@@ -87,18 +87,26 @@ function load_item(_section, _itemID, _data){
 	});
 	var _item = global.itemData[? _index];
 	
-	//
+	// Before implementing anything about the item, the first step is to check if there is a list of valid
+	// combos and resulting item from said combo being performed. If they both exist, their lists will be
+	// parsed and processed here instead of repeating this chunk of code for various items based on type.
 	with(_item){
-		// 
+		// Immediately stops attempting to parse any combination data if either piece of data doesn't exist.
 		if (is_undefined(_data[? KEY_VALID_COMBOS]) || is_undefined(_data[? KEY_COMBO_RESULTS]))
 			continue;
 		
+		// Parse the input combination list by first storing it the array's reference into a local variable.
+		// Then, if that reference is actually an array (-1 can also be returned), its contents are copied
+		// into the newly created validCombo array. Otherwise, the array is deleted since it only exists in
+		// local scope.
 		var _outputArray = item_parse_input_combo_data(_data[? KEY_VALID_COMBOS]);
 		if (is_array(_outputArray)){ // Only attempt to copy the contents if there is an array returned to copy.
 			validCombo = array_create(0);
 			array_copy(validCombo, 0, _outputArray, 0, array_length(_outputArray));
 		}
 		
+		// Do the same process as above but for each combination's resulting item data. If a proper array ref
+		// is returned, the array comboResult is created and has the contents from _outputArray copied to it.
 		_outputArray = item_parse_result_combo_data(_data[? KEY_COMBO_RESULTS]);
 		if (is_array(_outputArray)){ // Only attempt to copy the contents if there is an array returned to copy.
 			comboResult = array_create(0);
@@ -325,7 +333,9 @@ function item_parse_result_combo_data(_contents){
 		};
 	}
 	
-	// 
+	// The loop here is very similar to what is found in item_parse_input_combo_data, but with one major
+	// exception. In this case, it will have to parse an extra value in order to capture the item's ID as
+	// well as the potential minimum and maximum amount of that item that is created on a successful combo.
 	var _itemID			= -1;
 	var _minResult		= -1;
 	var _maxResult		= -1;
@@ -342,14 +352,19 @@ function item_parse_result_combo_data(_contents){
 			continue; // No other processing required; skip onto the next chunk of data.
 		}
 		
-		// 
+		// Attempt to parse out the minimum and maximum item amount values from the unprocessed string. If there
+		// isn't any content, the default amount of 1 for the min and max is assumed. Otherwise, the code will
+		// continue with parsing even further below this block.
 		_subStrings = string_split(_curString, "x");
 		if (array_length(_subStrings) == 1){
 			_outputArray[i] = create_result_combo_struct(_curString, "", "");
 			continue;
 		}
 		
-		// 
+		// Check if there is the "-" character within the split string (There should only ever be two indices
+		// in this array for properly formatted data, but any additional indexes are simply ignored, regardless).
+		// If so, the values will overwrite the previous _subStrings array and the first/second indexes will be
+		// used as the minimum and maximum amounts, respectively.
 		if (string_count("-", _subStrings[1]) > 0){
 			_curString = _subStrings[0];
 			_subStrings = string_split(_subStrings[1], "-");
@@ -357,8 +372,9 @@ function item_parse_result_combo_data(_contents){
 			continue;
 		}
 		
-		// 
-		_outputArray[i] = create_result_combo_struct(_subStrings[0], "", _subStrings[1]);
+		// Otherwise, it's assumed that the value is both the minimum and the maximum, so it will be passed
+		// in as both parameters for the item result container struct.
+		_outputArray[i] = create_result_combo_struct(_subStrings[0], _subStrings[1], _subStrings[1]);
 	}
 	
 	return _outputArray;
