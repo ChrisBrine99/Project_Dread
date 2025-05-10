@@ -1,3 +1,5 @@
+#region File Loading/Saving Functions
+
 /// @description
 /// Loads in and automatically decodes a JSON-formatted file into a GML data structure made up of ds_maps and
 /// ds_lists which is then returned by the function to be utilized as required in the code.
@@ -14,6 +16,10 @@ function load_json(_filename){
 	return json_decode(_string);
 }
 
+#endregion File Loading/Saving Functions
+
+#region Item Data Parsing Functions
+
 /// @description 
 ///	Attempts to load in the game's item data, which is taken in as a JSON file automatically converted by
 /// GameMaker before it gets further converted into a custom struct-based format that is easier to manage as
@@ -23,6 +29,8 @@ function load_json(_filename){
 function load_item_data(_filename){
 	if (global.itemData != -1) // Item data has already been loaded; don't bother trying to load it again.
 		return;
+		
+	var _startTime = get_timer();
 	
 	var _itemData = load_json(_filename);
 	if (_itemData == -1) // Invalid file was provided; no data was parsed.
@@ -52,6 +60,8 @@ function load_item_data(_filename){
 	}
 	
 	ds_map_destroy(_itemData);
+	
+	show_debug_message("Processed and parsed all item data in {0} microseconds.", get_timer() - _startTime);
 }
 
 /// @description
@@ -76,6 +86,25 @@ function load_item(_section, _itemID, _data){
 		flags		:	0,
 	});
 	var _item = global.itemData[? _index];
+	
+	//
+	with(_item){
+		// 
+		if (is_undefined(_data[? KEY_VALID_COMBOS]) || is_undefined(_data[? KEY_COMBO_RESULTS]))
+			continue;
+		
+		var _outputArray = item_parse_input_combo_data(_data[? KEY_VALID_COMBOS]);
+		if (is_array(_outputArray)){ // Only attempt to copy the contents if there is an array returned to copy.
+			validCombo = array_create(0);
+			array_copy(validCombo, 0, _outputArray, 0, array_length(_outputArray));
+		}
+		
+		_outputArray = item_parse_result_combo_data(_data[? KEY_COMBO_RESULTS]);
+		if (is_array(_outputArray)){ // Only attempt to copy the contents if there is an array returned to copy.
+			comboResult = array_create(0);
+			array_copy(comboResult, 0, _outputArray, 0, array_length(_outputArray));
+		}
+	}
 	
 	switch(_section){
 		case KEY_WEAPONS: // Parse through the data of a weapon item.
@@ -148,10 +177,11 @@ function load_item(_section, _itemID, _data){
 							  (bool(_data[? KEY_TEMP_BLEED_IMMUNITY_FLAG])		<<  4	) |
 							  (bool(_data[? KEY_TEMP_CRIPPLE_IMMUNITY_FLAG])	<<  5	);
 				
-				// Finally, parse the string containing the information about items this current one can be
-				// combined with, and the string containing the resulting item created through the combo.
-				validCombo	= string_split(_data[? KEY_VALID_COMBOS], ",");
-				comboResult	= string_split(_data[? KEY_COMBO_RESULTS], ",");
+				// Initialize these two variables with the default values of -1 should they not exist. 
+				// Otherwise, they will have already been initialized as arrays in the code block directly 
+				// above this switch statement.
+				if (!variable_struct_exists(_item, "validCombo"))	{ validCombo = -1; }
+				if (!variable_struct_exists(_item, "comboResult"))	{ comboResult = -1; }
 			}
 			break;
 		case KEY_COMBINABLE: // Parse through the data of a combinable item.
@@ -159,10 +189,11 @@ function load_item(_section, _itemID, _data){
 				type		= ITEM_TYPE_COMBINABLE;
 				stackLimit	= 1;	// Combinable items will ALWAYS have a limit of one per inventory slot.
 				
-				// Parse the string containing the information about items this current one can be combined 
-				// with, and the string containing the resulting item created through the combo.
-				validCombo	= string_split(_data[? KEY_VALID_COMBOS], ",");
-				comboResult	= string_split(_data[? KEY_COMBO_RESULTS], ",");
+				// Initialize these two variables with the default values of -1 should they not exist. 
+				// Otherwise, they will have already been initialized as arrays in the code block directly 
+				// above this switch statement.
+				if (!variable_struct_exists(_item, "validCombo"))	{ validCombo = -1; }
+				if (!variable_struct_exists(_item, "comboResult"))	{ comboResult = -1; }
 			}
 			break;
 		case KEY_EQUIPABLE: // Parse through the data of an equipable item.
@@ -183,11 +214,160 @@ function load_item(_section, _itemID, _data){
 				type		= ITEM_TYPE_KEY_ITEM;
 				stackLimit	= _data[? KEY_STACK];
 				
-				// Parse the string containing the information about items this current one can be combined 
-				// with, and the string containing the resulting item created through the combo.
-				validCombo	= string_split(_data[? KEY_VALID_COMBOS], ",");
-				comboResult	= string_split(_data[? KEY_COMBO_RESULTS], ",");
+				// Initialize these two variables with the default values of -1 should they not exist. 
+				// Otherwise, they will have already been initialized as arrays in the code block directly 
+				// above this switch statement.
+				if (!variable_struct_exists(_item, "validCombo"))	{ validCombo = -1; }
+				if (!variable_struct_exists(_item, "comboResult"))	{ comboResult = -1; }
 			}
 			break;
 	}
+	
+	show_debug_message("item {0} has been created. (structRef: {1})", _index, _item);
 }
+
+/// @description 
+///	Attempts to parse an items valid combination data, which is stored as a string of numbers split by commas.
+///	Optionally, there can be another value split from the first with the letter x which then becomes the cost
+/// (How many of that item needs to be in the inventory) for the combination to be allowed.
+///	
+///	@param {String}		contents	The string containing item IDs; split by the "," delimiter.
+function item_parse_input_combo_data(_contents){
+	// Return a default value of -1 if the item doesn't have any combination data associated with it.
+	if (_contents == "")
+		return -1;
+	
+	// Remove all spaces from the unformatted string should there be any before each value is split into its
+	// own index in the _splitContents array.
+	if (string_count(" ", _contents) > 0)
+		_contents = string_replace_all(_contents, " ", "")
+	var _contentArray	= string_split(_contents, ",");
+	var _arrayLength	= array_length(_contentArray);
+	var _outputArray	= array_create(_arrayLength, -1);
+	
+	/// @description
+	///	A lambda-like function that will return a new struct containing the index for the item required in the
+	///	combo recipe alongside its cost for the combination to actually occur (The default is a value of one).
+	///	
+	///	@param {String}		indexString		The index of the item required for the combination.
+	/// @param {String}		costString		The amount required of the item the player needs in their inventory in order to combine it.
+	var create_input_combo_struct = function(_indexString, _costString){
+		return {
+			index	: (_indexString == "")	? -1 : real(_indexString),
+			cost	: (_costString == "")	?  1 : real(_costString),
+		};
+	}
+	
+	// Loop through all of the combination input values; parsing them into structs containing numerical values
+	// for the item index that was found alongside its cost in the combination process.
+	var _itemID			= -1;
+	var _cost			= -1;
+	var _subStrings		= -1;
+	var _curString		= "";
+	for (var i = 0; i < _arrayLength; i++){
+		_curString = _contentArray[i];
+		
+		// If there isn't a cost for the item it is assumed to be a value of 1. So, an empty string is passed
+		// into the "create_input_combo_struct" to allow that default value to be set automatically.
+		if (string_count("x", _curString) == 0){
+			_outputArray[i] = create_input_combo_struct(_curString, "");
+			continue; // No other processing required; skip onto the next chunk of data.
+		}
+			
+		// Further split the string into another that should only contain the item's index in the first index
+		// of the array, and the cost required in the second index. If there isn't anything after the x character
+		// the default cost of 1 will be assumed and set. Otherwise, the parsed cost is stored.
+		_subStrings = string_split(_curString, "x");
+		if (array_length(_subStrings) == 1){
+			_outputArray[i] = create_input_combo_struct(_curString, "");
+			continue;
+		}
+		_outputArray[i] = create_input_combo_struct(_subStrings[0], _subStrings[1]);
+	}
+	
+	return _outputArray;
+}
+
+/// @description 
+///	A function that is very similar to item_parse_input_combo_data--with the main exception being this will
+/// process the resulting item from the combination. This result can have a range of how many are created, and
+/// as such needs unique logic to allow processing that.
+///	
+///	@param {String}		contents	The string containing item IDs; split by the "," delimiter.
+function item_parse_result_combo_data(_contents){
+	// Return a default value of -1 if the item doesn't have any combination data associated with it.
+	if (_contents == "")
+		return -1;
+		
+	// Remove all spaces from the unformatted string should there be any before each value is split into its
+	// own index in the _splitContents array.
+	if (string_count(" ", _contents) > 0)
+		_contents = string_replace_all(_contents, " ", "")
+	var _contentArray	= string_split(_contents, ",");
+	var _arrayLength	= array_length(_contentArray);
+	var _outputArray	= array_create(_arrayLength, -1);
+	
+	/// @description
+	///	A lambda-like function that will return a new struct containing the index for the item that results from
+	///	the item combination process. It also stores the minimum and maximum possible amounts that can be
+	///	created because of the combiation.
+	///
+	///	@param {String}		indexString		The index of the item required for the combination.
+	/// @param {String}		minString		The minimum potential amount of the item that can be created.
+	/// @param {String}		maxString		The maximum potential amount of the item that can be created.
+	var create_result_combo_struct = function(_indexString, _minString, _maxString){
+		var _minResult = (_minString == "")	?  1 : real(_minString);
+		var _maxResult = (_maxString == "")	?  1 : real(_maxString);
+		return {
+			index		: (_indexString == "")	? -1 : real(_indexString),
+			minResult	: _minResult,
+			maxResult	: max(_minResult, _maxResult),
+		};
+	}
+	
+	// 
+	var _itemID			= -1;
+	var _minResult		= -1;
+	var _maxResult		= -1;
+	var _subStrings		= -1;
+	var _curString		= "";
+	for (var i = 0; i < _arrayLength; i++){
+		_curString = _contentArray[i];
+		
+		// If there is no data for the amount crafted within the unprocessed data, it is assumed that the 
+		// resulting amount created is always one of the item, so empty strings are passed into the min and
+		// max value parameters to cause that default to be set for both.
+		if (string_count("x", _curString) == 0){
+			_outputArray[i] = create_result_combo_struct(_curString, "", "");
+			continue; // No other processing required; skip onto the next chunk of data.
+		}
+		
+		// 
+		_subStrings = string_split(_curString, "x");
+		if (array_length(_subStrings) == 1){
+			_outputArray[i] = create_result_combo_struct(_curString, "", "");
+			continue;
+		}
+		
+		// 
+		if (string_count("-", _subStrings[1]) > 0){
+			_curString = _subStrings[0];
+			_subStrings = string_split(_subStrings[1], "-");
+			_outputArray[i] = create_result_combo_struct(_curString, _subStrings[0], _subStrings[1]);
+			continue;
+		}
+		
+		// 
+		_outputArray[i] = create_result_combo_struct(_subStrings[0], "", _subStrings[1]);
+	}
+	
+	return _outputArray;
+}
+
+#endregion Item Data Parsing Functions
+
+#region Inventory Management Functions
+
+
+
+#endregion Invenotry Management Functions
