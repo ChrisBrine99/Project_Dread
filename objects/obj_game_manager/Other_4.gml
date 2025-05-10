@@ -1,0 +1,1 @@
+with(CAMERA) { room_start_event(); }	// Ensures the viewport is enabled and visible.

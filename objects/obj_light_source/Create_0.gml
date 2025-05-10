@@ -1,0 +1,1 @@
+lightSource = 0;

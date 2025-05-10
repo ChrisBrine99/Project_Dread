@@ -1,0 +1,1 @@
+if (lightSource) { light_destroy(lightSource); }
