@@ -1,3 +1,5 @@
+#region General Macro Initializations
+
 // Virtual keyboard constants for all keyboard keys that don't have built-in vk constants already.
 #macro	vk_0							0x30	// Top-row number keys
 #macro	vk_1							0x31
@@ -56,11 +58,19 @@
 
 // Values for the flags found within global.flags. They enable and disable certain aspects of the game on a
 // global scale as required.
-#macro	GAME_FLAG_PLAYTIME_ACTIVE		0x01000000
+#macro	GAME_FLAG_CMBTDIFF_FORGIVING	0x00000001	// Combat difficulty flags
+#macro	GAME_FLAG_CMBTDIFF_STANDARD		0x00000002
+#macro	GAME_FLAG_CMBTDIFF_PUNISHING	0x00000004
+#macro	GAME_FLAG_CMBTDIFF_NIGHTMARE	0x00000008
+#macro	GAME_FLAG_CMBTDIFF_ONELIFE		0x00000010
+#macro	GAME_FLAG_PUZZDIFF_FORGIVING	0x00000020	// Puzzle difficulty flags
+#macro	GAME_FLAG_PUZZDIFF_STANDARD		0x00000040
+#macro	GAME_FLAG_PUZZDIFF_PUNISHING	0x00000080
+#macro	GAME_FLAG_PLAYTIME_ACTIVE		0x01000000	// Other impotant flags
 #macro	GAME_FLAG_TRANSITION_ACTIVE		0x02000000
 #macro	GAME_FLAG_TEXTBOX_OPEN			0x04000000
 #macro	GAME_FLAG_GAMEPAD_ACTIVE		0x08000000
-#macro	GAME_FLAG_IN_GAME				0x10000000
+#macro	GAME_FLAG_IN_GAME				0x10000000	// Main game state flags
 #macro	GAME_FLAG_MENU_OPEN				0x20000000
 #macro	GAME_FLAG_CUTSCENE_ACTIVE		0x40000000
 #macro	GAME_FLAG_PAUSED				0x80000000
@@ -100,80 +110,9 @@
 #macro	GAME_PAD_FLASHLIGHT				gamepad_button_check(global.gamepadID, global.settings.gamePadFlashlight)
 #macro	GAME_PAD_USE_WEAPON				gamepad_button_check(global.gamepadID, global.settings.gamePadUseWeapon)
 
-// Macros for the main sections of the unprocessed global item data structure contents. These are only required 
-// on the initial load of the item data, as it will all be parsed and condensed into a single list once loaded.
-#macro	KEY_WEAPONS						"Weapons"
-#macro	KEY_AMMO						"Ammo"
-#macro	KEY_CONSUMABLE					"Consumable"
-#macro	KEY_COMBINABLE					"Combinable"
-#macro	KEY_EQUIPABLE					"Equipable"
-#macro	KEY_KEY_ITEMS					"Key_Items"
+#endregion General Macro Initializations
 
-// Macros for keys that show up in multiple sections of the unprocessed global item data structure contents. 
-// Each will be placed into a variable within the struct found in the processed item data structure list.
-#macro	KEY_NAME						"Name"
-#macro	KEY_STACK						"Stack"
-#macro	KEY_DURABILITY					"Durability"
-
-// Macros for keys that show up in the Weapon and Ammo sections of the unprocessed item data structure.
-#macro	KEY_DAMAGE						"Damage"
-#macro	KEY_RANGE						"Range"
-#macro	KEY_ACCURACY					"Accuracy"
-#macro	KEY_ATTACK_SPEED				"A_Speed"
-#macro	KEY_RELOAD_SPEED				"R_Speed"
-#macro	KEY_BULLET_COUNT				"Bullets"
-
-// Macros for keys that show up exclusively within the Weapon section of the unprocessed item data structure.
-#macro	KEY_IS_MELEE_FLAG				"Is_Melee"
-#macro	KEY_IS_AUTO_FLAG				"Is_Auto"
-#macro	KEY_IS_BURST_FLAG				"Is_Burst"
-#macro	KEY_IS_THROWN_FLAG				"Is_Thrown"
-#macro	KEY_AMMO_TYPES					"Ammo_Types"
-
-// Macros for keys that show up exclusively within the Ammo section of the unprocessed item data structure.
-#macro	KEY_IS_SPLASH_FLAG				"Is_Splash"
-
-// Macros for keys that show up in the Consumable, Combinable, and Key_Items sections of the unprocessed global
-// item data structure.
-#macro	KEY_VALID_COMBOS				"Valid_Combos"
-#macro	KEY_COMBO_RESULTS				"Combo_Results"
-
-// Macros for keys that only show up within the Consumable section of the unprocessed item data structure.
-#macro	KEY_HEALTH_RESTORE				"Heal%"
-#macro	KEY_SANITY_RESTORE				"Sanity%"
-#macro	KEY_CURE_POISON_FLAG			"Cur_Psn"
-#macro	KEY_CURE_BLEED_FLAG				"Cur_Bld"
-#macro	KEY_CURE_CRIPPLE_FLAG			"Cur_Crpl"
-#macro	KEY_TEMP_POISON_IMMUNITY_FLAG	"TmpImu_P"
-#macro	KEY_TEMP_BLEED_IMMUNITY_FLAG	"TmpImu_B"
-#macro	KEY_TEMP_CRIPPLE_IMMUNITY_FLAG	"TmpImu_C"
-#macro	KEY_IMMUNITY_TIME				"Imu_Time"
-
-// Macros for keys that only appear within the Equipable section of the unprocessed item data structure.
-#macro	KEY_TYPE						"Type"
-#macro	KEY_EQUIP_PARAMS				"Equip_Params"
-
-// Macros for keys that only appear within the Key_Items section of the unprocessed item data structure.
-#macro	KEY_CAN_USE_FLAG				"Can_Use"
-#macro	KEY_CAN_DROP_FLAG				"Can_Drop"
-#macro	KEY_USE_FUNCTION				"Use_Func"
-
-// Macros for the numerical representations of an item's type, which will help determine how it functions within
-// the game and what options are available to the player when it is selected in the inventory (Excluding any
-// flags that may also affect this).
-#macro	ITEM_TYPE_INVALID			   -1
-#macro	ITEM_TYPE_WEAPON				0
-#macro	ITEM_TYPE_AMMO					1
-#macro	ITEM_TYPE_CONSUMABLE			2
-#macro	ITEM_TYPE_COMBINABLE			3
-#macro	ITEM_TYPE_EQUIPABLE				4
-#macro	ITEM_TYPE_KEY_ITEM				5
-
-// Macros for the bit values of the flags utilized by a weapon-type item.
-#macro	WEAP_FLAG_IS_MELEE				0x00000001
-#macro	WEAP_FLAG_IS_AUTOMATIC			0x00000002
-#macro	WEAP_FLAG_IS_BURSTFIRE			0x00000004
-#macro	WEAP_FLAG_IS_THROWN				0x00000008
+#region Game Manager Global and Local Variable Initializations
 
 // Stores a copy of the application surface for any post-processing effects that require the application surface
 // that occur outside of the draw GUI events. Otherwise, it will draw itself to itself which makes no sense and
@@ -253,6 +192,18 @@ uLightSaturation		= shader_get_uniform(shd_lighting, "saturation");
 uLightContrast			= shader_get_uniform(shd_lighting, "contrast");
 uLightTexture			= shader_get_sampler_index(shd_lighting, "lightTex");
 
-// 
+// Upon initialization, it stores the value -1, but will contain a map of structs that contain all the info
+// about every item that can be collected within the game. This data is loaded in when a save file is loaded
+// or a new playthrough is started.
 global.itemData = -1;
+
+// Upon initialization, it stores the value -1, but will contain an array of items the player current has on
+// their person during gameplay; with the starting and maximum sizes being determined by the difficulty the
+// user selected when starting a new playthrough.
+global.inventory = -1;
+
+#endregion Game Manager Global and Local Variable Initializations
+
+// These calls are for testing purposes
 load_item_data("items.dat");
+inventory_initialize(GAME_FLAG_CMBTDIFF_STANDARD);

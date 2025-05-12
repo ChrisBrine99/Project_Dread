@@ -1,8 +1,20 @@
+var _length = 0; // Used by all array/data structure-based cleanup code, so it's initialized at the start.
+
+// Removes all inventory item structs as they aren't the standard structs that are automatically maintained by
+// the global.struct data structure. In very rare cases, the inventory will not have been initialized before
+// this event executes. In that case, this entire chunk of code is skipped since no cleanup is needed.
+if (is_array(global.inventory)){
+	_length = array_length(global.inventory);
+	for (var i = 0; i < _length; i++){
+		if (global.inventory != INV_EMPTY_SLOT && is_struct(global.inventory[i]))
+			delete global.inventory[i]; global.inventory[i] = INV_EMPTY_SLOT;
+	}
+}
+
 // Remove all item data from the game, and any data within a given item struct depending on its type. It will
 // also handle removing any internal containers within the main item struct itself (Ex. combo data is stored
 // within structs so they have to be removed as well as required).
 var _structRef	= undefined;
-var _length		= 0;
 var _itemID		= ds_map_find_first(global.itemData);
 while(!is_undefined(_itemID)){
 	_structRef = global.itemData[? _itemID];

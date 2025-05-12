@@ -18,6 +18,68 @@ function load_json(_filename){
 
 #endregion File Loading/Saving Functions
 
+#region Item Data Parsing Macros
+
+// Macros for the main sections of the unprocessed global item data structure contents. These are only required 
+// on the initial load of the item data, as it will all be parsed and condensed into a single list once loaded.
+#macro	KEY_WEAPONS						"Weapons"
+#macro	KEY_AMMO						"Ammo"
+#macro	KEY_CONSUMABLE					"Consumable"
+#macro	KEY_COMBINABLE					"Combinable"
+#macro	KEY_EQUIPABLE					"Equipable"
+#macro	KEY_KEY_ITEMS					"Key_Items"
+
+// Macros for keys that show up in multiple sections of the unprocessed global item data structure contents. 
+// Each will be placed into a variable within the struct found in the processed item data structure list.
+#macro	KEY_NAME						"Name"
+#macro	KEY_STACK						"Stack"
+#macro	KEY_DURABILITY					"Durability"
+
+// Macros for keys that show up in the Weapon and Ammo sections of the unprocessed item data structure.
+#macro	KEY_DAMAGE						"Damage"
+#macro	KEY_RANGE						"Range"
+#macro	KEY_ACCURACY					"Accuracy"
+#macro	KEY_ATTACK_SPEED				"A_Speed"
+#macro	KEY_RELOAD_SPEED				"R_Speed"
+#macro	KEY_BULLET_COUNT				"Bullets"
+
+// Macros for keys that show up exclusively within the Weapon section of the unprocessed item data structure.
+#macro	KEY_IS_MELEE_FLAG				"Is_Melee"
+#macro	KEY_IS_AUTO_FLAG				"Is_Auto"
+#macro	KEY_IS_BURST_FLAG				"Is_Burst"
+#macro	KEY_IS_THROWN_FLAG				"Is_Thrown"
+#macro	KEY_AMMO_TYPES					"Ammo_Types"
+
+// Macros for keys that show up exclusively within the Ammo section of the unprocessed item data structure.
+#macro	KEY_IS_SPLASH_FLAG				"Is_Splash"
+
+// Macros for keys that show up in the Consumable, Combinable, and Key_Items sections of the unprocessed global
+// item data structure.
+#macro	KEY_VALID_COMBOS				"Valid_Combos"
+#macro	KEY_COMBO_RESULTS				"Combo_Results"
+
+// Macros for keys that only show up within the Consumable section of the unprocessed item data structure.
+#macro	KEY_HEALTH_RESTORE				"Heal%"
+#macro	KEY_SANITY_RESTORE				"Sanity%"
+#macro	KEY_CURE_POISON_FLAG			"Cur_Psn"
+#macro	KEY_CURE_BLEED_FLAG				"Cur_Bld"
+#macro	KEY_CURE_CRIPPLE_FLAG			"Cur_Crpl"
+#macro	KEY_TEMP_POISON_IMMUNITY_FLAG	"TmpImu_P"
+#macro	KEY_TEMP_BLEED_IMMUNITY_FLAG	"TmpImu_B"
+#macro	KEY_TEMP_CRIPPLE_IMMUNITY_FLAG	"TmpImu_C"
+#macro	KEY_IMMUNITY_TIME				"Imu_Time"
+
+// Macros for keys that only appear within the Equipable section of the unprocessed item data structure.
+#macro	KEY_TYPE						"Type"
+#macro	KEY_EQUIP_PARAMS				"Equip_Params"
+
+// Macros for keys that only appear within the Key_Items section of the unprocessed item data structure.
+#macro	KEY_CAN_USE_FLAG				"Can_Use"
+#macro	KEY_CAN_DROP_FLAG				"Can_Drop"
+#macro	KEY_USE_FUNCTION				"Use_Func"
+
+#endregion item Data Parsing Macros
+
 #region Item Data Parsing Functions
 
 /// @description 
@@ -230,8 +292,7 @@ function load_item(_section, _itemID, _data){
 			}
 			break;
 	}
-	
-	show_debug_message("item {0} has been created. (structRef: {1})", _index, _item);
+	//show_debug_message("item {0} has been created. (structRef: {1})", _index, _item);
 }
 
 /// @description 
@@ -382,8 +443,178 @@ function item_parse_result_combo_data(_contents){
 
 #endregion Item Data Parsing Functions
 
+#region Inventory Management Macros
+
+// Macros for the numerical representations of an item's type, which will help determine how it functions within
+// the game and what options are available to the player when it is selected in the inventory (Excluding any
+// flags that may also affect this).
+#macro	ITEM_TYPE_INVALID			   -1
+#macro	ITEM_TYPE_WEAPON				0
+#macro	ITEM_TYPE_AMMO					1
+#macro	ITEM_TYPE_CONSUMABLE			2
+#macro	ITEM_TYPE_COMBINABLE			3
+#macro	ITEM_TYPE_EQUIPABLE				4
+#macro	ITEM_TYPE_KEY_ITEM				5
+
+// Macros for the bit values of the flags that exist within every weapon-type item.
+#macro	WEAP_FLAG_IS_MELEE				0x00000001
+#macro	WEAP_FLAG_IS_AUTOMATIC			0x00000002
+#macro	WEAP_FLAG_IS_BURSTFIRE			0x00000004
+#macro	WEAP_FLAG_IS_THROWN				0x00000008
+
+// Macros that represent the checks for specific bit states within the flags variable of a weapon-type item.
+#macro	WEAPON_IS_MELEE					(flags & WEAP_FLAG_IS_MELEE)
+#macro	WEAPON_IS_AUTOMATIC				(flags & WEAP_FLAG_IS_AUTOMATIC)
+#macro	WEAPON_IS_BURSTFIRE				(flags & WEAP_FLAG_IS_BURSTFIRE)
+#macro	WEAPON_IS_THROWN				(flags & WEAP_FLAG_IS_THROWN)
+
+// Macros for the bit values of the flags that exist within every consumable-type item.
+#macro	CNSM_FLAG_CURE_POISON			0x00000001
+#macro	CNSM_FLAG_CURE_BLEED			0x00000002
+#macro	CNSM_FLAG_CURE_CRIPPLE			0x00000004
+#macro	CNSM_FLAG_TMPIMU_POISON			0x00000008
+#macro	CNSM_FLAG_TMPIMU_BLEED			0x00000010
+#macro	CNSM_FLAG_TMPIMU_CRIPPLE		0x00000020
+
+// Macros that represent the checks for specific bit states within the flags variable of a consumable-type item.
+#macro	CONSUMABLE_CURES_POISON			(flags & CNSM_FLAG_CURE_POISON)
+#macro	CONSUMABLE_CURES_BLEED			(flags & CNSM_FLAG_CURE_BLEED)
+#macro	CONSUMABLE_CURES_CRIPPLE		(flags & CNSM_FLAG_CURE_CRIPPLE)
+#macro	CNSM_GIVES_TMPIMU_POISON		(flags & CNSM_FLAG_TMPIMU_POISON)
+#macro	CNSM_GIVES_TMPIMU_BLEED			(flags & CNSM_FLAG_TMPIMU_BLEED)
+#macro	CNSM_GIVES_TMPIMU_CRIPPLE		(flags & CNSM_FLAG_TMPIMU_CRIPPLE)
+
+// Macro that represents an inventory slot that current has no item contained within it.
+#macro	INV_EMPTY_SLOT				   -1
+
+#endregion Inventory Management Macros
+
 #region Inventory Management Functions
 
+/// @description
+///	Initializes the inventory data structure. It's starting size will be determined by what difficulty the
+/// player selected for their playthrough. The maximum size will also be affected by the selected difficulty,
+/// but not as a hard limit. Instead, it will limit how many capacity upgrades can be found in the world.
+///	
+///	@param {Real}	cmbDiffFlagBit		Determines how inventory will be initialized.
+function inventory_initialize(_cmbDiffFlagBit){
+	if (is_array(global.inventory)){ // Clear out old inventory contents to prevent memory leaks.
+		var _length = array_length(global.inventory);
+		for (var i = 0; i < _length; i++){
+			if (global.inventory != INV_EMPTY_SLOT && is_struct(global.inventory[i]))
+				delete global.inventory[i];
+		}
+	} else{ // Initialize the inventory array with a default size of 0.
+		global.inventory = array_create(0, INV_EMPTY_SLOT);
+	}
+	
+	switch(_cmbDiffFlagBit){
+		default: /* Invalid difficulty param */	array_resize(global.inventory,  0);		break;
+		case GAME_FLAG_CMBTDIFF_FORGIVING:		array_resize(global.inventory, 10);		break;
+		case GAME_FLAG_CMBTDIFF_STANDARD:		// Also starts with 8 slots available.
+		case GAME_FLAG_CMBTDIFF_PUNISHING:		array_resize(global.inventory,  8);		break;
+		case GAME_FLAG_CMBTDIFF_NIGHTMARE:		// Also starts with 6 slots available.
+		case GAME_FLAG_CMBTDIFF_ONELIFE:		array_resize(global.inventory,  6);		break;
+	}
+	
+	// Fill the array with -1 values since each index defaults to 0 when a resize adds new indices.
+	var _length = array_length(global.inventory);
+	for (var i = 0; i < _length; i++)
+		array_set(global.inventory, i, INV_EMPTY_SLOT);
+}
 
+/// @description 
+///	Adds some variable amount of an item to the player's inventory. The value returned will be the remainder
+/// of the item that didn't fit within the inventory. The same value as the _amount parameter is returned if
+/// it couldn't be added to the inventory due to the inventory not being initialized, the item id being invalid
+/// or the inventory being completely full.
+///	
+///	@param {Real}	itemID		Number representing the item within the game's data.
+///	@param {Real}	amount		How many of said item will be added to the inventory.
+function inventory_add_item(_itemID, _amount){
+	// Don't try adding anything to an uninitialized inventory.
+	if (!is_array(global.inventory))
+		return _amount;
+	
+	// Make sure the item id points to a valid item. Otherwise, don't even attempt to add it to the inventory.
+	var _itemData = global.itemData[? _itemID];
+	if (is_undefined(_itemData))
+		return _amount;
+	
+	// Being looping through the inventory from its first slot to its last slot; checking to see where the item
+	// in question can be placed within it. It can either be added to an existing slot containing the same item
+	// if there is room, or occupy the first empty slot that's found, or both is required.
+	var _maxPerSlot	= _itemData.stackLimit;
+	var _invItem	= -1;
+	var _length		= array_length(global.inventory);
+	for (var i = 0; i < _length; i++){
+		_invItem = global.inventory[i];
+		if (_invItem != INV_EMPTY_SLOT && is_struct(_invItem)){
+			with(_invItem){
+				// Either the item id doesn't match the current item in the slot OR the slot is already maxed
+				// out in capacity for the item in question. Move onto the next slot.
+				if (index != _itemID || quantity == _maxPerSlot)
+					break;
+				
+				// The amount to be added exceeds what can be stored inside a single slot. So, the amount that
+				// can fit within the slot is added and the remainder from the total amount to add will move
+				// onto the next slot to find a vacant place to be added.
+				if (quantity + _amount > _maxPerSlot){
+					_amount -= (_maxPerSlot - quantity);
+					quantity = _maxPerSlot;
+					break;
+				}
+				
+				// The full amount can fit in the current slot. Add it to the existing quantity and return 0.
+				quantity += _amount;
+				return 0;
+			}
+			
+			// Item exists within the slot so the next slot will be considered if the return 0 seen above
+			// wasn't hit by the code.
+			continue;
+		}
+		
+		// Create a new inventory item struct and set the inventory slot to its reference value.
+		_invItem = {
+			index		: _itemID,
+			quantity	: _amount,
+			durability	: 0	// This function will always set this value to 0.
+		};
+		global.inventory[i] = _invItem;
+		
+		// Check if the amount to be added can fit into this newly added inventory item. If it exceeds the max
+		// capacity per slot, the loop will continue. Otherwise, the value 0 is returned to signify every item
+		// was successfully added to the inventory.
+		with(_invItem){
+			if (_amount > _maxPerSlot){
+				_amount -= _maxPerSlot;
+				quantity = _maxPerSlot;
+				break;
+			}
+			return 0;
+		}
+	}
+	
+	// Return whatever the remainder is for what needed to be added to the inventory. If this happens, it means
+	// the inventory doesn't have enough room to store all of the items that were picked up.
+	return _amount;
+}
+
+/// @description 
+///	
+///	
+///	@param {Real}	itemID		Number representing the item within the game's data.
+/// @param {Real}	amount		How many of said item will be removed from the inventory.
+function inventory_remove_item(_itemID, _amount){
+	// Don't try adding anything to an uninitialized inventory.
+	if (!is_array(global.inventory))
+		return _amount;
+	
+	// Make sure the item id points to a valid item. Otherwise, don't even attempt to remove the invalid item.
+	var _itemData = global.itemData[? _itemID];
+	if (is_undefined(_itemData))
+		return _amount;
+}
 
 #endregion Invenotry Management Functions
