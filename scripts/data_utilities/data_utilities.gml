@@ -501,7 +501,7 @@ function inventory_initialize(_cmbDiffFlagBit){
 	if (is_array(global.inventory)){ // Clear out old inventory contents to prevent memory leaks.
 		var _length = array_length(global.inventory);
 		for (var i = 0; i < _length; i++){
-			if (global.inventory != INV_EMPTY_SLOT && is_struct(global.inventory[i]))
+			if (is_struct(global.inventory[i]))
 				delete global.inventory[i];
 		}
 	} else{ // Initialize the inventory array with a default size of 0.
@@ -549,7 +549,7 @@ function inventory_add_item(_itemID, _amount){
 	var _length		= array_length(global.inventory);
 	for (var i = 0; i < _length; i++){
 		_invItem = global.inventory[i];
-		if (_invItem != INV_EMPTY_SLOT && is_struct(_invItem)){
+		if (is_struct(_invItem)){
 			with(_invItem){
 				// Either the item id doesn't match the current item in the slot OR the slot is already maxed
 				// out in capacity for the item in question. Move onto the next slot.
