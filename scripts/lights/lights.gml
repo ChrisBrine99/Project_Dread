@@ -1,3 +1,5 @@
+#region Light Source Struct Definition
+
 /// @param {Function}	index	The value of "str_light_source" as determined by GameMaker during runtime.
 function str_light_source(_index) : str_base(_index) constructor {
 	x			= 0;
@@ -39,6 +41,10 @@ function str_light_source(_index) : str_base(_index) constructor {
 	}
 }
 
+#endregion Light Source Struct Definition
+
+#region Global Functions for Light Sources
+
 /// @description 
 ///	Creates a light source at the given position within the current room. If an Entity is creating this light,
 ///	it will follow that Entity automatically. Otherwise, it will remain static within the room unless moved
@@ -75,3 +81,5 @@ function light_destroy(_lightRef){
 	ds_list_delete(global.lights, _index);
 	instance_destroy_struct(_lightRef);
 }
+
+#endregion Global Functions for Light Sources

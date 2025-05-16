@@ -89,26 +89,56 @@
 // Macros for retrieving the state of a given input binding on the keyboard. It simply returns if the key is
 // currently held down or not, and logic for key presses/releases is done within a controllable object using
 // their "inputFlags" and "prevInputFlags" variables.
-#macro	GAME_KEY_RIGHT					keyboard_check(global.settings.gameKeyRight)
-#macro	GAME_KEY_LEFT					keyboard_check(global.settings.gameKeyLeft)
-#macro	GAME_KEY_UP						keyboard_check(global.settings.gameKeyUp)
-#macro	GAME_KEY_DOWN					keyboard_check(global.settings.gameKeyDown)
-#macro	GAME_KEY_INTERACT				keyboard_check(global.settings.gameKeyInteract)
-#macro	GAME_KEY_SPRINT					keyboard_check(global.settings.gameKeySprint)
-#macro	GAME_KEY_READY_WEAPON			keyboard_check(global.settings.gameKeyReadyWeapon)
-#macro	GAME_KEY_FLASHLIGHT				keyboard_check(global.settings.gameKeyFlashlight)
-#macro	GAME_KEY_USE_WEAPON				keyboard_check(global.settings.gameKeyUseWeapon)
+#macro	GAME_KEY_RIGHT					keyboard_check(global.settings.inputs[STNG_INPUT_GAME_RIGHT])
+#macro	GAME_KEY_LEFT					keyboard_check(global.settings.inputs[STNG_INPUT_GAME_LEFT])
+#macro	GAME_KEY_UP						keyboard_check(global.settings.inputs[STNG_INPUT_GAME_UP])
+#macro	GAME_KEY_DOWN					keyboard_check(global.settings.inputs[STNG_INPUT_GAME_DOWN])
+#macro	GAME_KEY_INTERACT				keyboard_check(global.settings.inputs[STNG_INPUT_INTERACT])
+#macro	GAME_KEY_SPRINT					keyboard_check(global.settings.inputs[STNG_INPUT_SPRINT])
+#macro	GAME_KEY_READYWEAPON			keyboard_check(global.settings.inputs[STNG_INPUT_READYWEAPON])
+#macro	GAME_KEY_FLASHLIGHT				keyboard_check(global.settings.inputs[STNG_INPUT_FLASHLIGHT])
+#macro	GAME_KEY_USEWEAPON				keyboard_check(global.settings.inputs[STNG_INPUT_USEWEAPON])
+#macro	MENU_KEY_RIGHT					keyboard_check(global.settings.inputs[STNG_INPUT_MENU_RIGHT])
+#macro	MENU_KEY_LEFT					keyboard_check(global.settings.inputs[STNG_INPUT_MENU_LEFT])
+#macro	MENU_KEY_UP						keyboard_check(global.settings.inputs[STNG_INPUT_MENU_UP])
+#macro	MENU_KEY_DOWN					keyboard_check(global.settings.inputs[STNG_INPUT_MENU_DOWN])
 
 // These macros are similar to above, but they are for checking gamepad inputs instead of the keyboard.
-#macro	GAME_PAD_RIGHT					gamepad_button_check(global.gamepadID, global.settings.gamePadRight)
-#macro	GAME_PAD_LEFT					gamepad_button_check(global.gamepadID, global.settings.gamePadLeft)
-#macro	GAME_PAD_UP						gamepad_button_check(global.gamepadID, global.settings.gamePadUp)
-#macro	GAME_PAD_DOWN					gamepad_button_check(global.gamepadID, global.settings.gamePadDown)
-#macro	GAME_PAD_INTERACT				gamepad_button_check(global.gamepadID, global.settings.gamePadInteract)
-#macro	GAME_PAD_SPRINT					gamepad_button_check(global.gamepadID, global.settings.gamePadSprint)
-#macro	GAME_PAD_READY_WEAPON			gamepad_button_check(global.gamepadID, global.settings.gamePadReadyWeapon)
-#macro	GAME_PAD_FLASHLIGHT				gamepad_button_check(global.gamepadID, global.settings.gamePadFlashlight)
-#macro	GAME_PAD_USE_WEAPON				gamepad_button_check(global.gamepadID, global.settings.gamePadUseWeapon)
+#macro	GAME_PAD_RIGHT					gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_GAME_RIGHT		+ 1])
+#macro	GAME_PAD_LEFT					gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_GAME_LEFT		+ 1])
+#macro	GAME_PAD_UP						gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_GAME_UP		+ 1])
+#macro	GAME_PAD_DOWN					gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_GAME_DOWN		+ 1])
+#macro	GAME_PAD_INTERACT				gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_INTERACT		+ 1])
+#macro	GAME_PAD_SPRINT					gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_SPRINT			+ 1])
+#macro	GAME_PAD_READYWEAPON			gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_READYWEAPON	+ 1])
+#macro	GAME_PAD_FLASHLIGHT				gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_FLASHLIGHT		+ 1])
+#macro	GAME_PAD_USEWEAPON				gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_USEWEAPON		+ 1])
+
+// 
+#macro	STNG_AUDIO_MASTER				0
+#macro	STNG_AUDIO_MUSIC				1
+#macro	STNG_AUDIO_SOUNDS				2
+#macro	TOTAL_VOLUME_OPTIONS			3
+
+// 
+#macro	STNG_INPUT_GAME_RIGHT			0
+#macro	STNG_INPUT_GAME_LEFT			2
+#macro	STNG_INPUT_GAME_UP				4
+#macro	STNG_INPUT_GAME_DOWN			6
+#macro	STNG_INPUT_INTERACT				8
+#macro	STNG_INPUT_SPRINT				10
+#macro	STNG_INPUT_READYWEAPON			12
+#macro	STNG_INPUT_FLASHLIGHT			14
+#macro	STNG_INPUT_USEWEAPON			16
+#macro	STNG_INPUT_MENU_RIGHT			18
+#macro	STNG_INPUT_MENU_LEFT			20
+#macro	STNG_INPUT_MENU_UP				22
+#macro	STNG_INPUT_MENU_DOWN			24
+#macro	STNG_INPUT_SELECT				26
+#macro	STNG_INPUT_RETURN				28
+#macro	STNG_INPUT_FILE_DELETE			30
+#macro	STNG_INPUT_TBOX_ADVANCE			32
+#macro	STNG_INPUT_TBOX_LOG				34
 
 #endregion General Macro Initializations
 
@@ -142,13 +172,71 @@ global.settings			= {
 	// --- Video Settings --- //
 	windowScale			: 4,
 	
-	// --- Audio Settings --- //
-	masterVolume		: 1.0,
-	sndFxVolume			: 0.9,
-	musicVolume			: 0.7,
+	// --- Audio Setting Array --- //
+	audio				: [
 	
-	// --- Input Settings (Keyboard) --- //
-	gameKeyRight		: vk_right,
+		1.0,			// Master
+		0.9,			// Sound Effects
+		0.7				// Music
+		
+	],
+	
+	// --- Input Setting Array --- //
+	inputs				: [
+	
+		// --- Inputs During Standard Gameplay (Keyboard and Gamepad Interwoven) --- //
+		vk_right,		// Move Character Right
+		gp_padr,
+		vk_left,		// Move Character Left
+		gp_padl,
+		vk_up,			// Move Character Up
+		gp_padu,
+		vk_down,		// Move Character Down
+		gp_padd,
+		vk_z,			// Interact with Environment
+		gp_face1,
+		vk_shift,		// Activate Sprinting
+		gp_shoulderl,
+		vk_space,		// Ready Equipped Weapon
+		gp_shoulderr,
+		vk_f,			// Toggle Flashlight (If Equipped)
+		gp_face4,
+		vk_z,			// Uses Equipped Weapon (Only When Readied)
+		gp_face1,
+		
+		// --- Inputs When Navigating Menus (Keyboard and Gamepad Interwoven) --- //
+		vk_right,		// Move Menu Cursor Right
+		gp_padr,
+		vk_left,		// Move Menu Cursor Left
+		gp_padl,
+		vk_up,			// Move Menu Cursor Up
+		gp_padu,
+		vk_down,		// Move Menu Cursor Down
+		gp_padd,
+		vk_z,			// Select Highlight Menu Option
+		gp_face1,
+		vk_x,			// Revert To Previous Menu/De-select Menu Option
+		gp_face2,
+		vk_d,			// Delete Save Data of Highlighted Save
+		gp_face4,
+		vk_z,			// Advance Textbox/Skip Typing Animation
+		gp_face1,
+		vk_space,		// Open Current Conversation Log
+		gp_face4,
+		
+	],
+	
+	menuKeyRight		: vk_right,		// Inputs when navigating menus
+	menuKeyLeft			: vk_left,
+	menuKeyUp			: vk_up,
+	menuKeyDown			: vk_down,
+	menuKeySelect		: vk_z,
+	menuKeyReturn		: vk_x,
+	menuKeyFileDelete	: vk_d,
+	menuKeyTextboxNext	: vk_z,			// Inputs for the textbox window
+	menuKeyTextLog		: vk_x,
+	
+	gameKeyRight		: vk_right,		// Inputs during standard gameplay
 	gameKeyLeft			: vk_left,
 	gameKeyUp			: vk_up,
 	gameKeyDown			: vk_down,
@@ -158,8 +246,9 @@ global.settings			= {
 	gameKeyFlashlight	: vk_f,
 	gameKeyUseWeapon	: vk_z,
 	
+	
 	// --- Input Settings (Gamepad) --- //
-	gamePadRight		: gp_padr,
+	gamePadRight		: gp_padr,		// Inputs during standard gameplay
 	gamePadLeft			: gp_padl,
 	gamePadUp			: gp_padu,
 	gamePadDown			: gp_padd,

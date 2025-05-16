@@ -6,6 +6,7 @@ gpu_set_alphatestref(10);
 // potential crashes will occur.
 ds_map_add(global.sInstances, KEY_GAME_MANAGER, instance_create_depth(0, 0, 30, obj_game_manager));
 ds_map_add(global.sInstances, KEY_CAMERA,		new str_camera(str_camera));
+ds_map_add(global.sInstances, KEY_TEXTBOX,		new str_textbox(str_textbox));
 ds_map_add(global.sInstances, KEY_PLAYER,		instance_create_depth(100, 100, 30, obj_player));
 // NOTE -- This is the only time the default ways of struct and object creation should be used!!!
 

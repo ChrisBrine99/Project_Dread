@@ -1,3 +1,5 @@
+#region Macros for Camera Struct
+
 // Values for the flags that are unique to the camera. They allow various states to be enabled or disabled as
 // required during runtime.
 #macro	CAM_FLAG_BOUNDS_LOCKED			0x00000001	// Prevents the viewport from going outside of the room bounds.
@@ -15,6 +17,10 @@
 // Determines a square region with a width and height of the value below multiplied by two where the camera
 // will no longer move alongside the object it is currently set to follow.
 #macro	DEADZONE_SIZE					8
+
+#endregion Macros for Camera Struct
+
+#region Camera Struct Definition
 
 /// @param {Function}	index	The value of "str_camera" as determined by GameMaker during runtime.
 function str_camera(_index) : str_base(_index) constructor {
@@ -188,3 +194,5 @@ function str_camera(_index) : str_base(_index) constructor {
 		}
 	}
 }
+
+#endregion Camera Struct Definition

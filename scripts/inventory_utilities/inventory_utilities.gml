@@ -30,9 +30,9 @@
 #macro	CNSM_FLAG_TMPIMU_CRIPPLE		0x00000020
 
 // Macros that represent the checks for specific bit states within the flags variable of a consumable-type item.
-#macro	CONSUMABLE_CURES_POISON			(flags & CNSM_FLAG_CURE_POISON)
-#macro	CONSUMABLE_CURES_BLEED			(flags & CNSM_FLAG_CURE_BLEED)
-#macro	CONSUMABLE_CURES_CRIPPLE		(flags & CNSM_FLAG_CURE_CRIPPLE)
+#macro	CNSM_CURES_POISON				(flags & CNSM_FLAG_CURE_POISON)
+#macro	CNSM_CURES_BLEED				(flags & CNSM_FLAG_CURE_BLEED)
+#macro	CNSM_CURES_CRIPPLE				(flags & CNSM_FLAG_CURE_CRIPPLE)
 #macro	CNSM_GIVES_TMPIMU_POISON		(flags & CNSM_FLAG_TMPIMU_POISON)
 #macro	CNSM_GIVES_TMPIMU_BLEED			(flags & CNSM_FLAG_TMPIMU_BLEED)
 #macro	CNSM_GIVES_TMPIMU_CRIPPLE		(flags & CNSM_FLAG_TMPIMU_CRIPPLE)

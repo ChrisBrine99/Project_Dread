@@ -87,6 +87,7 @@ function instance_find_struct(_id){
 function struct_is_special(_structFunc){
 	switch(_structFunc){
 		default:			return false;
+		case str_textbox:	return true;
 		case str_camera:	return true;
 		case str_base:		return true;
 	}

@@ -212,9 +212,9 @@ process_player_input = function(){
 		inputFlags |= (GAME_PAD_DOWN			<< 3);
 		inputFlags |= (GAME_PAD_INTERACT		<< 4);
 		inputFlags |= (GAME_PAD_SPRINT			<< 5);
-		inputFlags |= (GAME_PAD_READY_WEAPON	<< 6);
+		inputFlags |= (GAME_PAD_READYWEAPON		<< 6);
 		inputFlags |= (GAME_PAD_FLASHLIGHT		<< 7);
-		inputFlags |= (GAME_PAD_USE_WEAPON		<< 8);
+		inputFlags |= (GAME_PAD_USEWEAPON		<< 8);
 		return;
 	}
 	
@@ -224,9 +224,9 @@ process_player_input = function(){
 	inputFlags |= (GAME_KEY_DOWN			<< 3);
 	inputFlags |= (GAME_KEY_INTERACT		<< 4);
 	inputFlags |= (GAME_KEY_SPRINT			<< 5);
-	inputFlags |= (GAME_KEY_READY_WEAPON	<< 6);
+	inputFlags |= (GAME_KEY_READYWEAPON		<< 6);
 	inputFlags |= (GAME_KEY_FLASHLIGHT		<< 7);
-	inputFlags |= (GAME_KEY_USE_WEAPON		<< 8);
+	inputFlags |= (GAME_KEY_USEWEAPON		<< 8);
 }
 
 /// @description
