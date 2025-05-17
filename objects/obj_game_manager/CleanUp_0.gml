@@ -58,6 +58,7 @@ ds_list_destroy(global.structs);
 // Go through all singleton instances that require their destroy event in order to free any memory they've
 // allocated through the application's runtime. Then, the sInstance management map is destroyed.
 with(CAMERA)		{ destroy_event(); }	delete CAMERA;
+with(TEXTBOX)		{ destroy_event(); }	delete TEXTBOX;
 ds_map_destroy(global.sInstances);
 
 // Finally, delete any structs that exist on the game manager for various aspects of the game that need managing.

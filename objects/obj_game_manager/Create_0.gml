@@ -102,6 +102,11 @@
 #macro	MENU_KEY_LEFT					keyboard_check(global.settings.inputs[STNG_INPUT_MENU_LEFT])
 #macro	MENU_KEY_UP						keyboard_check(global.settings.inputs[STNG_INPUT_MENU_UP])
 #macro	MENU_KEY_DOWN					keyboard_check(global.settings.inputs[STNG_INPUT_MENU_DOWN])
+#macro	MENU_KEY_SELECT					keyboard_check(global.settings.inputs[STNG_INPUT_SELECT])
+#macro	MENU_KEY_RETURN					keyboard_check(global.settings.inputs[STNG_INPUT_RETURN])
+#macro	MENU_KEY_FILE_DELETE			keyboard_check(global.settings.inputs[STNG_INPUT_FILE_DELETE])
+#macro	MENU_KEY_TBOX_ADVANCE			keyboard_check(global.settings.inputs[STNG_INPUT_TBOX_ADVANCE])
+#macro	MENU_KEY_TBOX_LOG				keyboard_check(global.settings.inputs[STNG_INPUT_TBOX_LOG])
 
 // These macros are similar to above, but they are for checking gamepad inputs instead of the keyboard.
 #macro	GAME_PAD_RIGHT					gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_GAME_RIGHT		+ 1])
@@ -113,6 +118,15 @@
 #macro	GAME_PAD_READYWEAPON			gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_READYWEAPON	+ 1])
 #macro	GAME_PAD_FLASHLIGHT				gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_FLASHLIGHT		+ 1])
 #macro	GAME_PAD_USEWEAPON				gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_USEWEAPON		+ 1])
+#macro	MENU_PAD_RIGHT					gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_MENU_RIGHT		+ 1])
+#macro	MENU_PAD_LEFT					gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_MENU_LEFT		+ 1])
+#macro	MENU_PAD_UP						gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_MENU_UP		+ 1])
+#macro	MENU_PAD_DOWN					gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_MENU_DOWN		+ 1])
+#macro	MENU_PAD_SELECT					gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_SELECT			+ 1])
+#macro	MENU_PAD_RETURN					gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_RETURN			+ 1])
+#macro	MENU_PAD_FILE_DELETE			gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_FILE_DELETE	+ 1])
+#macro	MENU_PAD_TBOX_ADVANCE			gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_TBOX_ADVANCE	+ 1])
+#macro	MENU_PAD_TBOX_LOG				gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_TBOX_LOG		+ 1])
 
 // 
 #macro	STNG_AUDIO_MASTER				0

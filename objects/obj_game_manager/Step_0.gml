@@ -10,4 +10,7 @@ with(par_dynamic_entity){
 
 // Update the camera after all dynamic entities have been updated to ensure that it has accurate position
 // coordinates to use when positioning itself with its followed object (If it has one).
-with(CAMERA) { step_event(_delta); }
+with(CAMERA)	{ step_event(_delta); }
+
+// 
+with(TEXTBOX)	{ step_event(_delta); }
