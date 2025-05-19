@@ -21,7 +21,11 @@ for (var i = 0; i < _length; i++){
 }
 
 // 
-with(TEXTBOX) { draw_gui_event(); }
+with(TEXTBOX){
+	if (alpha == 0.0 || y >= VIEWPORT_HEIGHT)
+		break;
+	draw_gui_event();
+}
 
 draw_set_color(c_maroon);
 draw_set_halign(fa_right);

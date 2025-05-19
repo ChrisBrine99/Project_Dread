@@ -20,6 +20,13 @@ with(par_dynamic_entity){
 	end_step_event(_delta);
 }
 
+// Update the current state function for the textbox to match the value stored in the "nextState" variable at
+// the end of the step event, so state changes don't occur in the middle of a frame.
+with(TEXTBOX){
+	if (curState != nextState)
+		curState = nextState;
+}
+
 // Update the in-game playtime whenever its flag is toggled.
 if (GAME_IS_PLAYTIME_ACTIVE){
 	playtimeFraction += global.deltaTime;

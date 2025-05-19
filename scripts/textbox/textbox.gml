@@ -1,7 +1,7 @@
 // Two macros that determine the size of the textbox's text surface along the x and y axis, respectively. The
 // actual textbox's dimensions will be larger than this since this surface is only one part of the textbox.
 #macro	TBOX_SURFACE_WIDTH				280
-#macro	TBOX_SURFACE_HEIGHT				30
+#macro	TBOX_SURFACE_HEIGHT				28
 
 // Determines how many pixels away from the edges of the surface the text will be on the leftmost edge of it.
 #macro	TBOX_X_PADDING					1
@@ -14,6 +14,7 @@
 #macro	TBOX_FLAG_ACTIVE				0x00000004
 #macro	TBOX_FLAG_WIPE_DATA				0x00000008
 #macro	TBOX_FLAG_CLEAR_SURFACE			0x00000010
+#macro	TBOX_FLAG_SHOW_NAME				0x00000020
 
 // Macros that condense the checks required for specific states that the textbox must be in for it to process
 // certain aspects of the data it is displaying the user, if it is allowed to do that currently to begin with.
@@ -22,6 +23,15 @@
 #macro	TBOX_IS_ACTIVE					(flags & TBOX_FLAG_ACTIVE)
 #macro	TBOX_CAN_WIPE_DATA				(flags & TBOX_FLAG_WIPE_DATA)
 #macro	TBOX_SHOULD_CLEAR_SURFACE		(flags & TBOX_FLAG_CLEAR_SURFACE)
+#macro	TBOX_SHOULD_SHOW_NAME			(flags & TBOX_FLAG_SHOW_NAME)
+
+// Index values that point to an actor's name as a string within the game's data. Can be retrieved for use by
+// calling the function get_actor_name.
+#macro	TBOX_ACTOR_INVALID				0
+#macro	TBOX_ACTOR_PLAYER				1
+
+// 
+#macro	TBOX_Y_TARGET					120.0
 
 /// @param {Function}	index	The value of "str_textbox" as determined by GameMaker during runtime.
 function str_textbox(_index) : str_base(_index) constructor {
@@ -29,8 +39,16 @@ function str_textbox(_index) : str_base(_index) constructor {
 	
 	// The current position of the textbox on the game's GUI layer. Determines where everything is drawn as
 	// this coordinate will determine the top-left position of the entire textbox when drawn to the screen.
-	x				= 0.0;
-	y				= 120.0;
+	x				= floor((VIEWPORT_WIDTH - TBOX_SURFACE_WIDTH - 20) / 2);
+	y				= VIEWPORT_HEIGHT + 30;
+	
+	// 
+	alpha			= 0.0;
+	
+	// 
+	curState		= 0;
+	nextState		= 0;
+	lastState		= 0;
 	
 	// The surface that the current textbox's text will be drawn to, and the buffer that will store a copy of
 	// that data in memory in case the surface gets flushed from the GPU.
@@ -44,6 +62,10 @@ function str_textbox(_index) : str_base(_index) constructor {
 	textIndex		= 0;
 	nextIndex		= 0;
 	textLength		= 0;
+
+	// Stores the string that represents the name of the actor that is speaking in the current textbox. Can
+	// only be shown if the flag bit within the flags variable is set as well.
+	actorName		= "";
 	
 	// Stores the toggled and not toggled input flags from the previous frame so the input can be checked to
 	// see if it was pressed or not by the player.
@@ -65,40 +87,11 @@ function str_textbox(_index) : str_base(_index) constructor {
 		ds_list_destroy(textData);
 	}
 	
-	///	@param {Real}	delta	The difference in time between the execution of this frame and the last.
-	step_event = function(_delta){
-		// Don't allow the textbox's step event to execute as long as it isn't toggled to active.
-		if (!TBOX_IS_ACTIVE)
-			return;
-		process_textbox_input();
-		
-		// The text animation has completed, so nextChar no longer needs to have its value incremented, and
-		// the user can now press the advance key to move onto the next textbox.
-		if (nextChar == textLength){
-			if (TBOX_WAS_ADVANCE_PRESSED){
-				if (nextIndex == -1){ // The next index is invalid, the textbox will deactivate itself.
-					deactivate_textbox();
-					return;
-				}
-				set_textbox_index(nextIndex);
-			}
-			return;
-		}
-		
-		// Increment the value of nextChar by the current delta multiplied against the speed of the text as
-		// defined within the current struct being referenced within the textData data structure. Pressing
-		// the advance key before this value has reached the desired text length will skip this process and
-		// display all text on the screen instantly.
-		nextChar += _delta;
-		if (TBOX_WAS_ADVANCE_PRESSED || nextChar > textLength)
-			nextChar = textLength;
-	}
-	
 	draw_gui_event = function(){
 		// Ensures that the surface will be valid should it randomly be flushed from memory by the GPU. Then,
 		// the previous surface's contents are copied from their buffer onto the newly formed surface.
 		if (!surface_exists(textSurface)){
-			textSurface = surface_create(TEXTBOX_WIDTH, TEXTBOX_HEIGHT);
+			textSurface = surface_create(TBOX_SURFACE_WIDTH, TBOX_SURFACE_HEIGHT);
 			buffer_set_surface(surfBuffer, textSurface, 0);
 		}
 		
@@ -118,8 +111,10 @@ function str_textbox(_index) : str_base(_index) constructor {
 		if (TBOX_IS_ACTIVE && curChar < _nextChar){
 			surface_set_target(textSurface);
 				
-			// Set the font outside of the loop since all text drawn shares the same one.
+			// Set the font outside of the loop since all text drawn shares the same one. Also set the alpha
+			// value to 1.0 to ensure the text won't accidentally be drawn onto the surface with transparency.
 			draw_set_font(fnt_small);
+			draw_set_alpha(1.0);
 			draw_set_color(c_white); // TEMPORARY until color information is added to textbox data.
 			
 			// Grab a reference to the current textbox's contents and then begin adding characters to the text
@@ -127,7 +122,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 			var _curText = textData[| textIndex];
 			var _curChar = "";
 			while(curChar < _nextChar){
-				_curChar = string_char_at(_curText.data, curChar);
+				_curChar = string_char_at(_curText.content, curChar);
 				curChar += 1;
 				
 				// Newline character found; the x offset of the character is reset and the y value if offset
@@ -155,9 +150,11 @@ function str_textbox(_index) : str_base(_index) constructor {
 		var _xPos = floor(x);
 		var _yPos = floor(y);
 		
+		draw_sprite_ext(spr_rectangle, 0, _xPos, _yPos, VIEWPORT_WIDTH - 20, 50, 0.0, c_white, alpha * 0.25);
+		
 		// Draws the text surface twice to create a shadow effect beneath the actual surface contents.
-		draw_surface_ext(textSurface, _xPos + 1, _yPos + 1, 1.0, 1.0, 0.0, c_black, 0.75);
-		draw_surface_ext(textSurface, _xPos, _yPos, 1.0, 1.0, 0.0, c_white, 1.0);
+		draw_surface_ext(textSurface, _xPos + 11, _yPos + 15, 1.0, 1.0, 0.0, c_black, alpha * 0.75);
+		draw_surface_ext(textSurface, _xPos + 10, _yPos + 15, 1.0, 1.0, 0.0, c_white, alpha);
 	}
 	
 	/// @description 
@@ -198,7 +195,10 @@ function str_textbox(_index) : str_base(_index) constructor {
 		if (_clearDataOnDeactivation)
 			flags |= TBOX_FLAG_WIPE_DATA;
 		
-		// Finally, assign the textbox's index to what was passed into this first function's argument parameter.
+		// Finally, start the opening animation, assign the textbox's index to what was passed into this first
+		// function's argument parameter, and set the y position of the textbox to what is needed for the 
+		// opening animation to look correct.
+		object_set_state(state_open_animation);
 		set_textbox_index(_startingIndex);
 	}
 	
@@ -208,6 +208,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 	/// setting that flag upon the next time this funciton's called.
 	///	
 	deactivate_textbox = function(){
+		object_set_state(0);
 		flags &= ~TBOX_FLAG_ACTIVE;
 		if (!TBOX_CAN_WIPE_DATA) // Prevent deleting any text information if the flag isn't toggled.
 			return;
@@ -231,27 +232,43 @@ function str_textbox(_index) : str_base(_index) constructor {
 	set_textbox_index = function(_index){
 		var _textData = textData[| _index];
 		if (is_undefined(_textData)){ // Invalid index requested; clear the textbox.
-			deactivate_textbox();
+			object_set_state(state_close_animation);
+			nextIndex = -1;
 			return;
 		}
+		
+		var _prevActorIndex	= textData[| textIndex].actorIndex;
+		var _newActorIndex	= _textData.actorIndex;
+		if (_prevActorIndex != _newActorIndex)
+			object_set_state(state_close_animation);
+		
 		flags		   |= TBOX_FLAG_CLEAR_SURFACE;
-		textLength		= string_length(_textData.data) + 1;
+		textLength		= string_length(_textData.content) + 1;
 		textIndex		= _index;
 		nextIndex		= _textData.nextIndex;
+		actorName		= get_actor_name(_newActorIndex);
 		curChar			= 1;	// Reset these to their defaults so the typing animation can play again.
 		nextChar		= 1;
 		charX			= TBOX_X_PADDING;
 		charY			= TBOX_Y_PADDING;
+		
+		// Clear or set the flag that is responsible for allowing a textbox to display graphics related to an
+		// actor's name alongside that name itself depending on what "actorName" is set to by the call to the
+		// get_actor_name.
+		if (actorName != "") { flags &= ~TBOX_FLAG_SHOW_NAME; }
+		else				 { flags |=  TBOX_FLAG_SHOW_NAME; }
 	}
 	
 	/// @description 
 	///	Adds another element to the textData data structure for the textbox to utilize when set to view its
 	/// contents. It will properly format the string so it doesn't overflow the textbox horizontally before
-	/// the string is converted into a text content struct containing the string and data is references.
+	/// the string is converted into a text content struct containing the string and data is references. It
+	///	also discards any text that should exceed the 
 	///	
 	///	@param {String}	text		The text to format and enqueue for the textbox to display when ready.
+	/// @param {Real}	actorIndex	(Optional) If set to a value greater than 0, the actor's name relative to the index will be shown.
 	///	@param {Real}	nextIndex	(Optional) Determines which textbox out of the current data is after this one.
-	queue_new_text = function(_text, _nextIndex = -1){
+	queue_new_text = function(_text, _actorIndex = 0, _nextIndex = -1){
 		var _size = ds_list_size(textData);
 		if (_nextIndex < -1 || _nextIndex >= _size)
 			return;
@@ -273,7 +290,14 @@ function str_textbox(_index) : str_base(_index) constructor {
 			if (_curChar == " " || i == _length){
 				// The text will overflow the textbox horizontally, so the current line is added to the 
 				// formatted string and a new line will begin.
-				if (_curLineWidth + _curWordWidth > TEXTBOX_WIDTH + TEXTBOX_X_PADDING){
+				if (_curLineWidth + _curWordWidth > TBOX_SURFACE_WIDTH - (TBOX_X_PADDING * 2)){
+					// Make sure the text doesn't also overflow vertically if another line was going to be
+					// added to what will be shown on the screen. If so, exit the loop early.
+					if (string_height(_fullText + "\nM") > TBOX_SURFACE_HEIGHT - (TBOX_Y_PADDING * 2)){
+						_fullText  += _curLine;
+						_curLine	= "";
+						break;
+					}
 					_fullText	   += _curLine + "\n";
 					_curLineWidth	= _curWordWidth + string_width(" ");
 					_curLine		= _curWord + " ";
@@ -289,6 +313,13 @@ function str_textbox(_index) : str_base(_index) constructor {
 			// A newline character already exists within the string, so a new line will be started without
 			// the current line having to exceed the horizontal limit of the textbox.
 			if (_curChar == "\n"){
+				// Make sure the text doesn't also overflow vertically if another line was going to be
+				// added to what will be shown on the screen. If so, exit the loop early.
+				if (string_height(_fullText + "\nM") > TBOX_SURFACE_HEIGHT - (TBOX_Y_PADDING * 2)){
+					_fullText  += _curLine + _curWord;
+					_curLine	= "";
+					break;
+				}
 				_fullText	   += _curLine + _curWord + "\n";
 				_curLineWidth	= 0;
 				_curLine		= "";
@@ -305,13 +336,113 @@ function str_textbox(_index) : str_base(_index) constructor {
 		
 		// Make sure the final line is added to the parsed string if it wasn't set within the loop on its
 		// last iteration.
-		if (_curLine != "") 
+		if (_curLine != "")
 			_fullText += _curLine;
+		
+		// Check to see if the actor index specified is valid by quickly calling the function for getting an
+		// actor's name. If this function returnes its default value of an empty string, no name will be shown. 
+		if (_actorIndex != TBOX_ACTOR_INVALID && get_actor_name(_actorIndex) == "")
+			_actorIndex = TBOX_ACTOR_INVALID;
 		
 		// Finally, create a new struct for the parsed text's contents and paired data.
 		ds_list_add(textData, {
-			data		: _fullText,
+			content		: _fullText,
+			actorIndex	: _actorIndex,
 			nextIndex	: _nextIndex,
 		});
+	}
+	
+	/// @description
+	///	Simply returns a string representing the textbox's current speaker/actor. If the value isn't found,
+	/// an empty string will be returned to signify no name should be show for the currently visible textbox.
+	///	
+	///	@param {Real}	actorIndex	A numerical value that links to a character's name or an empty string.
+	get_actor_name = function(_actorIndex){
+		switch(_actorIndex){
+			default:
+			case TBOX_ACTOR_INVALID:		return "";
+			case TBOX_ACTOR_PLAYER:			return "Claire";
+		}
+	}
+	
+	/// @description 
+	/// The textbox's main state. It allows the player to skip over the textbox's typing animation with an
+	/// early press of the advance text input, and will also allow them to move onto the next textbox by
+	/// pressing that same key so long as all the text for the current textbox is visible to them.
+	///	
+	///	@param {Real}	delta 
+	state_default = function(_delta){
+		process_textbox_input();
+		
+		// The text animation has completed, so nextChar no longer needs to have its value incremented, and
+		// the user can now press the advance key to move onto the next textbox.
+		if (nextChar == textLength){
+			if (TBOX_WAS_ADVANCE_PRESSED){
+				if (nextIndex == -1){ // The next index is invalid, the textbox will deactivate itself.
+					object_set_state(state_close_animation);
+					return;
+				}
+				set_textbox_index(nextIndex);
+			}
+			return;
+		}
+		
+		// Increment the value of nextChar by the current delta multiplied against the speed of the text as
+		// defined within the current struct being referenced within the textData data structure. Pressing
+		// the advance key before this value has reached the desired text length will skip this process and
+		// display all text on the screen instantly.
+		nextChar += _delta;
+		if (TBOX_WAS_ADVANCE_PRESSED || nextChar > textLength)
+			nextChar = textLength;
+	}
+	
+	/// @description 
+	/// Executes the opening animation for the textbox, which fades it into visiblity on the GUI layer while
+	/// also smoothly shifting the textbox upward from the bottom of the screen. Once the target y position
+	/// is reached AND the alpha is set to 1.0, the opening animation will be considered complete.
+	///	
+	///	@param {Real}	delta 
+	state_open_animation = function(_delta){
+		// Give the player control over the textbox by shifting into its default state function. This state is
+		// also responsible for "typing" the characters onto the textbox until they're all shown.
+		if (alpha == 1.0 && y == TBOX_Y_TARGET){
+			object_set_state(state_default);
+			return;
+		}
+		
+		// Fades the entire textbox into full visiblity.
+		if (alpha < 1.0){
+			alpha += 0.075 * _delta;
+			if (alpha > 1.0)
+				alpha = 1.0;
+		}
+		
+		// Move the y position from where it is initially set below the visible portion of the screen to the
+		// desired position set by this opening animation.
+		if (y != TBOX_Y_TARGET){
+			y += (TBOX_Y_TARGET - y) * 0.2 * _delta;
+			if (abs(y - TBOX_Y_TARGET) <= 1.0 * _delta)
+				y = TBOX_Y_TARGET;
+		}
+	}
+	
+	/// @description 
+	/// Executes the closing animation for the textbox, which simply fades it out at a linear rate until it
+	/// is completely invisible to the player. Then, it determines whether to deactivate the current textbox
+	/// or re-opens it if an actor name change is why the textbox "closed".
+	///	
+	///	@param {Real}	delta 
+	state_close_animation = function(_delta){
+		// Repeat the opening animation or deactivate the textbox depending on the current value of nextIndex.
+		if (alpha == 0.0){
+			if (nextIndex == -1) { deactivate_textbox(); }
+			else				 { object_set_state(state_open_animation); }
+			return;
+		}
+		
+		// Fades the textbox until it is no longer visible on the screen.
+		alpha -= 0.075 * _delta;
+		if (alpha <= 0.0) // Prevent the value from going negative.
+			alpha = 0.0;
 	}
 }

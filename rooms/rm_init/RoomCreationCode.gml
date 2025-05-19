@@ -13,11 +13,11 @@ ds_map_add(global.sInstances, KEY_PLAYER,		instance_create_depth(100, 100, 30, o
 // Initialize the camera viewport and the window's dimensions; settings the starting coordinates as well.
 with(CAMERA){
 	camera_set_viewport(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
-	camera_set_followed_object(PLAYER, false);
+	camera_set_followed_object(PLAYER, true);
 }
 
 with(TEXTBOX){
-	queue_new_text("Test test\ntest test test test this is a test to see if the textbox can format the text properly!!!");
+	queue_new_text("Test test\ntest test test test this is a test to see if the textbox can format the gogungo\ntext\nproperly!!!", TBOX_ACTOR_PLAYER);
 	activate_textbox(0);
 }
 
