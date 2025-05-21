@@ -86,9 +86,10 @@ function instance_find_struct(_id){
 /// @param {Function}	structFunc		The struct function to check.
 function struct_is_special(_structFunc){
 	switch(_structFunc){
-		default:			return false;
-		case str_textbox:	return true;
-		case str_camera:	return true;
-		case str_base:		return true;
+		default:				return false;
+		case str_textbox:
+		case str_camera:
+		case str_base:
+		case str_base_menu:		return true;
 	}
 }

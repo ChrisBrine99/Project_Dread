@@ -1,3 +1,5 @@
+#region Macros for Textbox Struct
+
 // Two macros that determine the size of the textbox's text surface along the x and y axis, respectively. The
 // actual textbox's dimensions will be larger than this since this surface is only one part of the textbox.
 #macro	TBOX_SURFACE_WIDTH				280
@@ -31,7 +33,11 @@
 #macro	TBOX_ACTOR_PLAYER				1
 
 // 
-#macro	TBOX_Y_TARGET					120.0
+#macro	TBOX_Y_TARGET					VIEWPORT_HEIGHT - 60.0
+
+#endregion Macros for Textbox Struct
+
+#region Textbox Struct Definition
 
 /// @param {Function}	index	The value of "str_textbox" as determined by GameMaker during runtime.
 function str_textbox(_index) : str_base(_index) constructor {
@@ -446,3 +452,5 @@ function str_textbox(_index) : str_base(_index) constructor {
 			alpha = 0.0;
 	}
 }
+
+#endregion Textbox Struct Definition

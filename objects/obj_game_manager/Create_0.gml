@@ -240,38 +240,6 @@ global.settings			= {
 		
 	],
 	
-	menuKeyRight		: vk_right,		// Inputs when navigating menus
-	menuKeyLeft			: vk_left,
-	menuKeyUp			: vk_up,
-	menuKeyDown			: vk_down,
-	menuKeySelect		: vk_z,
-	menuKeyReturn		: vk_x,
-	menuKeyFileDelete	: vk_d,
-	menuKeyTextboxNext	: vk_z,			// Inputs for the textbox window
-	menuKeyTextLog		: vk_x,
-	
-	gameKeyRight		: vk_right,		// Inputs during standard gameplay
-	gameKeyLeft			: vk_left,
-	gameKeyUp			: vk_up,
-	gameKeyDown			: vk_down,
-	gameKeyInteract		: vk_z,
-	gameKeySprint		: vk_shift,
-	gameKeyReadyWeapon	: vk_space,
-	gameKeyFlashlight	: vk_f,
-	gameKeyUseWeapon	: vk_z,
-	
-	
-	// --- Input Settings (Gamepad) --- //
-	gamePadRight		: gp_padr,		// Inputs during standard gameplay
-	gamePadLeft			: gp_padl,
-	gamePadUp			: gp_padu,
-	gamePadDown			: gp_padd,
-	gamePadInteract		: gp_face1,
-	gamePadSprint		: gp_shoulderl,
-	gamePadReadyWeapon	: gp_shoulderr,
-	gamePadFlashlight	: gp_face4,
-	gamePadUseWeapon	: gp_face1,
-	
 	// --- Other Gamepad Settings --- //
 	stickDeadzone		: 0.15,
 	triggerThreshold	: 0.5,

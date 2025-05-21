@@ -1,12 +1,12 @@
 {
   "$GMScript":"v1",
-  "%Name":"textbox",
+  "%Name":"base_menu",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"textbox",
+  "name":"base_menu",
   "parent":{
-    "name":"ui",
-    "path":"folders/Scripts/Structs/Standard/ui.yy",
+    "name":"Menus",
+    "path":"folders/Scripts/Structs/Standard/Menus.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",
