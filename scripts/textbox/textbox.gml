@@ -1,14 +1,5 @@
 #region Macros for Textbox Struct
 
-// Two macros that determine the size of the textbox's text surface along the x and y axis, respectively. The
-// actual textbox's dimensions will be larger than this since this surface is only one part of the textbox.
-#macro	TBOX_SURFACE_WIDTH				280
-#macro	TBOX_SURFACE_HEIGHT				28
-
-// Determines how many pixels away from the edges of the surface the text will be on the leftmost edge of it.
-#macro	TBOX_X_PADDING					1
-#macro	TBOX_Y_PADDING					2
-
 // Macros that store the numerical values for each bit within the textbox's "flags" variable that are utilized
 // by it to achieve some sort of state-based functionality outside of the standard step event state machine.
 #macro	TBOX_INFLAG_ADVANCE				0x00000001
@@ -20,20 +11,34 @@
 
 // Macros that condense the checks required for specific states that the textbox must be in for it to process
 // certain aspects of the data it is displaying the user, if it is allowed to do that currently to begin with.
-#macro	TBOX_WAS_ADVANCE_PRESSED		((flags & TBOX_INFLAG_ADVANCE)	&& !(prevInputFlags & TBOX_INFLAG_ADVANCE))
-#macro	TBOX_WAS_TEXT_LOG_PRESSED		((flags & TBOX_INFLAG_TEXT_LOG)	&& !(prevInputFlags & TBOX_INFLAG_TEXT_LOG))
-#macro	TBOX_IS_ACTIVE					(flags & TBOX_FLAG_ACTIVE)
-#macro	TBOX_CAN_WIPE_DATA				(flags & TBOX_FLAG_WIPE_DATA)
-#macro	TBOX_SHOULD_CLEAR_SURFACE		(flags & TBOX_FLAG_CLEAR_SURFACE)
-#macro	TBOX_SHOULD_SHOW_NAME			(flags & TBOX_FLAG_SHOW_NAME)
+#macro	TBOX_WAS_ADVANCE_PRESSED		((flags & TBOX_INFLAG_ADVANCE)		!= 0 && (prevInputFlags & TBOX_INFLAG_ADVANCE)	== 0)
+#macro	TBOX_WAS_TEXT_LOG_PRESSED		((flags & TBOX_INFLAG_TEXT_LOG)		!= 0 && (prevInputFlags & TBOX_INFLAG_TEXT_LOG)	== 0)
+#macro	TBOX_IS_ACTIVE					((flags & TBOX_FLAG_ACTIVE)			!= 0)
+#macro	TBOX_CAN_WIPE_DATA				((flags & TBOX_FLAG_WIPE_DATA)		!= 0)
+#macro	TBOX_SHOULD_CLEAR_SURFACE		((flags & TBOX_FLAG_CLEAR_SURFACE)	!= 0)
+#macro	TBOX_SHOULD_SHOW_NAME			((flags & TBOX_FLAG_SHOW_NAME)		!= 0)
 
 // Index values that point to an actor's name as a string within the game's data. Can be retrieved for use by
 // calling the function get_actor_name.
 #macro	TBOX_ACTOR_INVALID				0
 #macro	TBOX_ACTOR_PLAYER				1
 
-// 
+// Two macros that determine the size of the textbox's text surface along the x and y axis, respectively. The
+// actual textbox's dimensions will be larger than this since this surface is only one part of the textbox.
+#macro	TBOX_SURFACE_WIDTH				280
+#macro	TBOX_SURFACE_HEIGHT				28
+
+// Determines how many pixels away from the edges of the surface the text will be on the leftmost edge of it.
+#macro	TBOX_X_PADDING					1
+#macro	TBOX_Y_PADDING					2
+
+// Determines the position on the GUI the textbox will rest at after its opening transition has completed.
 #macro	TBOX_Y_TARGET					VIEWPORT_HEIGHT - 60.0
+
+// Determines the speed of the the elements involved in the textbox's open and closing animations. The first
+// value is only utilized during opening, and the second is utilized by both.
+#macro	TBOX_ANIM_MOVE_SPEED			0.2
+#macro	TBOX_ANIM_ALPHA_SPEED			0.075
 
 #endregion Macros for Textbox Struct
 
@@ -48,10 +53,12 @@ function str_textbox(_index) : str_base(_index) constructor {
 	x				= floor((VIEWPORT_WIDTH - TBOX_SURFACE_WIDTH - 20) / 2);
 	y				= VIEWPORT_HEIGHT + 30;
 	
-	// 
+	// Determines the overall transparency level for every graphics element of the textbox.
 	alpha			= 0.0;
 	
-	// 
+	// State variables that function exactly like how they do when an entity utilizes them; processing a single
+	// function that represents the current state of the object; allowing them to move to other states as required
+	// during that initial state's output.
 	curState		= 0;
 	nextState		= 0;
 	lastState		= 0;
@@ -418,7 +425,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 		
 		// Fades the entire textbox into full visiblity.
 		if (alpha < 1.0){
-			alpha += 0.075 * _delta;
+			alpha += TBOX_ANIM_MOVE_SPEED * _delta;
 			if (alpha > 1.0)
 				alpha = 1.0;
 		}
@@ -426,8 +433,8 @@ function str_textbox(_index) : str_base(_index) constructor {
 		// Move the y position from where it is initially set below the visible portion of the screen to the
 		// desired position set by this opening animation.
 		if (y != TBOX_Y_TARGET){
-			y += (TBOX_Y_TARGET - y) * 0.2 * _delta;
-			if (abs(y - TBOX_Y_TARGET) <= 1.0 * _delta)
+			y += (TBOX_Y_TARGET - y) * TBOX_ANIM_MOVE_SPEED * _delta;
+			if (abs(y - TBOX_Y_TARGET) <= max(1.0, _delta))
 				y = TBOX_Y_TARGET;
 		}
 	}
@@ -447,7 +454,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 		}
 		
 		// Fades the textbox until it is no longer visible on the screen.
-		alpha -= 0.075 * _delta;
+		alpha -= TBOX_ANIM_MOVE_SPEED * _delta;
 		if (alpha <= 0.0) // Prevent the value from going negative.
 			alpha = 0.0;
 	}

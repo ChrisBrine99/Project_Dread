@@ -5,8 +5,8 @@
   "isDnD":false,
   "name":"textbox",
   "parent":{
-    "name":"ui",
-    "path":"folders/Scripts/Structs/Standard/ui.yy",
+    "name":"UI",
+    "path":"folders/Scripts/Structs/Standard/UI.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

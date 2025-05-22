@@ -1,5 +1,6 @@
 #region Macros for Base Menu Struct
 
+// 
 #macro	MENU_FLAG_OPTINFO_INITIALIZED	0x01000000
 #macro	MENU_FLAG_OPTIONS_INITIALIZED	0x02000000
 #macro	MENU_FLAG_PARAMS_INITIALIZED	0x04000000
@@ -9,13 +10,33 @@
 #macro	MENU_FLAG_ACTIVE				0x40000000
 // NOTE --- bit 0x80000000 is already used by STR_FLAG_PERSISTENT as defined in the script "base". 
 
-#macro	MENU_IS_OPTINFO_INITIALIZED		(flags & MENU_FLAG_OPTINFO_INITIALIZED)
-#macro	MENU_ARE_OPTIONS_INITIALIZED	(flags & MENU_FLAG_OPTIONS_INITIALIZED)
-#macro	MENU_ARE_PARAMS_INITIALIZED		(flags & MENU_FLAG_PARAMS_INITIALIZED)
-#macro	MENU_HAS_SELECTABLE_OPTIONS		(flags & MENU_FLAG_SELECTABLE_OPTIONS)
-#macro	MENU_IS_CURSOR_AUTOSCROLLING	(flags & MENU_FLAG_CURSOR_AUTOSCROLL)
-#macro	MENU_IS_VISIBLE					(flags & MENU_FLAG_VISIBLE)
-#macro	MENU_IS_ACTIVE					(flags & MENU_FLAG_ACTIVE)
+// 
+#macro	MENU_IS_OPTINFO_INITIALIZED		((flags & MENU_FLAG_OPTINFO_INITIALIZED)	!= 0)
+#macro	MENU_ARE_OPTIONS_INITIALIZED	((flags & MENU_FLAG_OPTIONS_INITIALIZED)	!= 0)
+#macro	MENU_ARE_PARAMS_INITIALIZED		((flags & MENU_FLAG_PARAMS_INITIALIZED)		!= 0)
+#macro	MENU_HAS_SELECTABLE_OPTIONS		((flags & MENU_FLAG_SELECTABLE_OPTIONS)		!= 0)
+#macro	MENU_IS_CURSOR_AUTOSCROLLING	((flags & MENU_FLAG_CURSOR_AUTOSCROLL)		!= 0)
+#macro	MENU_IS_VISIBLE					((flags & MENU_FLAG_VISIBLE)				!= 0)
+#macro	MENU_IS_ACTIVE					((flags & MENU_FLAG_ACTIVE)					!= 0)
+
+// 
+#macro	MINPUT_FLAG_CURSOR_RIGHT		0x00000001
+#macro	MINPUT_FLAG_CURSOR_LEFT			0x00000002
+#macro	MINPUT_FLAG_CURSOR_UP			0x00000004
+#macro	MINPUT_FLAG_CURSOR_DOWN			0x00000008
+#macro	MINPUT_FLAG_SELECT				0x00000010
+#macro	MINPUT_FLAG_AUX_SELECT			0x00000020
+#macro	MINPUT_FLAG_RETURN				0x00000040
+#macro	MINPUT_FLAG_AUX_RETURN			0x00000080
+
+// 
+#macro	MINPUT_IS_RIGHT_HELD			((inputFlags & MINPUT_FLAG_CURSOR_RIGHT)	!= 0 && (inputFlags & MINPUT_FLAG_CURSOR_LEFT)		== 0)
+#macro	MINPUT_IS_LEFT_HELD				((inputFlags & MINPUT_FLAG_CURSOR_LEFT)		!= 0 && (inputFlags & MINPUT_FLAG_CURSOR_RIGHT)		== 0)
+#macro	MINPUT_IS_UP_HELD				((inputFlags & MINPUT_FLAG_CURSOR_UP)		!= 0 && (inputFlags & MINPUT_FLAG_CURSOR_DOWN)		== 0)
+#macro	MINPUT_IS_DOWN_HELD				((inputFlags & MINPUT_FLAG_CURSOR_DOWN)		!= 0 && (inputFlags & MINPUT_FLAG_CURSOR_UP)		== 0)
+#macro	MINPUT_IS_SELECT_PRESSED		((inputFlags & MINPUT_FLAG_SELECT)			!= 0 && (prevInputFlags & MINPUT_FLAG_SELECT)		== 0)
+#macro	MINPUT_IS_AUX_SELECT_PRESSED	((inputFlags & MINPUT_FLAG_AUX_SELECT)		!= 0 && (prevInputFlags & MINPUT_FLAG_AUX_SELECT)	== 0)
+#macro	MINPUT_IS_RETURN_PRESSED		((inputFlags & MINPUT_FLAG_AUX_RETURN)		!= 0 && (prevInputFlags & MINPUT_FLAG_AUX_RETURN)	== 0)
 
 #endregion Macros for Base Menu Struct
 
@@ -23,46 +44,64 @@
 
 /// @param {Function}	index	The value of "str_base_menu" as determined by GameMaker during runtime.
 function str_base_menu(_index) : str_base(_index) constructor {
-	// 
-	curState		= 0;
-	nextState		= 0;
-	lastState		= 0;
+	// Stores the currently executing state, as well as the last state to be executed AND the state to shift to 
+	// at the end of the current frame if applicable (Its value matches that of "curState" otherwise).
+	curState			= 0;
+	nextState			= 0;
+	lastState			= 0;
+	
+	// Stores the inputs that were held versus not held for the current and last frame of gameplay. From this, 
+	// checks to see if they've been pressed, held, or released can be performed quickly through bitwise math.
+	inputFlags			= 0;
+	prevInputFlags		= 0;
+	
+	// Variables for input that are exclusive to a controller with at least one analog stick (Second pair of
+	// values is used for a potential second analog stick). Each pair will simply store the values retrieved
+	// from each of the sticks when inputs are handled by the current menu.
+	padStickInputLH		= 0.0;
+	padStickInputLV		= 0.0;
+	padStickInputRH		= 0.0;
+	padStickInputRV		= 0.0;
+	
+	// Variables for input that are exclusive to a menu. They store the value corresponding to the keycodes and
+	// gamepad buttons that correspond to secondary inputs that allow a menu option to be selected or the return
+	// logic to be activated, respectively.
+	keyAuxSelect		= vk_nokey;
+	keyAuxReturn		= vk_nokey;
+	padAuxSelect		= 0;
+	padAuxReturn		= 0;
+	
+	// Stores the widdth and height of the menu in options.
+	width				= 0;	// Set on a per-menu basis.
+	height				= 0;	// Set automatically as menu options are added.
 	
 	// 
-	inputFlags		= 0;
-	prevInputFlags	= 0;
+	options				= ds_list_create();
+	optionX				= 0;
+	optionY				= 0;
+	optionSpacingX		= 0;
+	optionSpacingY		= 0;
 	
 	// 
-	width			= 0;	// Set on a per-menu basis.
-	height			= 0;	// Set automatically as menu options are added.
-	
-	// 
-	options			= ds_list_create();
-	optionX			= 0;
-	optionY			= 0;
-	optionSpacingX	= 0;
-	optionSpacingY	= 0;
-	
-	// 
-	curOption		= -1;
-	selOption		= -1;
-	auxSelOption	= -1;
+	curOption			= -1;
+	selOption			= -1;
+	auxSelOption		= -1;
 	
 	// Determines how much of the menu is visible to the user at any given time. This region will be shifted
 	// as the cursor is moved relative to what the two variable below this group are set to.
-	visibleAreaX	= 0;
-	visibleAreaY	= 0;
-	visibleAreaW	= 0;
-	visibleAreaH	= 0;
+	visibleAreaX		= 0;
+	visibleAreaY		= 0;
+	visibleAreaW		= 0;
+	visibleAreaH		= 0;
 	
 	// Defines how far from the edge of the visible area along the x or y axis the cursor must be before another
 	// movement in the given direction will shift the current viewable region alongside the cursor's movement
 	// so long as there are further rows or columns in that movement direction.
-	visAreaShiftX	= 0;
-	visAreaShiftY	= 0;
+	visAreaShiftX		= 0;
+	visAreaShiftY		= 0;
 	
 	// 
-	alpha			= 1.0;
+	alpha				= 1.0;
 	
 	destroy_event = function(){
 		var _length = ds_list_size(options);
@@ -89,9 +128,9 @@ function str_base_menu(_index) : str_base(_index) constructor {
 		if (MENU_ARE_PARAMS_INITIALIZED)
 			return; // Don't reinitialize menu parameters.
 		
-		flags = (_isActive << 30)	// Will be either 0x00000000 or 0x40000000
-			  | (_isVisible << 29)	// Will be either 0x00000000 or 0x20000000
-			  | MENU_FLAG_PARAMS_INITIALIZED;
+		flags |= (_isActive << 30)	// Will be either 0x00000000 or 0x40000000
+			   | (_isVisible << 29)	// Will be either 0x00000000 or 0x20000000
+			   | MENU_FLAG_PARAMS_INITIALIZED;
 		// TODO -- Apply "_isEndless" flag here as well.
 		
 		// Apply base parameters based on respective argument values.
@@ -116,6 +155,15 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	initialize_option_params = function(_x, _y, _xSpacing, _ySpacing, _areSelectable = false){
 		if (MENU_ARE_OPTIONS_INITIALIZED)
 			return; // Don't reinitialize option parameters.
+		
+		flags |= (_areSelectable << 25) // Will be either 0x00000000 or 0x02000000
+			   | MENU_FLAG_OPTIONS_INITIALIZED;
+		
+		// Apply base parameters based on respective argument values.
+		optionX			= _x;
+		optionY			= _y;
+		optionSpacingX	= _xSpacing;
+		optionSpacingY	= _ySpacing;
 	}
 	
 	/// @description 
@@ -207,6 +255,45 @@ function str_base_menu(_index) : str_base(_index) constructor {
 		if (!MENU_ARE_OPTIONS_INITIALIZED)
 			return -1; // Return default error value is option params haven't been set.
 		return ds_list_find_index(options, _name);
+	}
+	
+	/// @description 
+	///	Gets player input for the menu in question. It handles getting inputs from both the gamepad and the
+	/// keyboard, but prioritizes the one that is currently active. The previous frame's inputs are stored in
+	/// the prevInputFlags variable, so the input can be checked to see if it was pressed, held, or released
+	/// with only a single keyboard_* or gamepad_* per input.
+	///	
+	process_player_input = function(){
+		prevInputFlags	= inputFlags;
+		inputFlags		= 0;
+		
+		if (GAME_IS_GAMEPAD_ACTIVE){
+			inputFlags |= (MENU_PAD_RIGHT				 ); // Offset based on position of the bit within the variable.
+			inputFlags |= (MENU_PAD_LEFT			<<  1);
+			inputFlags |= (MENU_PAD_UP				<<  2);
+			inputFlags |= (MENU_PAD_DOWN			<<  3);
+			inputFlags |= (MENU_PAD_SELECT			<<  4);
+			inputFlags |= (MENU_PAD_RETURN			<<  6);
+			
+			// Only check for auxiliary select/return inputs so long as their variables responsible for storing
+			// those gamepad bindings are set to something other than their default value, respectively.
+			if (padAuxSelect != 0) { inputFlags |= (gamepad_button_check_pressed(global.gamepadID, padAuxSelect) <<  5); }
+			if (padAuxReturn != 0) { inputFlags |= (gamepad_button_check_pressed(global.gamepadID, padAuxReturn) <<  7); }
+			
+			return;
+		}
+		
+		inputFlags |= (MENU_KEY_RIGHT				 ); // Offset based on position of the bit within the variable.
+		inputFlags |= (MENU_KEY_LEFT			<<  1);
+		inputFlags |= (MENU_KEY_UP				<<  2);
+		inputFlags |= (MENU_KEY_DOWN			<<  3);
+		inputFlags |= (MENU_KEY_SELECT			<<  4);
+		inputFlags |= (MENU_KEY_RETURN			<<  6);
+		
+		// Only check for auxiliary select/return inputs so long as their variables responsible for storing
+		// those keyboard bindings are set to something other than their default value, respectively.
+		if (keyAuxSelect != vk_nokey) { inputFlags |= (keyboard_check_pressed(keyAuxSelect) <<  5); }
+		if (keyAuxReturn != vk_nokey) { inputFlags |= (keyboard_check_pressed(keyAuxReturn) <<  7); }
 	}
 }
 
