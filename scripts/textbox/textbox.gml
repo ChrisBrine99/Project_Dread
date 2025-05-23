@@ -165,6 +165,8 @@ function str_textbox(_index) : str_base(_index) constructor {
 		
 		draw_sprite_ext(spr_rectangle, 0, _xPos, _yPos, VIEWPORT_WIDTH - 20, 50, 0.0, c_white, alpha * 0.25);
 		
+		draw_text(5, 80, string("alpha: {0}\ny: {1}", alpha, y));
+		
 		// Draws the text surface twice to create a shadow effect beneath the actual surface contents.
 		draw_surface_ext(textSurface, _xPos + 11, _yPos + 15, 1.0, 1.0, 0.0, c_black, alpha * 0.75);
 		draw_surface_ext(textSurface, _xPos + 10, _yPos + 15, 1.0, 1.0, 0.0, c_white, alpha);
@@ -425,7 +427,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 		
 		// Fades the entire textbox into full visiblity.
 		if (alpha < 1.0){
-			alpha += TBOX_ANIM_MOVE_SPEED * _delta;
+			alpha += TBOX_ANIM_ALPHA_SPEED * _delta;
 			if (alpha > 1.0)
 				alpha = 1.0;
 		}
@@ -434,7 +436,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 		// desired position set by this opening animation.
 		if (y != TBOX_Y_TARGET){
 			y += (TBOX_Y_TARGET - y) * TBOX_ANIM_MOVE_SPEED * _delta;
-			if (abs(y - TBOX_Y_TARGET) <= max(1.0, _delta))
+			if (point_distance(0, y, 0, TBOX_Y_TARGET) <= max(1.0, _delta))
 				y = TBOX_Y_TARGET;
 		}
 	}
