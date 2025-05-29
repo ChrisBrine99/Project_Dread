@@ -20,6 +20,9 @@
 #macro	MENU_IS_ACTIVE					((flags & MENU_FLAG_ACTIVE)					!= 0)
 
 // 
+#macro	MENU_NOT_PROPERLY_INITIALIZED	((flags & (MENU_FLAG_OPTIONS_INITIALIZED | MENU_FLAG_PARAMS_INITIALIZED)) != (MENU_FLAG_OPTIONS_INITIALIZED | MENU_FLAG_PARAMS_INITIALIZED))
+
+// 
 #macro	MINPUT_FLAG_CURSOR_RIGHT		0x00000001
 #macro	MINPUT_FLAG_CURSOR_LEFT			0x00000002
 #macro	MINPUT_FLAG_CURSOR_UP			0x00000004
@@ -37,6 +40,20 @@
 #macro	MINPUT_IS_SELECT_PRESSED		((inputFlags & MINPUT_FLAG_SELECT)			!= 0 && (prevInputFlags & MINPUT_FLAG_SELECT)		== 0)
 #macro	MINPUT_IS_AUX_SELECT_PRESSED	((inputFlags & MINPUT_FLAG_AUX_SELECT)		!= 0 && (prevInputFlags & MINPUT_FLAG_AUX_SELECT)	== 0)
 #macro	MINPUT_IS_RETURN_PRESSED		((inputFlags & MINPUT_FLAG_AUX_RETURN)		!= 0 && (prevInputFlags & MINPUT_FLAG_AUX_RETURN)	== 0)
+
+// 
+#macro	MINPUT_NO_DIRECTION_HELD		((inputFlags & (MINPUT_FLAG_CURSOR_RIGHT | MINPUT_FLAG_CURSOR_LEFT | MINPUT_FLAG_CURSOR_UP | MINPUT_FLAG_CURSOR_DOWN)) == 0)
+
+// 
+#macro	MENU_MOVEMENT_RIGHT				1
+#macro	MENU_MOVEMENT_LEFT			   -1
+#macro	MENU_MOVEMENT_DOWN				1
+#macro	MENU_MOVEMENT_UP			   -1
+#macro	MENU_MOVEMENT_NONE				0
+
+//
+#macro	MENU_FIRST_AUTOSCROLL_TIME		30.0
+#macro	MENU_AUTOSCROLL_TIME			10.0
 
 #endregion Macros for Base Menu Struct
 
@@ -102,6 +119,9 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	
 	// 
 	alpha				= 1.0;
+	
+	// 
+	cursorShiftTimer	= 0.0;
 	
 	destroy_event = function(){
 		var _length = ds_list_size(options);
@@ -190,10 +210,15 @@ function str_base_menu(_index) : str_base(_index) constructor {
 			isActive	: _isActive,
 		};
 		
+		// Update the height of the menu to match the dimensions relative to the set width. If the menu still
+		// hasn't reached the desired width, the height will always be set to a value of one.
+		var _size = ds_list_size(options);
+		height = _size > width ? ceil((_size + 1) / width) : 1;
+		
 		// Places new option at the end of the menu if the _index parameter is an invalid number. Otherwise, it
 		// will insert the option at the specified position. The position of the option is also returned to be
 		// referenced as required.
-		if (_index < 0 || _index >= ds_list_size(options)){
+		if (_index < 0 || _index >= _size){
 			ds_list_add(options, _option);
 			return;
 		}
@@ -239,9 +264,13 @@ function str_base_menu(_index) : str_base(_index) constructor {
 			return; // Don't attempt to remove out of bound indexes or when options aren't initialized.
 		ds_list_delete(options, _index);
 		
+		// Update the height of the menu to match what the dimensions should be after an element has been
+		// removed from it. If the new size is smaller than the desired width, the menu's height is one.
+		var _size = ds_list_size(options);
+		height = _size > width ? ceil(_size / width) : 1;
+		
 		// Fix edge case where the highlighted option is the last option and that option is also the one being
 		// removed. Otherwise curOption will be out of bounds and cause errors.
-		var _size = ds_list_size(options);
 		if (_size > 1 && _index == _size && curOption == _size)
 			curOption--;
 	}
@@ -295,6 +324,138 @@ function str_base_menu(_index) : str_base(_index) constructor {
 		if (keyAuxSelect != vk_nokey) { inputFlags |= (keyboard_check_pressed(keyAuxSelect) <<  5); }
 		if (keyAuxReturn != vk_nokey) { inputFlags |= (keyboard_check_pressed(keyAuxReturn) <<  7); }
 	}
+	
+	/// @description 
+	///	
+	///	
+	///	@param {Real}	delta	
+	update_cursor_position = function(_delta){
+		// Don't bother processing cursor movement on a menu that is smaller than a size of 2 since the cursor
+		// will have no place to be or one option to highlight, respectively.
+		var _menuSize = ds_list_size(options);
+		if (MENU_NOT_PROPERLY_INITIALIZED || _menuSize < 2)
+			return;
+		
+		// Grab the player's input within the current menu for the frame. If no directional inputs are held
+		// the function will exit prematurely; resetting the cursor movement timer and the auto scrolling
+		// flag if it happens to be set.
+		process_player_input();
+		if (MINPUT_NO_DIRECTION_HELD){
+			flags			&= ~MENU_FLAG_CURSOR_AUTOSCROLL;
+			cursorShiftTimer = 0.0;
+			return;
+		}
+		
+		// Decrement the current remaining time for the cursor's auto-shifting functionality. This timer does
+		// not matter if the user is clicking through the options since it will always be reset to 0.0 on no
+		// cursor movement/direction inputs being detected.
+		cursorShiftTimer -= _delta;
+		if (cursorShiftTimer > 0.0)
+			return;	
+		
+		// Determine the length of duration between cursor movements by checking if the "is autoscrolling"
+		// flag is currently set within the menu or not. If so, the interval time is slightly longer than
+		// all subsequent cursor position updates.
+		if (!MENU_IS_CURSOR_AUTOSCROLLING){
+			flags			|= MENU_FLAG_CURSOR_AUTOSCROLL;
+			cursorShiftTimer = MENU_FIRST_AUTOSCROLL_TIME;
+		} else{
+			cursorShiftTimer = MENU_AUTOSCROLL_TIME;
+		}
+		
+		// A small optimization for the smallest possible menu that can have the cursor move. It simply flips
+		// the value of curOption between 0 and 1 relative to the correct axis of input being held and the
+		// menu's width also matching what is required for the direction of movement (Ex. You can't move the
+		// cursor with left/right inputs if the menu's width is 1, and can't use up/down while the width is 2).
+		if (_menuSize == 2){
+			if ((width == 1 && (MINPUT_IS_UP_HELD || MINPUT_IS_DOWN_HELD)) || (width == 2 && (MINPUT_IS_RIGHT_HELD || MINPUT_IS_LEFT_HELD))){
+				curOption = !curOption;
+				// Make sure the highlighted option is still visible if only one of the two options happens to
+				// be visible within this two-option menu if the visible region is set to a size of 1x1.
+				if (width == 1 && visibleAreaH == 1)	{ visibleAreaY = curOption; }
+				else									{ visibleAreaX = curOption; }
+			}
+			return;
+		}
+		
+		// 
+		var _vMovement = (MINPUT_IS_DOWN_HELD - MINPUT_IS_UP_HELD);
+		if (height > 1 && _vMovement != 0){
+			var _curColumn	= curOption % width;
+			var _prevRow	= ceil(curOption / height);
+			curOption	   += width * _vMovement;
+			if (_vMovement == MENU_MOVEMENT_UP){
+				if (curOption < 0){ // Move to the last row in the menu.
+					curOption		= width * (height - 1) + _curColumn;
+					visibleAreaY	= max(0, height - visibleAreaH);
+					
+					// If the last row isn't fully populated the offset will need to be adjusted if there isn't
+					// a menu option on the current row. So, the column is shifted to the last possible option on
+					// the final row and the horizontal view is updated to match the shift.
+					if (curOption >= ds_list_size(options)){
+						curOption		= ds_list_size(options) - 1;
+						visibleAreaX	= (curOption % width) + visAreaShiftX;
+					}
+				} else{ // Shift the visible region of the menu along with the menu's cursor as required.
+					var _curRow = ceil(curOption / height);
+					if (_curRow - visAreaShiftY == visibleAreaY && visibleAreaY > 0)
+						visibleAreaY--;
+				}
+			} else if (_vMovement == MENU_MOVEMENT_DOWN){
+				if (_prevRow == height - 1 && ds_list_size(options)){ // Move to the last row if it isn't fully populated.
+					curOption		= ds_list_size(options) - 1;
+					visibleAreaX	= (curOption % width) + visAreaShiftX;
+				} else if (_prevRow == height){ // Rotate back to the first row.
+					curOption		= _curColumn;
+					visibleAreaY	= 0;
+				} else{ // Shift the visible region of the menu along with the menu's cursor as required.
+					var _curRow = ceil(curOption / height);
+					var _vAreaH = visibleAreaY + visibleAreaH;
+					if (_curRow + visAreaShiftY == _vAreaH && _vAreaH < height)
+						visibleAreaY++;
+				}
+			}
+		}
+		
+		// 
+		var _hMovement = (MINPUT_IS_RIGHT_HELD - MINPUT_IS_LEFT_HELD);
+		if (width > 1 && _hMovement != MENU_MOVEMENT_NONE){
+			var _size	= ds_list_size(options);
+			curOption  += _hMovement;
+			if (_hMovement == MENU_MOVEMENT_RIGHT){
+				if (curOption >= _size){
+					curOption		= (width * (height - 1));
+					visibleAreaX	= min((curOption & width) - visAreaShiftX, width - visibleAreaW);
+				} else if (curOption % width == 0){
+					curOption	   -= width;
+					visibleAreaX	= 0;
+				} else{ // Shift the visible region of the menu along with the menu's cursor as required.
+					var _curCol = curOption % width;
+					var _vAreaW = visibleAreaW + visibleAreaX;
+					if (
+				}
+			} else if (_hMovement == MENU_MOVEMENT_LEFT){
+				if ((curOption % width) == width - 1){
+					curOption		   += width;
+					if (curOption >= _size){
+						curOption		= _size - 1;
+						visibleAreaX	= (curOption % width) + visAreaShiftX;
+					} else{
+						visibleAreaX	= max(0, width - visibleAreaW);
+					}
+				} else{ // Shift the visible region of the menu along with the menu's cursor as required.
+					var _curCol = curOption % width;
+					if (_curCol - visAreaShiftX == visibleAreaX && visibleAreaX > 0)
+						visibleAreaX--;
+				}
+			}
+		}
+	}
+	
+	/// @description 
+	/// 
+	/// 
+	
 }
 
 #endregion Base Menu Struct Definition
