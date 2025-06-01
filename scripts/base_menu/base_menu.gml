@@ -98,6 +98,8 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	optionY				= 0;
 	optionSpacingX		= 0;
 	optionSpacingY		= 0;
+	optionAlignX		= fa_left;
+	optionAlignY		= fa_top;
 	
 	// 
 	curOption			= -1;
@@ -143,15 +145,13 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	/// @param {Real}	visibleHeight	Determines how many rows of options will be visible at any given time (Minimum value of one).
 	/// @param {Real}	visAreaShiftX	How close to the horizontal edge of visible options the cursor must be to shift the visible region in that direction if possible.
 	/// @param {Real}	visAreaShiftY	How close to the vertical edge of visible options the cursor must be to shift the visible region in that direction if possible.
-	///	@param {Bool}	isEndless		(Optional) When true, the menu will loop indefinitely without hitting a first or final row/column.
-	initialize_params = function(_isActive, _isVisible, _width, _visibleWidth, _visibleHeight, _visAreaShiftX = 0, _visAreaShiftY = 0, _isEndless = false){
+	initialize_params = function(_isActive, _isVisible, _width, _visibleWidth, _visibleHeight, _visAreaShiftX = 0, _visAreaShiftY = 0){
 		if (MENU_ARE_PARAMS_INITIALIZED)
 			return; // Don't reinitialize menu parameters.
 		
 		flags |= (_isActive << 30)	// Will be either 0x00000000 or 0x40000000
 			   | (_isVisible << 29)	// Will be either 0x00000000 or 0x20000000
 			   | MENU_FLAG_PARAMS_INITIALIZED;
-		// TODO -- Apply "_isEndless" flag here as well.
 		
 		// Apply base parameters based on respective argument values.
 		width			= max(1, _width);
@@ -167,12 +167,14 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	/// how far apart those options will be along each axis, and whether or not an option can be indefinitely
 	/// selected by the user if that is required for the menu.
 	/// 
-	///	@param {Real}	x				Position of the top-leftmost currently visible option on the screen along the x axis.
-	/// @param {Real}	y				Position of the top-leftmost currently visible option on the screen along the y axis.
-	/// @param {Real}	xSpacing		Determines how far each option is apart from each other (Excluding their actual width) along the x axis.
-	/// @param {Real}	ySpacing		Determines how far each option is apart from each other (Excluding their actual height) along the y axis.
-	/// @param {Bool}	areSelectable	(Optional) When true, options can be selected for more than just the frame the selection input was detected.
-	initialize_option_params = function(_x, _y, _xSpacing, _ySpacing, _areSelectable = false){
+	///	@param {Real}				x				Position of the top-leftmost currently visible option on the screen along the x axis.
+	/// @param {Real}				y				Position of the top-leftmost currently visible option on the screen along the y axis.
+	/// @param {Real}				xSpacing		Determines how far each option is apart from each other (Excluding their actual width) along the x axis.
+	/// @param {Real}				ySpacing		Determines how far each option is apart from each other (Excluding their actual height) along the y axis.
+	/// @param {Constant.HAlign}	xAlign			(Optional) AKA hAlign, this value determines how text is drawn relative to its x position.
+	/// @param {Constant.VAlign}	yAlign			(Optional) AKA vAlign, this value determines how text is drawn relative to its y position.
+	/// @param {Bool}				areSelectable	(Optional) When true, options can be selected for more than just the frame the selection input was detected.
+	initialize_option_params = function(_x, _y, _xSpacing, _ySpacing, _xAlign = fa_left, _yAlign = fa_top, _areSelectable = false){
 		if (MENU_ARE_OPTIONS_INITIALIZED)
 			return; // Don't reinitialize option parameters.
 		
@@ -184,6 +186,8 @@ function str_base_menu(_index) : str_base(_index) constructor {
 		optionY			= _y;
 		optionSpacingX	= _xSpacing;
 		optionSpacingY	= _ySpacing;
+		optionAlignX	= _xAlign;
+		optionAlignY	= _yAlign;
 	}
 	
 	/// @description 
@@ -368,7 +372,8 @@ function str_base_menu(_index) : str_base(_index) constructor {
 		// menu's width also matching what is required for the direction of movement (Ex. You can't move the
 		// cursor with left/right inputs if the menu's width is 1, and can't use up/down while the width is 2).
 		if (_menuSize == 2){
-			if ((width == 1 && (MINPUT_IS_UP_HELD || MINPUT_IS_DOWN_HELD)) || (width == 2 && (MINPUT_IS_RIGHT_HELD || MINPUT_IS_LEFT_HELD))){
+			if ((width == 1 && (MINPUT_IS_UP_HELD || MINPUT_IS_DOWN_HELD)) 
+					|| (width == 2 && (MINPUT_IS_RIGHT_HELD || MINPUT_IS_LEFT_HELD))){
 				curOption = !curOption;
 				// Make sure the highlighted option is still visible if only one of the two options happens to
 				// be visible within this two-option menu if the visible region is set to a size of 1x1.
@@ -381,38 +386,28 @@ function str_base_menu(_index) : str_base(_index) constructor {
 		// 
 		var _vMovement = (MINPUT_IS_DOWN_HELD - MINPUT_IS_UP_HELD);
 		if (height > 1 && _vMovement != 0){
-			var _curColumn	= curOption % width;
-			var _prevRow	= ceil(curOption / height);
-			curOption	   += width * _vMovement;
-			if (_vMovement == MENU_MOVEMENT_UP){
-				if (curOption < 0){ // Move to the last row in the menu.
-					curOption		= width * (height - 1) + _curColumn;
-					visibleAreaY	= max(0, height - visibleAreaH);
-					
-					// If the last row isn't fully populated the offset will need to be adjusted if there isn't
-					// a menu option on the current row. So, the column is shifted to the last possible option on
-					// the final row and the horizontal view is updated to match the shift.
-					if (curOption >= ds_list_size(options)){
-						curOption		= ds_list_size(options) - 1;
-						visibleAreaX	= (curOption % width) + visAreaShiftX;
-					}
-				} else{ // Shift the visible region of the menu along with the menu's cursor as required.
-					var _curRow = ceil(curOption / height);
-					if (_curRow - visAreaShiftY == visibleAreaY && visibleAreaY > 0)
-						visibleAreaY--;
-				}
-			} else if (_vMovement == MENU_MOVEMENT_DOWN){
-				if (_prevRow == height - 1 && ds_list_size(options)){ // Move to the last row if it isn't fully populated.
-					curOption		= ds_list_size(options) - 1;
-					visibleAreaX	= (curOption % width) + visAreaShiftX;
-				} else if (_prevRow == height){ // Rotate back to the first row.
-					curOption		= _curColumn;
-					visibleAreaY	= 0;
-				} else{ // Shift the visible region of the menu along with the menu's cursor as required.
-					var _curRow = ceil(curOption / height);
-					var _vAreaH = visibleAreaY + visibleAreaH;
-					if (_curRow + visAreaShiftY == _vAreaH && _vAreaH < height)
-						visibleAreaY++;
+			
+			// 
+			if (curOption - width < 0 && _vMovement == MENU_MOVEMENT_UP){
+				curOption	   += width * floor(_menuSize / width);
+				if (curOption >= _menuSize)
+					curOption  -= width;
+				
+				// 
+				visibleAreaY	= clamp(height - visibleAreaW, 0, floor(curOption / width) - visAreaShiftY + 1);
+			} else if (curOption + width >= _menuSize && _vMovement == MENU_MOVEMENT_DOWN){
+				curOption	   %= width;
+				visibleAreaY	= 0;
+			} else{
+				curOption	   += width * _vMovement;
+				
+				// 
+				var _curRow		= floor(curOption / width);
+				if (visibleAreaY + visAreaShiftY < height 
+						&& _curRow >= visibleAreaY + visibleAreaH - visAreaShiftY){
+					visibleAreaY++; // Shift visible area downward.
+				} else if (visibleAreaY > 0 && _curRow < visibleAreaY + visAreaShiftY){
+					visibleAreaY--; // Shift visible area upward.
 				}
 			}
 		}
@@ -420,33 +415,30 @@ function str_base_menu(_index) : str_base(_index) constructor {
 		// 
 		var _hMovement = (MINPUT_IS_RIGHT_HELD - MINPUT_IS_LEFT_HELD);
 		if (width > 1 && _hMovement != MENU_MOVEMENT_NONE){
-			var _size	= ds_list_size(options);
-			curOption  += _hMovement;
-			if (_hMovement == MENU_MOVEMENT_RIGHT){
-				if (curOption >= _size){
-					curOption		= (width * (height - 1));
-					visibleAreaX	= min((curOption & width) - visAreaShiftX, width - visibleAreaW);
-				} else if (curOption % width == 0){
-					curOption	   -= width;
+			var _curColumn		= curOption % width;
+			
+			// 
+			if (_curColumn == 0 && _hMovement == MENU_MOVEMENT_LEFT){
+				curOption		= min(ds_list_size(options) - 1, curOption + width - 1);
+				visibleAreaX	= clamp(visibleAreaX + width - visibleAreaW, 0, curOption % width - visAreaShiftX);
+			} else if (_curColumn == width - 1 && _hMovement == MENU_MOVEMENT_RIGHT){
+				curOption	   -= width - 1;
+				visibleAreaX	= 0;
+			} else{
+				curOption	   += _hMovement;
+				
+				// 
+				if (_hMovement == MENU_MOVEMENT_RIGHT && curOption >= ds_list_size(options)){
+					curOption	   -= curOption % width;
 					visibleAreaX	= 0;
-				} else{ // Shift the visible region of the menu along with the menu's cursor as required.
-					var _curCol = curOption % width;
-					var _vAreaW = visibleAreaW + visibleAreaX;
-					if (
 				}
-			} else if (_hMovement == MENU_MOVEMENT_LEFT){
-				if ((curOption % width) == width - 1){
-					curOption		   += width;
-					if (curOption >= _size){
-						curOption		= _size - 1;
-						visibleAreaX	= (curOption % width) + visAreaShiftX;
-					} else{
-						visibleAreaX	= max(0, width - visibleAreaW);
-					}
-				} else{ // Shift the visible region of the menu along with the menu's cursor as required.
-					var _curCol = curOption % width;
-					if (_curCol - visAreaShiftX == visibleAreaX && visibleAreaX > 0)
-						visibleAreaX--;
+				
+				// 
+				if (visibleAreaX + visAreaShiftX < width 
+						&& _curColumn >= visibleAreaX + visibleAreaW - visAreaShiftX){
+					visibleAreaX++; // Shift visible area to the right.
+				} else if (visibleAreaX > 0 && _curColumn < visibleAreaX + visAreaShiftX){
+					visibleAreaX--; // Shift visible area to the left.
 				}
 			}
 		}
@@ -455,7 +447,69 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	/// @description 
 	/// 
 	/// 
+	draw_visible_options = function(){
+		draw_set_font(fnt_small);
+		draw_set_halign(optionAlignX);
+		draw_set_valign(optionAlignY);
+		
+		// 
+		var _menuSize	= ds_list_size(options);
+		var _curOption	= curOption;
+		var _selOption	= selOption;
+		var _oIndex		= 0;
+		var _xx			= optionX;
+		var _yy			= optionY;
+		for (var curY = visibleAreaY; curY < visibleAreaY + visibleAreaH; curY++){
+			for (var curX = visibleAreaX; curX < visibleAreaX + visibleAreaW; curX++){
+				_oIndex = (curY * width) + curX;
+				
+				// The menu has reached its end so the inner loop will be broken out of and the value of curY
+				// is set to the earliest value that will break it out of the outer loop to end all drawing.
+				if (_oIndex >= _menuSize){
+					curY = visibleAreaY + visibleAreaH;
+					break; // Exits the inner loop instantly.
+				}
+				
+				// Jump into the scope of the option at the calculated index within the menu. Then, the state
+				// of the option is checked to see if it is inactive, selected, highlighted, or simply visible.
+				// Each of these will cause it to show up as a different color compared to the rest.
+				with(options[| _oIndex]){
+					if (!isActive)					{ draw_set_color(c_dkgray); }
+					else if (_selOption == _oIndex) { draw_set_color(c_lime); }
+					else if (_curOption == _oIndex)	{ draw_set_color(c_yellow); }
+					else							{ draw_set_color(c_white); }
+					
+					draw_text(_xx, _yy, oName);
+				}
+				
+				// Shift the x position based on the x spacing set for the menuu when its option parameters 
+				// were first initialized.
+				_xx += optionSpacingX;
+			}
+			
+			// Shift the y position based on the y spacing set for the menu with its option parameters were
+			// first initialized, and then reset the x position back to the leftmost value for the inner loop
+			// to have the correct coordinates for the next loop.
+			_yy    += optionSpacingY;
+			_xx		= optionX;
+		}
+		
+		draw_set_halign(fa_left);
+		draw_set_valign(fa_top);
+	}
 	
+	/// @description 
+	///	
+	///	
+	draw_visible_options_ext = function(){
+		draw_set_font(fnt_small);
+		draw_set_halign(optionAlignX);
+		draw_set_valign(optionAlignY);
+		
+		
+		draw_set_halign(fa_left);
+		draw_set_valign(fa_top);
+	}
 }
 
 #endregion Base Menu Struct Definition

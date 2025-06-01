@@ -68,6 +68,7 @@
     {"id":{"name":"camera","path":"scripts/camera/camera.yy",},},
     {"id":{"name":"data_utilities","path":"scripts/data_utilities/data_utilities.yy",},},
     {"id":{"name":"entity_utilities","path":"scripts/entity_utilities/entity_utilities.yy",},},
+    {"id":{"name":"inventory_menu","path":"scripts/inventory_menu/inventory_menu.yy",},},
     {"id":{"name":"inventory_utilities","path":"scripts/inventory_utilities/inventory_utilities.yy",},},
     {"id":{"name":"lights","path":"scripts/lights/lights.yy",},},
     {"id":{"name":"object_utilities","path":"scripts/object_utilities/object_utilities.yy",},},
