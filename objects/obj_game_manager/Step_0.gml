@@ -1,11 +1,22 @@
 if (GAME_IS_PAUSED)
 	return; // Prevent anything from updating while the game is considered paused.
 
+// 
 var _delta = global.deltaTime;
 with(par_dynamic_entity){
 	if (curState == 0 || !ENTT_IS_ACTIVE)
 		continue;
 	script_execute(curState, _delta);
+}
+
+// 
+var _length = ds_list_size(global.menus);
+for (var i = 0; i < _length; i++){
+	with(global.menus[| i]){
+		if (curState == 0 || !MENU_IS_ACTIVE)
+			continue;
+		script_execute(curState, _delta);
+	}
 }
 
 // Similarly to dynamic entities, the textbox will execute its step event through a provided state function. If

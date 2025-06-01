@@ -91,6 +91,9 @@ function str_textbox(_index) : str_base(_index) constructor {
 	charX			= 0;
 	charY			= 0;
 	
+	/// @description 
+	///	
+	///	
 	destroy_event = function(){
 		if (surface_exists(textSurface))
 			surface_free(textSurface);
@@ -100,6 +103,9 @@ function str_textbox(_index) : str_base(_index) constructor {
 		ds_list_destroy(textData);
 	}
 	
+	/// @description 
+	///	
+	///	
 	draw_gui_event = function(){
 		// Ensures that the surface will be valid should it randomly be flushed from memory by the GPU. Then,
 		// the previous surface's contents are copied from their buffer onto the newly formed surface.

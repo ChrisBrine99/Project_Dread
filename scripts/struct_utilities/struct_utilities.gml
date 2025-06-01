@@ -7,7 +7,7 @@ global.structID = 200000;
 /// @description 
 ///	Attempts to create an instance of the provided struct. If that struct happens to be a "special" struct and 
 /// an instance for said struct already exists, this function will not create another instance.
-///	
+///
 /// @param {Function}	structFunc		The struct to create an instance for (Cannot create duplicates of singleton structs).
 function instance_create_struct(_structFunc){
 	if (struct_is_special(_structFunc))

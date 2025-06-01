@@ -20,9 +20,21 @@ for (var i = 0; i < _length; i++){
 	draw_text(130, 50 + (i * 8),	string("x{0}", _invItem.quantity));
 }
 
+var _minAlpha = gpu_get_alphatestref() / 255.0;
+
+// 
+_length = ds_list_size(global.menus);
+for (var i = 0; i < _length; i++){
+	with(global.menus[| i]){
+		if (alpha <= _minAlpha || !MENU_IS_VISIBLE)
+			continue;
+		draw_gui_event();
+	}
+}
+
 // 
 with(TEXTBOX){
-	if (alpha == 0.0 || y >= VIEWPORT_HEIGHT)
+	if (alpha <= _minAlpha || y >= VIEWPORT_HEIGHT)
 		break;
 	draw_gui_event();
 }

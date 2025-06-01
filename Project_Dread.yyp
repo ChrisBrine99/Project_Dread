@@ -71,6 +71,7 @@
     {"id":{"name":"inventory_menu","path":"scripts/inventory_menu/inventory_menu.yy",},},
     {"id":{"name":"inventory_utilities","path":"scripts/inventory_utilities/inventory_utilities.yy",},},
     {"id":{"name":"lights","path":"scripts/lights/lights.yy",},},
+    {"id":{"name":"menu_utilites","path":"scripts/menu_utilites/menu_utilites.yy",},},
     {"id":{"name":"object_utilities","path":"scripts/object_utilities/object_utilities.yy",},},
     {"id":{"name":"singleton_utilities","path":"scripts/singleton_utilities/singleton_utilities.yy",},},
     {"id":{"name":"struct_utilities","path":"scripts/struct_utilities/struct_utilities.yy",},},

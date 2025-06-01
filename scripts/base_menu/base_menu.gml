@@ -51,7 +51,7 @@
 #macro	MENU_MOVEMENT_UP			   -1
 #macro	MENU_MOVEMENT_NONE				0
 
-//
+// 
 #macro	MENU_FIRST_AUTOSCROLL_TIME		30.0
 #macro	MENU_AUTOSCROLL_TIME			10.0
 
@@ -102,7 +102,7 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	optionAlignY		= fa_top;
 	
 	// 
-	curOption			= -1;
+	curOption			= 0;
 	selOption			= -1;
 	auxSelOption		= -1;
 	
@@ -125,12 +125,22 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	// 
 	cursorShiftTimer	= 0.0;
 	
+	/// @description 
+	///	Called whenever a menu is closed. It handles cleaning up memory that was allocated for any menu options,
+	/// and can be further extended to clean up additional memory allocated by child menu structs.
+	///	
 	destroy_event = function(){
 		var _length = ds_list_size(options);
 		for (var i = 0; i < _length; i++)
 			delete options[| i];
 		ds_list_destroy(options);
 	}
+	
+	/// @description 
+	///	Called during every frame that the menu exists for. It will be responsible for rendering its contents
+	/// to the game's GUI layer.
+	///	
+	draw_gui_event = function() {}
 	
 	/// @description
 	///	Initializes some default parameters for the menu. Specifically, whether or not it should be active or
@@ -332,7 +342,7 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	/// @description 
 	///	
 	///	
-	///	@param {Real}	delta	
+	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	update_cursor_position = function(_delta){
 		// Don't bother processing cursor movement on a menu that is smaller than a size of 2 since the cursor
 		// will have no place to be or one option to highlight, respectively.
@@ -354,8 +364,9 @@ function str_base_menu(_index) : str_base(_index) constructor {
 		// not matter if the user is clicking through the options since it will always be reset to 0.0 on no
 		// cursor movement/direction inputs being detected.
 		cursorShiftTimer -= _delta;
-		if (cursorShiftTimer > 0.0)
-			return;	
+		if (cursorShiftTimer >= 0.0)
+			return;
+		show_debug_message("cursor has moved");
 		
 		// Determine the length of duration between cursor movements by checking if the "is autoscrolling"
 		// flag is currently set within the menu or not. If so, the interval time is slightly longer than
@@ -403,7 +414,7 @@ function str_base_menu(_index) : str_base(_index) constructor {
 				
 				// 
 				var _curRow		= floor(curOption / width);
-				if (visibleAreaY + visAreaShiftY < height 
+				if (visibleAreaY + visibleAreaH < height 
 						&& _curRow >= visibleAreaY + visibleAreaH - visAreaShiftY){
 					visibleAreaY++; // Shift visible area downward.
 				} else if (visibleAreaY > 0 && _curRow < visibleAreaY + visAreaShiftY){
@@ -419,8 +430,8 @@ function str_base_menu(_index) : str_base(_index) constructor {
 			
 			// 
 			if (_curColumn == 0 && _hMovement == MENU_MOVEMENT_LEFT){
-				curOption		= min(ds_list_size(options) - 1, curOption + width - 1);
-				visibleAreaX	= clamp(visibleAreaX + width - visibleAreaW, 0, curOption % width - visAreaShiftX);
+				curOption		= min(_menuSize - 1, curOption + width - 1);
+				visibleAreaX	= clamp(visibleAreaX + width - visibleAreaW, 0, curOption % width - visAreaShiftX + 1);
 			} else if (_curColumn == width - 1 && _hMovement == MENU_MOVEMENT_RIGHT){
 				curOption	   -= width - 1;
 				visibleAreaX	= 0;
@@ -428,13 +439,14 @@ function str_base_menu(_index) : str_base(_index) constructor {
 				curOption	   += _hMovement;
 				
 				// 
-				if (_hMovement == MENU_MOVEMENT_RIGHT && curOption >= ds_list_size(options)){
+				if (_hMovement == MENU_MOVEMENT_RIGHT && curOption >= _menuSize){
 					curOption	   -= curOption % width;
 					visibleAreaX	= 0;
 				}
 				
 				// 
-				if (visibleAreaX + visAreaShiftX < width 
+				_curColumn = curOption % width;
+				if (visibleAreaX + visibleAreaW < width 
 						&& _curColumn >= visibleAreaX + visibleAreaW - visAreaShiftX){
 					visibleAreaX++; // Shift visible area to the right.
 				} else if (visibleAreaX > 0 && _curColumn < visibleAreaX + visAreaShiftX){

@@ -43,11 +43,19 @@ function str_camera(_index) : str_base(_index) constructor {
 	viewportHeight	= 0;
 	followedObject	= noone;
 	
+	/// @description 
+	///	The camera struct's destroy event. It will clean up anything that isn't automatically cleaned up by
+	/// GameMaker when a struct is destroyed/out of scope.
+	///
 	destroy_event = function(){
 		camera_destroy(cameraID);
 		cameraID = -1;
 	}
 	
+	/// @description 
+	///	Called every frame that the camera struct exists (Which should be the entirety of the game). It handles
+	/// moving the viewport to follow an object if the camera has an instance to follow.
+	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	step_event = function(_delta){
 		// The camera is manually controlled during cutscenes, so the functions within the cutscene manager
@@ -82,6 +90,11 @@ function str_camera(_index) : str_base(_index) constructor {
 		else if (_objectY > y + DEADZONE_SIZE)	{ y = _objectY - DEADZONE_SIZE; }
 	}
 	
+	/// @description 
+	///	Called at the end of the step events for all instances. It is responsible for setting the viewport to
+	/// the coordinate calculated during the camera's step event (If an object is being followed). The camera's
+	/// position is actual the center of the viewport instead of the top-left to make camera movement easier.
+	///	
 	end_step_event = function(){
 		// Offset the viewport coordinates such that the viewport is centered on the camera's position.
 		var _viewX = x - floor(viewportWidth / 2);
@@ -101,6 +114,11 @@ function str_camera(_index) : str_base(_index) constructor {
 		viewportY = camera_get_view_y(cameraID);
 	}
 	
+	/// @description 
+	///	Called when a new room is loaded in by GameMaker. It enables the viewport for said room, sets it to
+	/// visible, and performs a check to see if the followed object still exists so it doesn't try to follow
+	///	a now non-existent instance.
+	///
 	room_start_event = function(){
 		// Sets up the viewport for the room to utilize the camera that was set up during the game's initialization.
 		view_set_visible(0, true);

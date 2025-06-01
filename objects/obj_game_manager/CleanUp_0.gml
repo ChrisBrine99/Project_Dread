@@ -43,6 +43,11 @@ while(!is_undefined(_itemID)){
 ds_map_clear(global.itemData);
 ds_map_destroy(global.itemData);
 
+// Clear out the list of existing menu references and destroy said data structure. The references don't need
+// to be cleaned up since they'll be managed automatically by cleaning up the struct data structure below.
+ds_list_clear(global.menus);
+ds_list_destroy(global.menus);
+
 // Remove all existing struct instances from memory by deleting their references stores within the global struct
 // management list. Then, that list itself is destroyed to clear it from memory as well.
 _structRef = undefined;

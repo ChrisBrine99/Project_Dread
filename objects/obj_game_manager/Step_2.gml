@@ -20,6 +20,15 @@ with(par_dynamic_entity){
 	end_step_event(_delta);
 }
 
+// 
+var _length = ds_list_size(global.menus);
+for (var i = 0; i < _length; i++){
+	with(global.menus[| i]){
+		if (curState != nextState)
+			curState = nextState;
+	}
+}
+
 // Update the current state function for the textbox to match the value stored in the "nextState" variable at
 // the end of the step event, so state changes don't occur in the middle of a frame.
 with(TEXTBOX){

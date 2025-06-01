@@ -8,6 +8,10 @@ function str_light_source(_index) : str_base(_index) constructor {
 	strength	= 0.0;
 	color		= c_black;
 	
+	///	@description 
+	///	Called for every frame that the light source exists. Is responsible for rendering the light source with
+	/// its given color and properties at its current position within the room.
+	///	
 	/// @param {Real}	viewX		Offset along the x axis caused by the viewport moving around the room.
 	///	@param {Real}	viewY		Offset along the y axis caused by the viewport moving around the room.
 	///	@param {Real}	delta		The difference in time between the execution of this frame and the last.
