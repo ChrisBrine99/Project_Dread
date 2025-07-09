@@ -4,6 +4,7 @@ draw_set_color(c_white);
 draw_set_halign(fa_left);
 draw_text(5, 5, string("FPS\nDelta\nFlags"));
 
+/*
 var _invItem	= -1;
 var _itemData	= -1;
 var _length		= array_length(global.inventory);
@@ -19,6 +20,7 @@ for (var i = 0; i < _length; i++){
 	draw_text(5, 50 + (i * 8),		string("slot {0}: {1}", i + 1, _itemData.itemName));
 	draw_text(130, 50 + (i * 8),	string("x{0}", _invItem.quantity));
 }
+*/
 
 var _minAlpha = gpu_get_alphatestref() / 255.0;
 

@@ -28,9 +28,25 @@
 #macro	TBOX_SURFACE_WIDTH				280
 #macro	TBOX_SURFACE_HEIGHT				28
 
+// Macros for the characteristics of the textbox's background texture that the text surface will be drawn onto.
+// They represent the width, height, and opacity/alpha value of said background, respectively.
+#macro	TBOX_BG_WIDTH					VIEWPORT_WIDTH - 20
+#macro	TBOX_BG_HEIGHT					50
+#macro	TBOX_BG_ALPHA					0.25
+
+// The pixel offsets from the current x/y position of the textbox that the text contents will be rendered at.
+// The shadow for the text is offset one to the left and down to create a simple drop shadow effect on the text.
+#macro	TBOX_TEXT_X_OFFSET				10
+#macro	TBOX_TEXT_Y_OFFSET				15
+#macro	TBOX_TEXT_SHADOW_X_OFFSET		11
+#macro	TBOX_TEXT_SHADOW_Y_OFFSET		16
+
+// Determines the opacity of the text's shadow relative to the entire textbox's current opacity.
+#macro	TBOX_TEXT_SHADOW_ALPHA			0.75
+
 // Determines how many pixels away from the edges of the surface the text will be on the leftmost edge of it.
-#macro	TBOX_X_PADDING					1
-#macro	TBOX_Y_PADDING					2
+#macro	TBOX_SURFACE_X_PADDING			1
+#macro	TBOX_SURFACE_Y_PADDING			2
 
 // Determines the position on the GUI the textbox will rest at after its opening transition has completed.
 #macro	TBOX_Y_TARGET					VIEWPORT_HEIGHT - 60.0
@@ -90,9 +106,10 @@ function str_textbox(_index) : str_base(_index) constructor {
 	nextChar		= 1;
 	charX			= 0;
 	charY			= 0;
-	
+
 	/// @description 
-	///	
+	///	The textbox struct's destroy event. It will clean up anything that isn't automatically cleaned up by
+	/// GameMaker when this struct is destroyed/out of scope.
 	///	
 	destroy_event = function(){
 		if (surface_exists(textSurface))
@@ -104,7 +121,8 @@ function str_textbox(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	///	
+	///	Called to render the textbox and its current contents whenever the textbox struct is currently showing
+	/// information taht has been queued up for the player to see.
 	///	
 	draw_gui_event = function(){
 		// Ensures that the surface will be valid should it randomly be flushed from memory by the GPU. Then,
@@ -147,7 +165,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 				// Newline character found; the x offset of the character is reset and the y value if offset
 				// to create a new line of text on the surface instead of writing on top of the previous one.
 				if (_curChar == "\n"){
-					charX	= TBOX_X_PADDING;
+					charX	= TBOX_SURFACE_X_PADDING;
 					charY  += string_height("M");
 					continue;
 				}
@@ -169,13 +187,15 @@ function str_textbox(_index) : str_base(_index) constructor {
 		var _xPos = floor(x);
 		var _yPos = floor(y);
 		
-		draw_sprite_ext(spr_rectangle, 0, _xPos, _yPos, VIEWPORT_WIDTH - 20, 50, 0.0, c_white, alpha * 0.25);
-		
-		draw_text(5, 80, string("alpha: {0}\ny: {1}", alpha, y));
+		// TODO -- Replace this rectangle with an actual textbox graphic.
+		draw_sprite_ext(spr_rectangle, 0, _xPos, _yPos, 
+			TBOX_BG_WIDTH, TBOX_BG_HEIGHT, 0.0, c_white, alpha * TBOX_BG_ALPHA);
 		
 		// Draws the text surface twice to create a shadow effect beneath the actual surface contents.
-		draw_surface_ext(textSurface, _xPos + 11, _yPos + 15, 1.0, 1.0, 0.0, c_black, alpha * 0.75);
-		draw_surface_ext(textSurface, _xPos + 10, _yPos + 15, 1.0, 1.0, 0.0, c_white, alpha);
+		draw_surface_ext(textSurface, _xPos + TBOX_TEXT_SHADOW_X_OFFSET, _yPos + TBOX_TEXT_SHADOW_Y_OFFSET, 
+			1.0, 1.0, 0.0, c_black, alpha * TBOX_TEXT_SHADOW_ALPHA);
+		draw_surface_ext(textSurface, _xPos + TBOX_TEXT_X_OFFSET, _yPos + TBOX_TEXT_Y_OFFSET, 
+			1.0, 1.0, 0.0, c_white, alpha);
 	}
 	
 	/// @description 
@@ -203,9 +223,9 @@ function str_textbox(_index) : str_base(_index) constructor {
 	/// to "active" wihtin its flags variable and the starting index is within the valid range of 0 to what the
 	/// size of the data structure (AKA the total number of text elements to show to the user).
 	///	
-	///	@param {Real}	startingIndex				Determines which text out of the list is used as the first in the textbox.	
-	/// @param {Bool}	clearDataOnDeactivation		(Optional) Determines if the contents within textData are deleted after the textbox closes down.
-	activate_textbox = function(_startingIndex, _clearDataOnDeactivation = true){
+	///	@param {Real}	startingIndex				(Optional) Determines which text out of the list is used as the first in the textbox. The default value is zero.
+	/// @param {Bool}	clearDataOnDeactivation		(Optional) Determines if the contents within textData are deleted after the textbox closes down. The default flag is true.
+	activate_textbox = function(_startingIndex = 0, _clearDataOnDeactivation = true){
 		var _size = ds_list_size(textData);
 		if (TBOX_IS_ACTIVE || _size == 0 || _size <= _startingIndex)
 			return;
@@ -229,7 +249,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 	/// setting that flag upon the next time this funciton's called.
 	///	
 	deactivate_textbox = function(){
-		object_set_state(0);
+		object_set_state(STATE_NONE);
 		flags &= ~TBOX_FLAG_ACTIVE;
 		if (!TBOX_CAN_WIPE_DATA) // Prevent deleting any text information if the flag isn't toggled.
 			return;
@@ -270,8 +290,8 @@ function str_textbox(_index) : str_base(_index) constructor {
 		actorName		= get_actor_name(_newActorIndex);
 		curChar			= 1;	// Reset these to their defaults so the typing animation can play again.
 		nextChar		= 1;
-		charX			= TBOX_X_PADDING;
-		charY			= TBOX_Y_PADDING;
+		charX			= TBOX_SURFACE_X_PADDING;
+		charY			= TBOX_SURFACE_Y_PADDING;
 		
 		// Clear or set the flag that is responsible for allowing a textbox to display graphics related to an
 		// actor's name alongside that name itself depending on what "actorName" is set to by the call to the
@@ -311,10 +331,10 @@ function str_textbox(_index) : str_base(_index) constructor {
 			if (_curChar == " " || i == _length){
 				// The text will overflow the textbox horizontally, so the current line is added to the 
 				// formatted string and a new line will begin.
-				if (_curLineWidth + _curWordWidth > TBOX_SURFACE_WIDTH - (TBOX_X_PADDING * 2)){
+				if (_curLineWidth + _curWordWidth > TBOX_SURFACE_WIDTH - (TBOX_SURFACE_X_PADDING * 2)){
 					// Make sure the text doesn't also overflow vertically if another line was going to be
 					// added to what will be shown on the screen. If so, exit the loop early.
-					if (string_height(_fullText + "\nM") > TBOX_SURFACE_HEIGHT - (TBOX_Y_PADDING * 2)){
+					if (string_height(_fullText + "\nM") > TBOX_SURFACE_HEIGHT - (TBOX_SURFACE_Y_PADDING * 2)){
 						_fullText  += _curLine;
 						_curLine	= "";
 						break;
@@ -336,7 +356,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 			if (_curChar == "\n"){
 				// Make sure the text doesn't also overflow vertically if another line was going to be
 				// added to what will be shown on the screen. If so, exit the loop early.
-				if (string_height(_fullText + "\nM") > TBOX_SURFACE_HEIGHT - (TBOX_Y_PADDING * 2)){
+				if (string_height(_fullText + "\nM") > TBOX_SURFACE_HEIGHT - (TBOX_SURFACE_Y_PADDING * 2)){
 					_fullText  += _curLine + _curWord;
 					_curLine	= "";
 					break;

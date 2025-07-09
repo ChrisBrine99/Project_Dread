@@ -101,7 +101,8 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	optionAlignX		= fa_left;
 	optionAlignY		= fa_top;
 	
-	// 
+	// Stores the index of the option that is currently being highlighted, has been selected, and was selected
+	// but has been stored for later use within the menu, respectively.
 	curOption			= 0;
 	selOption			= -1;
 	auxSelOption		= -1;
@@ -119,10 +120,12 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	visAreaShiftX		= 0;
 	visAreaShiftY		= 0;
 	
-	// 
-	alpha				= 1.0;
+	// Determines the opactity for the entire menu. Unique opacities can reference this one to allow different
+	// values that are all kept in step for things like opening/closing animations, and so on.
+	alpha				= 0.0;
 	
-	// 
+	// Stores the duration the player has been holding a cursor movement key for which is then used to process
+	// automatic cursor movement so long as any of those keys are held.
 	cursorShiftTimer	= 0.0;
 	
 	/// @description 
@@ -340,7 +343,10 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	///	
+	///	Processes the cursor movement for the current game frame. It also handles decrementing the timer that
+	/// counts durations between automatic cursor shifts if the user is holding down a cursor movement key. If
+	/// no movement is detected, the menu itself has a single element, or the menu itself hasn't been properly
+	/// initialized, this function will exit early and never update the cursor's position.
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	update_cursor_position = function(_delta){
@@ -366,7 +372,7 @@ function str_base_menu(_index) : str_base(_index) constructor {
 		cursorShiftTimer -= _delta;
 		if (cursorShiftTimer >= 0.0)
 			return;
-		show_debug_message("cursor has moved");
+		// show_debug_message("cursor has moved");
 		
 		// Determine the length of duration between cursor movements by checking if the "is autoscrolling"
 		// flag is currently set within the menu or not. If so, the interval time is slightly longer than
@@ -394,25 +400,30 @@ function str_base_menu(_index) : str_base(_index) constructor {
 			return;
 		}
 		
-		// 
+		// Handle vertical movement by seeing if either the upward or downward key was pressed/held by the player,
+		// but not both of them. On top of that, this section is skipped if the menu's height is equal to one.
 		var _vMovement = (MINPUT_IS_DOWN_HELD - MINPUT_IS_UP_HELD);
 		if (height > 1 && _vMovement != 0){
 			
-			// 
+			// Determine what to do based on what the current value for "curOption" is and what direction the
+			// player has chosen to move their cursor. 
 			if (curOption - width < 0 && _vMovement == MENU_MOVEMENT_UP){
 				curOption	   += width * floor(_menuSize / width);
 				if (curOption >= _menuSize)
 					curOption  -= width;
 				
-				// 
-				visibleAreaY	= clamp(height - visibleAreaW, 0, floor(curOption / width) - visAreaShiftY + 1);
+				// Calculate the topmost visible row by subtracting the visible region's height by the menu's
+				// actual height (AKA the total number of rows). The clamp function will ensure this new value
+				// never exceeds or goes below what is considered the "valid area" of options for the menu.
+				visibleAreaY	= clamp(height - visibleAreaH, 0, floor(curOption / width) - visAreaShiftY + 1);
 			} else if (curOption + width >= _menuSize && _vMovement == MENU_MOVEMENT_DOWN){
 				curOption	   %= width;
 				visibleAreaY	= 0;
 			} else{
 				curOption	   += width * _vMovement;
 				
-				// 
+				// Determine if the menu's vertical visible region should be shifted upward or downward depending.
+				// of the updated "curOption" value as well as the current row the menu cursor is now on.
 				var _curRow		= floor(curOption / width);
 				if (visibleAreaY + visibleAreaH < height 
 						&& _curRow >= visibleAreaY + visibleAreaH - visAreaShiftY){
@@ -423,12 +434,15 @@ function str_base_menu(_index) : str_base(_index) constructor {
 			}
 		}
 		
-		// 
+		// Handle horizontal movement by seeing if either the upward or downward key was pressed/held by the 
+		// player, but not both of them. On top of that, this section is skipped if the menu's width is equal
+		// to one.
 		var _hMovement = (MINPUT_IS_RIGHT_HELD - MINPUT_IS_LEFT_HELD);
 		if (width > 1 && _hMovement != MENU_MOVEMENT_NONE){
 			var _curColumn		= curOption % width;
 			
-			// 
+			// Determine what to do based on the current column the highlighted option is on (This is where the
+			// cursor is currently positioned) and what direction the player has chosen to move the cursor.
 			if (_curColumn == 0 && _hMovement == MENU_MOVEMENT_LEFT){
 				curOption		= min(_menuSize - 1, curOption + width - 1);
 				visibleAreaX	= clamp(visibleAreaX + width - visibleAreaW, 0, curOption % width - visAreaShiftX + 1);
@@ -457,14 +471,18 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	/// 
+	/// Renders the currently visible region of menu options to the screen given the positioning, spacing, and
+	/// alignment for each option that is (AND SHOULD ALWAYS BE) set upon initialization of a given menu. This
+	/// version will only render the text elements of each option and ignore any potential icons that could
+	/// also exist. To draw both text and icons, draw_visible_options_ext must be used.
 	/// 
 	draw_visible_options = function(){
 		draw_set_font(fnt_small);
 		draw_set_halign(optionAlignX);
 		draw_set_valign(optionAlignY);
 		
-		// 
+		// Loop through the visible region of option structs. Each has their color determined on-the-fly
+		// relative to their state and how the cursor and menu itself are currently interacting with them.
 		var _menuSize	= ds_list_size(options);
 		var _curOption	= curOption;
 		var _selOption	= selOption;
@@ -473,7 +491,7 @@ function str_base_menu(_index) : str_base(_index) constructor {
 		var _yy			= optionY;
 		for (var curY = visibleAreaY; curY < visibleAreaY + visibleAreaH; curY++){
 			for (var curX = visibleAreaX; curX < visibleAreaX + visibleAreaW; curX++){
-				_oIndex = (curY * width) + curX;
+				_oIndex = (curY * width) + curX; // Convert to a one-dimensional index.
 				
 				// The menu has reached its end so the inner loop will be broken out of and the value of curY
 				// is set to the earliest value that will break it out of the outer loop to end all drawing.

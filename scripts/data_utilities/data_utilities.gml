@@ -122,8 +122,7 @@ function load_item_data(_filename){
 	}
 	
 	ds_map_destroy(_itemData);
-	
-	show_debug_message("Processed and parsed all item data in {0} microseconds.", get_timer() - _startTime);
+	// show_debug_message("Processed and parsed all item data in {0} microseconds.", get_timer() - _startTime);
 }
 
 /// @description

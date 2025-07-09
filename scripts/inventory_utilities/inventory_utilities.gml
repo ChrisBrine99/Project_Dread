@@ -208,7 +208,7 @@ function inventory_remove_slot(_slot, _amount){
 	if (!is_array(global.inventory) || _slot < 0 || _slot >= array_length(global.inventory))
 		return _amount;
 	
-	// ALso don't try removing anything if the slot in question doesn't have an item occupying it currently.
+	// Also don't try removing anything if the slot in question doesn't have an item occupying it currently.
 	var _item = global.inventory[_slot];
 	if (!is_struct(_item))
 		return _amount;
@@ -242,6 +242,24 @@ function inventory_slot_swap(_first, _second){
 	var _temp = global.inventory[_first];
 	global.inventory[_first] = global.inventory[_second];
 	global.inventory[_second] = _temp;
+}
+
+/// @description 
+///	Returns the struct containing the information about the item that occupies a slot within the inventory.
+/// If no item currently occupies the slot, the value -1 (INV_EMPTY_SLOT) will be returned. This value is also
+/// returned if for some reason the provided value for "slot" is out of bounds or the inventory hasn't been
+/// initialized properly.
+///	
+/// @param {Real}	slot	The slot within the inventory to grab the information from.
+function inventory_slot_get_item_data(_slot){
+	if (!is_array(global.inventory) || _slot < 0 || _slot >= array_length(global.inventory))
+		return INV_EMPTY_SLOT;	// Default value will simply be treated as an empty inventory slot.
+		
+	var _slotContents	= global.inventory[_slot];
+	var _itemData		= ds_map_find_value(global.itemData, _slotContents);
+	if (is_undefined(_itemData)) // No item data exists for the id value in the slot; return default value.
+		return INV_EMPTY_SLOT;
+	return _itemData;
 }
 
 /// @description

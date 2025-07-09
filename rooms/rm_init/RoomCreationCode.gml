@@ -16,10 +16,10 @@ with(CAMERA){
 	camera_set_followed_object(PLAYER, true);
 }
 
-with(TEXTBOX){
+/*with(TEXTBOX){
 	queue_new_text("Test test\ntest test test test this is a test to see if the textbox can format the gogungo\ntext\nproperly!!!", TBOX_ACTOR_PLAYER);
 	activate_textbox(0);
-}
+}*/
 
 // Once everything has been initialized, the first official room for the game is loaded, and the game is unpaused.
 room_goto(rm_test_01);

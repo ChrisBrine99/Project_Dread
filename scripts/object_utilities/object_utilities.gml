@@ -1,3 +1,8 @@
+// A macro that defines what setting an object's state to 0 will do. When set to zero, most logic processing
+// of objects should be bypassed since it isn't actively doing anything in the game (Excluding rendering if
+// that is still required by the object).
+#macro	STATE_NONE						0
+
 /// @description 
 /// A slightly modified version of the standard instance creation functions that come standard with Game 
 /// Maker. It will simply check to see if an object is special before creating an instance of them.

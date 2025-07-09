@@ -45,7 +45,7 @@ function str_camera(_index) : str_base(_index) constructor {
 	
 	/// @description 
 	///	The camera struct's destroy event. It will clean up anything that isn't automatically cleaned up by
-	/// GameMaker when a struct is destroyed/out of scope.
+	/// GameMaker when this struct is destroyed/out of scope.
 	///
 	destroy_event = function(){
 		camera_destroy(cameraID);
