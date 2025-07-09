@@ -1,4 +1,11 @@
 #region Macros for Inventory Menu Struct
+
+// Positional offsets of the currently highlighted item's name and description, respectively.
+#macro	MENUINV_NAME_TEXT_X				20
+#macro	MENUINV_NAME_TEXT_Y				120
+#macro	MENUINV_INFO_TEXT_X				20
+#macro	MENUINV_INFO_TEXT_Y				132
+
 #endregion Macros for Inventory Menu Struct
 
 #region Inventory Menu Struct Definition
@@ -48,7 +55,11 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	///	
 	///	
 	draw_gui_event = function(){
-		draw_text(5, 50, string("cursorShiftTimer: {0}", cursorShiftTimer));
+		//var _xPos = floor(x);
+		//var _yPos = floor(y);
+		
+		
+		
 		draw_visible_options();
 	}
 	

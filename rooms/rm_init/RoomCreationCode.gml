@@ -16,10 +16,11 @@ with(CAMERA){
 	camera_set_followed_object(PLAYER, true);
 }
 
-/*with(TEXTBOX){
-	queue_new_text("Test test\ntest test test test this is a test to see if the textbox can format the gogungo\ntext\nproperly!!!", TBOX_ACTOR_PLAYER);
+with(TEXTBOX){
+	queue_new_text("Test test\ntest test @blue{test test} this is a @red{test} @orange{to} @purple{see} if the textbox can format the gogungo\ntext\nproperly!!!", TBOX_ACTOR_PLAYER, 1);
+	queue_new_text("Another textbox to see if the @orange{color-changing logic} works properly. Otherwise, @red{something isn't being reset properly and needs to be fixed}.", TBOX_ACTOR_INVALID);
 	activate_textbox(0);
-}*/
+}
 
 // Once everything has been initialized, the first official room for the game is loaded, and the game is unpaused.
 room_goto(rm_test_01);

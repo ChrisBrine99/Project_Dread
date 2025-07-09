@@ -1,1 +1,1 @@
-instance_create_menu_struct(str_inventory_menu);
+// instance_create_menu_struct(str_inventory_menu);

@@ -18,6 +18,20 @@
 #macro	TBOX_SHOULD_CLEAR_SURFACE		((flags & TBOX_FLAG_CLEAR_SURFACE)	!= 0)
 #macro	TBOX_SHOULD_SHOW_NAME			((flags & TBOX_FLAG_SHOW_NAME)		!= 0)
 
+//
+#macro	TBOX_CHAR_SPACE					" "
+#macro	TBOX_CHAR_NEWLINE				"\n"
+#macro	TBOX_CHAR_COLOR_CHANGE			"@"
+#macro	TBOX_CHAR_REGION_START			"{"
+#macro	TBOX_CHAR_REGION_END			"}"
+
+// 
+#macro	TBOX_COLOR_CODE_BLUE			"blue"
+#macro	TBOX_COLOR_CODE_RED				"red"
+#macro	TBOX_COLOR_CODE_GREEN			"green"
+#macro	TBOX_COLOR_CODE_ORANGE			"orange"
+#macro	TBOX_COLOR_CODE_PURPLE			"purple"
+
 // Index values that point to an actor's name as a string within the game's data. Can be retrieved for use by
 // calling the function get_actor_name.
 #macro	TBOX_ACTOR_INVALID				0
@@ -106,6 +120,11 @@ function str_textbox(_index) : str_base(_index) constructor {
 	nextChar		= 1;
 	charX			= 0;
 	charY			= 0;
+	
+	// 
+	colorDataRef	= -1;
+	totalColors		= 0;
+	charColorIndex	= 0;
 
 	/// @description 
 	///	The textbox struct's destroy event. It will clean up anything that isn't automatically cleaned up by
@@ -156,24 +175,43 @@ function str_textbox(_index) : str_base(_index) constructor {
 			
 			// Grab a reference to the current textbox's contents and then begin adding characters to the text
 			// surface one at a time until the value of curChar matches that of _nextChar.
-			var _curText = textData[| textIndex];
-			var _curChar = "";
+			var _curText	= textData[| textIndex];
+			var _curChar	= "";
+			var _colorData	= -1;
+			var _curColor	= c_white;
 			while(curChar < _nextChar){
 				_curChar = string_char_at(_curText.content, curChar);
-				curChar += 1;
 				
 				// Newline character found; the x offset of the character is reset and the y value if offset
 				// to create a new line of text on the surface instead of writing on top of the previous one.
 				if (_curChar == "\n"){
 					charX	= TBOX_SURFACE_X_PADDING;
 					charY  += string_height("M");
+					curChar++;
 					continue;
 				}
 				
+				// Check if any unique colors should be used for the text currently being added to the screen.
+				// This entire chunk of code is ignored if the textbox doesn't have any additional color data
+				// associated with it.
+				if (colorDataRef != -1 && charColorIndex < totalColors){
+					var _curCharIndex = curChar;
+					with(colorDataRef[| charColorIndex]){
+						// When the final character index is hit, the next element in the list (If one exists)
+						// will be utilized on the next iteration of this character rendering logic. Otherwise,
+						// the desired color is set if the current character's index is higher than whatever
+						// the starting index for the color data is.
+						if (_curCharIndex > endIndex)		  { other.charColorIndex++; }
+						else if (_curCharIndex >= startIndex) { _curColor = colorCode; }
+					}
+				}
+				curChar++; // Only increment this value AFTER the potential color data has been checked.
+				
 				// Once the proper coordinates have been set as required, the character is drawn and the width
 				// of the drawn character is added to properly offset the next character in the string.
-				draw_text(charX, charY,	_curChar);
-				charX   += string_width(_curChar);
+				draw_text_shadow(charX, charY, _curChar, _curColor);
+				charX    += string_width(_curChar);
+				_curColor = c_white; 
 			}
 			
 			// Finally, the surface target is reset to that of the application surface, and the current contents 
@@ -191,9 +229,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 		draw_sprite_ext(spr_rectangle, 0, _xPos, _yPos, 
 			TBOX_BG_WIDTH, TBOX_BG_HEIGHT, 0.0, c_white, alpha * TBOX_BG_ALPHA);
 		
-		// Draws the text surface twice to create a shadow effect beneath the actual surface contents.
-		draw_surface_ext(textSurface, _xPos + TBOX_TEXT_SHADOW_X_OFFSET, _yPos + TBOX_TEXT_SHADOW_Y_OFFSET, 
-			1.0, 1.0, 0.0, c_black, alpha * TBOX_TEXT_SHADOW_ALPHA);
+		// Simply draw the currently rendered text onto the screen with this single draw call.
 		draw_surface_ext(textSurface, _xPos + TBOX_TEXT_X_OFFSET, _yPos + TBOX_TEXT_Y_OFFSET, 
 			1.0, 1.0, 0.0, c_white, alpha);
 	}
@@ -258,8 +294,17 @@ function str_textbox(_index) : str_base(_index) constructor {
 		// Loop through and clear out the structs from within the textData data structures. All now undefined
 		// references will also be cleared and the structure is set back to a size of 0.
 		var _length = ds_list_size(textData);
-		for (var i = 0; i < _length; i++)
+		for (var i = 0; i < _length; i++){
+			with(textData[| i]){ // Make sure color data structs are removed should any exist for the current textbox.
+				if (ds_exists(colorData, ds_type_list)){
+					var _cDataLength = ds_list_size(colorData);
+					for (var ii = 0; ii < _cDataLength; ii++)
+						delete colorData[| ii];
+					ds_list_destroy(colorData);
+				}
+			}
 			delete textData[| i];
+		}
 		ds_list_clear(textData);
 	}
 	
@@ -271,13 +316,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 	///	
 	/// @param {Real}	index	The index within the textbox data to use for the displayed textbox.
 	set_textbox_index = function(_index){
-		var _textData = textData[| _index];
-		if (is_undefined(_textData)){ // Invalid index requested; clear the textbox.
-			object_set_state(state_close_animation);
-			nextIndex = -1;
-			return;
-		}
-		
+		var _textData		= textData[| _index];
 		var _prevActorIndex	= textData[| textIndex].actorIndex;
 		var _newActorIndex	= _textData.actorIndex;
 		if (_prevActorIndex != _newActorIndex)
@@ -292,6 +331,9 @@ function str_textbox(_index) : str_base(_index) constructor {
 		nextChar		= 1;
 		charX			= TBOX_SURFACE_X_PADDING;
 		charY			= TBOX_SURFACE_Y_PADDING;
+		colorDataRef	= _textData.colorData;	// Overwrite the previous ds_list reference with either -1 or the new textbox's color list.
+		totalColors		= (colorDataRef == -1) ? 0 : ds_list_size(colorDataRef);
+		charColorIndex	= 0;
 		
 		// Clear or set the flag that is responsible for allowing a textbox to display graphics related to an
 		// actor's name alongside that name itself depending on what "actorName" is set to by the call to the
@@ -310,25 +352,22 @@ function str_textbox(_index) : str_base(_index) constructor {
 	/// @param {Real}	actorIndex	(Optional) If set to a value greater than 0, the actor's name relative to the index will be shown.
 	///	@param {Real}	nextIndex	(Optional) Determines which textbox out of the current data is after this one.
 	queue_new_text = function(_text, _actorIndex = 0, _nextIndex = -1){
-		var _size = ds_list_size(textData);
-		if (_nextIndex < -1 || _nextIndex >= _size)
-			return;
-		
 		draw_set_font(fnt_small); // Ensures proper font is used for size calculations.
-		var _curWordWidth	= 0;
-		var _curLineWidth	= 0;
-		var _curChar		= "";
-		var _curLine		= "";
-		var _curWord		= "";
-		var _fullText		= "";
-		var _length			= string_length(_text);
+		var _curWordWidth		= 0;
+		var _curLineWidth		= 0;
+		var _curChar			= "";
+		var _curLine			= "";
+		var _curWord			= "";
+		var _fullText			= "";
+		var _fullColorData		= ds_list_create();
+		var _length				= string_length(_text);
 		for (var i = 1; i <= _length; i++){
 			_curChar = string_char_at(_text, i);
-			
+
 			// A space character or the length of the string has been reached. The current word will be added
 			// to the current line if that line still has room on the textbox. Otherwise, it will be added to
 			// the next line and that line will begin with that word alongside a spaceas its starting content.
-			if (_curChar == " " || i == _length){
+			if (_curChar == TBOX_CHAR_SPACE || i == _length){
 				// The text will overflow the textbox horizontally, so the current line is added to the 
 				// formatted string and a new line will begin.
 				if (_curLineWidth + _curWordWidth > TBOX_SURFACE_WIDTH - (TBOX_SURFACE_X_PADDING * 2)){
@@ -339,8 +378,8 @@ function str_textbox(_index) : str_base(_index) constructor {
 						_curLine	= "";
 						break;
 					}
-					_fullText	   += _curLine + "\n";
-					_curLineWidth	= _curWordWidth + string_width(" ");
+					_fullText	   += _curLine + TBOX_CHAR_NEWLINE;
+					_curLineWidth	= _curWordWidth + string_width(TBOX_CHAR_SPACE);
 					_curLine		= _curWord + " ";
 				} else{ // Line has more space; keep adding to it.
 					_curLineWidth  += _curWordWidth + string_width(_curChar);
@@ -353,19 +392,61 @@ function str_textbox(_index) : str_base(_index) constructor {
 			
 			// A newline character already exists within the string, so a new line will be started without
 			// the current line having to exceed the horizontal limit of the textbox.
-			if (_curChar == "\n"){
+			if (_curChar == TBOX_CHAR_NEWLINE){
 				// Make sure the text doesn't also overflow vertically if another line was going to be
 				// added to what will be shown on the screen. If so, exit the loop early.
 				if (string_height(_fullText + "\nM") > TBOX_SURFACE_HEIGHT - (TBOX_SURFACE_Y_PADDING * 2)){
-					_fullText  += _curLine + _curWord;
-					_curLine	= "";
+					_fullText	   += _curLine + _curWord;
+					_curLine		= "";
 					break;
 				}
-				_fullText	   += _curLine + _curWord + "\n";
+				_fullText	   += _curLine + _curWord + TBOX_CHAR_NEWLINE;
 				_curLineWidth	= 0;
 				_curLine		= "";
 				_curWordWidth	= 0;
 				_curWord		= "";
+				continue;
+			}
+			
+			// A region end character ('}') has been hit while parsing the current string. So, the position
+			// within the parsed string is captured so the color data will know when it has ended. Otherwise, 
+			// all subsequent characters would remain a given color until another color within this ds_list 
+			// would overwrite it with its own color; instead of going back to the standard text color.
+			if (_curChar == TBOX_CHAR_REGION_END){
+				with(_fullColorData[| ds_list_size(_fullColorData) - 1])
+					endIndex = string_length(_fullText) + string_length(_curLine) + string_length(_curWord);
+				continue;
+			}
+			
+			// A color change character ('@') has been hit while parsing the current string. So, a new struct
+			// is created that will house the data for the next chunk of text that will be colored a different
+			// hue from the textbox's default.
+			if (_curChar == TBOX_CHAR_COLOR_CHANGE){
+				i++; // Increment i to skip over the color change character.
+				
+				// Set the start index of the colored text region to whatever the current length of all the
+				// parsed text is equal to. The endIndex value is initialzed to 0, but will be set in the future.
+				var _colorData = {
+					colorCode	: 0,
+					startIndex	: string_length(_fullText) + string_length(_curLine) + string_length(_curWord),
+					endIndex	: 0,
+				};
+				
+				// Now, loop until a region start character ('{') is found. When that character is hit, whatever
+				// was parsed before it will be treated as the "color code". THis is passed into a function that
+				// will return an RGB color value that the text can utilize as it's being rendered.
+				var _strColor = "";
+				while(i < _length){
+					_curChar = string_char_at(_text, i);
+					if (_curChar == TBOX_CHAR_REGION_START){
+						ds_list_add(_fullColorData, _colorData);
+						_colorData.colorCode = get_color_code_from_string(_strColor);
+						break;
+					}
+					
+					_strColor += _curChar;
+					i++;
+				}
 				continue;
 			}
 			
@@ -385,12 +466,38 @@ function str_textbox(_index) : str_base(_index) constructor {
 		if (_actorIndex != TBOX_ACTOR_INVALID && get_actor_name(_actorIndex) == "")
 			_actorIndex = TBOX_ACTOR_INVALID;
 		
+		// Should no additional color data be parsed from the provided text, the ds_list that was created to
+		// hold any potential color information will be destroyed and the value passed into the textData struct
+		// will simply be the default value of -1.
+		if (ds_list_size(_fullColorData) == 0){
+			ds_list_destroy(_fullColorData);
+			_fullColorData = -1;
+		}
+		
 		// Finally, create a new struct for the parsed text's contents and paired data.
 		ds_list_add(textData, {
 			content		: _fullText,
+			colorData	: _fullColorData,
 			actorIndex	: _actorIndex,
 			nextIndex	: _nextIndex,
 		});
+	}
+	
+	/// @description 
+	///	Grabs an RGB color code (Denoted as 0xBBGGRR in the actual hex values for each) that matches the string
+	/// code that was parsed into this function's single argument parameter. If a matching value is found, it
+	/// will be returned. Otherwise, the default value of a dark gray is returned as a soft error.
+	///	
+	/// @param {String}	string	The string of text that will be checked to get the matching color code from. 
+	get_color_code_from_string = function(_string){
+		switch(string_lower(_string)){
+			default:						return c_dkgray;
+			case TBOX_COLOR_CODE_BLUE:		return c_blue;
+			case TBOX_COLOR_CODE_RED:		return c_red;
+			case TBOX_COLOR_CODE_GREEN:		return c_green;
+			case TBOX_COLOR_CODE_ORANGE:	return c_orange;
+			case TBOX_COLOR_CODE_PURPLE:	return c_purple;
+		}
 	}
 	
 	/// @description
@@ -421,6 +528,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 			if (TBOX_WAS_ADVANCE_PRESSED){
 				if (nextIndex == -1){ // The next index is invalid, the textbox will deactivate itself.
 					object_set_state(state_close_animation);
+					textIndex = -1;
 					return;
 				}
 				set_textbox_index(nextIndex);
@@ -476,7 +584,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 	state_close_animation = function(_delta){
 		// Repeat the opening animation or deactivate the textbox depending on the current value of nextIndex.
 		if (alpha == 0.0){
-			if (nextIndex == -1) { deactivate_textbox(); }
+			if (textIndex == -1) { deactivate_textbox(); }
 			else				 { object_set_state(state_open_animation); }
 			return;
 		}
