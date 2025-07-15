@@ -62,6 +62,9 @@
 #macro	TBOX_SURFACE_X_PADDING			1
 #macro	TBOX_SURFACE_Y_PADDING			2
 
+// Determines the position on the GUI the textbox will begin the opening animation at.
+#macro	TBOX_Y_START					VIEWPORT_HEIGHT + 30
+
 // Determines the position on the GUI the textbox will rest at after its opening transition has completed.
 #macro	TBOX_Y_TARGET					VIEWPORT_HEIGHT - 60.0
 
@@ -81,7 +84,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 	// The current position of the textbox on the game's GUI layer. Determines where everything is drawn as
 	// this coordinate will determine the top-left position of the entire textbox when drawn to the screen.
 	x				= floor((VIEWPORT_WIDTH - TBOX_SURFACE_WIDTH - 20) / 2);
-	y				= VIEWPORT_HEIGHT + 30;
+	y				= TBOX_Y_START;
 	
 	// Determines the overall transparency level for every graphics element of the textbox.
 	alpha			= 0.0;
@@ -584,8 +587,13 @@ function str_textbox(_index) : str_base(_index) constructor {
 	state_close_animation = function(_delta){
 		// Repeat the opening animation or deactivate the textbox depending on the current value of nextIndex.
 		if (alpha == 0.0){
-			if (textIndex == -1) { deactivate_textbox(); }
-			else				 { object_set_state(state_open_animation); }
+			if (textIndex == -1){ // Closes the textbox.
+				deactivate_textbox();
+				return;
+			}
+			// Set the textbox to "reopen" itself for the new actor's dialogue.
+			object_set_state(state_open_animation); 
+			y = TBOX_Y_START;
 			return;
 		}
 		
