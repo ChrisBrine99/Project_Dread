@@ -1,3 +1,5 @@
+#region Shared Macros Between Entity Types
+
 // Values for the flag bits found within an entity (Both dynamic and static utilize these) that will determine
 // what non-function states apply to them currently. Each flag has its own unique purpose and effect.
 #macro	ENTT_FLAG_SHADOW				0x02000000
@@ -17,6 +19,10 @@
 #macro	ENTT_IS_DESTROYED				((flags & ENTT_FLAG_DESTROYED)		!= 0 && (flags & ENTT_FLAG_INVINCIBLE)	== 0)
 #macro	ENTT_IS_ACTIVE					((flags & ENTT_FLAG_ACTIVE)			!= 0 && (flags & ENTT_FLAG_DESTROYED)	== 0)
 
+#endregion Shared Macros Between Entity Types
+
+#region Shared Event Functions Between Entity Types
+
 /// @description
 ///	The default Entity drawing function, which will also handle animation that Entity should their current
 /// sprite have more than one frame OR their animation speed is set to some non-zero value.
@@ -35,8 +41,13 @@ function entity_draw_event(_delta){
 		flags	   |= ENTT_FLAG_ANIMATION_END;
 		image_index = animLoopStart;
 	}
-	draw_sprite_ext(sprite_index, floor(image_index), x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+	draw_sprite_ext(sprite_index, floor(image_index), x, y, 
+		image_xscale, image_yscale, image_angle, image_blend, image_alpha);
 }
+
+#endregion Shared Event Functions Between Entity Types
+
+#region Shared Miscellaneous Functions Between Entity Types
 
 /// @description 
 ///	Assigns a new sprite for the Entity to use. If the sprite resource already matches what the Entity's current
@@ -67,12 +78,14 @@ function entity_set_sprite(_sprite, _speed = 1.0, _start = 0, _loopStart = 0){
 /// @param {Real}	color		(Optional) The hue of the light source.
 ///	@param {Real}	strength	(Optional) How bright the light source appears in the world (Alpha under a different name).
 /// @param {Bool}	persistent	(Optional) When true, the light will remain alive between rooms.
-function entity_add_light(_x, _y, _radius, _color = c_white, _strength = 1.0, _persistent = false){
+function entity_add_standard_light(_x, _y, _radius, _color = COLOR_TRUE_WHITE, _strength = 1.0, _persistent = false){
 	// Don't attempt to create a light source if a reference already occupies the storage variable.
 	if (lightSource)
 		return;
 	
-	lightSource = light_create(x + _x, y + _y, _radius, _color, _strength, _persistent);
+	lightSource = light_standard_create(x + _x, y + _y, _radius, _color, _strength, _persistent);
 	lightX		= _x;
 	lightY		= _y;
 }
+
+#endregion Shared Miscellaneous Functions Between Entity Types

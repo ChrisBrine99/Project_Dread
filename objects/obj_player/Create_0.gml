@@ -74,6 +74,11 @@
 #macro	PLYR_ACCEL_SPRINT_SLOW			0.20
 #macro	PLYR_SPEED_SPRINT_SLOW			1.40
 
+// Macros that will determine how the player's movement animation sprite is split up relative to the number of
+// directions representing within that sprite resource.
+#macro	PLYR_ANIM_DIRECTION_DELTA		90.0	// Number MUST divide 360 with no remainder.
+#macro	PLYR_MOVE_ANIM_LENGTH			3.0
+
 // Macros for the indices into the "timers" array that correspond to each one utilized by the player for various
 // interval-based actions and code. The final value is the total number of those timers required by the object.
 #macro	PLYR_STAMINA_LOSS_TIMER			0
@@ -85,18 +90,23 @@
 // Macros that determine the speed at which various interval-based actions will occur for the player.
 #macro	PLYR_STAMINA_LOSS_RATE			2.0
 #macro	PLYR_STAMINA_REGEN_RATE			5.0
-#macro	PLYR_BLEEDING_DAMAGE_RATE		150.0
-#macro	PLYR_POISON_DAMAGE_RATE			300.0
+#macro	PLYR_BLEEDING_DAMAGE_RATE		300.0
+#macro	PLYR_POISON_DAMAGE_RATE			600.0
+
+// Determines the percentage amount relative to their current maximum hitpoints of damage dealt to the player 
+// whenever they're bleeding and the damage interval timer rolls over. Unlike poison, it is a constant amount.
+#macro	PLYR_BLEEDING_DAMAGE_AMOUNT		0.02
 
 // Determines the starting damage of the poison status condition. From here, it doubles until the player either
 // curs the status or dies from the damage. The damage is reset once the player's poison status is removed.
 #macro	PLYR_POISON_BASE_DAMAGE			0.01
 
-// 
+// Macros for the values/properties applied to the player's ambient light source whenever they're in the world
+// without a flashlight or with their equipped flashlight turned off.
 #macro	PLYR_AMBLIGHT_XOFFSET			0
 #macro	PLYR_AMBLIGHT_YOFFSET		   -14
-#macro	PLYR_AMBLIGHT_RADIUS			12
-#macro	PLYR_AMBLIGHT_COLOR				c_dkgray
+#macro	PLYR_AMBLIGHT_RADIUS			12.0
+#macro	PLYR_AMBLIGHT_COLOR				COLOR_DARK_GRAY
 #macro	PLYR_AMBLIGHT_STRENGTH			0.25
 
 #endregion Misc. Macros
@@ -116,18 +126,19 @@ accel				= 0.15;
 maxMoveSpeed		= 1.05;
 
 // Create a very dim ambient light that will illuminate the player's face when in complete darkness.
-entity_add_light(PLYR_AMBLIGHT_XOFFSET, PLYR_AMBLIGHT_YOFFSET, 
+entity_add_standard_light(PLYR_AMBLIGHT_XOFFSET, PLYR_AMBLIGHT_YOFFSET, 
 	PLYR_AMBLIGHT_RADIUS, PLYR_AMBLIGHT_COLOR, PLYR_AMBLIGHT_STRENGTH, true);
 
 // Set the starting sprite for the player.
 entity_set_sprite(spr_player_unarmed);
 animSpeed			= 0.0; // Pauses the inherited animation system so the one below can be utilized instead.
 
-// To prevent repeating the same frame twice for each direction (An extra 4 redundant sprites), the player will use
-// a slightly adjusted version of the standard Entity animation system. It will set "image_index" to the value found
-// at each index	 within "animFrames" and "animCurFrame" will store what "image_index" was originally required to.
+// To prevent repeating the same frame twice for each direction (An extra 4 redundant sprites), the player 
+// will use a slightly adjusted version of the standard Entity animation system. It will set "image_index" to 
+// the value found at each index within "animFrames" and "animCurFrame" will store what "image_index" was 
+// originally required to.
 animFrames			= [0, 1, 0, 2];
-animLength			= 4.0;
+animLength			= array_length(animFrames);
 animCurFrame		= 0.0;
 
 // Assign the player's starting and maximum hitpoints to be 100 units so whole percentage values are always
@@ -135,8 +146,8 @@ animCurFrame		= 0.0;
 maxHitpoints		= 100;
 curHitpoints		= maxHitpoints;
 
-// Stores the inputs that were held versus not held for the current and last frame of gameplay. From this, checks
-// to see if they've been pressed, held, or released can be performed quickly through bitwise math.
+// Stores the inputs that were held versus not held for the current and last frame of gameplay. From this, 
+// checks to see if they've been pressed, held, or released can be performed quickly through bitwise math.
 inputFlags			= 0;
 prevInputFlags		= 0;
 
@@ -173,12 +184,12 @@ poisonDamagePercent	= PLYR_POISON_BASE_DAMAGE;
 // throughout the game. The first four are used in all playthroughs, and the remaining two "amulet" slots are 
 // exclusive to new game+ modes.
 equipment = {
-	weapon			: -1,
-	weaponAmmo		: -1,
-	armor			: -1,
-	flashlight		: -1,
-	firstAmulet		: -1,
-	secondAmulet	: -1,
+	weapon			: ID_INVALID,
+	weaponAmmo		: ID_INVALID,
+	armor			: ID_INVALID,
+	flashlight		: ID_INVALID,
+	firstAmulet		: ID_INVALID,
+	secondAmulet	: ID_INVALID,
 };
 
 #endregion Variable Inheritance and Initialization
@@ -252,7 +263,7 @@ determine_movement_vector = function(){
 /// 
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 process_movement_animation = function(_delta){
-	animLoopStart = 3.0 * round(direction / 90.0);
+	animLoopStart = PLYR_MOVE_ANIM_LENGTH * round(direction / PLYR_ANIM_DIRECTION_DELTA);
 	animCurFrame += _delta * (moveSpeed / PLYR_SPEED_NORMAL) * (animFps / GAME_TARGET_FPS);
 	if (animCurFrame >= animLength) // Loop back to the start of the animation.
 		animCurFrame -= animLength;
@@ -304,7 +315,7 @@ end_step_event = function(_delta){
 	// Damaging the player at each bleeding status timer interval if they are current bleeding.
 	if (PLYR_IS_BLEEDING && timers[PLYR_BLEEDING_TIMER] == 0.0){
 		timers[PLYR_BLEEDING_TIMER] = PLYR_BLEEDING_DAMAGE_RATE;
-		update_hitpoints(floor(maxHitpoints * 0.02)); // Reduce hitpoints by 2% rounded down.
+		update_hitpoints(floor(maxHitpoints * PLYR_BLEEDING_DAMAGE_AMOUNT)); // Reduce hitpoints by 2% rounded down.
 	}
 	
 	// Damaging the player at each poison damage interval if they are currently poisoned and also doubling

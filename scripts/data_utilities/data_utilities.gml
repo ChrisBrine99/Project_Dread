@@ -1,8 +1,8 @@
 #region File Loading/Saving Functions
 
 /// @description
-/// Loads in and automatically decodes a JSON-formatted file into a GML data structure made up of ds_maps and
-/// ds_lists which is then returned by the function to be utilized as required in the code.
+/// Loads in and automatically decodes a JSON-formatted file into a GML data structure made up of ds_maps 
+/// and ds_lists which is then returned by the function to be utilized as required in the code.
 ///	
 ///	@param {String}	filename	The JSON file to load.
 function load_json(_filename){

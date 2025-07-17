@@ -1,3 +1,11 @@
+#region Macros for Light Source Struct
+
+// 
+#macro	LGHT_MIN_STRENGTH				0.0
+#macro	LGHT_MAX_STRENGTH				1.0
+
+#endregion Macros for Light Struct
+
 #region Light Source Struct Definition
 
 /// @param {Function}	index	The value of "str_light_source" as determined by GameMaker during runtime.
@@ -5,8 +13,8 @@ function str_light_source(_index) : str_base(_index) constructor {
 	x			= 0;
 	y			= 0;
 	radius		= 0.0;
-	strength	= 0.0;
-	color		= c_black;
+	strength	= LGHT_MIN_STRENGTH;
+	color		= COLOR_BLACK;
 	
 	///	@description 
 	///	Called for every frame that the light source exists. Is responsible for rendering the light source with
@@ -17,7 +25,7 @@ function str_light_source(_index) : str_base(_index) constructor {
 	///	@param {Real}	delta		The difference in time between the execution of this frame and the last.
 	draw_event = function(_viewX, _viewY, _delta) {
 		draw_set_alpha(strength);
-		draw_circle_color(x - _viewX, y - _viewY, radius, color, c_black, false);
+		draw_circle_color(x - _viewX, y - _viewY, radius, color, COLOR_BLACK, false);
 	}
 	
 	/// @description 
@@ -38,29 +46,29 @@ function str_light_source(_index) : str_base(_index) constructor {
 	/// @param {Real}	radius		Area from the origin of the light source that is illuminated by it.
 	/// @param {Real}	color		(Optional) The hue of the light source.
 	/// @param {Real}	strength	(Optional) How bright the light source appears in the world (Alpha under a different name).
-	light_set_properties = function(_radius, _color = c_white, _strength = 1.0){
+	light_set_properties = function(_radius, _color = COLOR_TRUE_WHITE, _strength = LGHT_MAX_STRENGTH){
 		radius		= _radius;
 		color		= _color;
-		strength	= clamp(_strength, 0.0, 1.0);
+		strength	= clamp(_strength, LGHT_MIN_STRENGTH, LGHT_MAX_STRENGTH);
 	}
 }
 
 #endregion Light Source Struct Definition
 
-#region Global Functions for Light Sources
+#region Global Functions for Light Source
 
 /// @description 
 ///	Creates a light source at the given position within the current room. If an Entity is creating this light,
 ///	it will follow that Entity automatically. Otherwise, it will remain static within the room unless moved
 ///	manually through a cutscene or something similar.
 ///	
-///	@param {Real}	x			Horizontal position of the light within the room.
-/// @param {Real}	y			Vertical position of the light within the room.
-/// @param {Real}	radius		Area from the origin of the light source that is illuminated by it.
-/// @param {Real}	color		(Optional) The hue of the light source.
-///	@param {Real}	strength	(Optional) How bright the light source appears in the world (Alpha under a different name).
-/// @param {Bool}	persistent	(Optional) Determines if the light will remain existing between rooms.
-function light_create(_x, _y, _radius, _color = c_white, _strength = 1.0, _persistent = false){
+///	@param {Real}		x			Horizontal position of the light within the room.
+/// @param {Real}		y			Vertical position of the light within the room.
+/// @param {Real}		radius		Area from the origin of the light source that is illuminated by it.
+/// @param {Real}		color		(Optional) The hue of the light source.
+///	@param {Real}		strength	(Optional) How bright the light source appears in the world (Alpha under a different name).
+/// @param {Bool}		persistent	(Optional) Determines if the light will remain existing between rooms.
+function light_standard_create(_x, _y, _radius, _color = COLOR_TRUE_WHITE, _strength = LGHT_MAX_STRENGTH, _persistent = false){
 	var _light = instance_create_struct(str_light_source);
 	with(_light){ // Position the light and apply its sizing/color/strength.
 		light_set_position(_x, _y);

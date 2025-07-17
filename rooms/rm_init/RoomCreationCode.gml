@@ -17,9 +17,9 @@ with(CAMERA){
 }
 
 with(TEXTBOX){
-	queue_new_text("Test test\ntest test @blue{test test} this is a @red{test} @orange{to} @purple{see} if the textbox can format incoming text properly!!!", TBOX_ACTOR_PLAYER, 1);
+	queue_new_text("Test. test.\ntest test. @0xF84020{test test}. this is a @0x3050F8{test} @0x10A0E4{to} @0xF84468{see} if the textbox can format incoming text properly!!!", TBOX_ACTOR_PLAYER, 1);
 	queue_new_text("A textbox in the middle to see if the same actor speaking makes it so the textbox doesn't close and open again.", TBOX_ACTOR_PLAYER, 2);
-	queue_new_text("Another textbox to see if the @orange{color-changing logic} works properly. Otherwise, @red{something isn't being reset properly and needs to be fixed}.", TBOX_ACTOR_INVALID);
+	queue_new_text("Another textbox to see if the @0x10A0E4{color-changing logic} works properly. Otherwise, @0x3050F8{something isn't being reset properly and needs to be fixed}.", TBOX_ACTOR_INVALID);
 	activate_textbox(0);
 }
 

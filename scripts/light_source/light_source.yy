@@ -1,9 +1,9 @@
 {
   "$GMScript":"v1",
-  "%Name":"lights",
+  "%Name":"light_source",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"lights",
+  "name":"light_source",
   "parent":{
     "name":"Standard",
     "path":"folders/Scripts/Structs/Standard.yy",
