@@ -65,9 +65,9 @@
 // Determines how much additional time is applied to the "wait" timer during the textbox's text typing process
 // whenever a given punctuation character has been hit.
 #macro	TBOX_PUNCT_NONE					1.0
-#macro	TBOX_PUNCT_COMMA_DELAY			0.25
-#macro	TBOX_PUNCT_COLON_DELAY			0.18
-#macro	TBOX_PUNCT_SEMICOLON_DELAY		0.18
+#macro	TBOX_PUNCT_COMMA_DELAY			0.175
+#macro	TBOX_PUNCT_COLON_DELAY			0.125
+#macro	TBOX_PUNCT_SEMICOLON_DELAY		0.15
 #macro	TBOX_PUNCT_PERIOD_DELAY			0.1
 #macro	TBOX_PUNCT_QUESTION_DELAY		0.09
 #macro	TBOX_PUNCT_EXCLAIM_DELAY		0.075
@@ -192,18 +192,19 @@ function str_textbox(_index) : str_base(_index) constructor {
 			
 			// Grab a reference to the current textbox's contents and then begin adding characters to the text
 			// surface one at a time until the value of curChar matches that of _nextChar.
-			var _curText	= textData[| textIndex].content;
-			var _curChar	= "";
-			var _colorData	= -1;
-			var _curColor	= COLOR_WHITE;
+			var _curText		= textData[| textIndex].content;
+			var _curChar		= "";
+			var _curCharIndex	= curChar;
+			var _colorData		= -1;
+			var _curColor		= COLOR_WHITE;
 			while(curChar < _nextCharIndex){
-				_curChar = string_char_at(_curText, curChar);
+				_curChar		= string_char_at(_curText, curChar);
+				_curCharIndex	= curChar; // Store for later use.
 				
 				// Check if any unique colors should be used for the text currently being added to the screen.
 				// This entire chunk of code is ignored if the textbox doesn't have any additional color data
 				// associated with it.
 				if (colorDataRef != -1 && charColorIndex < totalColors){
-					var _curCharIndex = curChar;
 					with(colorDataRef[| charColorIndex]){
 						// When the final character index is hit, the next element in the list (If one exists)
 						// will be utilized on the next iteration of this character rendering logic. Otherwise,
@@ -223,8 +224,9 @@ function str_textbox(_index) : str_base(_index) constructor {
 				// font being used, and then move onto the next character if punctuation isn't found.
 				if (_curChar == TBOX_CHAR_SPACE){
 					charX += string_width(TBOX_CHAR_SPACE);
-					if (check_for_punctuation(_curText, curChar - 2))
-						break; // Break out of the loop so the delay is actually applied to the next character.
+					// Get the previous character to see if it is punctuation and exit the loop if so.
+					if (check_for_punctuation(_curText, _curCharIndex - 1))
+						break;
 					continue;
 				}
 				
@@ -234,8 +236,9 @@ function str_textbox(_index) : str_base(_index) constructor {
 				if (_curChar == TBOX_CHAR_NEWLINE){
 					charX	= TBOX_SURFACE_X_PADDING;
 					charY  += string_height("M");
-					if (check_for_punctuation(_curText, curChar - 2))
-						break; // Break out of the loop so the delay is actually applied to the next character.
+					// Get the previous character to see if it is punctuation and exit the loop if so.
+					if (check_for_punctuation(_curText, _curCharIndex - 1))
+						break;
 					continue;
 				}
 				

@@ -184,10 +184,8 @@ function draw_text_with_shadow_ext(_x, _y, _text, _color1 = c_white, _color2 = c
 ///	
 /// @param {String}		char	The character to check.
 function is_punctuation(_char){
-	if (_char == CHAR_COMMA || _char == CHAR_COLON || _char == CHAR_SEMICOLON || 
-			_char == CHAR_PERIOD || _char == CHAR_QUESTION || _char == CHAR_EXCLAIM)
-		return true;
-	return false;
+	return (_char == CHAR_COMMA || _char == CHAR_COLON || _char == CHAR_SEMICOLON || 
+			_char == CHAR_PERIOD || _char == CHAR_QUESTION || _char == CHAR_EXCLAIM);
 }
 
 #endregion String Manupulation Functions
