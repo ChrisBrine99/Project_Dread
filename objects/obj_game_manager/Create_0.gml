@@ -256,16 +256,6 @@ uLightSaturation		= shader_get_uniform(shd_lighting, "saturation");
 uLightContrast			= shader_get_uniform(shd_lighting, "contrast");
 uLightTexture			= shader_get_sampler_index(shd_lighting, "lightTex");
 
-// Upon initialization, it stores the value -1, but will contain a map of structs that contain all the info
-// about every item that can be collected within the game. This data is loaded in when a save file is loaded
-// or a new playthrough is started.
-global.itemData = -1;
-
-// Upon initialization, it stores the value -1, but will contain an array of items the player current has on
-// their person during gameplay; with the starting and maximum sizes being determined by the difficulty the
-// user selected when starting a new playthrough.
-global.inventory = -1;
-
 #endregion Game Manager Global and Local Variable Initializations
 
 // These calls are for testing purposes

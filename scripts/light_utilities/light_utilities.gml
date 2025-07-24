@@ -1,3 +1,5 @@
+#region Global Variables Related to the Lighting System
+
 // Globals that store important information about the lighting system. The top variable is the management list
 // for all light struct instances, and the other values store the surface ID and texture ID for the surface
 // the lights are rendered onto, respectively.
@@ -5,10 +7,17 @@ global.lights			= ds_list_create();
 global.lightSurface		= -1;
 global.lightTexture		= -1;
 
+#endregion Global Variables Related to the Lighting System
+
+#region General Creation/Destruction Functions for Light Sources
+
 /// @description 
 ///	
 ///	
-///	@param {Struct._structRef}
+///	@param {Function}	structFunc	The light source struct to instantiate.
+function light_create(_structFunc){
+	
+}
 
 /// @description
 ///	Destroys a given light instance through the reference passed into the function's single parameter. It will
@@ -23,3 +32,5 @@ function light_destroy(_lightRef){
 	ds_list_delete(global.lights, _index);
 	instance_destroy_struct(_lightRef);
 }
+
+#endregion General Creation/Destruction Functions for Light Sources

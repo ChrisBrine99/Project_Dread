@@ -1,3 +1,5 @@
+#region Macros Utilized Primarily by the Inventory System
+
 // Macros for the numerical representations of an item's type, which will help determine how it functions within
 // the game and what options are available to the player when it is selected in the inventory (Excluding any
 // flags that may also affect this).
@@ -40,6 +42,19 @@
 // Macro that represents an inventory slot that current has no item contained within it.
 #macro	INV_EMPTY_SLOT				   -1
 
+#endregion Macros Utilized Primarily by the Inventory System
+
+#region Globals Related to the Inventory System
+
+// Upon initialization, it stores the value -1, but will contain an array of items the player current has on
+// their person during gameplay; with the starting and maximum sizes being determined by the difficulty the
+// user selected when starting a new playthrough.
+global.inventory = -1;
+
+#endregion Globals Related to the Inventory System
+
+#region Inventory Initialization Function
+
 /// @description
 ///	Initializes the inventory data structure. It's starting size will be determined by what difficulty the
 /// player selected for their playthrough. The maximum size will also be affected by the selected difficulty,
@@ -71,6 +86,10 @@ function inventory_initialize(_cmbDiffFlagBit){
 	for (var i = 0; i < _length; i++)
 		array_set(global.inventory, i, INV_EMPTY_SLOT);
 }
+
+#endregion Inventory Initialization Function
+
+#region Functions for Manipulating the Inventory's Contents
 
 /// @description 
 ///	Adds some variable amount of an item to the player's inventory. The value returned will be the remainder
@@ -244,6 +263,10 @@ function inventory_slot_swap(_first, _second){
 	global.inventory[_second] = _temp;
 }
 
+#endregion Functions for Manipulating the Inventory's Contents
+
+#region Functions for Getting Info About the Inventory's Contents
+
 /// @description 
 ///	Returns the struct containing the information about the item that occupies a slot within the inventory.
 /// If no item currently occupies the slot, the value -1 (INV_EMPTY_SLOT) will be returned. This value is also
@@ -282,3 +305,5 @@ function inventory_count_item(_itemID){
 	}
 	return _count;
 }
+
+#endregion Functions for Getting Info About the Inventory's Contents

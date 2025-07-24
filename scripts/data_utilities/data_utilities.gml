@@ -1,3 +1,12 @@
+#region Globals Related to General Data Management
+
+// Upon initialization, it stores the value -1, but will contain a map of structs that contain all the info
+// about every item that can be collected within the game. This data is loaded in when a save file is loaded
+// or a new playthrough is started.
+global.itemData = -1;
+
+#endregion Globals Related to General Data Management
+
 #region File Loading/Saving Functions
 
 /// @description
