@@ -5,8 +5,8 @@
   "isDnD":false,
   "name":"menu_utilites",
   "parent":{
-    "name":"Structs",
-    "path":"folders/Scripts/Structs.yy",
+    "name":"Utilities",
+    "path":"folders/Scripts/Utilities.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

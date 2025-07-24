@@ -9,7 +9,7 @@
 #region Light Source Struct Definition
 
 /// @param {Function}	index	The value of "str_light_source" as determined by GameMaker during runtime.
-function str_light_source(_index) : str_base(_index) constructor {
+function str_light_basic(_index) : str_base(_index) constructor {
 	x			= 0;
 	y			= 0;
 	radius		= 0.0;
@@ -29,17 +29,6 @@ function str_light_source(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	///	Sets the position within the room for the light's origin to be. Any floating-point values passed in
-	///	as argument parameters will be truncated to become whole-pixel values.
-	///	
-	///	@param {Real}	x	Horizontal position of the light within the room.
-	/// @param {Real}	y	Vertical position of the light within the room.
-	light_set_position = function(_x, _y){
-		x = floor(_x);
-		y = floor(_y);
-	}
-	
-	/// @description 
 	///	Sets the base properties of the light source. Children of this basic light source struct can override
 	///	this function to enabled setting up the parameters they add for their type of lighting style.
 	///	
@@ -50,6 +39,17 @@ function str_light_source(_index) : str_base(_index) constructor {
 		radius		= _radius;
 		color		= _color;
 		strength	= clamp(_strength, LGHT_MIN_STRENGTH, LGHT_MAX_STRENGTH);
+	}
+	
+	/// @description 
+	///	Sets the position within the room for the light's origin to be. Any floating-point values passed in
+	///	as argument parameters will be truncated to become whole-pixel values.
+	///	
+	///	@param {Real}	x	Horizontal position of the light within the room.
+	/// @param {Real}	y	Vertical position of the light within the room.
+	light_set_position = function(_x, _y){
+		x = floor(_x);
+		y = floor(_y);
 	}
 }
 
@@ -68,8 +68,11 @@ function str_light_source(_index) : str_base(_index) constructor {
 /// @param {Real}		color		(Optional) The hue of the light source.
 ///	@param {Real}		strength	(Optional) How bright the light source appears in the world (Alpha under a different name).
 /// @param {Bool}		persistent	(Optional) Determines if the light will remain existing between rooms.
-function light_standard_create(_x, _y, _radius, _color = COLOR_TRUE_WHITE, _strength = LGHT_MAX_STRENGTH, _persistent = false){
-	var _light = instance_create_struct(str_light_source);
+function light_basic_create(_x, _y, _radius, _color = COLOR_TRUE_WHITE, _strength = LGHT_MAX_STRENGTH, _persistent = false){
+	var _light = instance_create_struct(str_light_basic);
+	if (_light == noone)
+		return noone;
+	
 	with(_light){ // Position the light and apply its sizing/color/strength.
 		light_set_position(_x, _y);
 		light_set_properties(_radius, _color, _strength);
@@ -78,20 +81,6 @@ function light_standard_create(_x, _y, _radius, _color = COLOR_TRUE_WHITE, _stre
 	
 	ds_list_add(global.lights, _light);
 	return _light;
-}
-
-/// @description
-///	Destroys a given light instance through the reference passed into the function's single parameter. It will
-/// remove their reference from the global light management list before finally removing it from the struct
-///	management list.
-///	
-/// @param {Struct._structRef}	lightRef	Reference to the str_light_source instance that will be deleted.
-function light_destroy(_lightRef){
-	var _index = ds_list_find_index(global.lights, _lightRef);
-	if (_index == -1) // Function was called on a struct reference that isn't a light source; exit without deleting.
-		return;
-	ds_list_delete(global.lights, _index);
-	instance_destroy_struct(_lightRef);
 }
 
 #endregion Global Functions for Light Sources

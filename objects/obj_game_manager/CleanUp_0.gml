@@ -50,13 +50,8 @@ ds_list_destroy(global.menus);
 
 // Remove all existing struct instances from memory by deleting their references stores within the global struct
 // management list. Then, that list itself is destroyed to clear it from memory as well.
-_structRef = undefined;
 _length	= ds_list_size(global.structs);
-for (var i = 0; i < _length; i++){
-	_structRef = global.structs[| i];
-	_structRef.destroy_event();
-	delete _structRef;
-}
+for (var i = 0; i < _length; i++) { instance_destroy_struct(global.structs[| i]); }
 ds_list_clear(global.structs);
 ds_list_destroy(global.structs);
 
@@ -66,5 +61,5 @@ with(CAMERA)		{ destroy_event(); }	delete CAMERA;
 with(TEXTBOX)		{ destroy_event(); }	delete TEXTBOX;
 ds_map_destroy(global.sInstances);
 
-// Finally, delete any structs that exist on the game manager for various aspects of the game that need managing.
+// Finally, delete any structs that exist globally as the game manager bares responsibility for cleaning up.
 delete global.settings;

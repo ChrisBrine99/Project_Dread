@@ -248,13 +248,6 @@ global.settings			= {
 // Stores the device ID for the gamepad that is currently connected to the game so its input can be polled.
 global.gamepadID		= -1;
 
-// Globals that store important information about the lighting system. The top variable is the management list
-// for all light struct instances, and the other values store the surface ID and texture ID for the surface
-// the lights are rendered onto, respectively.
-global.lights			= ds_list_create();
-global.lightSurface		= -1;
-global.lightTexture		= -1;
-
 // Uniforms for the lighting shader that will allow the properties of the shader to be changed on-the-fly as
 // required for the current area in the game.
 uLightColor				= shader_get_uniform(shd_lighting, "color");

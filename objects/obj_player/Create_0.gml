@@ -126,7 +126,7 @@ accel				= 0.15;
 maxMoveSpeed		= 1.05;
 
 // Create a very dim ambient light that will illuminate the player's face when in complete darkness.
-entity_add_standard_light(PLYR_AMBLIGHT_XOFFSET, PLYR_AMBLIGHT_YOFFSET, 
+entity_add_basic_light(PLYR_AMBLIGHT_XOFFSET, PLYR_AMBLIGHT_YOFFSET, 
 	PLYR_AMBLIGHT_RADIUS, PLYR_AMBLIGHT_COLOR, PLYR_AMBLIGHT_STRENGTH, true);
 
 // Set the starting sprite for the player.

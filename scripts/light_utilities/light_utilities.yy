@@ -1,12 +1,12 @@
 {
   "$GMScript":"v1",
-  "%Name":"light_source",
+  "%Name":"light_utilities",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"light_source",
+  "name":"light_utilities",
   "parent":{
-    "name":"Standard",
-    "path":"folders/Scripts/Structs/Standard.yy",
+    "name":"Utilities",
+    "path":"folders/Scripts/Utilities.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

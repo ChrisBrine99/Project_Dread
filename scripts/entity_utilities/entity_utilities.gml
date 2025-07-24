@@ -78,12 +78,12 @@ function entity_set_sprite(_sprite, _speed = 1.0, _start = 0, _loopStart = 0){
 /// @param {Real}	color		(Optional) The hue of the light source.
 ///	@param {Real}	strength	(Optional) How bright the light source appears in the world (Alpha under a different name).
 /// @param {Bool}	persistent	(Optional) When true, the light will remain alive between rooms.
-function entity_add_standard_light(_x, _y, _radius, _color = COLOR_TRUE_WHITE, _strength = 1.0, _persistent = false){
+function entity_add_basic_light(_x, _y, _radius, _color = COLOR_TRUE_WHITE, _strength = 1.0, _persistent = false){
 	// Don't attempt to create a light source if a reference already occupies the storage variable.
 	if (lightSource)
 		return;
 	
-	lightSource = light_standard_create(x + _x, y + _y, _radius, _color, _strength, _persistent);
+	lightSource = light_basic_create(x + _x, y + _y, _radius, _color, _strength, _persistent);
 	lightX		= _x;
 	lightY		= _y;
 }

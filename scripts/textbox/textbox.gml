@@ -660,5 +660,6 @@ function str_textbox(_index) : str_base(_index) constructor {
 			alpha = 0.0;
 	}
 }
+ds_map_add(global.structType, str_textbox, STRUCT_TYPE_CT_SINGLETON);
 
 #endregion Textbox Struct Definition

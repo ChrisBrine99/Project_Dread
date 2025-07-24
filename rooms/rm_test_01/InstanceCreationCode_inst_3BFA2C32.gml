@@ -1,1 +1,1 @@
-lightSource = light_standard_create(x, y, 256.0, COLOR_WHITE, 0.8);
+lightSource = light_basic_create(x, y, 256.0, COLOR_WHITE, 0.8);

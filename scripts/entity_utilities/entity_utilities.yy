@@ -5,8 +5,8 @@
   "isDnD":false,
   "name":"entity_utilities",
   "parent":{
-    "name":"Entity",
-    "path":"folders/Scripts/Entity.yy",
+    "name":"Utilities",
+    "path":"folders/Scripts/Utilities.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",
