@@ -1,4 +1,6 @@
-// 
+// A list of references to existing menu structs so they can be updated and rendered when active. This is needed
+// since the standard struct data structure doesn't require a struct to update or draw itself, but menus will
+// always need that to be the case.
 global.menus = ds_list_create();
 
 /// @description 

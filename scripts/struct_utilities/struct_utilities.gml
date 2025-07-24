@@ -100,9 +100,11 @@ function instance_find_struct(_id){
 }
 
 /// @description 
-/// Checks to see if the struct is a compile time singleton or not. It doesn't actually mean that the struct
-/// CAN'T be created during runtime, but simply that it can't so long as creation/destruction are done through
-/// "instance_create_struct" and "instance_destroy_struct", respectively.
+/// Checks to see if the struct is a compile-time singleton, runtime singleton, or neither. The term "compile-
+/// time" doesn't actually mean that the struct CAN'T be created during runtime, but simply that it can't so 
+/// long as creation/destruction are done through "instance_create_struct" and "instance_destroy_struct", 
+/// respectively. The same applies to runtime singletons, but they allow at least one instance to be created
+/// or destroyed as required.
 ///	
 /// @param {Function}	structFunc		The struct function to check.
 /// @param {Bool}		isDestroying	(Optional) When true, the function will check if a runtime singleton exists to be deleted.
