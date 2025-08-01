@@ -1,10 +1,11 @@
 #region Macros for Basic Light Struct
 
-// 
+// Values for the bits being utilized within a light struct's "flags" variable to enable/disable functionality
+// during its lifetime.
 #macro	LGHT_FLAG_LIMITED_LIFE			0x00000001
 #macro	LGHT_FLAG_DESTROYED				0x40000000
 
-// 
+// Checks to see whether a given flag within a light struct's "flags" variable is set to a 0 (false) or 1 (true).
 #macro	LGHT_HAS_LIMITED_LIFE			(flags & LGHT_FLAG_LIMITED_LIFE)
 #macro	LGHT_IS_DESTROYED				(flags & LGHT_FLAG_DESTROYED)
 

@@ -87,6 +87,19 @@ function load_json(_filename){
 #macro	KEY_CAN_DROP_FLAG				"Can_Drop"
 #macro	KEY_USE_FUNCTION				"Use_Func"
 
+// Macros that define what the indices within the "_subStrings" variable are during the item crafting data
+// parsing process. Otherwise, these values would be incredibly undescriptive just looking at them within the
+// code responsible for parsing the data.
+#macro	IDATA_CRAFT_RESULT_ID			0
+#macro	IDATA_CRAFT_UNPARSED_AMOUNTS	1
+#macro	IDATA_CRAFT_MIN_AMOUNT			0
+#macro	IDATA_CRAFT_MAX_AMOUNT			1
+
+// Macros for the delimiters that are referenced when parsing an item's crafting data out of a standard string
+// and into a valid trio of a crafted item id, a minimum amount made, as well as a maximum amount made.
+#macro	IDATA_CRAFT_AMOUNT_DELIM		"x"
+#macro	IDATA_CRAFT_AMOUNT_RANGE_DELIM	"-"
+
 #endregion item Data Parsing Macros
 
 #region Item Data Parsing Functions
@@ -416,7 +429,7 @@ function item_parse_result_combo_data(_contents){
 		// If there is no data for the amount crafted within the unprocessed data, it is assumed that the 
 		// resulting amount created is always one of the item, so empty strings are passed into the min and
 		// max value parameters to cause that default to be set for both.
-		if (string_count("x", _curString) == 0){
+		if (string_count(IDATA_CRAFT_AMOUNT_RANGE_DELIM, _curString) == 0){
 			_outputArray[i] = create_result_combo_struct(_curString, "", "");
 			continue; // No other processing required; skip onto the next chunk of data.
 		}
@@ -424,7 +437,7 @@ function item_parse_result_combo_data(_contents){
 		// Attempt to parse out the minimum and maximum item amount values from the unprocessed string. If there
 		// isn't any content, the default amount of 1 for the min and max is assumed. Otherwise, the code will
 		// continue with parsing even further below this block.
-		_subStrings = string_split(_curString, "x");
+		_subStrings = string_split(_curString, IDATA_CRAFT_AMOUNT_DELIM);
 		if (array_length(_subStrings) == 1){
 			_outputArray[i] = create_result_combo_struct(_curString, "", "");
 			continue;
@@ -434,16 +447,18 @@ function item_parse_result_combo_data(_contents){
 		// in this array for properly formatted data, but any additional indexes are simply ignored, regardless).
 		// If so, the values will overwrite the previous _subStrings array and the first/second indexes will be
 		// used as the minimum and maximum amounts, respectively.
-		if (string_count("-", _subStrings[1]) > 0){
-			_curString = _subStrings[0];
-			_subStrings = string_split(_subStrings[1], "-");
-			_outputArray[i] = create_result_combo_struct(_curString, _subStrings[0], _subStrings[1]);
+		if (string_count("-", _subStrings[IDATA_CRAFT_UNPARSED_AMOUNTS]) > 0){
+			_curString = _subStrings[IDATA_CRAFT_RESULT_ID];
+			_subStrings = string_split(_subStrings[IDATA_CRAFT_UNPARSED_AMOUNTS], IDATA_CRAFT_AMOUNT_RANGE_DELIM);
+			_outputArray[i] = create_result_combo_struct(_curString, 
+								_subStrings[IDATA_CRAFT_MIN_AMOUNT], _subStrings[IDATA_CRAFT_MAX_AMOUNT]);
 			continue;
 		}
 		
 		// Otherwise, it's assumed that the value is both the minimum and the maximum, so it will be passed
 		// in as both parameters for the item result container struct.
-		_outputArray[i] = create_result_combo_struct(_subStrings[0], _subStrings[1], _subStrings[1]);
+		_outputArray[i] = create_result_combo_struct(_subStrings[IDATA_CRAFT_RESULT_ID], 
+							_subStrings[IDATA_CRAFT_MAX_AMOUNT], _subStrings[IDATA_CRAFT_MAX_AMOUNT]);
 	}
 	
 	return _outputArray;

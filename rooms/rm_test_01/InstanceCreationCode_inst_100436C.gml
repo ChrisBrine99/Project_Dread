@@ -1,1 +1,1 @@
-lightSource = light_flicker_create(x, y, 253.0, 269.0, 0.02, 0.08, COLOR_WHITE, 0.8, 180.0, LGHT_FLAG_LIMITED_LIFE);
+lightSource = light_flicker_create(x, y, 253.0, 269.0, 0.02, 0.08, COLOR_WHITE, 0.8);
