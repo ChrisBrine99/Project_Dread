@@ -1,12 +1,12 @@
 {
   "$GMScript":"v1",
-  "%Name":"base_menu",
+  "%Name":"light_flicker",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"base_menu",
+  "name":"light_flicker",
   "parent":{
-    "name":"Menus",
-    "path":"folders/Scripts/Structs/Standard/UI/Menus.yy",
+    "name":"Lights",
+    "path":"folders/Scripts/Structs/Standard/Lights.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

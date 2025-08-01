@@ -2,6 +2,9 @@
 #macro	STRUCT_TYPE_CT_SINGLETON	   -10000	// Can only be created/destroy within rm_init and when the game closes, respectively.
 #macro	STRUCT_TYPE_RT_SINGLETON	   -20000	// Allows only one instance to be created at any given time, but can be destroyed to free that slot.
 
+// Macros that determine what type a given struct is when they aren't a compile-time or runtime singleton.
+#macro	STRUCT_TYPE_LIGHT_SOURCE	   -30000
+
 // A list that manages the current struct instances that exist at any given point during runtime, and the unique
 // value to provide to a newly created struct instance which will always increment by one from a successful
 // execution of the "instance_create_struct" function.
@@ -18,6 +21,8 @@ ds_map_add(global.structType, str_camera,			STRUCT_TYPE_CT_SINGLETON);
 ds_map_add(global.structType, str_textbox,			STRUCT_TYPE_CT_SINGLETON);
 ds_map_add(global.structType, str_base_menu,		STRUCT_TYPE_CT_SINGLETON);
 ds_map_add(global.structType, str_inventory_menu,	STRUCT_TYPE_RT_SINGLETON);
+ds_map_add(global.structType, str_light_basic,		STRUCT_TYPE_LIGHT_SOURCE);
+ds_map_add(global.structType, str_light_flicker,	STRUCT_TYPE_LIGHT_SOURCE);
 
 /// @description 
 ///	Attempts to create an instance of the provided struct. If that struct happens to be a "special" struct and 

@@ -34,13 +34,20 @@ with(CAMERA){
 	var _viewH	= viewportY + viewportHeight;
 	var _light	= noone;
 	var _length	= ds_list_size(global.lights);
-	for (var i = 0; i < _length; i++){
-		_light = ds_list_find_value(global.lights, i);
+	var _index	= 0;
+	while (_index < _length){
+		_light = ds_list_find_value(global.lights, _index);
 		with(_light){
 			if (x + radius < _viewX || y + radius < _viewY || x - radius > _viewW || y - radius > _viewH)
-				continue;
+				continue; // Skip over all off-screen light sources.
 			draw_event(_viewX, _viewY, _delta);
+			
+			if (LGHT_IS_DESTROYED){ // Remove lights that are destroyed.
+				ds_list_delete(global.lights, _index);
+				continue; // Skips over increment to account for removed element from list.
+			}
 		}
+		_index++;
 	}
 	
 	gpu_set_blendmode(bm_normal);

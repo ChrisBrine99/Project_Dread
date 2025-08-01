@@ -5,8 +5,8 @@
   "isDnD":false,
   "name":"light_basic",
   "parent":{
-    "name":"Standard",
-    "path":"folders/Scripts/Structs/Standard.yy",
+    "name":"Lights",
+    "path":"folders/Scripts/Structs/Standard/Lights.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",
