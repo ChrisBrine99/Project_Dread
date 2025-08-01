@@ -392,8 +392,8 @@ function item_parse_result_combo_data(_contents){
 	// Remove all spaces from the unformatted string should there be any before each value is split into its
 	// own index in the _splitContents array.
 	if (string_count(" ", _contents) > 0)
-		_contents = string_replace_all(_contents, " ", "")
-	var _contentArray	= string_split(_contents, ",");
+		_contents = string_replace_all(_contents, CHAR_SPACE, "");
+	var _contentArray	= string_split(_contents, CHAR_COMMA);
 	var _arrayLength	= array_length(_contentArray);
 	var _outputArray	= array_create(_arrayLength, -1);
 	
@@ -406,10 +406,10 @@ function item_parse_result_combo_data(_contents){
 	/// @param {String}		minString		The minimum potential amount of the item that can be created.
 	/// @param {String}		maxString		The maximum potential amount of the item that can be created.
 	var create_result_combo_struct = function(_indexString, _minString, _maxString){
-		var _minResult = (_minString == "")	?  1 : real(_minString);
-		var _maxResult = (_maxString == "")	?  1 : real(_maxString);
+		var _minResult = (_minString == "")	? 1 : real(_minString);
+		var _maxResult = (_maxString == "")	? 1 : real(_maxString);
 		return {
-			index		: (_indexString == "")	? -1 : real(_indexString),
+			index		: (_indexString == "") ? ID_INVALID : real(_indexString),
 			minResult	: _minResult,
 			maxResult	: max(_minResult, _maxResult),
 		};

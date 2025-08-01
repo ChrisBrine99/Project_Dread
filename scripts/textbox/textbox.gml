@@ -20,7 +20,6 @@
 
 // Characters that are used within the unformatted text for a textbox to help format the text in a specific way.
 // when it is parsed prior to being turned into a textbox for the player to view.
-#macro	TBOX_CHAR_SPACE					" "
 #macro	TBOX_CHAR_NEWLINE				"\n"
 #macro	TBOX_CHAR_COLOR_CHANGE			"@"
 #macro	TBOX_CHAR_REGION_START			"{"
@@ -28,7 +27,7 @@
 
 // Macros that are used to check and see if a color code found within the string being parsed for a textbox is
 // formatted properly. Otherwise, a default color of dark gray will be used to signify a sort of "soft error".
-#macro	TBOX_HEX_CODE_PREFIX			"0x"	
+#macro	TBOX_HEX_CODE_PREFIX			"0x"
 #macro	TBOX_COLOR_CODE_LENGTH			8		// Number of characters including the "0x" prefix
 
 // Index values that point to an actor's name as a string within the game's data. Can be retrieved for use by
@@ -222,8 +221,8 @@ function str_textbox(_index) : str_base(_index) constructor {
 				
 				// Space character found; offset the x character by how wide the space character is within the
 				// font being used, and then move onto the next character if punctuation isn't found.
-				if (_curChar == TBOX_CHAR_SPACE){
-					charX += string_width(TBOX_CHAR_SPACE);
+				if (_curChar == CHAR_SPACE){
+					charX += string_width(CHAR_SPACE);
 					// Get the previous character to see if it is punctuation and exit the loop if so.
 					if (check_for_punctuation(_curText, _curCharIndex - 1))
 						break;
@@ -402,7 +401,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 			// A space character or the length of the string has been reached. The current word will be added
 			// to the current line if that line still has room on the textbox. Otherwise, it will be added to
 			// the next line and that line will begin with that word alongside a spaceas its starting content.
-			if (_curChar == TBOX_CHAR_SPACE || i == _length){
+			if (_curChar == CHAR_SPACE || i == _length){
 				// The text will overflow the textbox horizontally, so the current line is added to the 
 				// formatted string and a new line will begin.
 				if (_curLineWidth + _curWordWidth > TBOX_SURFACE_WIDTH - (TBOX_SURFACE_X_PADDING * 2)){
@@ -414,7 +413,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 						break;
 					}
 					_fullText	   += _curLine + TBOX_CHAR_NEWLINE;
-					_curLineWidth	= _curWordWidth + string_width(TBOX_CHAR_SPACE);
+					_curLineWidth	= _curWordWidth + string_width(CHAR_SPACE);
 					_curLine		= _curWord + " ";
 				} else{ // Line has more space; keep adding to it.
 					_curLineWidth  += _curWordWidth + string_width(_curChar);
