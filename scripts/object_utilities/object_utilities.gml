@@ -45,15 +45,14 @@ function object_is_special(_object){
 }
 
 /// @description
-/// Determines the state function that the Entity will execute from the next frame onwards.
-///
+/// Determines the state function that the object calling this function will execute from the next frame 
+/// onwards. Note that without the "curState", "nextState", and "lastState" variables defined in its Create
+/// Event (Or the struct equivalent), a call to this function will cause the game to crash.
+/// 
 /// @param {Function}	state	The variable assigned to the state function.
 function object_set_state(_state){
-	if (_state == curState)
-		return; // Don't attempt to set the current state to itself again.
-	
 	var _index = method_get_index(_state);
-	if (_index == undefined)
-		return; // Don't attempt to assign a function that doesn't exist.
+	if (is_undefined(_index) || _index == curState)
+		return; // Don't update to an invalid state or if the state is identical to the current one.
 	nextState = _index;
 }

@@ -648,7 +648,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 				return;
 			}
 			// Set the textbox to "reopen" itself for the new actor's dialogue.
-			object_set_state(state_open_animation); 
+			object_set_state(state_open_animation);
 			y = TBOX_Y_START;
 			return;
 		}
