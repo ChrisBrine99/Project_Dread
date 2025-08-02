@@ -6,7 +6,7 @@
   "name":"textbox",
   "parent":{
     "name":"UI",
-    "path":"folders/Scripts/Structs/Standard/UI.yy",
+    "path":"folders/Scripts/Structs/UI.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

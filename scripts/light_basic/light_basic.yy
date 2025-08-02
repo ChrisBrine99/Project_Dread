@@ -6,7 +6,7 @@
   "name":"light_basic",
   "parent":{
     "name":"Lights",
-    "path":"folders/Scripts/Structs/Standard/Lights.yy",
+    "path":"folders/Scripts/Structs/Lights.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

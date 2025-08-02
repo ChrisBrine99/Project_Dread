@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"control_ui_manager",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"control_ui_manager",
+  "parent":{
+    "name":"UI",
+    "path":"folders/Scripts/Structs/UI.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

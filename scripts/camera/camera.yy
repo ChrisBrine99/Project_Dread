@@ -5,8 +5,8 @@
   "isDnD":false,
   "name":"camera",
   "parent":{
-    "name":"Standard",
-    "path":"folders/Scripts/Structs/Standard.yy",
+    "name":"Structs",
+    "path":"folders/Scripts/Structs.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

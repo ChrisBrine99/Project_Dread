@@ -6,7 +6,7 @@
   "name":"base_menu",
   "parent":{
     "name":"Menus",
-    "path":"folders/Scripts/Structs/Standard/UI/Menus.yy",
+    "path":"folders/Scripts/Structs/UI/Menus.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",
