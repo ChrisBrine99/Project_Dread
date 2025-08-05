@@ -34,6 +34,10 @@
 #macro	PINPUT_FLAG_READY_WEAPON		0x00000040
 #macro	PINPUT_FLAG_FLASHLIGHT			0x00000080
 #macro	PINPUT_FLAG_USE_WEAPON			0x00000100
+#macro	PINPUT_FLAG_ITEM_MENU			0x10000000
+#macro	PINPUT_FLAG_NOTES_MENU			0x20000000
+#macro	PINPUT_FLAG_MAP_MENU			0x40000000
+#macro	PINPUT_FLAG_PAUSE_MENU			0x80000000
 
 // Checks to see if the above input flags have been set in such a way that they have been pressed, held, or
 // released as required by each individual input.

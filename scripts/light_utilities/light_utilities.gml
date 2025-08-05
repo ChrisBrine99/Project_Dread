@@ -28,9 +28,15 @@ function light_create(_lightFunc){
 ///	
 /// @param {Struct._structRef}	lightRef	Reference to the str_light_source instance that will be deleted.
 function light_destroy(_lightRef){
+	// Don't even attempt to remove the light source's reference if the management list has already been 
+	// deleted from memory (This is an edge case crash when closing the game due to order of event calls).
+	if (!ds_exists(global.lights, ds_type_list))
+		return;
+		
 	var _index = ds_list_find_index(global.lights, _lightRef);
 	if (_index == -1) // Function was called on a struct reference that isn't a light source; exit without deleting.
 		return;
+		
 	ds_list_delete(global.lights, _index);
 	instance_destroy_struct(_lightRef);
 }

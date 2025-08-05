@@ -134,7 +134,8 @@ function str_textbox(_index) : str_base(_index) constructor {
 	charY			= 0;
 	nextCharDelay	= TBOX_PUNCT_NONE;
 	
-	// 
+	// Variables that allow the textbox to reference the current color data for the text that is being typed
+	// onto the textbox; allowing each individual character to be a unique color compared to the default white.
 	colorDataRef	= -1;
 	totalColors		= 0;
 	charColorIndex	= 0;
@@ -186,8 +187,11 @@ function str_textbox(_index) : str_base(_index) constructor {
 			
 			// Set the font outside of the loop since all text drawn shares the same one. Also set the alpha
 			// value to 1.0 to ensure the text won't accidentally be drawn onto the surface with transparency.
+			// Finally, set the alignment to the top-left which is the default in case it has been changed.
 			draw_set_font(fnt_small);
 			draw_set_alpha(1.0);
+			draw_set_halign(fa_left);
+			draw_set_valign(fa_top);
 			
 			// Grab a reference to the current textbox's contents and then begin adding characters to the text
 			// surface one at a time until the value of curChar matches that of _nextChar.

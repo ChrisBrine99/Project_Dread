@@ -1,4 +1,4 @@
-#region Macros Utilized Primarily by the Inventory System
+#region Macros Utilized Primarily by the Item Inventory System
 
 // Macros for the numerical representations of an item's type, which will help determine how it functions within
 // the game and what options are available to the player when it is selected in the inventory (Excluding any
@@ -42,18 +42,18 @@
 // Macro that represents an inventory slot that current has no item contained within it.
 #macro	INV_EMPTY_SLOT				   -1
 
-#endregion Macros Utilized Primarily by the Inventory System
+#endregion Macros Utilized Primarily by the Item Inventory System
 
-#region Globals Related to the Inventory System
+#region Globals Related to the Item Inventory System
 
 // Upon initialization, it stores the value -1, but will contain an array of items the player current has on
 // their person during gameplay; with the starting and maximum sizes being determined by the difficulty the
 // user selected when starting a new playthrough.
-global.inventory = -1;
+global.curItems = -1;
 
-#endregion Globals Related to the Inventory System
+#endregion Globals Related to the Item Inventory System
 
-#region Inventory Initialization Function
+#region Item Inventory Initialization Function
 
 /// @description
 ///	Initializes the inventory data structure. It's starting size will be determined by what difficulty the
@@ -61,35 +61,35 @@ global.inventory = -1;
 /// but not as a hard limit. Instead, it will limit how many capacity upgrades can be found in the world.
 ///	
 ///	@param {Real}	cmbDiffFlagBit		Determines how inventory will be initialized.
-function inventory_initialize(_cmbDiffFlagBit){
-	if (is_array(global.inventory)){ // Clear out old inventory contents to prevent memory leaks.
-		var _length = array_length(global.inventory);
+function item_inventory_initialize(_cmbDiffFlagBit){
+	if (is_array(global.curItems)){ // Clear out old inventory contents to prevent memory leaks.
+		var _length = array_length(global.curItems);
 		for (var i = 0; i < _length; i++){
-			if (is_struct(global.inventory[i]))
-				delete global.inventory[i];
+			if (is_struct(global.curItems[i]))
+				delete global.curItems[i];
 		}
 	} else{ // Initialize the inventory array with a default size of 0.
-		global.inventory = array_create(0, INV_EMPTY_SLOT);
+		global.curItems = array_create(0, INV_EMPTY_SLOT);
 	}
 	
 	switch(_cmbDiffFlagBit){
-		default: /* Invalid difficulty param */	array_resize(global.inventory,  0);		break;
-		case GAME_FLAG_CMBTDIFF_FORGIVING:		array_resize(global.inventory, 10);		break;
+		default: /* Invalid difficulty param */	array_resize(global.curItems,  0);		break;
+		case GAME_FLAG_CMBTDIFF_FORGIVING:		array_resize(global.curItems, 10);		break;
 		case GAME_FLAG_CMBTDIFF_STANDARD:		// Also starts with 8 slots available.
-		case GAME_FLAG_CMBTDIFF_PUNISHING:		array_resize(global.inventory,  8);		break;
+		case GAME_FLAG_CMBTDIFF_PUNISHING:		array_resize(global.curItems,  8);		break;
 		case GAME_FLAG_CMBTDIFF_NIGHTMARE:		// Also starts with 6 slots available.
-		case GAME_FLAG_CMBTDIFF_ONELIFE:		array_resize(global.inventory,  6);		break;
+		case GAME_FLAG_CMBTDIFF_ONELIFE:		array_resize(global.curItems,  6);		break;
 	}
 	
 	// Fill the array with -1 values since each index defaults to 0 when a resize adds new indices.
-	var _length = array_length(global.inventory);
+	var _length = array_length(global.curItems);
 	for (var i = 0; i < _length; i++)
-		array_set(global.inventory, i, INV_EMPTY_SLOT);
+		array_set(global.curItems, i, INV_EMPTY_SLOT);
 }
 
-#endregion Inventory Initialization Function
+#endregion Item Inventory Initialization Function
 
-#region Functions for Manipulating the Inventory's Contents
+#region Functions for Manipulating the Item Inventory's Contents
 
 /// @description 
 ///	Adds some variable amount of an item to the player's inventory. The value returned will be the remainder
@@ -99,9 +99,9 @@ function inventory_initialize(_cmbDiffFlagBit){
 ///	
 ///	@param {Real}	itemID		Number representing the item within the game's data.
 ///	@param {Real}	amount		How many of said item will be added to the inventory.
-function inventory_add_item(_itemID, _amount){
+function item_inventory_add(_itemID, _amount){
 	// Don't try adding anything to an uninitialized inventory.
-	if (!is_array(global.inventory))
+	if (!is_array(global.curItems))
 		return _amount;
 	
 	// Make sure the item id points to a valid item. Otherwise, don't even attempt to add it to the inventory.
@@ -114,9 +114,9 @@ function inventory_add_item(_itemID, _amount){
 	// if there is room, or occupy the first empty slot that's found, or both is required.
 	var _maxPerSlot	= _itemData.stackLimit;
 	var _invItem	= -1;
-	var _length		= array_length(global.inventory);
+	var _length		= array_length(global.curItems);
 	for (var i = 0; i < _length; i++){
-		_invItem = global.inventory[i];
+		_invItem = global.curItems[i];
 		if (is_struct(_invItem)){
 			with(_invItem){
 				// Either the item id doesn't match the current item in the slot OR the slot is already maxed
@@ -149,7 +149,7 @@ function inventory_add_item(_itemID, _amount){
 			quantity	: _amount,
 			durability	: 0	// This function will always set this value to 0.
 		};
-		global.inventory[i] = _invItem;
+		global.curItems[i] = _invItem;
 		
 		// Check if the amount to be added can fit into this newly added inventory item. If it exceeds the max
 		// capacity per slot, the loop will continue. Otherwise, the value 0 is returned to signify every item
@@ -177,18 +177,18 @@ function inventory_add_item(_itemID, _amount){
 ///	
 ///	@param {Real}	itemID		Number representing the item within the game's data.
 /// @param {Real}	amount		How many of said item will be removed from the inventory.
-function inventory_remove_item(_itemID, _amount){
+function item_inventory_remove(_itemID, _amount){
 	// Don't try adding anything to an uninitialized inventory.
-	if (!is_array(global.inventory))
+	if (!is_array(global.curItems))
 		return _amount;
 	
 	// Loop through the inventory in search of any slots containing the required item. If any are found,
 	// remove as much as possible from its current quantity within the slot to satisfy the amount to remove.
 	var _invItem	= -1;
 	var _quantity	= 0;
-	var _length		= array_length(global.inventory);
+	var _length		= array_length(global.curItems);
 	for (var i = 0; i < _length; i++){
-		_invItem = global.inventory[i];
+		_invItem = global.curItems[i];
 		if (!is_struct(_invItem) || _invItem.index != _itemID) // Ignore all empty inventory slots or items with non-matching IDs.
 			continue;
 		
@@ -197,7 +197,7 @@ function inventory_remove_item(_itemID, _amount){
 		// loop will continue its execution.
 		_quantity = _invItem.quantity;
 		if (_quantity <= _amount){
-			array_set(global.inventory, i, INV_EMPTY_SLOT);
+			array_set(global.curItems, i, INV_EMPTY_SLOT);
 			_amount -= _quantity;
 			delete _invItem;
 			continue;
@@ -222,13 +222,13 @@ function inventory_remove_item(_itemID, _amount){
 ///	
 ///	@param {Real}	slot		The slot that will have quantity removed from it.
 /// @param {Real}	amount		How many of the item within the slot will be removed.
-function inventory_remove_slot(_slot, _amount){
+function item_inventory_remove_slot(_slot, _amount){
 	// Don't try removing anything to an uninitialized inventory, an out of bounds index.
-	if (!is_array(global.inventory) || _slot < 0 || _slot >= array_length(global.inventory))
+	if (!is_array(global.curItems) || _slot < 0 || _slot >= array_length(global.curItems))
 		return _amount;
 	
 	// Also don't try removing anything if the slot in question doesn't have an item occupying it currently.
-	var _item = global.inventory[_slot];
+	var _item = global.curItems[_slot];
 	if (!is_struct(_item))
 		return _amount;
 	
@@ -237,7 +237,7 @@ function inventory_remove_slot(_slot, _amount){
 	// quantity is above zero, or it is removed should the quantity be zero.
 	var _quantity = _item.quantity;
 	if (_quantity <= _amount){
-		array_set(global.inventory, _slot, INV_EMPTY_SLOT);
+		array_set(global.curItems, _slot, INV_EMPTY_SLOT);
 		delete _item;
 		return (_amount - _quantity);
 	}
@@ -251,21 +251,21 @@ function inventory_remove_slot(_slot, _amount){
 ///	
 ///	@param {Real}	first		The first slot to swap.
 /// @param {Real}	second		The second slot to swap.
-function inventory_slot_swap(_first, _second){
+function item_inventory_slot_swap(_first, _second){
 	// Don't attempt to swap anything if the inventory hasn't been initialized or if either of the slot values
 	// happen to be out of the bounds of the inventory array.
-	if (!is_array(global.inventory) || _first < 0 || _second < 0 || 
-			_first >= array_length(global.inventory) || _second >= array_length(global.inventory))
+	if (!is_array(global.curItems) || _first < 0 || _second < 0 || 
+			_first >= array_length(global.curItems) || _second >= array_length(global.curItems))
 		return;
 		
-	var _temp = global.inventory[_first];
-	global.inventory[_first] = global.inventory[_second];
-	global.inventory[_second] = _temp;
+	var _temp = global.curItems[_first];
+	global.curItems[_first] = global.curItems[_second];
+	global.curItems[_second] = _temp;
 }
 
-#endregion Functions for Manipulating the Inventory's Contents
+#endregion Functions for Manipulating the Item Inventory's Contents
 
-#region Functions for Getting Info About the Inventory's Contents
+#region Functions for Getting Info About the Item Inventory's Contents
 
 /// @description 
 ///	Returns the struct containing the information about the item that occupies a slot within the inventory.
@@ -274,11 +274,11 @@ function inventory_slot_swap(_first, _second){
 /// initialized properly.
 ///	
 /// @param {Real}	slot	The slot within the inventory to grab the information from.
-function inventory_slot_get_item_data(_slot){
-	if (!is_array(global.inventory) || _slot < 0 || _slot >= array_length(global.inventory))
+function item_inventory_slot_get_data(_slot){
+	if (!is_array(global.curItems) || _slot < 0 || _slot >= array_length(global.curItems))
 		return INV_EMPTY_SLOT;	// Default value will simply be treated as an empty inventory slot.
 		
-	var _slotContents	= global.inventory[_slot];
+	var _slotContents	= global.curItems[_slot];
 	var _itemData		= ds_map_find_value(global.itemData, _slotContents);
 	if (is_undefined(_itemData)) // No item data exists for the id value in the slot; return default value.
 		return INV_EMPTY_SLOT;
@@ -289,21 +289,21 @@ function inventory_slot_get_item_data(_slot){
 /// Returns the sum of a given item within the inventory.
 ///	
 /// @param {Real}	itemID		Number representing the item within the game's data.
-function inventory_count_item(_itemID){
+function item_inventory_count(_itemID){
 	// Don't try counting items in an inventory that hasn't been initialized.
-	if (!is_array(global.inventory))
+	if (!is_array(global.curItems))
 		return 0;
 	
 	// Loop through inventory and count up the requested item IDs quantity within.
 	var _invItem	= -1;
 	var _count		= 0; // Stores the sum of quantities.
-	var _length		= array_length(global.inventory);
+	var _length		= array_length(global.curItems);
 	for (var i = 0; i < _length; i++){
-		_invItem = global.inventory[i];
+		_invItem = global.curItems[i];
 		if (is_struct(_invItem) && _invItem.index == _itemID)
 			_count += _invItem.quantity;
 	}
 	return _count;
 }
 
-#endregion Functions for Getting Info About the Inventory's Contents
+#endregion Functions for Getting Info About the Item Inventory's Contents

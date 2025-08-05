@@ -20,7 +20,7 @@ ds_map_add(global.structType, str_base,				STRUCT_TYPE_CT_SINGLETON);
 ds_map_add(global.structType, str_camera,			STRUCT_TYPE_CT_SINGLETON);
 ds_map_add(global.structType, str_textbox,			STRUCT_TYPE_CT_SINGLETON);
 ds_map_add(global.structType, str_base_menu,		STRUCT_TYPE_CT_SINGLETON);
-ds_map_add(global.structType, str_inventory_menu,	STRUCT_TYPE_RT_SINGLETON);
+ds_map_add(global.structType, str_item_menu,		STRUCT_TYPE_RT_SINGLETON);
 ds_map_add(global.structType, str_light_basic,		STRUCT_TYPE_LIGHT_SOURCE);
 ds_map_add(global.structType, str_light_flicker,	STRUCT_TYPE_LIGHT_SOURCE);
 

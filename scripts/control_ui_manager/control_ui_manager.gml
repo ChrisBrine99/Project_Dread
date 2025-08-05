@@ -1,8 +1,10 @@
 #region Control UI Manager Macro Definitions
 
+// 
 #macro	ICONUI_BINDING_NONE				0
 #macro	ICONUI_NO_ICON				   -1
 
+// 
 #macro	ICONUI_GAME_RIGHT				"g_right"
 #macro	ICONUI_GAME_LEFT				"g_left"
 #macro	ICONUI_GAME_UP					"g_up"
@@ -18,6 +20,7 @@
 function str_control_ui_manager(_index) : str_base(_index) constructor {
 	flags			= STR_FLAG_PERSISTENT;
 	
+	// 
 	controlIcons	= ds_map_create();
 	
 	/// @description 

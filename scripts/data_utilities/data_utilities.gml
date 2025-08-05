@@ -18,7 +18,7 @@ function load_json(_filename){
 	var _buffer = buffer_load(_filename);
 	if (_buffer == -1)
 		return "";
-		
+	
 	var _string = buffer_read(_buffer, buffer_string);
 	buffer_delete(_buffer);
 	
@@ -144,7 +144,11 @@ function load_item_data(_filename){
 	}
 	
 	ds_map_destroy(_itemData);
-	// show_debug_message("Processed and parsed all item data in {0} microseconds.", get_timer() - _startTime);
+	show_debug_message(
+		"Processed and parsed all item data ({1} items) in {0} microseconds.", 
+		get_timer() - _startTime,
+		ds_map_size(global.itemData)
+	);
 }
 
 /// @description
@@ -182,18 +186,20 @@ function load_item(_section, _itemID, _data){
 		// Then, if that reference is actually an array (-1 can also be returned), its contents are copied
 		// into the newly created validCombo array. Otherwise, the array is deleted since it only exists in
 		// local scope.
-		var _outputArray = item_parse_input_combo_data(_data[? KEY_VALID_COMBOS]);
+		var _outputArray		= item_parse_input_combo_data(_data[? KEY_VALID_COMBOS]);
+		var _outputArrayLength	= array_length(_outputArray);
 		if (is_array(_outputArray)){ // Only attempt to copy the contents if there is an array returned to copy.
-			validCombo = array_create(0);
-			array_copy(validCombo, 0, _outputArray, 0, array_length(_outputArray));
+			validCombo = array_create(_outputArrayLength, ID_INVALID);
+			array_copy(validCombo, 0, _outputArray, 0, _outputArrayLength);
 		}
 		
 		// Do the same process as above but for each combination's resulting item data. If a proper array ref
 		// is returned, the array comboResult is created and has the contents from _outputArray copied to it.
-		_outputArray = item_parse_result_combo_data(_data[? KEY_COMBO_RESULTS]);
+		_outputArray		= item_parse_result_combo_data(_data[? KEY_COMBO_RESULTS]);
+		_outputArrayLength	= array_length(_outputArray); // Update value since array was changed.
 		if (is_array(_outputArray)){ // Only attempt to copy the contents if there is an array returned to copy.
-			comboResult = array_create(0);
-			array_copy(comboResult, 0, _outputArray, 0, array_length(_outputArray));
+			comboResult = array_create(_outputArrayLength, ID_INVALID);
+			array_copy(comboResult, 0, _outputArray, 0, _outputArrayLength);
 		}
 	}
 	
@@ -313,7 +319,7 @@ function load_item(_section, _itemID, _data){
 			}
 			break;
 	}
-	//show_debug_message("item {0} has been created. (structRef: {1})", _index, _item);
+	// show_debug_message("item {0} has been created. (structRef: {1})", _index, _item);
 }
 
 /// @description 
@@ -329,9 +335,9 @@ function item_parse_input_combo_data(_contents){
 	
 	// Remove all spaces from the unformatted string should there be any before each value is split into its
 	// own index in the _splitContents array.
-	if (string_count(" ", _contents) > 0)
-		_contents = string_replace_all(_contents, " ", "")
-	var _contentArray	= string_split(_contents, ",");
+	if (string_count(CHAR_SPACE, _contents) > 0)
+		_contents = string_replace_all(_contents, CHAR_SPACE, "")
+	var _contentArray	= string_split(_contents, CHAR_COMMA);
 	var _arrayLength	= array_length(_contentArray);
 	var _outputArray	= array_create(_arrayLength, -1);
 	
@@ -391,16 +397,16 @@ function item_parse_result_combo_data(_contents){
 		
 	// Remove all spaces from the unformatted string should there be any before each value is split into its
 	// own index in the _splitContents array.
-	if (string_count(" ", _contents) > 0)
+	if (string_count(CHAR_SPACE, _contents) > 0)
 		_contents = string_replace_all(_contents, CHAR_SPACE, "");
 	var _contentArray	= string_split(_contents, CHAR_COMMA);
 	var _arrayLength	= array_length(_contentArray);
 	var _outputArray	= array_create(_arrayLength, -1);
 	
 	/// @description
-	///	A lambda-like function that will return a new struct containing the index for the item that results from
-	///	the item combination process. It also stores the minimum and maximum possible amounts that can be
-	///	created because of the combiation.
+	///	A lambda-like function that will return a new struct containing the index for the item that results 
+	/// from the item combination process. It also stores the minimum and maximum possible amounts that can 
+	/// be created because of the combiation.
 	///
 	///	@param {String}		indexString		The index of the item required for the combination.
 	/// @param {String}		minString		The minimum potential amount of the item that can be created.
@@ -429,7 +435,7 @@ function item_parse_result_combo_data(_contents){
 		// If there is no data for the amount crafted within the unprocessed data, it is assumed that the 
 		// resulting amount created is always one of the item, so empty strings are passed into the min and
 		// max value parameters to cause that default to be set for both.
-		if (string_count(IDATA_CRAFT_AMOUNT_RANGE_DELIM, _curString) == 0){
+		if (string_count(IDATA_CRAFT_AMOUNT_DELIM, _curString) == 0){
 			_outputArray[i] = create_result_combo_struct(_curString, "", "");
 			continue; // No other processing required; skip onto the next chunk of data.
 		}
@@ -447,7 +453,7 @@ function item_parse_result_combo_data(_contents){
 		// in this array for properly formatted data, but any additional indexes are simply ignored, regardless).
 		// If so, the values will overwrite the previous _subStrings array and the first/second indexes will be
 		// used as the minimum and maximum amounts, respectively.
-		if (string_count("-", _subStrings[IDATA_CRAFT_UNPARSED_AMOUNTS]) > 0){
+		if (string_count(IDATA_CRAFT_AMOUNT_RANGE_DELIM, _subStrings[IDATA_CRAFT_UNPARSED_AMOUNTS]) > 0){
 			_curString = _subStrings[IDATA_CRAFT_RESULT_ID];
 			_subStrings = string_split(_subStrings[IDATA_CRAFT_UNPARSED_AMOUNTS], IDATA_CRAFT_AMOUNT_RANGE_DELIM);
 			_outputArray[i] = create_result_combo_struct(_curString, 

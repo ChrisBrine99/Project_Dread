@@ -1,9 +1,9 @@
 {
   "$GMScript":"v1",
-  "%Name":"inventory_utilities",
+  "%Name":"item_inventory_utilities",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"inventory_utilities",
+  "name":"item_inventory_utilities",
   "parent":{
     "name":"Utilities",
     "path":"folders/Scripts/Utilities.yy",

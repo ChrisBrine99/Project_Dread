@@ -1,13 +1,13 @@
 var _length = 0; // Used by all array/data structure-based cleanup code, so it's initialized at the start.
 
-// Removes all inventory item structs as they aren't the standard structs that are automatically maintained by
-// the global.struct data structure. In very rare cases, the inventory will not have been initialized before
-// this event executes. In that case, this entire chunk of code is skipped since no cleanup is needed.
-if (is_array(global.inventory)){
-	_length = array_length(global.inventory);
+// Removes all item inventory structs as they aren't the standard structs that are automatically maintained by
+// the global.struct data structure. In very rare cases, the item inventory will not have been initialized 
+// before this event executes. In that case, this entire chunk of code is skipped since no cleanup is needed.
+if (is_array(global.itemInventory)){
+	_length = array_length(global.itemInventory);
 	for (var i = 0; i < _length; i++){
-		if (is_struct(global.inventory[i]))
-			delete global.inventory[i]; global.inventory[i] = INV_EMPTY_SLOT;
+		if (is_struct(global.itemInventory[i]))
+			delete global.itemInventory[i]; global.itemInventory[i] = INV_EMPTY_SLOT;
 	}
 }
 
@@ -36,8 +36,8 @@ while(!is_undefined(_itemID)){
 		}
 	}
 	
-	_itemID = ds_map_find_next(global.itemData, _itemID);
 	show_debug_message("Deleted item {0} (structRef: {1})", _itemID, _structRef);
+	_itemID = ds_map_find_next(global.itemData, _itemID);
 	delete _structRef;
 }
 ds_map_clear(global.itemData);

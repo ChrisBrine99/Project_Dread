@@ -1,9 +1,9 @@
 {
   "$GMScript":"v1",
-  "%Name":"inventory_menu",
+  "%Name":"item_menu",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"inventory_menu",
+  "name":"item_menu",
   "parent":{
     "name":"Menus",
     "path":"folders/Scripts/Structs/UI/Menus.yy",

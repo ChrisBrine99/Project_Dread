@@ -13,6 +13,7 @@ if (GAME_IS_PAUSED)
 
 with(CAMERA) { end_step_event(); }	// Updates the camera viewport's coordinates.
 
+// Update all currently existing dynamic entities within the room so long as they are also currently active.
 var _delta = global.deltaTime;
 with(par_dynamic_entity){
 	if (!ENTT_IS_ACTIVE)
@@ -20,21 +21,16 @@ with(par_dynamic_entity){
 	end_step_event(_delta);
 }
 
-// 
+// Loop through all currently active menu struct instances; updating their current state to whatever was set
+// in their "nextState" variable so a proper state switch doesn't occur in the middle of updating.
 var _length = ds_list_size(global.menus);
 for (var i = 0; i < _length; i++){
-	with(global.menus[| i]){
-		if (curState != nextState)
-			curState = nextState;
-	}
+	with(global.menus[| i]) { curState = nextState; }
 }
 
 // Update the current state function for the textbox to match the value stored in the "nextState" variable at
 // the end of the step event, so state changes don't occur in the middle of a frame.
-with(TEXTBOX){
-	if (curState != nextState)
-		curState = nextState;
-}
+with(TEXTBOX) { curState = nextState; }
 
 // Update the in-game playtime whenever its flag is toggled.
 if (GAME_IS_PLAYTIME_ACTIVE){

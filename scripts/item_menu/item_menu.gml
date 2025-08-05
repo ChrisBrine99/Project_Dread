@@ -1,17 +1,17 @@
-#region Macros for Inventory Menu Struct
+#region Macros for Item Inventory Menu Struct
 
 // Positional offsets of the currently highlighted item's name and description, respectively.
-#macro	MENUINV_NAME_TEXT_X				20
-#macro	MENUINV_NAME_TEXT_Y				120
-#macro	MENUINV_INFO_TEXT_X				20
-#macro	MENUINV_INFO_TEXT_Y				132
+#macro	MENUITM_NAME_TEXT_X				20
+#macro	MENUITM_NAME_TEXT_Y				120
+#macro	MENUITM_INFO_TEXT_X				20
+#macro	MENUITM_INFO_TEXT_Y				132
 
-#endregion Macros for Inventory Menu Struct
+#endregion Macros for Item Inventory Menu Struct
 
-#region Inventory Menu Struct Definition
+#region Item Inventory Menu Struct Definition
 
 /// @param {Function}	index	The value of "str_inventory_menu" as determined by GameMaker during runtime.
-function str_inventory_menu(_index) : str_base_menu(_index) constructor {
+function str_item_menu(_index) : str_base_menu(_index) constructor {
 	
 	/// @description 
 	///	
@@ -34,9 +34,9 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		
 		// 
 		var _invItem	= INV_EMPTY_SLOT;
-		var _invSize	= array_length(global.inventory);
+		var _invSize	= array_length(global.curItems);
 		for (var i = 0; i < _invSize; i++){
-			_invItem = inventory_slot_get_item_data(i);
+			_invItem = item_inventory_slot_get_data(i);
 			if (_invItem == INV_EMPTY_SLOT){ // Occupy the slot with an empty option.
 				add_option("---", "---");
 				show_debug_message("Inventory slot {0} is empty.", i + 1);
@@ -44,7 +44,7 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 			}
 			add_option(_invItem.itemName, _invItem.itemInfo);
 			show_debug_message("Inventory slot {0} contains {1} of the item {2}.", 
-				i + 1, global.inventory[i].quantity, _invItem.itemName);
+				i + 1, global.curItems[i].quantity, _invItem.itemName);
 		}
 			
 		object_set_state(state_default);
@@ -72,4 +72,4 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	}
 }
 
-#endregion Inventory Menu Struct Definition
+#endregion Item Inventory Menu Struct Definition

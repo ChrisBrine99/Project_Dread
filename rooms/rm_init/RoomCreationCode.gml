@@ -1,5 +1,16 @@
+// Since the game manager is a singleton instance that is created within this initialization room, if it 
+// happens to exist BEFORE the line of code that creates the instance something has gone terrible wong and the 
+// game will close itself.
+if (instance_exists(obj_game_manager)){
+	game_end(1);
+	return;
+}
+
+// Disable drawing the application surface automatically so post-processing effects can be done properly and
+// set the rendering alpha test threshold so nearly invisible elements will be completely ignored in the
+// rendering pipeline.
 application_surface_draw_enable(false);
-gpu_set_alphatestref(10);
+gpu_set_alphatestref(10); // ~0.039
 
 // All singleton instances will be created here, and they will exist throughout the ENTIRE runtime of the game. If
 // any of them are to be deleted for whatever reason before the game is closed, a lot of undefined things and 
@@ -16,12 +27,12 @@ with(CAMERA){
 	camera_set_followed_object(PLAYER, true);
 }
 
-with(TEXTBOX){
+/*with(TEXTBOX){
 	queue_new_text("Test. test.\ntest test. @0xF84020{test test}. this is a @0x3050F8{test} @0x10A0E4{to} @0xF84468{see} if the textbox can format incoming text properly!!!", TBOX_ACTOR_PLAYER, 1);
 	queue_new_text("A textbox in the middle to see if the same actor speaking makes it so the textbox doesn't close and open again.", TBOX_ACTOR_PLAYER, 2);
 	queue_new_text("Another textbox to see if the @0x10A0E4{color-changing logic} works properly. Otherwise, @0x3050F8{something isn't being reset properly and needs to be fixed}.", TBOX_ACTOR_INVALID);
 	activate_textbox(0);
-}
+}*/
 
 // Once everything has been initialized, the first official room for the game is loaded, and the game is unpaused.
 room_goto(rm_test_01);
