@@ -51,6 +51,11 @@ function object_is_special(_object){
 /// 
 /// @param {Function}	state	The variable assigned to the state function.
 function object_set_state(_state){
+	if (_state == lastState){ // Returning to the previous state.
+		nextState = _state;
+		return;
+	}
+	
 	var _index = method_get_index(_state);
 	if (is_undefined(_index) || _index == curState)
 		return; // Don't update to an invalid state or if the state is identical to the current one.

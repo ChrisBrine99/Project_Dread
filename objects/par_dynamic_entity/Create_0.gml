@@ -169,7 +169,8 @@ end_step_event = function(_delta){
 		curState = nextState;
 	}
 	
-	if (lightSource) { lightSource.light_set_position(x + lightX, y + lightY); }
+	if (lightSource != noone) // Update the posiiton of the light source in case the entity moved.
+		lightSource.light_set_position(x + lightX, y + lightY);
 }
 
 #endregion Event Function Definitions

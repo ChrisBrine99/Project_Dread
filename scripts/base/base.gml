@@ -1,7 +1,7 @@
 #region Macros for Base Struct (All standard structs also use these as required)
 
 #macro	STR_FLAG_PERSISTENT				0x80000000	// Prevents struct from being destroyed until end of runtime.
-#macro	STR_IS_PERSISTENT				(flags & STR_FLAG_PERSISTENT)
+#macro	STR_IS_PERSISTENT				((flags & STR_FLAG_PERSISTENT) != 0)
 
 #endregion Base Struct's Macros
 

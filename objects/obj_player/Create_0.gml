@@ -97,6 +97,14 @@
 #macro	PLYR_BLEEDING_DAMAGE_RATE		300.0
 #macro	PLYR_POISON_DAMAGE_RATE			600.0
 
+// Determines the additional time added to the player's stamina regeneration timer for the interval of time
+// between the player releasing the run button and their stamina beginning its regeneration.
+#macro	PLYR_STAMINA_PAUSE_FACTOR		10.0
+
+// Determines how much of a penalty is applied to the player's initial break before their stamina regenerates
+// if their stamina is completely depleted while running.
+#macro	PLYR_STAMINA_EXHAUST_FACTOR		3.0
+
 // Determines the percentage amount relative to their current maximum hitpoints of damage dealt to the player 
 // whenever they're bleeding and the damage interval timer rolls over. Unlike poison, it is a constant amount.
 #macro	PLYR_BLEEDING_DAMAGE_AMOUNT		0.02
@@ -121,17 +129,17 @@
 event_inherited();
 
 // Set the flags that are initially toggled upon the player object's creation.
-flags				=	DENTT_FLAG_WORLD_COLLISION | ENTT_FLAG_OVERRIDE_DRAW | 
+flags				= DENTT_FLAG_WORLD_COLLISION | ENTT_FLAG_OVERRIDE_DRAW | 
 						ENTT_FLAG_VISIBLE | ENTT_FLAG_ACTIVE;
 
 // Set the player's acceleration and maximum movement speeds (Running allows the player to temporarily exceed
 // this maximum until their stamina runs out).
-accel				= 0.15;
-maxMoveSpeed		= 1.05;
+accel				= PLYR_ACCEL_NORMAL;
+maxMoveSpeed		= PLYR_SPEED_NORMAL;
 
 // Create a very dim ambient light that will illuminate the player's face when in complete darkness.
 entity_add_basic_light(PLYR_AMBLIGHT_XOFFSET, PLYR_AMBLIGHT_YOFFSET, 
-	PLYR_AMBLIGHT_RADIUS, PLYR_AMBLIGHT_COLOR, PLYR_AMBLIGHT_STRENGTH, true);
+	PLYR_AMBLIGHT_RADIUS, PLYR_AMBLIGHT_COLOR, PLYR_AMBLIGHT_STRENGTH, 0.0, STR_FLAG_PERSISTENT);
 
 // Set the starting sprite for the player.
 entity_set_sprite(spr_player_unarmed);
@@ -332,7 +340,7 @@ end_step_event = function(_delta){
 		// (128% of the player's maximum hitpoints) inflicted even when at max hitpoints after 80 seconds.
 		if (PLYR_CAN_UP_POISON_DAMAGE){
 			flags |= PLYR_FLAG_UP_POISON_DAMAGE;
-			poisonDamagePercent *= 2;
+			poisonDamagePercent *= 2.0;
 		} else{
 			flags &= ~PLYR_FLAG_UP_POISON_DAMAGE;
 		}
@@ -348,8 +356,15 @@ end_step_event = function(_delta){
 /// 
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 custom_draw_default = function(_delta){
-	draw_sprite_ext(sprite_index, floor(image_index), x, y, 
+	draw_sprite_ext(sprite_index, image_index, x, y, 
 			image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+			
+	var _interactX = x + lengthdir_x(10, direction);
+	var _interactY = y + lengthdir_y(8, direction) - 8;
+	draw_set_color(COLOR_TRUE_WHITE);
+	draw_set_alpha(1.0);
+	draw_sprite(spr_rectangle, 0, _interactX, _interactY);
+	
 }
 
 drawFunction = method_get_index(custom_draw_default);
@@ -365,6 +380,16 @@ drawFunction = method_get_index(custom_draw_default);
 /// 
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 state_default = function(_delta){
+	// A check to see if the textbox is currently open. If so, the player will be switched to a special state
+	// that will wait for the textbox to no longer be active before returning control back to the player.
+	if (GAME_IS_TEXTBOX_OPEN){
+		object_set_state(state_textbox);
+		image_index = animLoopStart;
+		moveSpeed	= 0.0;
+		flags	   &= ~PLYR_FLAG_MOVING;
+		return; // State was changed; ignore remaining state code.
+	}
+	
 	process_player_input();
 	determine_movement_vector();
 	
@@ -386,21 +411,36 @@ state_default = function(_delta){
 		}
 	}
 	
-	// Handling the input for toggling the flashlight on and off (If one happens to be equipped).
-	if (PINPUT_FLASHLIGHT_PRESSED){
-		
+	// Handling interaction between the player and interactables within the current room. It checks a single
+	// point directly in front of the player to see if it is within the interaction radius of the nearest
+	// interactable object, and executes that instance's interaction logic if the required condition is met.
+	if (PINPUT_INTERACT_PRESSED){
+		var _interactX		= x + lengthdir_x(10, direction);
+		var _interactY		= y + lengthdir_y(8, direction) - 8;
+		var _interactable	= instance_nearest(_interactX, _interactY, par_interactable);
+		with(_interactable){ // Code is ignored if there are no interactables in the current room.
+			if (point_distance(_interactX, _interactY, interactX, interactY) <= interactRadius)
+				on_player_interact(_delta);
+		}
 	}
 	
-	// Don't bother with collision, sprinting or animation if the player isn't current considered moving. Note
-	// that the player can only interact with objects if they're not moving, so that logic is handled in this
-	// block.
-	if (!PLYR_IS_MOVING){
-		// 
-		if (PINPUT_INTERACT_PRESSED){
-			
+	// Handling the input for toggling the flashlight on and off (If one happens to be equipped).
+	if (PINPUT_FLASHLIGHT_PRESSED && equipment.flashlight != ID_INVALID){
+		// Turning off the flashlight; returning the player's ambient light to its default parameters.
+		if (PLYR_IS_FLASHLIGHT_ON){
+			flags &= ~PLYR_FLAG_FLASHLIGHT;
+			lightX = PLYR_AMBLIGHT_XOFFSET;
+			lightY = PLYR_AMBLIGHT_YOFFSET;
+			lightSource.light_set_properties(PLYR_AMBLIGHT_RADIUS, PLYR_AMBLIGHT_COLOR, PLYR_AMBLIGHT_STRENGTH);
+		} else{ // Turning on the flashlight; using the properties of the equipped flashlight.
+			flags |= PLYR_FLAG_FLASHLIGHT;
+			//lightSource.light_set_properties(64.0, COLOR_VERY_LIGHT_YELLOW, 0.8);
 		}
-		return;
 	}
+	
+	// Don't bother with collision, sprinting or animation if the player isn't current considered moving.
+	if (!PLYR_IS_MOVING)
+		return;
 		
 	// Activating the player's sprinting, which will cause their stamina to deplete to zero and remain there
 	// until they stop running. They can still run without stamina, but the speed is heavily reduced.
@@ -424,9 +464,9 @@ state_default = function(_delta){
 	var _xMove = lengthdir_x(moveSpeed, direction);
 	var _yMove = lengthdir_y(moveSpeed, direction);
 	if ((update_position(_xMove, _yMove, _delta) || PINPUT_SPRINT_RELEASED) && PLYR_IS_SPRINTING){
-		timers[PLYR_STAMINA_REGEN_TIMER] = PLYR_STAMINA_REGEN_RATE * 10.0;
-		if (curStamina == 0) // Triple the time it takes before stamina begins to regen if the player is completely exhausted.
-			timers[PLYR_STAMINA_REGEN_TIMER] *= 3.0;
+		timers[PLYR_STAMINA_REGEN_TIMER] = PLYR_STAMINA_REGEN_RATE * PLYR_STAMINA_PAUSE_FACTOR;
+		// Triple the time it takes before stamina begins to regen if the player is completely exhausted.
+		if (curStamina == 0) { timers[PLYR_STAMINA_REGEN_TIMER] *= PLYR_STAMINA_EXHAUST_FACTOR; }
 
 		flags		   &= ~PLYR_FLAG_SPRINTING;
 		accel			= PLYR_ACCEL_NORMAL;
@@ -436,7 +476,16 @@ state_default = function(_delta){
 	// Process the movement animation as normal if no collision occurred for the frame.
 	process_movement_animation(_delta);
 }
-
 object_set_state(state_default);
+
+/// @description 
+///	A very VERY simple function that simply checks to see if the textbox is no longer open. If that is the
+/// case, the player will be returned to whatever their previous state was prior to the textbox opening.
+/// 
+///	@param {Real}	delta	The difference in time between the execution of this frame and the last.
+state_textbox = function(_delta){
+	if (!GAME_IS_TEXTBOX_OPEN)
+		object_set_state(lastState);
+}
 
 #endregion State Function Definitions

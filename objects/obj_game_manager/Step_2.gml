@@ -25,12 +25,22 @@ with(par_dynamic_entity){
 // in their "nextState" variable so a proper state switch doesn't occur in the middle of updating.
 var _length = ds_list_size(global.menus);
 for (var i = 0; i < _length; i++){
-	with(global.menus[| i]) { curState = nextState; }
+	with(global.menus[| i]){
+		if (curState != nextState){
+			lastState = curState;
+			curState = nextState;
+		}
+	}
 }
 
 // Update the current state function for the textbox to match the value stored in the "nextState" variable at
 // the end of the step event, so state changes don't occur in the middle of a frame.
-with(TEXTBOX) { curState = nextState; }
+with(TEXTBOX){
+	if (curState != nextState){
+		lastState = curState;
+		curState = nextState;
+	}
+}
 
 // Update the in-game playtime whenever its flag is toggled.
 if (GAME_IS_PLAYTIME_ACTIVE){

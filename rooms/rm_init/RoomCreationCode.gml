@@ -27,13 +27,7 @@ with(CAMERA){
 	camera_set_followed_object(PLAYER, true);
 }
 
-/*with(TEXTBOX){
-	queue_new_text("Test. test.\ntest test. @0xF84020{test test}. this is a @0x3050F8{test} @0x10A0E4{to} @0xF84468{see} if the textbox can format incoming text properly!!!", TBOX_ACTOR_PLAYER, 1);
-	queue_new_text("A textbox in the middle to see if the same actor speaking makes it so the textbox doesn't close and open again.", TBOX_ACTOR_PLAYER, 2);
-	queue_new_text("Another textbox to see if the @0x10A0E4{color-changing logic} works properly. Otherwise, @0x3050F8{something isn't being reset properly and needs to be fixed}.", TBOX_ACTOR_INVALID);
-	activate_textbox(0);
-}*/
-
-// Once everything has been initialized, the first official room for the game is loaded, and the game is unpaused.
+// Once everything has been initialized, the first official room for the game is loaded, and the game is 
+// unpaused to allow various game elements to start updating.
 room_goto(rm_test_01);
 global.flags &= ~GAME_FLAG_PAUSED;

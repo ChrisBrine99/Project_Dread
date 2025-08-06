@@ -61,6 +61,7 @@
     {"id":{"name":"obj_solid_collider","path":"objects/obj_solid_collider/obj_solid_collider.yy",},},
     {"id":{"name":"obj_table_small1","path":"objects/obj_table_small1/obj_table_small1.yy",},},
     {"id":{"name":"par_dynamic_entity","path":"objects/par_dynamic_entity/par_dynamic_entity.yy",},},
+    {"id":{"name":"par_interactable","path":"objects/par_interactable/par_interactable.yy",},},
     {"id":{"name":"par_static_entity","path":"objects/par_static_entity/par_static_entity.yy",},},
     {"id":{"name":"rm_init","path":"rooms/rm_init/rm_init.yy",},},
     {"id":{"name":"rm_template","path":"rooms/rm_template/rm_template.yy",},},

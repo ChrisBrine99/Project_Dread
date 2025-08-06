@@ -16,13 +16,14 @@ global.structID		= 1000000000; // Start at one billion since GML starts counting
 // not or has conditions pertaining to its potential creation. 
 global.structType	= ds_map_create();
 // ALL STRUCTS THAT ARE EITHER A COMPILE-TIME OR RUNTIME SINGLETON HERE SHOULD HAVE THAT VALUE SET HERE!!!
-ds_map_add(global.structType, str_base,				STRUCT_TYPE_CT_SINGLETON);
-ds_map_add(global.structType, str_camera,			STRUCT_TYPE_CT_SINGLETON);
-ds_map_add(global.structType, str_textbox,			STRUCT_TYPE_CT_SINGLETON);
-ds_map_add(global.structType, str_base_menu,		STRUCT_TYPE_CT_SINGLETON);
-ds_map_add(global.structType, str_item_menu,		STRUCT_TYPE_RT_SINGLETON);
-ds_map_add(global.structType, str_light_basic,		STRUCT_TYPE_LIGHT_SOURCE);
-ds_map_add(global.structType, str_light_flicker,	STRUCT_TYPE_LIGHT_SOURCE);
+ds_map_add(global.structType, str_base,					STRUCT_TYPE_CT_SINGLETON);
+ds_map_add(global.structType, str_camera,				STRUCT_TYPE_CT_SINGLETON);
+ds_map_add(global.structType, str_control_ui_manager,	STRUCT_TYPE_CT_SINGLETON);
+ds_map_add(global.structType, str_textbox,				STRUCT_TYPE_CT_SINGLETON);
+ds_map_add(global.structType, str_base_menu,			STRUCT_TYPE_CT_SINGLETON);
+ds_map_add(global.structType, str_item_menu,			STRUCT_TYPE_RT_SINGLETON);
+ds_map_add(global.structType, str_light_basic,			STRUCT_TYPE_LIGHT_SOURCE);
+ds_map_add(global.structType, str_light_flicker,		STRUCT_TYPE_LIGHT_SOURCE);
 
 /// @description 
 ///	Attempts to create an instance of the provided struct. If that struct happens to be a "special" struct and 

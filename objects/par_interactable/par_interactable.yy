@@ -1,19 +1,19 @@
 {
   "$GMObject":"",
-  "%Name":"obj_table_small1",
+  "%Name":"par_interactable",
   "eventList":[
     {"$GMEvent":"v1","%Name":"","collisionObjectId":null,"eventNum":0,"eventType":0,"isDnD":false,"name":"","resourceType":"GMEvent","resourceVersion":"2.0",},
   ],
   "managed":true,
-  "name":"obj_table_small1",
+  "name":"par_interactable",
   "overriddenProperties":[],
   "parent":{
-    "name":"Interior",
-    "path":"folders/Objects/Entity/Static/Interior.yy",
+    "name":"Static",
+    "path":"folders/Objects/Entity/Static.yy",
   },
   "parentObjectId":{
-    "name":"par_interactable",
-    "path":"objects/par_interactable/par_interactable.yy",
+    "name":"par_static_entity",
+    "path":"objects/par_static_entity/par_static_entity.yy",
   },
   "persistent":false,
   "physicsAngularDamping":0.1,
@@ -32,10 +32,7 @@
   "resourceType":"GMObject",
   "resourceVersion":"2.0",
   "solid":false,
-  "spriteId":{
-    "name":"spr_table_small1",
-    "path":"sprites/spr_table_small1/spr_table_small1.yy",
-  },
+  "spriteId":null,
   "spriteMaskId":null,
   "visible":false,
 }

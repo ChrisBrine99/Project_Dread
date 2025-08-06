@@ -260,4 +260,4 @@ uLightTexture			= shader_get_sampler_index(shd_lighting, "lightTex");
 
 // These calls are for testing purposes
 load_item_data("items.dat");
-inventory_initialize(GAME_FLAG_CMBTDIFF_STANDARD);
+item_inventory_initialize(GAME_FLAG_CMBTDIFF_STANDARD);

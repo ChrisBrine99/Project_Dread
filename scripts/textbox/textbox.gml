@@ -18,6 +18,10 @@
 #macro	TBOX_SHOULD_CLEAR_SURFACE		((flags & TBOX_FLAG_CLEAR_SURFACE)	!= 0)
 #macro	TBOX_SHOULD_SHOW_NAME			((flags & TBOX_FLAG_SHOW_NAME)		!= 0)
 
+// The value the textbox is looking for within its "nextIndex" variable so it knows it can deactivate itself.
+// This value is then reset to 0 after the deactivation is completed.
+#macro	TBOX_INDEX_CLOSE			   -1
+
 // Characters that are used within the unformatted text for a textbox to help format the text in a specific way.
 // when it is parsed prior to being turned into a textbox for the player to view.
 #macro	TBOX_CHAR_NEWLINE				"\n"
@@ -303,6 +307,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 		var _size = ds_list_size(textData);
 		if (TBOX_IS_ACTIVE || _size == 0 || _size <= _startingIndex)
 			return;
+		global.flags |= GAME_FLAG_TEXTBOX_OPEN;
 			
 		// Set the default flags that are toggled upon activation of the textbox. Then, if required, the flag
 		// will be set to true that all data will be cleared on deactivation of the textbox.
@@ -324,7 +329,8 @@ function str_textbox(_index) : str_base(_index) constructor {
 	///	
 	deactivate_textbox = function(){
 		object_set_state(STATE_NONE);
-		flags &= ~TBOX_FLAG_ACTIVE;
+		flags		   &= ~TBOX_FLAG_ACTIVE;
+		global.flags   &= ~GAME_FLAG_TEXTBOX_OPEN;
 		if (!TBOX_CAN_WIPE_DATA) // Prevent deleting any text information if the flag isn't toggled.
 			return;
 		flags &= ~TBOX_CAN_WIPE_DATA;
@@ -344,6 +350,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 			delete textData[| i];
 		}
 		ds_list_clear(textData);
+		show_debug_message("Data cleared.");
 	}
 	
 	/// @description 
@@ -587,9 +594,9 @@ function str_textbox(_index) : str_base(_index) constructor {
 		// the user can now press the advance key to move onto the next textbox.
 		if (nextChar == textLength){
 			if (TBOX_WAS_ADVANCE_PRESSED){
-				if (nextIndex == -1){ // The next index is invalid, the textbox will deactivate itself.
+				if (nextIndex == TBOX_INDEX_CLOSE){ // The next index is invalid, the textbox will deactivate itself.
 					object_set_state(state_close_animation);
-					textIndex = -1;
+					textIndex = TBOX_INDEX_CLOSE;
 					return;
 				}
 				set_textbox_index(nextIndex);
@@ -647,8 +654,9 @@ function str_textbox(_index) : str_base(_index) constructor {
 	state_close_animation = function(_delta){
 		// Repeat the opening animation or deactivate the textbox depending on the current value of nextIndex.
 		if (alpha == 0.0){
-			if (textIndex == -1){ // Closes the textbox.
+			if (textIndex == TBOX_INDEX_CLOSE){ // Closes the textbox.
 				deactivate_textbox();
+				textIndex = 0;
 				return;
 			}
 			// Set the textbox to "reopen" itself for the new actor's dialogue.
@@ -663,6 +671,5 @@ function str_textbox(_index) : str_base(_index) constructor {
 			alpha = 0.0;
 	}
 }
-ds_map_add(global.structType, str_textbox, STRUCT_TYPE_CT_SINGLETON);
 
 #endregion Textbox Struct Definition
