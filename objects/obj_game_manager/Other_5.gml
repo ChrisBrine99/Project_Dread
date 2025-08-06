@@ -10,7 +10,7 @@ for (var i = _length; i >= 0; i--){ // Has to loop backwards since elements will
 // Loop through all structs still alive within the room; destroying them if they aren't persistent.
 _length = ds_list_size(global.structs) - 1;
 for (var i = _length; i >= 0; i--){ // Has to loop backwards since elements will be removed throughout the loop.
-	if ((global.lights[| i].flags & STR_FLAG_PERSISTENT) != 0)
+	if ((global.structs[| i].flags & STR_FLAG_PERSISTENT) != 0)
 		continue;
 
 	with(global.structs[| i])

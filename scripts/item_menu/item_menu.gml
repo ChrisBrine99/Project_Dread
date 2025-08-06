@@ -1,4 +1,4 @@
-#region Macros for Item Inventory Menu Struct
+#region Macros for Item Menu Struct
 
 // Positional offsets of the currently highlighted item's name and description, respectively.
 #macro	MENUITM_NAME_TEXT_X				20
@@ -6,11 +6,11 @@
 #macro	MENUITM_INFO_TEXT_X				20
 #macro	MENUITM_INFO_TEXT_Y				132
 
-#endregion Macros for Item Inventory Menu Struct
+#endregion Macros for Item Menu Struct
 
-#region Item Inventory Menu Struct Definition
+#region Item Menu Struct Definition
 
-/// @param {Function}	index	The value of "str_inventory_menu" as determined by GameMaker during runtime.
+/// @param {Function}	index	The value of "str_item_menu" as determined by GameMaker during runtime.
 function str_item_menu(_index) : str_base_menu(_index) constructor {
 	
 	/// @description 
@@ -72,4 +72,4 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	}
 }
 
-#endregion Item Inventory Menu Struct Definition
+#endregion Item Menu Struct Definition

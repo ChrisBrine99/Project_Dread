@@ -76,6 +76,7 @@
     {"id":{"name":"item_inventory_utilities","path":"scripts/item_inventory_utilities/item_inventory_utilities.yy",},},
     {"id":{"name":"item_menu","path":"scripts/item_menu/item_menu.yy",},},
     {"id":{"name":"light_basic","path":"scripts/light_basic/light_basic.yy",},},
+    {"id":{"name":"light_blink","path":"scripts/light_blink/light_blink.yy",},},
     {"id":{"name":"light_flicker","path":"scripts/light_flicker/light_flicker.yy",},},
     {"id":{"name":"light_utilities","path":"scripts/light_utilities/light_utilities.yy",},},
     {"id":{"name":"menu_utilites","path":"scripts/menu_utilites/menu_utilites.yy",},},

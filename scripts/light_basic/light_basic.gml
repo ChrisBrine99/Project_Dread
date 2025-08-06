@@ -3,10 +3,12 @@
 // Values for the bits being utilized within a light struct's "flags" variable to enable/disable functionality
 // during its lifetime.
 #macro	LGHT_FLAG_LIMITED_LIFE			0x00000001
+#macro	LGHT_FLAG_ACTIVE				0x20000000 // Unused by default.
 #macro	LGHT_FLAG_DESTROYED				0x40000000
 
 // Checks to see whether a given flag within a light struct's "flags" variable is set to a 0 (false) or 1 (true).
 #macro	LGHT_HAS_LIMITED_LIFE			((flags & LGHT_FLAG_LIMITED_LIFE)	!= 0)
+#macro	LGHT_IS_ACTIVE					((flags & LGHT_FLAG_ACTIVE)			!= 0)
 #macro	LGHT_IS_DESTROYED				((flags & LGHT_FLAG_DESTROYED)		!= 0)
 
 // Two macros that denote the minimum and maximum possible strength values for a light source, respectively.
@@ -24,13 +26,11 @@ function str_light_basic(_index) : str_base(_index) constructor {
 	radius			= 0.0;
 	lifetime		= 0.0;
 	color			= COLOR_BLACK;
-	
 	strength		= LGHT_MIN_STRENGTH;
-	strengthFalloff = 0.0;
 	
 	///	@description 
-	///	Called for every frame that the light source exists. Is responsible for rendering the light source with
-	/// its given color and properties at its current position within the room.
+	///	Called for every frame that the light source exists. It's responsible for rendering the light source 
+	/// with its given color and properties at its current position within the room.
 	///	
 	/// @param {Real}	viewX		Offset along the x axis caused by the viewport moving around the room.
 	///	@param {Real}	viewY		Offset along the y axis caused by the viewport moving around the room.

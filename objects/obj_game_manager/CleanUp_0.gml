@@ -3,11 +3,11 @@ var _length = 0; // Used by all array/data structure-based cleanup code, so it's
 // Removes all item inventory structs as they aren't the standard structs that are automatically maintained by
 // the global.struct data structure. In very rare cases, the item inventory will not have been initialized 
 // before this event executes. In that case, this entire chunk of code is skipped since no cleanup is needed.
-if (is_array(global.itemInventory)){
-	_length = array_length(global.itemInventory);
+if (is_array(global.curItems)){
+	_length = array_length(global.curItems);
 	for (var i = 0; i < _length; i++){
-		if (is_struct(global.itemInventory[i]))
-			delete global.itemInventory[i]; global.itemInventory[i] = INV_EMPTY_SLOT;
+		if (is_struct(global.curItems[i]))
+			delete global.curItems[i]; global.curItems[i] = INV_EMPTY_SLOT;
 	}
 }
 
@@ -43,7 +43,9 @@ while(!is_undefined(_itemID)){
 ds_map_clear(global.itemData);
 ds_map_destroy(global.itemData);
 
-// 
+// Clear the list of references from the light management list, and then destroy that list to deallocate the
+// memory associated with it. The actual deletion of the light struct instances is handled below alongside
+// all other structs that were alive at the game's close/end.
 ds_list_clear(global.lights);
 ds_list_destroy(global.lights);
 

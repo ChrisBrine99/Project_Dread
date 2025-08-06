@@ -1,0 +1,1 @@
+lightSource = light_blink_create(x, y, 256.0, 0.15, 80.0, COLOR_WHITE, 0.8);

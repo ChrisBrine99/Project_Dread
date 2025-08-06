@@ -9,7 +9,7 @@
 
 #region Flickering Light Struct Definition
 
-/// @param {Function}	index	The value of "str_light_source" as determined by GameMaker during runtime.
+/// @param {Function}	index	The value of "str_light_flicker" as determined by GameMaker during runtime.
 function str_light_flicker(_index) : str_light_basic(_index) constructor {
 	// The smallest and largest possible sizes the light can flicker within.
 	minRadius			= 0.0;
@@ -22,20 +22,22 @@ function str_light_flicker(_index) : str_light_basic(_index) constructor {
 	maxFlickerInterval	= 0.0;
 	flickerTimer		= 0.0;
 	
-	// 
+	// Stores the starting strength of the light since it will be altered and its grows and shrinks within the
+	// light's set range of flickering.
 	baseStrength		= 0.0;
 	
-	/// 
+	/// Store the original draw event's reference so the code for handling the light's lifetime (If it has one)
+	/// doesn't need to be copy and pasted into this overridden draw event.
 	__draw_event = draw_event;
 	///	@description 
-	///	Called for every frame that the light source exists. Is responsible for rendering the light source with
-	/// its given color and properties at its current position within the room. Also handles the light flicker
-	/// logic since there is no step event.
+	///	Called for every frame that the light source exists. It'ss responsible for rendering the light source 
+	/// with its given color and properties at its current position within the room. Also handles the light 
+	/// flicker logic since there is no step event.
 	///	
 	/// @param {Real}	viewX		Offset along the x axis caused by the viewport moving around the room.
 	///	@param {Real}	viewY		Offset along the y axis caused by the viewport moving around the room.
 	///	@param {Real}	delta		The difference in time between the execution of this frame and the last.
-	draw_event = function(_viewX, _viewY, _delta) {
+	draw_event = function(_viewX, _viewY, _delta){
 		flickerTimer -= _delta;
 		if (flickerTimer <= 0.0){ // Update the light to "flicker" to a new size.
 			flickerTimer	= max(LGHT_MIN_FLICKER_TIME, // Minimum amount of time is 1/60th of a second.
@@ -101,9 +103,14 @@ function str_light_flicker(_index) : str_light_basic(_index) constructor {
 /// @param {Bool}	flags				(Optional) Determines which substate bits to toggle on for the light.
 function light_flicker_create(_x, _y, _minRadius, _maxRadius, _minFlickerInterval, _maxFlickerInterval, _color = COLOR_TRUE_WHITE, _strength = LGHT_MAX_STRENGTH, _lifetime = 0.0, _flags = 0){
 	var _light = light_create(str_light_flicker);
-	with(_light){ // Position the light and apply its sizing/color/strength.
+	with(_light){ // Position the light and apply its sizing/color/strength and flicking parameters.
 		light_set_position(_x, _y);
-		light_set_properties(_minRadius, _maxRadius, _minFlickerInterval, _maxFlickerInterval, _color, _strength);
+		light_set_properties(
+			_minRadius,				_maxRadius, 
+			_minFlickerInterval,	_maxFlickerInterval, 
+			_color, 
+			_strength
+		);
 		lifetime	= _lifetime;
 		flags		= _flags;
 	}

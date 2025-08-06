@@ -9,7 +9,9 @@
 // value to provide to a newly created struct instance which will always increment by one from a successful
 // execution of the "instance_create_struct" function.
 global.structs		= ds_list_create();
-global.structID		= 1000000000; // Start at one billion since GML starts counting instance IDs at 100000; preventing clashing instance IDs between objects and structs.
+global.structID		= 1000000000; 
+// ^	Start at one billion since GML starts counting instance IDs at 100000; preventing clashing instance 
+//		IDs between objects and structs.
 
 // A list that should only be written to BEFORE the game actually begins running (AKA before rm_init is even
 // created and executed) so the game will know at runtime whether a struct can be created multiple times or
@@ -24,6 +26,7 @@ ds_map_add(global.structType, str_base_menu,			STRUCT_TYPE_CT_SINGLETON);
 ds_map_add(global.structType, str_item_menu,			STRUCT_TYPE_RT_SINGLETON);
 ds_map_add(global.structType, str_light_basic,			STRUCT_TYPE_LIGHT_SOURCE);
 ds_map_add(global.structType, str_light_flicker,		STRUCT_TYPE_LIGHT_SOURCE);
+ds_map_add(global.structType, str_light_blink,			STRUCT_TYPE_LIGHT_SOURCE);
 
 /// @description 
 ///	Attempts to create an instance of the provided struct. If that struct happens to be a "special" struct and 
