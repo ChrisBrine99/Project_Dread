@@ -19,10 +19,18 @@ for (var i = 0; i < _length; i++){
 	}
 }
 
-// Similarly to dynamic entities, the textbox will execute its step event through a provided state function. If
-// no function is set OR the textbox isn't currently active, nothing will be executed.
+// Similarly to dynamic entities, the textbox will execute its step event through a provided state function. 
+// If no function is set OR the textbox isn't currently active, nothing will be executed.
 with(TEXTBOX){
 	if (curState == 0 || !TBOX_IS_ACTIVE)
+		break;
+	script_execute(curState, _delta);
+}
+
+// Much like entities and the textbox, the screen fade will execute its step event through a state function.
+// If no funciton is set OR the screen fade isn't being applied, nothing will happen.
+with(SCREEN_FADE){
+	if (curState == 0 || !FADE_IS_ACTIVE)
 		break;
 	script_execute(curState, _delta);
 }

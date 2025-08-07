@@ -42,6 +42,14 @@ with(TEXTBOX){
 	}
 }
 
+// Perform the same thing that occurs to the textbox and its state values within the Screen Fade struct.
+with(SCREEN_FADE){
+	if (curState != nextState){
+		lastState = curState;
+		curState = nextState;
+	}
+}
+
 // Update the in-game playtime whenever its flag is toggled.
 if (GAME_IS_PLAYTIME_ACTIVE){
 	playtimeFraction += global.deltaTime;

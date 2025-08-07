@@ -380,16 +380,6 @@ drawFunction = method_get_index(custom_draw_default);
 /// 
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 state_default = function(_delta){
-	// A check to see if the textbox is currently open. If so, the player will be switched to a special state
-	// that will wait for the textbox to no longer be active before returning control back to the player.
-	if (GAME_IS_TEXTBOX_OPEN){
-		object_set_state(state_textbox);
-		image_index = animLoopStart;
-		moveSpeed	= 0.0;
-		flags	   &= ~PLYR_FLAG_MOVING;
-		return; // State was changed; ignore remaining state code.
-	}
-	
 	process_player_input();
 	determine_movement_vector();
 	
@@ -491,8 +481,18 @@ state_room_warp = function(_delta){
 /// case, the player will be returned to whatever their previous state was prior to the textbox opening.
 /// 
 ///	@param {Real}	delta	The difference in time between the execution of this frame and the last.
-state_textbox = function(_delta){
+state_textbox_open = function(_delta){
 	if (!GAME_IS_TEXTBOX_OPEN)
+		object_set_state(lastState);
+}
+
+/// @description 
+/// A very VERY simple state that will check to see if a transition effect is no longer active. If so, the
+/// player is returned to whatever their previous state was before this state was applied to them.
+/// 
+///	@param {Real}	delta	The difference in time between the execution of this frame and the last.
+state_transition_active = function(_delta){
+	if (!GAME_IS_TRANSITION_ACTIVE)
 		object_set_state(lastState);
 }
 

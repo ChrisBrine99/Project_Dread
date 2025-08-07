@@ -34,6 +34,7 @@
 #macro	GAME_MANAGER					global.sInstances[? obj_game_manager]
 #macro	CAMERA							global.sInstances[? str_camera]
 #macro	TEXTBOX							global.sInstances[? str_textbox]
+#macro	SCREEN_FADE						global.sInstances[? str_screen_fade]
 #macro	PLAYER							global.sInstances[? obj_player]
 
 // Macros for referencing the instance IDs of all runtime singletons. These will return "noone" if no instance
@@ -82,13 +83,17 @@
 #macro	MENU_PAD_TBOX_ADVANCE			gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_TBOX_ADVANCE	+ 1])
 #macro	MENU_PAD_TBOX_LOG				gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_TBOX_LOG		+ 1])
 
-// 
+// Macros for the index values within the global.setting struct volume array. They each correspond to a group 
+// of sounds that can have their volume adjusted independently of the other values (As well as the main master
+// volume value at index 0).
 #macro	STNG_AUDIO_MASTER				0
 #macro	STNG_AUDIO_MUSIC				1
 #macro	STNG_AUDIO_SOUNDS				2
 #macro	TOTAL_VOLUME_OPTIONS			3
 
-// 
+// Macros for the index values within the global.settings struct input binding array. There are two values for
+// each input: the keyboard binding, and the gamepad binding. So, each macro is an even number and is incremented
+// in order to get the input's gamepad equivalent.
 #macro	STNG_INPUT_GAME_RIGHT			0
 #macro	STNG_INPUT_GAME_LEFT			2
 #macro	STNG_INPUT_GAME_UP				4
@@ -221,3 +226,5 @@ uLightTexture			= shader_get_sampler_index(shd_lighting, "lightTex");
 // These calls are for testing purposes
 load_item_data("items.dat");
 item_inventory_initialize(GAME_FLAG_CMBTDIFF_STANDARD);
+
+eventBit = 0;

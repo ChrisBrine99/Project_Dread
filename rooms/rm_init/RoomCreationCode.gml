@@ -15,10 +15,11 @@ gpu_set_alphatestref(10); // ~0.039
 // All singleton instances will be created here, and they will exist throughout the ENTIRE runtime of the game. If
 // any of them are to be deleted for whatever reason before the game is closed, a lot of undefined things and 
 // potential crashes will occur.
-ds_map_add(global.sInstances, KEY_GAME_MANAGER, instance_create_depth(0, 0, 30, obj_game_manager));
-ds_map_add(global.sInstances, KEY_CAMERA,		new str_camera(str_camera));
-ds_map_add(global.sInstances, KEY_TEXTBOX,		new str_textbox(str_textbox));
-ds_map_add(global.sInstances, KEY_PLAYER,		instance_create_depth(100, 100, 30, obj_player));
+ds_map_add(global.sInstances, obj_game_manager, instance_create_depth(0, 0, 30, obj_game_manager));
+ds_map_add(global.sInstances, obj_player,		instance_create_depth(100, 100, 30, obj_player));
+ds_map_add(global.sInstances, str_camera,		new str_camera(str_camera));
+ds_map_add(global.sInstances, str_textbox,		new str_textbox(str_textbox));
+ds_map_add(global.sInstances, str_screen_fade,	new str_screen_fade(str_screen_fade));
 // NOTE -- This is the only time the default ways of struct and object creation should be used!!!
 
 // Initialize the camera viewport and the window's dimensions; settings the starting coordinates as well.

@@ -20,24 +20,36 @@ lockData		= ds_list_create();
 semiLockMessage	= "There are still some unopened locks preventing me from opening the door...";
 unlockMessage	= "The door has been unlocked.";
 
+// 
+targetX			= 0;
+targetY			= 0;
+targetRoom		= undefined;
+
 #endregion Variable Initializations
 
 #region Interaction Function Override
 
 /// @description 
-/// 
+/// The function that is called whenever the player interacts with the interactable object in question. It 
+/// will handle displaying one of the three messages based on if the door is completely unlocked (All locks
+/// have been opened by the player), particallyunlocked  (Only some of the locks have been opened), or still
+/// completely locked (All locks are still locked). When the door is unlocked, an interaction will cause the
+/// player to be warped to the target room and position set for the door. 
 ///	
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 on_player_interact = function(_delta){
 	if (!DOOR_IS_LOCKED || ds_list_size(lockData) == 0){
+		if (is_undefined(targetRoom))
+			return; // No warp will occur if the target room index isn't defined.
+			
 		// TODO -- Activate Room Transition Logic Here.
 		return;
 	}
 	
 	// Loop through the door's list of locks to see how many of them have been unlocked by the player. This
-	// sum of opened locks is stored and referenced after the loop to determine which of three different types
-	// of message to show to the player: an unlock message, a partial-unlock message, and a completely locked
-	// message.
+	// sum of opened locks is stored and referenced after the loop to determine which of three different 
+	// types of message to show to the player: an unlock message, a partial-unlock message, and a completely 
+	// locked message.
 	var _locksOpened	= 0;
 	var _length			= ds_list_size(lockData);
 	for (var i = 0; i < _length; i++){
@@ -113,6 +125,23 @@ add_lock = function(_keyID, _flagID, _flagState){
 		flagID		: _flagID,
 		flagState	: _flagState,
 	});
+}
+
+/// @description 
+/// Attempts to set the parameters for the door's room warping. If the index provided for the room doesn't
+/// actually exist, the value for "targetRoom" is set to "undefined" so an attempt to warp will not occur.
+/// 
+/// @param {Real}			targetX		Player's destination along the x-axis within the target room.
+/// @param {Real}			targetY		Player's destination along the y-axis within the target room.
+/// @param {Asset.GMRoom}	targetRoom	The room to warp the player to.
+set_warp_params = function(_targetX, _targetY, _targetRoom){
+	if (!room_exists(_targetRoom)){
+		targetRoom = undefined;
+		return;
+	}
+	targetX		= _targetX;
+	targetY		= _targetY;
+	targetRoom	= _targetRoom;
 }
 
 #endregion Unique Function Initializations

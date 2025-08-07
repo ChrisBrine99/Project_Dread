@@ -18,6 +18,7 @@ var _structRef = undefined;
 var _itemID	= ds_map_find_first(global.itemData);
 while(!is_undefined(_itemID)){
 	_structRef = global.itemData[? _itemID];
+	show_debug_message("Deleted item {0} (structRef: {1})", _itemID, _structRef);
 	with(_structRef){
 		// Remove the containers for the input side of the item's combination data. This block of code is
 		// skipped over should there not be an array named validCombo within the current struct.
@@ -35,8 +36,6 @@ while(!is_undefined(_itemID)){
 				delete comboResult[i];
 		}
 	}
-	
-	show_debug_message("Deleted item {0} (structRef: {1})", _itemID, _structRef);
 	_itemID = ds_map_find_next(global.itemData, _itemID);
 	delete _structRef;
 }
@@ -66,6 +65,9 @@ ds_list_destroy(global.structs);
 with(CAMERA)		{ destroy_event(); }	delete CAMERA;
 with(TEXTBOX)		{ destroy_event(); }	delete TEXTBOX;
 ds_map_destroy(global.sInstances);
+
+// Clear the event flag buffer from memory.
+buffer_delete(global.eventFlags);
 
 // Finally, delete any structs that exist globally as the game manager bares responsibility for cleaning up.
 delete global.settings;

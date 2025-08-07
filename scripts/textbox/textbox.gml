@@ -308,7 +308,19 @@ function str_textbox(_index) : str_base(_index) constructor {
 		if (TBOX_IS_ACTIVE || _size == 0 || _size <= _startingIndex)
 			return;
 		global.flags |= GAME_FLAG_TEXTBOX_OPEN;
-			
+		
+		// set the player object to its unique textbox state where it simply waits until the current textbox
+		// has been closed. It stops them from animating and places them in their standing sprite for thir
+		// facing direction. If a cutscene is active this code is skipped.
+		if (!GAME_IS_CUTSCENE_ACTIVE){
+			with(PLAYER){
+				object_set_state(state_textbox_open);
+				image_index = animLoopStart;
+				moveSpeed	= 0.0;
+				flags	   &= ~PLYR_FLAG_MOVING;
+			}
+		}
+		
 		// Set the default flags that are toggled upon activation of the textbox. Then, if required, the flag
 		// will be set to true that all data will be cleared on deactivation of the textbox.
 		flags |= TBOX_FLAG_ACTIVE; // Surface clearing flag is set within "set_textbox_index".
@@ -542,7 +554,9 @@ function str_textbox(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	///
+	/// Checks to see if the current character is a valid piece of punctuation or not. If it is, a unique delay
+	/// is applied relative to the punctuation character it happens to be, and it not the standard delay will
+	/// be applied between this and the next character appearing within the textbox.
 	///
 	///	@param {String}		curText		The text that is referenced during the punctuation check.
 	/// @param {Real}		index		Position within the string to check for a punctuation character.
@@ -585,7 +599,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 	/// early press of the advance text input, and will also allow them to move onto the next textbox by
 	/// pressing that same key so long as all the text for the current textbox is visible to them.
 	///	
-	///	@param {Real}	delta 
+	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_default = function(_delta){
 		process_textbox_input();
 		
