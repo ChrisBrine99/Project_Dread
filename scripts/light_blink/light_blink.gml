@@ -1,5 +1,9 @@
 #region Blinking Light Macro Definitions
 
+// 
+#macro	LGHT_FLAG_POWER_STATE			0x00000001
+#macro	LGHT_IS_POWERED_ON				((flags & LGHT_FLAG_POWER_STATE) != 0)
+
 // Determines the minimum interval of time between a light blinking between on and off.
 #macro	LGHT_MIN_BLINK_TIME				0.05
 
@@ -35,12 +39,12 @@ function str_light_blink(_index) : str_light_basic(_index) constructor {
 			
 			// Toggle the flag bit to enable/disable the rendering of the light, but not the logic that is 
 			// also in this draw event that handles the blinking timer.
-			if (LGHT_IS_ACTIVE) { flags &= ~LGHT_FLAG_ACTIVE; }
-			else				{ flags |=  LGHT_FLAG_ACTIVE; }
+			if (LGHT_IS_POWERED_ON) { flags &= ~LGHT_FLAG_POWER_STATE; }
+			else					{ flags |=  LGHT_FLAG_POWER_STATE; }
 		}
 		
 		// Only call the base function if the light is set to active.
-		if (LGHT_IS_ACTIVE) { __draw_event(_viewX, _viewY, _delta); }
+		if (LGHT_IS_POWERED_ON) { __draw_event(_viewX, _viewY, _delta); }
 	}
 	
 	/// @description 

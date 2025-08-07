@@ -6,18 +6,19 @@
 #macro	ENTT_FLAG_OVERRIDE_DRAW			0x04000000
 #macro	ENTT_FLAG_ANIMATION_END			0x08000000
 #macro	ENTT_FLAG_VISIBLE				0x10000000
-#macro	ENTT_FLAG_DESTROYED				0x20000000
-#macro	ENTT_FLAG_INVINCIBLE			0x40000000
-#macro	ENTT_FLAG_ACTIVE				0x80000000
+#macro	ENTT_FLAG_ACTIVE				0x20000000
+#macro	ENTT_FLAG_DESTROYED				0x40000000
+#macro	ENTT_FLAG_INVINCIBLE			0x80000000
+
 
 // Macros for the code required to check the state of a given flag or flag(s) that are required for certain
 // events or code to trigger within a given entity. They simple condense those checks down to a single term.
 #macro	ENTT_HAS_SHADOW					((flags & ENTT_FLAG_SHADOW)				!= 0)
 #macro	ENTT_OVERRIDES_DRAW_EVENT		((flags & ENTT_FLAG_OVERRIDE_DRAW)		!= 0)
 #macro	ENTT_DID_ANIMATION_END			((flags & ENTT_FLAG_ANIMATION_END)		!= 0)
+#macro	ENTT_IS_ACTIVE					((flags & ENTT_FLAG_ACTIVE)				!= 0 && (flags & ENTT_FLAG_DESTROYED)	== 0)
 #macro	ENTT_IS_VISIBLE					((flags & ENTT_FLAG_VISIBLE)			!= 0 && (flags & ENTT_FLAG_ACTIVE)		!= 0)
 #macro	ENTT_IS_DESTROYED				((flags & ENTT_FLAG_DESTROYED)			!= 0 && (flags & ENTT_FLAG_INVINCIBLE)	== 0)
-#macro	ENTT_IS_ACTIVE					((flags & ENTT_FLAG_ACTIVE)				!= 0 && (flags & ENTT_FLAG_DESTROYED)	== 0)
 
 #endregion Shared Macros Between Entity Types
 

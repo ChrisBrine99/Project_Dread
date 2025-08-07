@@ -467,6 +467,7 @@ state_default = function(_delta){
 	process_movement_animation(_delta);
 }
 object_set_state(state_default);
+curState = nextState; // Instantly applies the state specified above.
 
 /// @description 
 ///	A very VERY simple function that simply checks to see if the textbox is no longer open. If that is the
@@ -474,8 +475,9 @@ object_set_state(state_default);
 /// 
 ///	@param {Real}	delta	The difference in time between the execution of this frame and the last.
 state_textbox_open = function(_delta){
-	if (!GAME_IS_TEXTBOX_OPEN)
+	if (!GAME_IS_TEXTBOX_OPEN){
 		object_set_state(lastState);
+	}
 }
 
 #endregion State Function Definitions

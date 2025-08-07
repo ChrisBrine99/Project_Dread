@@ -57,7 +57,9 @@ function object_set_state(_state){
 	}
 	
 	var _index = method_get_index(_state);
-	if (is_undefined(_index) || _index == curState)
+	if (is_undefined(_index) || _index == curState){
+		nextState = 0;
 		return; // Don't update to an invalid state or if the state is identical to the current one.
+	}
 	nextState = _index;
 }

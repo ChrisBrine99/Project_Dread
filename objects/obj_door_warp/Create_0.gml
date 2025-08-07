@@ -13,7 +13,7 @@
 // variable is used to display the text for when the door is locked.
 event_inherited();
 interactRadius	= 12;
-textboxMessage	= "The door is locked. I can't get it open.";
+textboxMessage	= "The door is locked. I can't get it open without its key.";
 
 // 
 lockData		= ds_list_create();
@@ -52,6 +52,11 @@ on_player_interact = function(_delta){
 			targetRoom = _targetRoom;
 			add_instance_to_warp(PLAYER, _targetX, _targetY);
 		}
+		
+		// Finally, initialize the screen fading effect that is used in tandem with the room warp logic. It is
+		// toggled to manually activating its fade out so it doesn't begin fading out until AFTER the target
+		// room has completely loaded in.
+		with(SCREEN_FADE) { activate_screen_fade(0.05, 0.05, COLOR_BLACK, true); }
 		return;
 	}
 	

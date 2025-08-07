@@ -536,7 +536,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 			content		: _fullText,
 			colorData	: _fullColorData,
 			actorIndex	: _actorIndex,
-			nextIndex	: _nextIndex,
+			nextIndex	: _nextIndex == -1 ? ds_list_size(textData) + 1 : _nextIndex,
 		});
 	}
 	
@@ -607,7 +607,9 @@ function str_textbox(_index) : str_base(_index) constructor {
 		// the user can now press the advance key to move onto the next textbox.
 		if (nextChar == textLength){
 			if (TBOX_WAS_ADVANCE_PRESSED){
-				if (nextIndex == TBOX_INDEX_CLOSE){ // The next index is invalid, the textbox will deactivate itself.
+				// Close the textbox if the next index is less than 0, equal to the current index, or outside
+				// of the valid bounds of textbox data indices.
+				if (nextIndex < 0 && nextIndex == textIndex || nextIndex >= ds_list_size(textData)){
 					object_set_state(state_close_animation);
 					textIndex = TBOX_INDEX_CLOSE;
 					return;
@@ -667,14 +669,14 @@ function str_textbox(_index) : str_base(_index) constructor {
 	state_close_animation = function(_delta){
 		// Repeat the opening animation or deactivate the textbox depending on the current value of nextIndex.
 		if (alpha == 0.0){
-			if (textIndex == TBOX_INDEX_CLOSE){ // Closes the textbox.
+			y = TBOX_Y_START; // Reset the y position so the textbox opens properly next time.
+			if (textIndex < 0 || textIndex >= ds_list_size(textData)){ // Closes the textbox.
 				deactivate_textbox();
 				textIndex = 0;
 				return;
 			}
 			// Set the textbox to "reopen" itself for the new actor's dialogue.
 			object_set_state(state_open_animation);
-			y = TBOX_Y_START;
 			return;
 		}
 		

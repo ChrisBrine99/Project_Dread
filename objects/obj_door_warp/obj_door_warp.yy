@@ -38,6 +38,9 @@
     "name":"spr_door_warp",
     "path":"sprites/spr_door_warp/spr_door_warp.yy",
   },
-  "spriteMaskId":null,
+  "spriteMaskId":{
+    "name":"spr_empty_mask",
+    "path":"sprites/spr_empty_mask/spr_empty_mask.yy",
+  },
   "visible":false,
 }

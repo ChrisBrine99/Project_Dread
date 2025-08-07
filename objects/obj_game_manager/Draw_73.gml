@@ -50,14 +50,17 @@ with(CAMERA){
 	while (_index < _length){
 		_light = ds_list_find_value(global.lights, _index);
 		with(_light){
-			if (strength <= _minAlpha || x + radius < _viewX || y + radius < _viewY 
+			// Skip rendering the light source if it isn't currently active, the strength value is too low, or
+			// the position/radius of the light is outside of the viewport's current bounds.
+			if (!LGHT_IS_ACTIVE || strength <= _minAlpha || x + radius < _viewX || y + radius < _viewY 
 					|| x - radius > _viewW || y - radius > _viewH)
-				continue; // Skip over all invisible or off-screen light sources.
+				continue;
 			draw_event(_viewX, _viewY, _delta);
 			
 			if (LGHT_IS_DESTROYED){ // Remove lights that are destroyed.
 				ds_list_delete(global.lights, _index);
-				continue; // Skips over increment to account for removed element from list.
+				_length--;	// Decrement the length value since an element was removed.
+				continue;
 			}
 		}
 		_index++;

@@ -2,5 +2,5 @@
 if (lightSource) { light_destroy(lightSource); }
 
 // Removes index from sorting grid to account for the now-removed entity.
-var _height = ds_grid_height(global.sortOrder);
-ds_grid_resize(global.sortOrder, 2, _height - 1);
+// var _height = ds_grid_height(global.sortOrder);
+// ds_grid_resize(global.sortOrder, 2, _height - 1);

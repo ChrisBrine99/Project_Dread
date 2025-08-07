@@ -69,6 +69,10 @@ ds_map_destroy(global.sInstances);
 // Clear the event flag buffer from memory.
 buffer_delete(global.eventFlags);
 
+// Delete the grid that stores entities and their current y position so they can be drawn from the top of 
+// the screen to the bottom in order.
+ds_grid_destroy(global.sortOrder);
+
 // Delete any structs that exist globally as the game manager bares responsibility for cleaning them up.
 delete global.settings;
 

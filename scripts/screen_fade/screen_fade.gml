@@ -14,6 +14,8 @@
 
 /// @param {Function}	index	The value of "str_screen_fade" as determined by GameMaker during runtime.
 function str_screen_fade(_index) : str_base(_index) constructor {
+	flags			= STR_FLAG_PERSISTENT;
+	
 	// 
 	curState		= 0;
 	nextState		= 0;
