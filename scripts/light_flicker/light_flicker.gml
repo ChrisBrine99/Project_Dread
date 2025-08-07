@@ -2,7 +2,7 @@
 
 // Determines the minimum possible amounts for the amount of time between a flicker update and minimum amount
 // to adjust the radius by during said update, respectively.
-#macro	LGHT_MIN_FLICKER_TIME			1.0 / 60.0
+#macro	LGHT_MIN_FLICKER_TIME			0.05
 #macro	LGHT_MIN_FLICKER_AMOUNT			0.5
 
 #endregion Flickering Light Macro Definitions

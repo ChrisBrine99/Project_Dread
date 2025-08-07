@@ -1,0 +1,1 @@
+lightSource = light_flicker_create(x, y, 252.0, 260.0, 1.0, 5.0, COLOR_WHITE, 0.5);

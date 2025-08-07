@@ -1,9 +1,9 @@
 {
   "$GMScript":"v1",
-  "%Name":"singleton_utilities",
+  "%Name":"event_utilities",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"singleton_utilities",
+  "name":"event_utilities",
   "parent":{
     "name":"Utilities",
     "path":"folders/Scripts/Utilities.yy",

@@ -1,7 +1,7 @@
 #region Blinking Light Macro Definitions
 
 // Determines the minimum interval of time between a light blinking between on and off.
-#macro	LGHT_MIN_BLINK_TIME				1.0 / 60.0
+#macro	LGHT_MIN_BLINK_TIME				0.05
 
 #endregion Blinking Light Macro Definitions
 

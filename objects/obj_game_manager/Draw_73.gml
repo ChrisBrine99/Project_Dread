@@ -1,7 +1,6 @@
 // Create a few local variables that will be used and referenced throughout the event by different instances
 // and structures to avoid having to constantly get the same values over and over again.
 var _minAlpha		= gpu_get_alphatestref() / 255.0;
-var _scale			= global.settings.windowScale;
 var _viewX			= 0;
 var _viewY			= 0;
 

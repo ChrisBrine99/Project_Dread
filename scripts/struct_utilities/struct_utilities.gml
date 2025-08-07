@@ -97,7 +97,7 @@ function instance_find_struct(_id){
 		}
 		
 		if (_structRef.structID > _id){
-			_end = _middle; // Cut off top half; search remainder of instances.
+			_end	= _middle; // Cut off top half; search remainder of instances.
 			_middle = floor((_end + _start) / 2);
 			continue;
 		}

@@ -104,7 +104,67 @@
 
 #endregion Color Hex Value Macros
 
+#region Macros for "vk_*" Constants not Included by GameMaker
+
+// Virtual keyboard constants for all keyboard keys that don't have built-in vk constants already.
+#macro	vk_0							0x30	// Top-row number keys
+#macro	vk_1							0x31
+#macro	vk_2							0x32
+#macro	vk_3							0x33
+#macro	vk_4							0x34
+#macro	vk_5							0x35
+#macro	vk_6							0x36
+#macro	vk_7							0x37
+#macro	vk_8							0x38
+#macro	vk_9							0x39
+#macro	vk_a							0x41	// Alphabet keys
+#macro	vk_b							0x42
+#macro	vk_c							0x43
+#macro	vk_d							0x44
+#macro	vk_e							0x45
+#macro	vk_f							0x46
+#macro	vk_g							0x47
+#macro	vk_h							0x48
+#macro	vk_i							0x49
+#macro	vk_j							0x4A
+#macro	vk_k							0x4B
+#macro	vk_l							0x4C
+#macro	vk_m							0x4D
+#macro	vk_n							0x4E
+#macro	vk_o							0x4F
+#macro	vk_p							0x50
+#macro	vk_q							0x51
+#macro	vk_r							0x52
+#macro	vk_s							0x53
+#macro	vk_t							0x54
+#macro	vk_u							0x55
+#macro	vk_v							0x56
+#macro	vk_w							0x57
+#macro	vk_x							0x58
+#macro	vk_y							0x59
+#macro	vk_z							0x5A
+#macro	vk_capslock						0x14	// All remaining keys
+#macro	vk_numberlock					0x90
+#macro	vk_scrolllock					0x91
+#macro	vk_semicolon					0xBA	// Also ":"
+#macro	vk_equal						0xBB	// Also "+"
+#macro	vk_comma						0xBC	// Also "<"
+#macro	vk_underscore					0xBD	// Also "-"
+#macro	vk_period						0xBE	// Also ">"
+#macro	vk_forwardslash					0xBF	// Also "?"
+#macro	vk_tilde						0xC0	// Also "`"
+#macro	vk_openbracket					0xDA	// Also "{"
+#macro	vk_backslash					0xDC	// Also "|"
+#macro	vk_closebracket					0xDD	// Also "}"
+#macro	vk_quotation					0xDE	// Also "'"
+
+#endregion Macros for "vk_*" Constants not Included by GameMaker
+
 #region General Macros
+
+// The value that equates to one second of real-time in the game's units. An exmaple would be an entity with
+// a speed value of 1.0 would move roughly 60 pixels per second.
+#macro	GAME_TARGET_FPS					60.0
 
 // A catchall for some ID that is considered invalid (Ex. item IDs, data structure IDs, etc.).
 #macro	ID_INVALID					   -1

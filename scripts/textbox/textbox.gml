@@ -350,7 +350,6 @@ function str_textbox(_index) : str_base(_index) constructor {
 			delete textData[| i];
 		}
 		ds_list_clear(textData);
-		show_debug_message("Data cleared.");
 	}
 	
 	/// @description 

@@ -1,1 +1,1 @@
-if (lightSource) { light_destroy(lightSource); }
+if (lightSource != noone) { light_destroy(lightSource); }

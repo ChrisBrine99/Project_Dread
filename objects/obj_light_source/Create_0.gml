@@ -1,1 +1,1 @@
-lightSource = 0;
+lightSource = noone;

@@ -479,6 +479,14 @@ state_default = function(_delta){
 object_set_state(state_default);
 
 /// @description 
+/// 
+///	
+///	@param {Real}	delta	The difference in time between the execution of this frame and the last.
+state_room_warp = function(_delta){
+	
+}
+
+/// @description 
 ///	A very VERY simple function that simply checks to see if the textbox is no longer open. If that is the
 /// case, the player will be returned to whatever their previous state was prior to the textbox opening.
 /// 
