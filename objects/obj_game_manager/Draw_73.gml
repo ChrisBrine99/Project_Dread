@@ -12,6 +12,11 @@ with(CAMERA){
 	_viewX	= viewportX;
 	_viewY	= viewportY;
 	
+	// Exit from updating the current lighting if the game is completely paused. The surface will still be
+	// drawn below, but no updates are made to it until the game is unpaused once more. 
+	if (GAME_IS_PAUSED)
+		break;
+	
 	// Since the lighting system is the first post-processing effect to be drawn, the world surface is checked
 	// for a potential flushing by the GPU here and a new surface is created if that happens to be the case.
 	// Then, the unaltered application surface is drawn to it.

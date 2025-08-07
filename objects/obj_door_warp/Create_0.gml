@@ -39,10 +39,19 @@ targetRoom		= undefined;
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 on_player_interact = function(_delta){
 	if (!DOOR_IS_LOCKED || ds_list_size(lockData) == 0){
-		if (is_undefined(targetRoom))
-			return; // No warp will occur if the target room index isn't defined.
-			
-		// TODO -- Activate Room Transition Logic Here.
+		if (GAME_IS_ROOM_WARP_OCCURRING || is_undefined(targetRoom) || !room_exists(targetRoom))
+			return; // No warp will occur if the target room index isn't defined or a room warp is already occurring.
+		global.flags |= GAME_FLAG_ROOM_WARP;
+		
+		// Set the game manager up to handle the room warping logic. It will add the player to the warp queue
+		// with their position after the warp being the target x and y values set by the door.
+		var _targetX	= targetX;
+		var _targetY	= targetY;
+		var _targetRoom = targetRoom;
+		with(GAME_MANAGER){
+			targetRoom = _targetRoom;
+			add_instance_to_warp(PLAYER, _targetX, _targetY);
+		}
 		return;
 	}
 	

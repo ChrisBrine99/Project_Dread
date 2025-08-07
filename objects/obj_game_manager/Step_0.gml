@@ -1,15 +1,20 @@
 if (GAME_IS_PAUSED)
 	return; // Prevent anything from updating while the game is considered paused.
 
-// 
+// Loop through all existing dynamic entities and execute their state functions should they have a valid state
+// set and they're currently toggled to be active. Otherwise, the entity is skipped in the update process.
 var _delta = global.deltaTime;
-with(par_dynamic_entity){
-	if (curState == 0 || !ENTT_IS_ACTIVE)
-		continue;
-	script_execute(curState, _delta);
+if (!GAME_IS_ROOM_WARP_OCCURRING){ // All entities should pause during a room transition.
+	with(par_dynamic_entity){
+		if (curState == 0 || !ENTT_IS_ACTIVE)
+			continue;
+		script_execute(curState, _delta);
+	}
 }
 
-// 
+// Loop through all menus in order of first created to last; updating them all if they have a valid state
+// function to call upon and they are currently considered active via their active flag being set. Menus that
+// don't meet that criteria are skipped over and prevented from updating.
 var _length = ds_list_size(global.menus);
 for (var i = 0; i < _length; i++){
 	with(global.menus[| i]){

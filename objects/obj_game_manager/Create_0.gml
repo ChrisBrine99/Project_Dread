@@ -10,8 +10,9 @@
 #macro	GAME_FLAG_PUZZDIFF_FORGIVING	0x00000020	// Puzzle difficulty flags
 #macro	GAME_FLAG_PUZZDIFF_STANDARD		0x00000040
 #macro	GAME_FLAG_PUZZDIFF_PUNISHING	0x00000080
-#macro	GAME_FLAG_PLAYTIME_ACTIVE		0x01000000	// Other impotant flags
-#macro	GAME_FLAG_TRANSITION_ACTIVE		0x02000000
+#macro	GAME_FLAG_PLAYTIME_ACTIVE		0x00800000	// Other impotant flags
+#macro	GAME_FLAG_TRANSITION_ACTIVE		0x01000000
+#macro	GAME_FLAG_ROOM_WARP				0x02000000
 #macro	GAME_FLAG_TEXTBOX_OPEN			0x04000000
 #macro	GAME_FLAG_GAMEPAD_ACTIVE		0x08000000
 #macro	GAME_FLAG_IN_GAME				0x10000000	// Main game state flags
@@ -23,6 +24,7 @@
 // or the value of the flag itself which is non-zero AKA "true".
 #macro	GAME_IS_PLAYTIME_ACTIVE			((global.flags & GAME_FLAG_PLAYTIME_ACTIVE)		!= 0)
 #macro	GAME_IS_TRANSITION_ACTIVE		((global.flags & GAME_FLAG_TRANSITION_ACTIVE)	!= 0)
+#macro	GAME_IS_ROOM_WARP_OCCURRING		((global.flags & GAME_FLAG_ROOM_WARP)			!= 0)
 #macro	GAME_IS_TEXTBOX_OPEN			((global.flags & GAME_FLAG_TEXTBOX_OPEN)		!= 0)
 #macro	GAME_IS_GAMEPAD_ACTIVE			((global.flags & GAME_FLAG_GAMEPAD_ACTIVE)		!= 0)
 #macro	GAME_IS_IN_GAME					((global.flags & GAME_FLAG_IN_GAME)				!= 0)
@@ -221,7 +223,49 @@ uLightSaturation		= shader_get_uniform(shd_lighting, "saturation");
 uLightContrast			= shader_get_uniform(shd_lighting, "contrast");
 uLightTexture			= shader_get_sampler_index(shd_lighting, "lightTex");
 
+// Stores the current offset for the screen-wide noise effect. This allows the game to pause the effect if it
+// is ever required since without these variables the draw call would constantly be setting new random numbers
+// for each offset between 0 and 63.
+noiseOffsetX			= 0;
+noiseOffsetY			= 0;
+
+// 
+targetRoom				= noone;
+instancesToWarp			= ds_map_create();
+
 #endregion Game Manager Global and Local Variable Initializations
+
+#region Game Manager Local Function Initializations
+
+/// @description 
+///	Adds a given instance to the map of instances that will warp to the target room together. Each instance
+/// can be given a unique position, and all will temporarily be set to persistent during the warping process.
+///	
+///	@param {Id.Instance}	id			The unique value given to the instance in question.
+/// @param {Real}			targetX		Position along the x-axis within the target room to set the instance's x position to.
+/// @param {Real}			targetY		Position along the y-axis within the target room to set the instance's y position to.
+add_instance_to_warp = function(_id, _targetX, _targetY){
+	var _key = ds_map_find_value(instancesToWarp, _id);
+	if (!is_undefined(_key)) // Don't try to add the same instance twice.
+		return;
+	
+	var _persistent = false;
+	with(_id){ // Store whether or not the isntance was previously persistent before setting it to true. 
+		_persistent = persistent;
+		persistent	= true;
+	}
+	
+	// Store the target position for the instance to warp to and whether the object was persistent based on the
+	// value stored in the local "_persistent" variable. This is required since warping objects will be set to
+	// temporary persistence so they aren't destroyed during the actual room transition.
+	ds_map_add(instancesToWarp, _id, {
+		targetX			: _targetX,
+		targetY			: _targetY,
+		wasPersistent	: _persistent
+	});
+}
+
+#endregion Game Manager Local Function Initializations
 
 // These calls are for testing purposes
 load_item_data("items.dat");

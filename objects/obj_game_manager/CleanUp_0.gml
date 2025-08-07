@@ -69,5 +69,15 @@ ds_map_destroy(global.sInstances);
 // Clear the event flag buffer from memory.
 buffer_delete(global.eventFlags);
 
-// Finally, delete any structs that exist globally as the game manager bares responsibility for cleaning up.
+// Delete any structs that exist globally as the game manager bares responsibility for cleaning them up.
 delete global.settings;
+
+// Finally, remove and clear out any data structures or dynamic memory that was allocated by the game manager
+// itself for handling various logic that occurs on a global scale within the game.
+var _key = ds_map_find_first(instancesToWarp);
+while(!is_undefined(_key)){
+	delete instancesToWarp[? _key];
+	_key = ds_map_find_next(instancesToWarp, _key);
+}
+ds_map_clear(instancesToWarp);
+ds_map_destroy(instancesToWarp);

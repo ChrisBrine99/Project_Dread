@@ -57,7 +57,6 @@ function str_screen_fade(_index) : str_base(_index) constructor {
 		// themselves accordingly. On top of that, set the player to their transition effect state until this
 		// global flag is cleared once again.
 		global.flags   |= GAME_FLAG_TRANSITION_ACTIVE;
-		with(PLAYER) { object_set_state(state_transition_active); }
 	}
 	
 	/// @description 
