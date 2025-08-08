@@ -341,19 +341,6 @@ function item_parse_input_combo_data(_contents){
 	var _arrayLength	= array_length(_contentArray);
 	var _outputArray	= array_create(_arrayLength, -1);
 	
-	/// @description
-	///	A lambda-like function that will return a new struct containing the index for the item required in the
-	///	combo recipe alongside its cost for the combination to actually occur (The default is a value of one).
-	///	
-	///	@param {String}		indexString		The index of the item required for the combination.
-	/// @param {String}		costString		The amount required of the item the player needs in their inventory in order to combine it.
-	var create_input_combo_struct = function(_indexString, _costString){
-		return {
-			index	: (_indexString == "")	? -1 : real(_indexString),
-			cost	: (_costString == "")	?  1 : real(_costString),
-		};
-	}
-	
 	// Loop through all of the combination input values; parsing them into structs containing numerical values
 	// for the item index that was found alongside its cost in the combination process.
 	var _itemID			= -1;
@@ -384,6 +371,19 @@ function item_parse_input_combo_data(_contents){
 	return _outputArray;
 }
 
+/// @description
+///	A simple function that will return a new struct containing the index for the item required in the combo 
+/// recipe alongside its cost for the combination to actually occur (The default is a value of one).
+///	
+///	@param {String}		indexString		The index of the item required for the combination.
+/// @param {String}		costString		The amount required of the item the player needs in their inventory in order to combine it.
+function create_input_combo_struct(_indexString, _costString){
+	return {
+		index	: (_indexString == "")	? -1 : real(_indexString),
+		cost	: (_costString == "")	?  1 : real(_costString),
+	};
+}
+
 /// @description 
 ///	A function that is very similar to item_parse_input_combo_data--with the main exception being this will
 /// process the resulting item from the combination. This result can have a range of how many are created, and
@@ -402,24 +402,6 @@ function item_parse_result_combo_data(_contents){
 	var _contentArray	= string_split(_contents, CHAR_COMMA);
 	var _arrayLength	= array_length(_contentArray);
 	var _outputArray	= array_create(_arrayLength, -1);
-	
-	/// @description
-	///	A lambda-like function that will return a new struct containing the index for the item that results 
-	/// from the item combination process. It also stores the minimum and maximum possible amounts that can 
-	/// be created because of the combiation.
-	///
-	///	@param {String}		indexString		The index of the item required for the combination.
-	/// @param {String}		minString		The minimum potential amount of the item that can be created.
-	/// @param {String}		maxString		The maximum potential amount of the item that can be created.
-	var create_result_combo_struct = function(_indexString, _minString, _maxString){
-		var _minResult = (_minString == "")	? 1 : real(_minString);
-		var _maxResult = (_maxString == "")	? 1 : real(_maxString);
-		return {
-			index		: (_indexString == "") ? ID_INVALID : real(_indexString),
-			minResult	: _minResult,
-			maxResult	: max(_minResult, _maxResult),
-		};
-	}
 	
 	// The loop here is very similar to what is found in item_parse_input_combo_data, but with one major
 	// exception. In this case, it will have to parse an extra value in order to capture the item's ID as
@@ -454,8 +436,9 @@ function item_parse_result_combo_data(_contents){
 		// If so, the values will overwrite the previous _subStrings array and the first/second indexes will be
 		// used as the minimum and maximum amounts, respectively.
 		if (string_count(IDATA_CRAFT_AMOUNT_RANGE_DELIM, _subStrings[IDATA_CRAFT_UNPARSED_AMOUNTS]) > 0){
-			_curString = _subStrings[IDATA_CRAFT_RESULT_ID];
-			_subStrings = string_split(_subStrings[IDATA_CRAFT_UNPARSED_AMOUNTS], IDATA_CRAFT_AMOUNT_RANGE_DELIM);
+			_curString		= _subStrings[IDATA_CRAFT_RESULT_ID];
+			_subStrings		= string_split(_subStrings[IDATA_CRAFT_UNPARSED_AMOUNTS], 
+								IDATA_CRAFT_AMOUNT_RANGE_DELIM);
 			_outputArray[i] = create_result_combo_struct(_curString, 
 								_subStrings[IDATA_CRAFT_MIN_AMOUNT], _subStrings[IDATA_CRAFT_MAX_AMOUNT]);
 			continue;
@@ -463,11 +446,29 @@ function item_parse_result_combo_data(_contents){
 		
 		// Otherwise, it's assumed that the value is both the minimum and the maximum, so it will be passed
 		// in as both parameters for the item result container struct.
-		_outputArray[i] = create_result_combo_struct(_subStrings[IDATA_CRAFT_RESULT_ID], 
-							_subStrings[IDATA_CRAFT_MAX_AMOUNT], _subStrings[IDATA_CRAFT_MAX_AMOUNT]);
+		_outputArray[i]		= create_result_combo_struct(_subStrings[IDATA_CRAFT_RESULT_ID], 
+								_subStrings[IDATA_CRAFT_MAX_AMOUNT], _subStrings[IDATA_CRAFT_MAX_AMOUNT]);
 	}
 	
 	return _outputArray;
+}
+
+/// @description
+///	A simple function that will return a new struct containing the index for the item that results from the 
+/// item combination process. It also stores the minimum and maximum possible amounts that can be created 
+/// because of the combination.
+///
+///	@param {String}		indexString		The index of the item required for the combination.
+/// @param {String}		minString		The minimum potential amount of the item that can be created.
+/// @param {String}		maxString		The maximum potential amount of the item that can be created.
+function create_result_combo_struct(_indexString, _minString, _maxString){
+	var _minResult = (_minString == "")	? 1 : real(_minString);
+	var _maxResult = (_maxString == "")	? 1 : real(_maxString);
+	return {
+		index		: (_indexString == "") ? ID_INVALID : real(_indexString),
+		minResult	: _minResult,
+		maxResult	: max(_minResult, _maxResult),
+	};
 }
 
 #endregion Item Data Parsing Functions
