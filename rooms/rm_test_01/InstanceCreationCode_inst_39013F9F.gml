@@ -1,0 +1,1 @@
+add_lock(ID_INVALID, 0, true);

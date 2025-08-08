@@ -2,7 +2,17 @@
 
 // 
 #macro	DOOR_FLAG_LOCKED				0x00000001
-#macro	DOOR_IS_LOCKED					((flags & DOOR_FLAG_LOCKED) != 0)
+#macro	DOOR_FLAG_NORTHBOUND			0x00000002
+#macro	DOOR_FLAG_SOUTHBOUND			0x00000004
+#macro	DOOR_FLAG_EASTBOUND				0x00000008
+#macro	DOOR_FLAG_WESTBOUND				0x00000010
+
+// 
+#macro	DOOR_IS_LOCKED					((flags & DOOR_FLAG_LOCKED)		!= 0)
+#macro	DOOR_FACING_NORTH				((flags & DOOR_FLAG_NORTHBOUND) != 0)
+#macro	DOOR_FACING_SOUTH				((flags & DOOR_FLAG_SOUTHBOUND) != 0)
+#macro	DOOR_FACING_EAST				((flags & DOOR_FLAG_EASTBOUND)	!= 0)
+#macro	DOOR_FACING_WEST				((flags & DOOR_FLAG_WESTBOUND)	!= 0)
 
 #endregion Macro Initializations
 
@@ -15,19 +25,22 @@ event_inherited();
 interactRadius	= 12;
 textboxMessage	= "The door is locked. I can't get it open without its key.";
 
-// 
+// Variables relating to the door's lock/key system. There will be a list containing all the items (AKA keys)
+// required within the player's inventory upon interaction to unlock the door, and the last two variables hold
+// text that is shown to the player when they've unlocked some of the locks or all of them, respectively.
 lockData		= ds_list_create();
 semiLockMessage	= "There are still some unopened locks preventing me from opening the door...";
 unlockMessage	= "The door has been unlocked.";
 
-// 
+// The parameters for the position to snap the player object to and the room to move them to when they
+// interact with this object (When it's also flagged to be unlocked) in a given area.
 targetX			= 0;
 targetY			= 0;
 targetRoom		= undefined;
 
 #endregion Variable Initializations
 
-#region Interaction Function Override
+#region Function Overrides
 
 /// @description 
 /// The function that is called whenever the player interacts with the interactable object in question. It 
@@ -117,7 +130,19 @@ on_player_interact = function(_delta){
 	}
 }
 
-#endregion Interaction Function Override
+/// 
+__draw_gui_event = draw_gui_event;
+/// @description
+/// 
+///	
+/// @param {Real}	delta	The difference in time between the execution of this frame and the last.
+draw_gui_event = function(_delta){
+	
+	
+	__draw_gui_event(_delta);
+}
+
+#endregion Function Overrides
 
 #region Unique Function Initializations
 

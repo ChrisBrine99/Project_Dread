@@ -204,6 +204,9 @@ equipment = {
 	secondAmulet	: ID_INVALID,
 };
 
+// 
+interactableID		= noone;
+
 #endregion Variable Inheritance and Initialization
 
 #region Utility Function Definitions
@@ -349,7 +352,7 @@ end_step_event = function(_delta){
 
 #endregion End Step Event Function Override Definition
 
-#region Custom Draw Function Definitions
+#region Custom Draw Function Definition
 
 /// @description 
 /// 
@@ -364,12 +367,10 @@ custom_draw_default = function(_delta){
 	draw_set_color(COLOR_TRUE_WHITE);
 	draw_set_alpha(1.0);
 	draw_sprite(spr_rectangle, 0, _interactX, _interactY);
-	
 }
-
 drawFunction = method_get_index(custom_draw_default);
 
-#endregion
+#endregion Custom Draw Function Definition
 
 #region State Function Definitions
 
@@ -401,19 +402,6 @@ state_default = function(_delta){
 		}
 	}
 	
-	// Handling interaction between the player and interactables within the current room. It checks a single
-	// point directly in front of the player to see if it is within the interaction radius of the nearest
-	// interactable object, and executes that instance's interaction logic if the required condition is met.
-	if (PINPUT_INTERACT_PRESSED){
-		var _interactX		= x + lengthdir_x(10, direction);
-		var _interactY		= y + lengthdir_y(8, direction) - 8;
-		var _interactable	= instance_nearest(_interactX, _interactY, par_interactable);
-		with(_interactable){ // Code is ignored if there are no interactables in the current room.
-			if (point_distance(_interactX, _interactY, interactX, interactY) <= interactRadius)
-				on_player_interact(_delta);
-		}
-	}
-	
 	// Handling the input for toggling the flashlight on and off (If one happens to be equipped).
 	if (PINPUT_FLASHLIGHT_PRESSED && equipment.flashlight != ID_INVALID){
 		// Turning off the flashlight; returning the player's ambient light to its default parameters.
@@ -428,8 +416,32 @@ state_default = function(_delta){
 		}
 	}
 	
+	// 
+	var _isMoving = PLYR_IS_MOVING;
+	if (_isMoving || interactableID == noone){
+		var _interactX			= x + lengthdir_x(10, direction);
+		var _interactY			= y + lengthdir_y(8, direction) - 8;
+		interactableID			= instance_nearest(_interactX, _interactY, par_interactable);
+		with(interactableID){
+			if (point_distance(_interactX, _interactY, interactX, interactY) <= interactRadius){
+				flags |= INTR_FLAG_INTERACT;
+				break;
+			}
+			flags &= ~INTR_FLAG_INTERACT;
+		}
+	}
+	
+	// 
+	if (PINPUT_INTERACT_PRESSED){
+		with(interactableID){
+			on_player_interact(_delta);
+			flags &= ~INTR_FLAG_INTERACT;
+		}
+		interactableID = noone;
+	}
+	
 	// Don't bother with collision, sprinting or animation if the player isn't current considered moving.
-	if (!PLYR_IS_MOVING)
+	if (!_isMoving)
 		return;
 		
 	// Activating the player's sprinting, which will cause their stamina to deplete to zero and remain there

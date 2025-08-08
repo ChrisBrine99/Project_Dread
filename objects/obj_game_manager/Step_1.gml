@@ -7,6 +7,10 @@ with(par_dynamic_entity){
 	if (ENTT_IS_DESTROYED) { instance_destroy_object(id); }
 }
 
+with(par_static_entity){
+	if (ENTT_IS_DESTROYED) { instance_destroy_object(id); }
+}
+
 // Check to see if a room warp is currently occurring. If not, the code below this check will be ignored. If so,
 // the game will process warping to the next room as required.
 if (!GAME_IS_ROOM_WARP_OCCURRING)
@@ -41,8 +45,9 @@ if (_fadeAlpha == 1.0 && room != targetRoom){
 			y			= _data.targetY;
 			persistent	= _data.wasPersistent;
 		}
-		delete _data; // Singal to the garbage collector that the struct is no longer required.
-		_key = ds_map_find_next(instancesToWarp, _key);
+		delete instancesToWarp[? _key]; // Signal to the garbage collector that the struct is no longer required.
+		_data	= undefined;
+		_key	= ds_map_find_next(instancesToWarp, _key);
 	}
 	ds_map_clear(instancesToWarp);
 	

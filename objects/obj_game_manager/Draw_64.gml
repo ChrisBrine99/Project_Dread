@@ -2,6 +2,15 @@
 // ignored during the rendering process.
 var _minAlpha = gpu_get_alphatestref() / 255.0;
 
+// 
+with(PLAYER){
+	with(interactableID){
+		if (!INTR_CAN_PLAYER_INTERACT)
+			continue;
+		draw_gui_event(global.deltaTime);
+	}
+}
+
 // Loop through all currently active menus; rendering them to the screen if they're flagged to be visible and
 // their current alpha level is above the minimum alpha threshold. If a menu fails to meet these conditions it
 // will not be rendered to the GUI layer.

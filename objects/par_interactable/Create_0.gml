@@ -1,3 +1,10 @@
+#region Macro Initializations
+
+#macro	INTR_FLAG_INTERACT				0x01000000
+#macro	INTR_CAN_PLAYER_INTERACT		((flags & INTR_FLAG_INTERACT) != 0)
+
+#endregion Macro Initializations
+
 #region Variable Initializations
 
 event_inherited();
@@ -17,7 +24,7 @@ textboxMessage	= "Nothing special.";
 
 #endregion Variable Initializations
 
-#region Interaction Function Initialization
+#region Function Initializations
 
 /// @description 
 ///	The function that is called through the player object whenever they successfully interact with a child of
@@ -33,4 +40,12 @@ on_player_interact = function(_delta){
 	}
 }
 
-#endregion Interaction Function Initialization
+/// @description
+/// 
+///	
+/// @param {Real}	delta	The difference in time between the execution of this frame and the last.
+draw_gui_event = function(_delta){
+	draw_text_shadow(100, 100, "Interaction possible.", COLOR_WHITE);
+}
+
+#endregion Function Initializations

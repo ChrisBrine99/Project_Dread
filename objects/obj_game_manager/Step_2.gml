@@ -45,7 +45,6 @@ with(TEXTBOX){
 // Perform the same thing that occurs to the textbox and its state values within the Screen Fade struct.
 with(SCREEN_FADE){
 	if (curState != nextState){
-		show_debug_message("state updated");
 		lastState = curState;
 		curState = nextState;
 	}
