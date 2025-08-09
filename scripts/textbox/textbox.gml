@@ -408,6 +408,8 @@ function str_textbox(_index) : str_base(_index) constructor {
 	/// @param {Real}	actorIndex	(Optional) If set to a value greater than 0, the actor's name relative to the index will be shown.
 	///	@param {Real}	nextIndex	(Optional) Determines which textbox out of the current data is after this one.
 	queue_new_text = function(_text, _actorIndex = 0, _nextIndex = -1){
+		show_debug_message(string_split_lines(_text, fnt_small, TBOX_SURFACE_WIDTH - (TBOX_SURFACE_X_PADDING * 2), 3));
+		
 		draw_set_font(fnt_small); // Ensures proper font is used for size calculations.
 		var _curWordWidth		= 0;
 		var _curLineWidth		= 0;

@@ -179,6 +179,7 @@
 #macro	CHAR_PERIOD						"."
 #macro	CHAR_QUESTION					"?"
 #macro	CHAR_EXCLAIM					"!"
+#macro	CHAR_NEWLINE					"\n"
 
 #endregion General Macros
 
@@ -240,6 +241,86 @@ function draw_text_with_shadow_ext(_x, _y, _text, _color1 = c_white, _color2 = c
 #endregion Text Rendering Functions
 
 #region String Manipulation Functions
+
+/// @description 
+///	Takes an input string and converts it to a string that can fit into the region defined by the "_maxWidth"
+/// and "_maxLines" parameters. If the input string happens to exceed the total number of lines allowed, the
+/// remainder of the string is discarded from the formatted string that the function returns.
+///	
+///	@param {String}			string		Value that will be formatted to fit the defined region.
+/// @param {Asset.GMFont}	font		Resource to use for the various width/height calculations for the string.
+/// @param {Real}			maxWidth	Maximum width of a line in pixels for the formatted string.
+/// @param {Real}			maxLines	Total number of lines allowed in the formatted string.
+function string_split_lines(_string, _font, _maxWidth, _maxLines = 1){
+	// Set the font to the parameter and then check if the input string even needs to be formatted in the 
+	// first place. If not, it means the string is already within the desired format and is simply returned.
+	draw_set_font(_font);
+	if (string_width(_string) <= _maxWidth || _string = "") // Also exit ealy if an empty string was passed in.
+		return _string;
+	
+	// 
+	var _spaceWidth	= string_width(CHAR_SPACE);
+	var _totalLines = 1;
+	var _lineWidth	= 0;
+	var _curChar	= "";
+	var _curLine	= "";
+	var _curWord	= "";
+	var _newString	= "";
+	var _numChars	= string_length(_string);
+	for (var i = 1; i <= _numChars; i++){ // Starts from one since GML's font functions are indexed starting at one.
+		_curChar = string_char_at(_string, i);
+		
+		// 
+		if (_curChar == CHAR_SPACE || i == _numChars){
+			var _wordWidth = string_width(_curWord);
+			if (_lineWidth + _wordWidth > _maxWidth){
+				if (_totalLines == _maxLines)
+					break;
+				_newString	   += _curLine + CHAR_NEWLINE;
+				_totalLines	   += 1;
+				_lineWidth		= _wordWidth;
+				_curLine		= _curWord + _curChar;
+				_curWord		= "";
+				continue;
+			}
+			
+			_lineWidth += _wordWidth + _spaceWidth;
+			_curLine   += _curWord + _curChar;
+			_curWord	= "";
+			continue;
+		}
+		
+		// 
+		if (_curChar == CHAR_NEWLINE){
+			if (_totalLines == _maxLines)
+					break;
+			_newString	   += _curLine + CHAR_NEWLINE;
+			_totalLines    += 1;
+			_curLine		= "";
+			_curWord		= "";
+			continue;
+		}
+
+		_curWord += _curChar;
+	}
+	
+	// 
+	if (_curLine != "")
+		return _newString + _curLine;
+	return _newString;
+}
+
+/// @description 
+///	
+///	
+///	@param {String}			string		Value that will be formatted to fit the defined region.	
+function string_parse_color_data(_string){
+	
+	
+	// 
+	var _curChar	= "";
+	var _numChars	= string_length(_string);
+}
 
 /// @description 
 /// A very simple and dirty function that checks to see if the provided character is one of six valid punctuation 

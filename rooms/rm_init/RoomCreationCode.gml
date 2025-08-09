@@ -28,16 +28,6 @@ with(CAMERA){
 	camera_set_followed_object(PLAYER, true);
 }
 
-/*with(TEXTBOX){
-	var _startTime = get_timer();
-	queue_new_text("THIS IS A TEST TO SEE IF THE TEXTBOX IS WORKING PROPERLY!!!", TBOX_ACTOR_PLAYER);
-	queue_new_text("IF THIS CAUSES THE TEXTBOX TO REOPEN IT IS NOT WORKING!!!", TBOX_ACTOR_PLAYER);
-	queue_new_text("IF THIS DOES IT MEANS IT IS WORKING PROPERLY!!!");
-	queue_new_text("I have aids.", TBOX_ACTOR_PLAYER);
-	activate_textbox();
-	show_debug_message("Took the textbox {0} microseconds to process all queued text.", get_timer() - _startTime);
-}*/
-
 // Once everything has been initialized, the first official room for the game is loaded, and the game is 
 // unpaused to allow various game elements to start updating.
 room_goto(rm_test_01);
