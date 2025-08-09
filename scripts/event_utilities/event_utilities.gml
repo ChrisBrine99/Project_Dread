@@ -25,9 +25,9 @@ function event_set_flag(_flagID, _flagState){
 	var _bitField	= buffer_peek(global.eventFlags, _byteOffset, buffer_u8);
 	var _bitOffset	= _flagID % 8; // Determine offset within the byte for the bit we need.
 	
-	var _bitFieldString = "";
-	for (var i = 0; i < 8; i++) { _bitFieldString += string(real(bool(_bitField & (1 << i)))); }
-	show_debug_message("Setting bit {0} from bit field {1} to {2}.", _flagID, _bitFieldString, _flagState);
+	//var _bitFieldString = "";
+	//for (var i = 0; i < 8; i++) { _bitFieldString += string(real(bool(_bitField & (1 << i)))); }
+	//show_debug_message("Setting bit {0} from bit field {1} to {2}.", _flagID, _bitFieldString, _flagState);
 	
 	// Finally, clear the bit if "_flagState" is false, or set it if "_flagState" is true by performing bitwise 
 	// math on the byte that was retrieved from the event flag buffer relative to the id bit's offset.
@@ -51,9 +51,9 @@ function event_get_flag(_flagID){
 	var _bitField	= buffer_peek(global.eventFlags, _byteOffset, buffer_u8);
 	var _bitOffset	= _flagID % 8; // Determine offset within the byte for the bit we need.
 	
-	var _bitFieldString = "";
-	for (var i = 0; i < 8; i++) { _bitFieldString += string(real(bool(_bitField & (1 << i)))); }
-	show_debug_message("Getting bit {0} from bit field {1}.", _flagID, _bitFieldString);
+	//var _bitFieldString = "";
+	//for (var i = 0; i < 8; i++) { _bitFieldString += string(real(bool(_bitField & (1 << i)))); }
+	//show_debug_message("Getting bit {0} from bit field {1}.", _flagID, _bitFieldString);
 	
 	// Finally, return a bool that is either true (1) or false (0) depending on what is calculated from bitwise
 	// ANDing the grabbed bitfield against a value where only the desired bit is set.

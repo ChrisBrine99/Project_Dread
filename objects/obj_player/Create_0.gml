@@ -434,8 +434,10 @@ state_default = function(_delta){
 	// 
 	if (PINPUT_INTERACT_PRESSED){
 		with(interactableID){
-			on_player_interact(_delta);
-			flags &= ~INTR_FLAG_INTERACT;
+			if (INTR_CAN_PLAYER_INTERACT){
+				on_player_interact(_delta);
+				flags &= ~INTR_FLAG_INTERACT;
+			}
 		}
 		interactableID = noone;
 	}
