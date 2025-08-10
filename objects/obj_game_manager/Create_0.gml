@@ -217,11 +217,15 @@ global.gamepadID		= -1;
 
 // Uniforms for the lighting shader that will allow the properties of the shader to be changed on-the-fly as
 // required for the current area in the game.
-uLightColor				= shader_get_uniform(shd_lighting, "color");
-uLightBrightness		= shader_get_uniform(shd_lighting, "brightness");
-uLightSaturation		= shader_get_uniform(shd_lighting, "saturation");
-uLightContrast			= shader_get_uniform(shd_lighting, "contrast");
-uLightTexture			= shader_get_sampler_index(shd_lighting, "lightTex");
+uLightColor				= shader_get_uniform(shd_lighting,			"color");
+uLightBrightness		= shader_get_uniform(shd_lighting,			"brightness");
+uLightSaturation		= shader_get_uniform(shd_lighting,			"saturation");
+uLightContrast			= shader_get_uniform(shd_lighting,			"contrast");
+uLightTexture			= shader_get_sampler_index(shd_lighting,	"lightTex");
+
+// 
+uScanlineIntensity		= shader_get_uniform(shd_retro_effects,		"scanlineIntensity");
+uQuantizeLevel			= shader_get_uniform(shd_retro_effects,		"quantizeLevel");
 
 // Stores the current offset for the screen-wide noise effect. This allows the game to pause the effect if it
 // is ever required since without these variables the draw call would constantly be setting new random numbers

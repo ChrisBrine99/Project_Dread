@@ -1,6 +1,7 @@
 #region Blinking Light Macro Definitions
 
-// 
+// Determines whether or not the light source is currently "blinked" off (The flag is cleared) or on (The flag
+// is set). When off, the light isn't rendered.
 #macro	LGHT_FLAG_POWER_STATE			0x00000001
 #macro	LGHT_IS_POWERED_ON				((flags & LGHT_FLAG_POWER_STATE) != 0)
 
@@ -82,7 +83,7 @@ function str_light_blink(_index) : str_light_basic(_index) constructor {
 /// @param {Real}	color				(Optional) The hue of the light source.
 ///	@param {Real}	strength			(Optional) How bright the light source appears in the world (Alpha under a different name).
 /// @param {Real}	lifetime			(Optional) Determines how long the light is alive for relative to its creation.
-/// @param {Bool}	flags				(Optional) Determines which substate bits to toggle on for the light.
+/// @param {Real}	flags				(Optional) Determines which substate bits to toggle on for the light.
 function light_blink_create(_x, _y, _radius, _minBlinkInterval, _maxBlinkInterval, _color = COLOR_TRUE_WHITE, _strength = LGHT_MAX_STRENGTH, _lifetime = 0.0, _flags = LGHT_FLAG_ACTIVE){
 	var _light = light_create(str_light_blink);
 	with(_light){

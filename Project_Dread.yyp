@@ -91,7 +91,7 @@
     {"id":{"name":"struct_utilities","path":"scripts/struct_utilities/struct_utilities.yy",},},
     {"id":{"name":"textbox","path":"scripts/textbox/textbox.yy",},},
     {"id":{"name":"shd_lighting","path":"shaders/shd_lighting/shd_lighting.yy",},},
-    {"id":{"name":"shd_scanlines","path":"shaders/shd_scanlines/shd_scanlines.yy",},},
+    {"id":{"name":"shd_retro_effects","path":"shaders/shd_retro_effects/shd_retro_effects.yy",},},
     {"id":{"name":"spr_apartment_ceiling","path":"sprites/spr_apartment_ceiling/spr_apartment_ceiling.yy",},},
     {"id":{"name":"spr_apartment_floors","path":"sprites/spr_apartment_floors/spr_apartment_floors.yy",},},
     {"id":{"name":"spr_apartment_wall_details","path":"sprites/spr_apartment_wall_details/spr_apartment_wall_details.yy",},},

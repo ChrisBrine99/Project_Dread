@@ -1,7 +1,7 @@
 {
   "$GMShader":"",
-  "%Name":"shd_scanlines",
-  "name":"shd_scanlines",
+  "%Name":"shd_retro_effects",
+  "name":"shd_retro_effects",
   "parent":{
     "name":"Shaders",
     "path":"folders/Shaders.yy",
