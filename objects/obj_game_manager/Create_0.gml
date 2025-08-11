@@ -224,8 +224,10 @@ uLightContrast			= shader_get_uniform(shd_lighting,			"contrast");
 uLightTexture			= shader_get_sampler_index(shd_lighting,	"lightTex");
 
 // 
-uScanlineIntensity		= shader_get_uniform(shd_retro_effects,		"scanlineIntensity");
+uScanlineFactor			= shader_get_uniform(shd_retro_effects,		"scanlineFactor");
 uQuantizeLevel			= shader_get_uniform(shd_retro_effects,		"quantizeLevel");
+uWindowScale			= shader_get_uniform(shd_retro_effects,		"windowScale");
+uDitherMatrix			= shader_get_uniform(shd_retro_effects,		"ditherMatrix");
 
 // Stores the current offset for the screen-wide noise effect. This allows the game to pause the effect if it
 // is ever required since without these variables the draw call would constantly be setting new random numbers
