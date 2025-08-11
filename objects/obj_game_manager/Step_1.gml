@@ -21,14 +21,17 @@ if (!GAME_IS_ROOM_WARP_OCCURRING)
 var _fadeAlpha = 0.0;
 with(SCREEN_FADE) { _fadeAlpha = alpha; }
 
-// 
+// Check when to end the room transition process. This can only happen if the current room matches the target.
+// Otherwise, the game will ignore this branch even if the screen fade's alpha level is zero.
 if (_fadeAlpha == 0.0 && room == targetRoom){
 	global.flags   &= ~GAME_FLAG_ROOM_WARP;
 	targetRoom		= undefined;
 	return;
 }
 
-// 
+// Check for when the screen fade is completely opaque. At this point, the room can be switched without the
+// player noticing the change occurring. After this, the screen fade will be signaled to begin fadeing out
+// so the transition can complete.
 if (_fadeAlpha == 1.0 && room != targetRoom){
 	// First, load in the target room.
 	room_goto(targetRoom);

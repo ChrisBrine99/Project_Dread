@@ -1,6 +1,7 @@
 #region Macros for Base Menu Struct
 
-// 
+// Macros for the various bits utilized by all menus to determine which aspects of itself are initialized and
+// also general flags for if the menu can be rendered or recieve player input, and so on.
 #macro	MENU_FLAG_OPTINFO_INITIALIZED	0x01000000
 #macro	MENU_FLAG_OPTIONS_INITIALIZED	0x02000000
 #macro	MENU_FLAG_PARAMS_INITIALIZED	0x04000000
@@ -10,7 +11,8 @@
 #macro	MENU_FLAG_ACTIVE				0x40000000
 // NOTE --- bit 0x80000000 is already used by STR_FLAG_PERSISTENT as defined in the script "base". 
 
-// 
+// Macros for checking the various bits within a menu's "flags" variable to see if they're currently cleared
+// or set, which can then be used to determine what to happen with regards to the menu in question.
 #macro	MENU_IS_OPTINFO_INITIALIZED		((flags & MENU_FLAG_OPTINFO_INITIALIZED)	!= 0)
 #macro	MENU_ARE_OPTIONS_INITIALIZED	((flags & MENU_FLAG_OPTIONS_INITIALIZED)	!= 0)
 #macro	MENU_ARE_PARAMS_INITIALIZED		((flags & MENU_FLAG_PARAMS_INITIALIZED)		!= 0)
@@ -19,10 +21,11 @@
 #macro	MENU_IS_VISIBLE					((flags & MENU_FLAG_VISIBLE)				!= 0)
 #macro	MENU_IS_ACTIVE					((flags & MENU_FLAG_ACTIVE)					!= 0)
 
-// 
+// A unique check to see if a menu hasn't been properly initialized; meaning its option parameters and general
+// parameters haven't been setup before the code attempts to perform any menu logic involving such data.
 #macro	MENU_NOT_PROPERLY_INITIALIZED	((flags & (MENU_FLAG_OPTIONS_INITIALIZED | MENU_FLAG_PARAMS_INITIALIZED)) != (MENU_FLAG_OPTIONS_INITIALIZED | MENU_FLAG_PARAMS_INITIALIZED))
 
-// 
+// Macros for the inputs a menu will check for; stored within a variable named "inputFlags".
 #macro	MINPUT_FLAG_CURSOR_RIGHT		0x00000001
 #macro	MINPUT_FLAG_CURSOR_LEFT			0x00000002
 #macro	MINPUT_FLAG_CURSOR_UP			0x00000004
@@ -32,7 +35,8 @@
 #macro	MINPUT_FLAG_RETURN				0x00000040
 #macro	MINPUT_FLAG_AUX_RETURN			0x00000080
 
-// 
+// Macros to check the state of a given input flag to see if it is currently set or cleared. Note that these
+// checks have additional conditions alongside seeing if the bit is set to determine if the input is valid.
 #macro	MINPUT_IS_RIGHT_HELD			((inputFlags & MINPUT_FLAG_CURSOR_RIGHT)	!= 0 && (inputFlags & MINPUT_FLAG_CURSOR_LEFT)		== 0)
 #macro	MINPUT_IS_LEFT_HELD				((inputFlags & MINPUT_FLAG_CURSOR_LEFT)		!= 0 && (inputFlags & MINPUT_FLAG_CURSOR_RIGHT)		== 0)
 #macro	MINPUT_IS_UP_HELD				((inputFlags & MINPUT_FLAG_CURSOR_UP)		!= 0 && (inputFlags & MINPUT_FLAG_CURSOR_DOWN)		== 0)
@@ -41,17 +45,21 @@
 #macro	MINPUT_IS_AUX_SELECT_PRESSED	((inputFlags & MINPUT_FLAG_AUX_SELECT)		!= 0 && (prevInputFlags & MINPUT_FLAG_AUX_SELECT)	== 0)
 #macro	MINPUT_IS_RETURN_PRESSED		((inputFlags & MINPUT_FLAG_AUX_RETURN)		!= 0 && (prevInputFlags & MINPUT_FLAG_AUX_RETURN)	== 0)
 
-// 
+// A unique check to see if no cursor movement inputs are being held by the player. Prevents having to perform
+// four seperate checks on each input since they'll all equal 0 when none are held.
 #macro	MINPUT_NO_DIRECTION_HELD		((inputFlags & (MINPUT_FLAG_CURSOR_RIGHT | MINPUT_FLAG_CURSOR_LEFT | MINPUT_FLAG_CURSOR_UP | MINPUT_FLAG_CURSOR_DOWN)) == 0)
 
-// 
+// Macros for the values that determine the cursor's movement direction whenever a given direction input is
+// currently being held by the user.
 #macro	MENU_MOVEMENT_RIGHT				1
 #macro	MENU_MOVEMENT_LEFT			   -1
 #macro	MENU_MOVEMENT_DOWN				1
 #macro	MENU_MOVEMENT_UP			   -1
 #macro	MENU_MOVEMENT_NONE				0
 
-// 
+// Two values for the menu's autoscrolling functionality whenever a cursor input is continuously held down by
+// the player. The first value is the initial interval between the cursor movement occurring, and the second
+// value is what is used from that point on until the player stops autoscrolling the cursor.
 #macro	MENU_FIRST_AUTOSCROLL_TIME		30.0
 #macro	MENU_AUTOSCROLL_TIME			10.0
 
@@ -80,6 +88,10 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	padStickInputRH		= 0.0;
 	padStickInputRV		= 0.0;
 	
+	// 
+	moveDirectionX		= 0.0;
+	moveDirectionY		= 0.0;
+	
 	// Variables for input that are exclusive to a menu. They store the value corresponding to the keycodes and
 	// gamepad buttons that correspond to secondary inputs that allow a menu option to be selected or the return
 	// logic to be activated, respectively.
@@ -92,7 +104,9 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	width				= 0;	// Set on a per-menu basis.
 	height				= 0;	// Set automatically as menu options are added.
 	
-	// 
+	// Variables related to a menu's options. There is a list of "options" that are structs containing info
+	// about a given option within the menu, and the remaining values are all parameters that affect the
+	// positioning, spacing, and alignment of all currently visible options.
 	options				= ds_list_create();
 	optionX				= 0;
 	optionY				= 0;
@@ -314,6 +328,18 @@ function str_base_menu(_index) : str_base(_index) constructor {
 		inputFlags		= 0;
 		
 		if (GAME_IS_GAMEPAD_ACTIVE){
+			// Getting input from the main analog stick by reading its current horizontal and vertical position
+			// relative to its centerpoint and the deadzone applied by the game's input settings.
+			var _gamepad	= global.gamepadID;
+			padStickInputLH = gamepad_axis_value(_gamepad, gp_axislh);
+			padStickInputLV = gamepad_axis_value(_gamepad, gp_axislv);
+			
+			// Getting input from the secondary analog stick if the controller has one.
+			if (gamepad_axis_count(global.gamepadID) > 1){
+				padStickInputRH	= gamepad_axis_value(_gamepad, gp_axisrh);
+				padStickInputRV = gamepad_axis_value(_gamepad, gp_axisrv);
+			}
+			
 			inputFlags |= (MENU_PAD_RIGHT				 ); // Offset based on position of the bit within the variable.
 			inputFlags |= (MENU_PAD_LEFT			<<  1);
 			inputFlags |= (MENU_PAD_UP				<<  2);
@@ -360,7 +386,14 @@ function str_base_menu(_index) : str_base(_index) constructor {
 		// the function will exit prematurely; resetting the cursor movement timer and the auto scrolling
 		// flag if it happens to be set.
 		process_player_input();
-		if (MINPUT_NO_DIRECTION_HELD){
+		
+		// This if statement is fucking disgusting but it's the only way to ensure autoscrolling is paused
+		// when the gamepad doesn't detect input on the d-pad as well as both potential analog sticks that
+		// can also be used for moving the menu's cursor.
+		var _noDirectionsHeld = MINPUT_NO_DIRECTION_HELD;
+		if (_noDirectionsHeld || (_noDirectionsHeld && GAME_IS_GAMEPAD_ACTIVE && 
+				padStickInputLH == 0.0 && padStickInputLV == 0.0 && 
+					padStickInputRH == 0.0 && padStickInputRV == 0.0)){
 			flags			&= ~MENU_FLAG_CURSOR_AUTOSCROLL;
 			cursorShiftTimer = 0.0;
 			return;
@@ -372,8 +405,7 @@ function str_base_menu(_index) : str_base(_index) constructor {
 		cursorShiftTimer -= _delta;
 		if (cursorShiftTimer >= 0.0)
 			return;
-		// show_debug_message("cursor has moved");
-		
+
 		// Determine the length of duration between cursor movements by checking if the "is autoscrolling"
 		// flag is currently set within the menu or not. If so, the interval time is slightly longer than
 		// all subsequent cursor position updates.
@@ -384,13 +416,25 @@ function str_base_menu(_index) : str_base(_index) constructor {
 			cursorShiftTimer = MENU_AUTOSCROLL_TIME;
 		}
 		
+		// 
+		var _isGamepadActive = GAME_IS_GAMEPAD_ACTIVE;
+		if (_isGamepadActive && (padStickInputLH != 0.0 || padStickInputLV != 0.0)){
+			moveDirectionX = sign(padStickInputLH); // Converts values from analog to -1, 0, +1.
+			moveDirectionY = sign(padStickInputLV);
+		} else if (_isGamepadActive && (padStickInputRH != 0.0 || padStickInputRV != 0.0)){
+			moveDirectionX = sign(padStickInputRH); // Does the same as above but for the right stick instead.
+			moveDirectionY = sign(padStickInputRV);
+		} else{ // Uses the gamepad's d-pad or the relevant keyboard keys to return a value of -1, 0, or +1.
+			moveDirectionX = ((inputFlags & MINPUT_FLAG_CURSOR_RIGHT)	!= 0) - ((inputFlags & MINPUT_FLAG_CURSOR_LEFT) != 0);
+			moveDirectionY = ((inputFlags & MINPUT_FLAG_CURSOR_DOWN)	!= 0) - ((inputFlags & MINPUT_FLAG_CURSOR_UP)	!= 0);
+		}
+		
 		// A small optimization for the smallest possible menu that can have the cursor move. It simply flips
 		// the value of curOption between 0 and 1 relative to the correct axis of input being held and the
 		// menu's width also matching what is required for the direction of movement (Ex. You can't move the
 		// cursor with left/right inputs if the menu's width is 1, and can't use up/down while the width is 2).
 		if (_menuSize == 2){
-			if ((width == 1 && (MINPUT_IS_UP_HELD || MINPUT_IS_DOWN_HELD)) 
-					|| (width == 2 && (MINPUT_IS_RIGHT_HELD || MINPUT_IS_LEFT_HELD))){
+			if ((width == 1 && moveDirectionY != 0) || (width == 2 && moveDirectionX != 0)){
 				curOption = !curOption;
 				// Make sure the highlighted option is still visible if only one of the two options happens to
 				// be visible within this two-option menu if the visible region is set to a size of 1x1.
@@ -402,12 +446,11 @@ function str_base_menu(_index) : str_base(_index) constructor {
 		
 		// Handle vertical movement by seeing if either the upward or downward key was pressed/held by the player,
 		// but not both of them. On top of that, this section is skipped if the menu's height is equal to one.
-		var _vMovement = (MINPUT_IS_DOWN_HELD - MINPUT_IS_UP_HELD);
-		if (height > 1 && _vMovement != 0){
+		if (height > 1 && moveDirectionY != 0){
 			
 			// Determine what to do based on what the current value for "curOption" is and what direction the
 			// player has chosen to move their cursor. 
-			if (curOption - width < 0 && _vMovement == MENU_MOVEMENT_UP){
+			if (curOption - width < 0 && moveDirectionY == MENU_MOVEMENT_UP){
 				curOption	   += width * floor(_menuSize / width);
 				if (curOption >= _menuSize)
 					curOption  -= width;
@@ -416,11 +459,11 @@ function str_base_menu(_index) : str_base(_index) constructor {
 				// actual height (AKA the total number of rows). The clamp function will ensure this new value
 				// never exceeds or goes below what is considered the "valid area" of options for the menu.
 				visibleAreaY	= clamp(height - visibleAreaH, 0, floor(curOption / width) - visAreaShiftY + 1);
-			} else if (curOption + width >= _menuSize && _vMovement == MENU_MOVEMENT_DOWN){
+			} else if (curOption + width >= _menuSize && moveDirectionY == MENU_MOVEMENT_DOWN){
 				curOption	   %= width;
 				visibleAreaY	= 0;
 			} else{
-				curOption	   += width * _vMovement;
+				curOption	   += width * moveDirectionY;
 				
 				// Determine if the menu's vertical visible region should be shifted upward or downward depending.
 				// of the updated "curOption" value as well as the current row the menu cursor is now on.
@@ -437,28 +480,29 @@ function str_base_menu(_index) : str_base(_index) constructor {
 		// Handle horizontal movement by seeing if either the upward or downward key was pressed/held by the 
 		// player, but not both of them. On top of that, this section is skipped if the menu's width is equal
 		// to one.
-		var _hMovement = (MINPUT_IS_RIGHT_HELD - MINPUT_IS_LEFT_HELD);
-		if (width > 1 && _hMovement != MENU_MOVEMENT_NONE){
+		if (width > 1 && moveDirectionX != MENU_MOVEMENT_NONE){
 			var _curColumn		= curOption % width;
 			
 			// Determine what to do based on the current column the highlighted option is on (This is where the
 			// cursor is currently positioned) and what direction the player has chosen to move the cursor.
-			if (_curColumn == 0 && _hMovement == MENU_MOVEMENT_LEFT){
+			if (_curColumn == 0 && moveDirectionX == MENU_MOVEMENT_LEFT){
 				curOption		= min(_menuSize - 1, curOption + width - 1);
 				visibleAreaX	= clamp(visibleAreaX + width - visibleAreaW, 0, curOption % width - visAreaShiftX + 1);
-			} else if (_curColumn == width - 1 && _hMovement == MENU_MOVEMENT_RIGHT){
+			} else if (_curColumn == width - 1 && moveDirectionX == MENU_MOVEMENT_RIGHT){
 				curOption	   -= width - 1;
 				visibleAreaX	= 0;
 			} else{
-				curOption	   += _hMovement;
+				curOption	   += moveDirectionX;
 				
-				// 
-				if (_hMovement == MENU_MOVEMENT_RIGHT && curOption >= _menuSize){
+				// Handling wrapping to the leftmost option on the bottom row should it not contain enough
+				// options to completely populate the row relative to the menu's width.
+				if (moveDirectionX == MENU_MOVEMENT_RIGHT && curOption >= _menuSize){
 					curOption	   -= curOption % width;
 					visibleAreaX	= 0;
 				}
 				
-				// 
+				// Determining how to shift the visible region of the menu along the x-axis. It will shift
+				// right until hitting the first column, or shift left until hitting the final column.
 				_curColumn = curOption % width;
 				if (visibleAreaX + visibleAreaW < width 
 						&& _curColumn >= visibleAreaX + visibleAreaW - visAreaShiftX){
@@ -504,10 +548,10 @@ function str_base_menu(_index) : str_base(_index) constructor {
 				// of the option is checked to see if it is inactive, selected, highlighted, or simply visible.
 				// Each of these will cause it to show up as a different color compared to the rest.
 				with(options[| _oIndex]){
-					if (!isActive)					{ draw_set_color(c_dkgray); }
-					else if (_selOption == _oIndex) { draw_set_color(c_lime); }
-					else if (_curOption == _oIndex)	{ draw_set_color(c_yellow); }
-					else							{ draw_set_color(c_white); }
+					if (!isActive)					{ draw_set_color(COLOR_DARK_GRAY); }
+					else if (_selOption == _oIndex) { draw_set_color(COLOR_LIGHT_GREEN); }
+					else if (_curOption == _oIndex)	{ draw_set_color(COLOR_LIGHT_YELLOW); }
+					else							{ draw_set_color(COLOR_WHITE); }
 					
 					draw_text(_xx, _yy, oName);
 				}

@@ -93,9 +93,8 @@
 #macro	STNG_FLAG_DITHERING				0x00000008
 #macro	STNG_FLAG_SCANLINES				0x00000010
 #macro	STNG_FLAG_MUSIC					0x00000020	// Audio flags
-#macro	STNG_FLAG_INPUT_TOGGLE			0x00000040	// Input flags
-#macro	STNG_FLAG_SWAP_STICK			0x00000080	// Gamepad flags
-#macro	STNG_FLAG_VIBRATION				0x00000100	
+#macro	STNG_FLAG_INPUT_TOGGLE			0x00000040	// Input flags	
+#macro	STNG_FLAG_VIBRATION				0x00000080	// Gamepad flags
 
 // Macros for checking if a given flag in the global.settings struct's "flags" variable is set or cleared.
 #macro	STNG_IS_VSYNC_ON				((global.settings.flags & STNG_FLAG_VSYNC)			!= 0)
@@ -105,7 +104,6 @@
 #macro	STNG_ARE_SCANLINES_ON			((global.settings.flags & STNG_FLAG_SCANLINES)		!= 0)
 #macro	STNG_IS_MUSIC_ON				((global.settings.flags & STNG_FLAG_MUSIC)			!= 0)
 #macro	STNG_ARE_INPUTS_TOGGLED			((global.settings.flags & STNG_FLAG_INPUT_TOGGLE)	!= 0)
-#macro	STNG_IS_STICK_SWAPPED			((global.settings.flags & STNG_FLAG_SWAP_STICK)		!= 0)
 #macro	STNG_IS_VIBRATION_ACTIVE		((global.settings.flags & STNG_FLAG_VIBRATION)		!= 0)
 
 // Macros for the index values within the global.setting struct volume array. They each correspond to a group 
@@ -250,7 +248,8 @@ uLightSaturation		= shader_get_uniform(shd_lighting,			"saturation");
 uLightContrast			= shader_get_uniform(shd_lighting,			"contrast");
 uLightTexture			= shader_get_sampler_index(shd_lighting,	"lightTex");
 
-// 
+// Uniforms for the shader that is responsible for applying the quantization, dithering, and scanline effects
+// onto the game's image (Note that UI elements don't have these effect applied onto them).
 uScanlineFactor			= shader_get_uniform(shd_retro_effects,		"scanlineFactor");
 uQuantizeLevel			= shader_get_uniform(shd_retro_effects,		"quantizeLevel");
 uWindowScale			= shader_get_uniform(shd_retro_effects,		"windowScale");
@@ -265,7 +264,8 @@ uScanlinesActive		= shader_get_uniform(shd_retro_effects,		"scanlinesActive");
 noiseOffsetX			= 0;
 noiseOffsetY			= 0;
 
-// 
+// Variables for storing data regarding a room transition. The first value is simply the index for the room
+// that should be loaded next. The second is a map containing the instances that should move to the next room.
 targetRoom				= noone;
 instancesToWarp			= ds_map_create();
 

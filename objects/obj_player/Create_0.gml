@@ -262,10 +262,14 @@ process_player_input = function(){
 /// -1, 0, or +1 based on current input flags.
 /// 
 determine_movement_vector = function(){
-	if (GAME_IS_GAMEPAD_ACTIVE && (padStickInputLH != 0.0 || padStickInputLV != 0.0)){ 
+	var _isGamepadActive = GAME_IS_GAMEPAD_ACTIVE;
+	if (_isGamepadActive && (padStickInputLH != 0.0 || padStickInputLV != 0.0)){ // Using the left stick for movement.
 		moveDirectionX = padStickInputLH;
 		moveDirectionY = padStickInputLV;
-	} else{ // Uses the d-pad values to return a value of -1, 0, or +1.
+	} else if (_isGamepadActive && (padStickInputRH != 0.0 || padStickInputRV != 0.0)){ // Using the right stick for movement.
+		moveDirectionX = padStickInputRH;
+		moveDirectionY = padStickInputRV;
+	} else{ // Uses the gamepad's d-pad or the relevant keyboard keys to return a value of -1, 0, or +1.
 		moveDirectionX = ((inputFlags & PINPUT_FLAG_MOVE_RIGHT) != 0) - ((inputFlags & PINPUT_FLAG_MOVE_LEFT)	!= 0);
 		moveDirectionY = ((inputFlags & PINPUT_FLAG_MOVE_DOWN)	!= 0) - ((inputFlags & PINPUT_FLAG_MOVE_UP)		!= 0);
 	}

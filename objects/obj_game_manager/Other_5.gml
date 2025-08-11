@@ -24,10 +24,7 @@ for (var i = _length; i >= 0; i--){ // Has to loop backwards since elements will
 
 // Skip over the code below if there aren't any entities within the sorting grid yet.
 _length	= ds_grid_height(global.sortOrder);
-if (_length == 0){
-	show_debug_message("Room Transition took {0} microseconds to execute.", get_timer() - _startTime);
-	return; 
-}
+if (_length == 0) { return; }
 
 // Update the sort order grid to ensure only persistent entity IDs remain within it. This will start by copying
 // all persistent instances from the sort order grid into a temporary list which are then place back into the
