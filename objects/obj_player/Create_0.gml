@@ -416,30 +416,45 @@ state_default = function(_delta){
 		}
 	}
 	
-	// 
+	// Updating what the player is currently able to interact with, which only occurs if the player is moving
+	// around or they haven't checked the current room to see what the nearest interactable is. Then, the
+	// interactable checks to see if the player's point of interaction is within the item's valid interaction
+	// radius. If so, the player will be able to press the interact input to perform the interaction with the
+	// item.
 	var _isMoving = PLYR_IS_MOVING;
 	if (_isMoving || interactableID == noone){
-		var _interactX			= x + lengthdir_x(10, direction);
+		var _interactX			= x + lengthdir_x(10, direction);		// Calculate the interaction point based on facing direction.
 		var _interactY			= y + lengthdir_y(8, direction) - 8;
 		interactableID			= instance_nearest(_interactX, _interactY, par_interactable);
-		with(interactableID){
+		with(interactableID){ // Check to see if the distance of the point if within the interaction radius.
 			if (point_distance(_interactX, _interactY, interactX, interactY) <= interactRadius){
 				flags |= INTR_FLAG_INTERACT;
 				break;
 			}
-			flags &= ~INTR_FLAG_INTERACT;
+			flags &= ~INTR_FLAG_INTERACT; // Always clear the flag when an interaction can't occur.
 		}
 	}
 	
-	// 
+	// Checking for player input for an interaction. It will check to see if the current nearest interactable
+	// can be interacted with (This is decided by the state of its interaction flag). If it can, its function
+	// for the interaction is executed.
 	if (PINPUT_INTERACT_PRESSED){
+		var _didInteract = false;
 		with(interactableID){
 			if (INTR_CAN_PLAYER_INTERACT){
 				on_player_interact(_delta);
-				flags &= ~INTR_FLAG_INTERACT;
+				flags	    &= ~INTR_FLAG_INTERACT;
+				_didInteract = true;
 			}
 		}
-		interactableID = noone;
+		
+		// If an interaction was successful, the player will be set to stand and the interactable in question
+		// is cleared from the "interactableID" variable in case the object is deleted upon interaction.
+		if (_didInteract){
+			image_index		= animLoopStart;
+			interactableID	= noone;
+			return; // Interactions stop movement, so movement and world collision don't need to be processed.
+		}
 	}
 	
 	// Don't bother with collision, sprinting or animation if the player isn't current considered moving.
