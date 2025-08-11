@@ -88,9 +88,12 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	padStickInputRH		= 0.0;
 	padStickInputRV		= 0.0;
 	
-	// 
-	moveDirectionX		= 0.0;
-	moveDirectionY		= 0.0;
+	// Stores the movement for the menu's cursor in a way similar to how variables with the same names store
+	// the player's current movement vector when handling their movement. The main difference is these will
+	// only ever store -1, 0, or +1 for their respective movement since circular movement doesn't need to be
+	// accounted for in a menu.
+	moveDirectionX		= 0;
+	moveDirectionY		= 0;
 	
 	// Variables for input that are exclusive to a menu. They store the value corresponding to the keycodes and
 	// gamepad buttons that correspond to secondary inputs that allow a menu option to be selected or the return
@@ -416,7 +419,9 @@ function str_base_menu(_index) : str_base(_index) constructor {
 			cursorShiftTimer = MENU_AUTOSCROLL_TIME;
 		}
 		
-		// 
+		// Determine the direction the cursor is moving based on whether or not the gamepad is active and if
+		// the gamepad's first or second analog stick are being used instead of its d-pad, or if the keyboard's
+		// movement inputs are currently being used instead.
 		var _isGamepadActive = GAME_IS_GAMEPAD_ACTIVE;
 		if (_isGamepadActive && (padStickInputLH != 0.0 || padStickInputLV != 0.0)){
 			moveDirectionX = sign(padStickInputLH); // Converts values from analog to -1, 0, +1.
