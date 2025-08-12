@@ -34,6 +34,8 @@
 #macro	PINPUT_FLAG_READY_WEAPON		0x00000040
 #macro	PINPUT_FLAG_FLASHLIGHT			0x00000080
 #macro	PINPUT_FLAG_USE_WEAPON			0x00000100
+#macro	PINPUT_FLAG_GP_LEFT_STICK		0x04000000
+#macro	PINPUT_FLAG_GP_RIGHT_STICK		0x08000000
 #macro	PINPUT_FLAG_ITEM_MENU			0x10000000
 #macro	PINPUT_FLAG_NOTES_MENU			0x20000000
 #macro	PINPUT_FLAG_MAP_MENU			0x40000000
@@ -53,11 +55,20 @@
 #macro	PINPUT_READY_WEAPON_RELEASED	((inputFlags & PINPUT_FLAG_READY_WEAPON)	== 0 && (prevInputFlags & PINPUT_FLAG_READY_WEAPON)	!= 0)
 #macro	PINPUT_FLASHLIGHT_RELEASED		((inputFlags & PINPUT_FLAG_FLASHLIGHT)		== 0 && (prevInputFlags & PINPUT_FLAG_FLASHLIGHT)	!= 0)
 #macro	PINPUT_USE_WEAPON_HELD			((inputFlags & PINPUT_FLAG_USE_WEAPON)		!= 0)
+#macro	PINPUT_OPENING_ITEM_MENU		((inputFlags & PINPUT_FLAG_ITEM_MENU)		!= 0 && (prevInputFlags & PINPUT_FLAG_ITEM_MENU)	== 0)
+#macro	PINPUT_OPENING_NOTES_MENU		((inputFlags & PINPUT_FLAG_NOTES_MENU)		!= 0 && (prevInputFlags & PINPUT_FLAG_NOTES_MENU)	== 0)
+#macro	PINPUT_OPENING_MAP_MENU			((inputFlags & PINPUT_FLAG_MAP_MENU)		!= 0 && (prevInputFlags & PINPUT_FLAG_MAP_MENU)		== 0)
+#macro	PINPUT_OPENING_PAUSE_MENU		((inputFlags & PINPUT_FLAG_PAUSE_MENU)		!= 0 && (prevInputFlags & PINPUT_FLAG_PAUSE_MENU)	== 0)
 
 // Variants of the above pressed/released inputs for readying a weapon and sprinting that can be toggled to 
 // be hold inputs or not in the game's accessibility settings.
 #macro	PINPUT_READY_WEAPON_HELD		((inputFlags & PINPUT_FLAG_READY_WEAPON)	!= 0)
 #macro	PINPUT_SPRINT_HELD				((inputFlags & PINPUT_FLAG_SPRINT)			!= 0)
+
+// Two unique flags contained within the player's "inputFlags" variable. They will let the rest of the code
+// run by the player which of the two sticks are being used for movement during the current frame.
+#macro	PINPUT_USING_LEFT_STICK			((inputFlags & PINPUT_FLAG_GP_LEFT_STICK)	!= 0)
+#macro	PINPUT_USING_RIGHT_STICK		((inputFlags & PINPUT_FLAG_GP_RIGHT_STICK)	!= 0)
 
 #endregion Input Macros
 
@@ -77,6 +88,10 @@
 // act as the "fast" sprinting speed should the player still have stamina remaining.
 #macro	PLYR_ACCEL_SPRINT_SLOW			0.20
 #macro	PLYR_SPEED_SPRINT_SLOW			1.40
+
+// Determines the minimum percentage of movement can occur when using a gamepad's analog stick relative to the
+// player's current maximum movement speed.
+#macro	PLYR_MIN_ANALOG_PERCENTAGE		0.25
 
 // Macros that will determine how the player's movement animation sprite is split up relative to the number of
 // directions representing within that sprite resource.
@@ -225,11 +240,16 @@ process_player_input = function(){
 		var _gamepad	= global.gamepadID;
 		padStickInputLH = gamepad_axis_value(_gamepad, gp_axislh);
 		padStickInputLV = gamepad_axis_value(_gamepad, gp_axislv);
+		if (padStickInputLH != 0.0 || padStickInputLV != 0.0)
+			inputFlags |= PINPUT_FLAG_GP_LEFT_STICK;
 		
-		// Getting input from the secondary analog stick if the controller has one.
+		// Getting input from the secondary analog stick if the controller has one and the primary stick isn't
+		// being currently utilized by the player.
 		if (gamepad_axis_count(global.gamepadID) > 1){
 			padStickInputRH	= gamepad_axis_value(_gamepad, gp_axisrh);
 			padStickInputRV = gamepad_axis_value(_gamepad, gp_axisrv);
+			if (!PINPUT_USING_LEFT_STICK && (padStickInputRH != 0.0 || padStickInputRV != 0.0))
+				inputFlags |= PINPUT_FLAG_GP_RIGHT_STICK;
 		}
 		
 		inputFlags |= (GAME_PAD_RIGHT				 ); // Offset based on position of the bit within the variable.
@@ -263,10 +283,10 @@ process_player_input = function(){
 /// 
 determine_movement_vector = function(){
 	var _isGamepadActive = GAME_IS_GAMEPAD_ACTIVE;
-	if (_isGamepadActive && (padStickInputLH != 0.0 || padStickInputLV != 0.0)){ // Using the left stick for movement.
+	if (_isGamepadActive && PINPUT_USING_LEFT_STICK){ // Using the left stick for movement.
 		moveDirectionX = padStickInputLH;
 		moveDirectionY = padStickInputLV;
-	} else if (_isGamepadActive && (padStickInputRH != 0.0 || padStickInputRV != 0.0)){ // Using the right stick for movement.
+	} else if (_isGamepadActive && PINPUT_USING_RIGHT_STICK){ // Using the right stick for movement.
 		moveDirectionX = padStickInputRH;
 		moveDirectionY = padStickInputRV;
 	} else{ // Uses the gamepad's d-pad or the relevant keyboard keys to return a value of -1, 0, or +1.
@@ -391,11 +411,28 @@ state_default = function(_delta){
 	// Updating the current direction of the player and also accelerating/decelerating them depending on the
 	// movement vector.
 	if (moveDirectionX != 0.0 || moveDirectionY != 0.0){ // Handling acceleration
-		flags		   |= PLYR_FLAG_MOVING;
+		if (!PLYR_IS_MOVING){
+			flags		   |= PLYR_FLAG_MOVING;
+			animCurFrame	= 1;
+		}
 		moveSpeed	   += accel * _delta;
-		if (moveSpeed > maxMoveSpeed)
-			moveSpeed	= maxMoveSpeed;
 		direction		= point_direction(0.0, 0.0, moveDirectionX, moveDirectionY);
+		
+		// Dynamically calculate the limit for the player's movement speed based on if they're currently using
+		// the primary or secondary analog sticks on a gamepad. If they aren't using either stick (Or are using
+		// the keyboard for input) the maximum movement speed isn't altered by this logic.
+		var _maxMoveSpeed = maxMoveSpeed;
+		if (PINPUT_USING_LEFT_STICK){ // This is considered the primary stick, so it has priority.
+			var _movePercent	= point_distance(0.0, 0.0, padStickInputLH, padStickInputLV);
+			_maxMoveSpeed	   *= max(_movePercent, PLYR_MIN_ANALOG_PERCENTAGE);
+		} else if (PINPUT_USING_RIGHT_STICK){ // Primary stick wasn't being used, check for the secondary.
+			var _movePercent	= point_distance(0.0, 0.0, padStickInputRH, padStickInputRV);
+			_maxMoveSpeed	   *= max(_movePercent, PLYR_MIN_ANALOG_PERCENTAGE);
+		}
+		
+		// Prevent the current movement speed from exceeding the current limit.
+		if (moveSpeed > _maxMoveSpeed)
+			moveSpeed = _maxMoveSpeed;
 	} else if (moveSpeed > 0.0){ // Handling deceleration
 		moveSpeed		   -= accel * _delta;
 		if (moveSpeed <= 0.0){
@@ -508,9 +545,8 @@ curState = nextState; // Instantly applies the state specified above.
 /// 
 ///	@param {Real}	delta	The difference in time between the execution of this frame and the last.
 state_textbox_open = function(_delta){
-	if (!GAME_IS_TEXTBOX_OPEN){
+	if (!GAME_IS_TEXTBOX_OPEN)
 		object_set_state(lastState);
-	}
 }
 
 #endregion State Function Definitions
