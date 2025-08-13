@@ -23,7 +23,7 @@ function str_base(_index) constructor {
 	///	Called upon destruction of a struct instance (WARNING!! Destroying a struct through manually invoking
 	/// the delete keyword will cause this function to be ignored, so using instance_destroy_struct is required).
 	///	
-	destroy_event = function() {}
+	destroy_event	= function() {}
 }
 
 #endregion Base Struct Definition

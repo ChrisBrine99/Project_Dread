@@ -17,14 +17,17 @@ global.structID		= 1000000000;
 // created and executed) so the game will know at runtime whether a struct can be created multiple times or
 // not or has conditions pertaining to its potential creation. 
 global.structType	= ds_map_create();
-// ALL STRUCTS THAT ARE EITHER A COMPILE-TIME OR RUNTIME SINGLETON HERE SHOULD HAVE THAT VALUE SET HERE!!!
+// ALL STRUCTS INHERITING FROM "str_base" SHOULD HAVE A VALUE SET HERE FOR THEIR CLASSIFICATION!!!
 ds_map_add(global.structType, str_base,					STRUCT_TYPE_CT_SINGLETON);
 ds_map_add(global.structType, str_camera,				STRUCT_TYPE_CT_SINGLETON);
 ds_map_add(global.structType, str_control_ui_manager,	STRUCT_TYPE_CT_SINGLETON);
 ds_map_add(global.structType, str_textbox,				STRUCT_TYPE_CT_SINGLETON);
 ds_map_add(global.structType, str_screen_fade,			STRUCT_TYPE_CT_SINGLETON);
 ds_map_add(global.structType, str_base_menu,			STRUCT_TYPE_CT_SINGLETON);
+ds_map_add(global.structType, str_inventory_menu,		STRUCT_TYPE_RT_SINGLETON);
 ds_map_add(global.structType, str_item_menu,			STRUCT_TYPE_RT_SINGLETON);
+ds_map_add(global.structType, str_note_menu,			STRUCT_TYPE_RT_SINGLETON);
+ds_map_add(global.structType, str_map_menu,				STRUCT_TYPE_RT_SINGLETON);
 ds_map_add(global.structType, str_light_basic,			STRUCT_TYPE_LIGHT_SOURCE);
 ds_map_add(global.structType, str_light_flicker,		STRUCT_TYPE_LIGHT_SOURCE);
 ds_map_add(global.structType, str_light_blink,			STRUCT_TYPE_LIGHT_SOURCE);
@@ -92,14 +95,18 @@ function instance_find_struct(_id){
 	while (_start != _end){
 		_structRef = global.structs[| _middle];
 		if (_structRef.structID < _id){
-			_start	= _middle; // Cut off bottom half; search remainder of instances.
+			_start	= _middle;		// Cut off bottom half; search remainder of instances.
 			_middle = floor((_end + _start) / 2);
+			if (_start == _middle)	// Fix for potential endless looping; ensures the next interation is the last.
+				_middle = _end;
 			continue;
 		}
 		
 		if (_structRef.structID > _id){
-			_end	= _middle; // Cut off top half; search remainder of instances.
+			_end	= _middle;		// Cut off top half; search remainder of instances.
 			_middle = floor((_end + _start) / 2);
+			if (_end == _middle)	// Fix for potential endless looping; ensures the next interation is the last.
+				_middle = _start;
 			continue;
 		}
 		

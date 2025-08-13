@@ -1,0 +1,151 @@
+#region Macros for Inventory Menu Struct
+
+// 
+#macro	MENUINV_FLAG_CAN_CLOSE			0x00000001
+#macro	MENUINV_CAN_CLOSE				((flags & MENUINV_FLAG_CAN_CLOSE) != 0)
+
+// 
+#macro	MENUINV_INDEX_ITEM_MENU			0
+#macro	MENUINV_INDEX_NOTE_MENU			1
+#macro	MENUINV_INDEX_MAP_MENU			2
+
+#endregion Macros for Inventory Menu Struct
+
+#region Inventory Menu Struct Definition
+
+/// @param {Function}	index	The value of "str_inventory_menu" as determined by GameMaker during runtime.
+function str_inventory_menu(_index) : str_base_menu(_index) constructor {
+	// Stores a reference to the three "submenus" that are managed by this main menu: the item menu, note
+	// menu, and the map menu, respectively.
+	menuRef = [noone, noone, noone];
+	
+	// 
+	selfRef	= noone;
+	
+	/// @description 
+	///	
+	///	
+	create_event = function(){
+		selfRef				= instance_find_struct(structID);
+		alpha				= 1.0;
+		object_set_state(state_default);
+		
+		// 
+		var _x				= 50;
+		var _y				= 50;
+		var _isActive		= true;
+		var _isVisible		= true;
+		var _menuWidth		= 3;	// Three "elements" AKA Items, Notes, and Maps
+		var _visibleWidth	= 1;
+		var _visibleHeight	= 1;
+		initialize_params(_x, _y, _isActive, _isVisible, _menuWidth, _visibleWidth, _visibleHeight);
+		flags |= MENUINV_FLAG_CAN_CLOSE; // Initially enable the flag to allow this menu to close.
+		
+		// 
+		var _optionX		= 5;
+		var _optionY		= 1;
+		var _optionSpacingX	= 0; // No spacing needed since only one option is visible at a time.
+		var _optionSpacingY	= 0;
+		initialize_option_params(_optionX, _optionY, _optionSpacingX, _optionSpacingY);
+		
+		// 
+		add_option("Items");
+		add_option("Notes");
+		add_option("Map");
+		
+		// 
+		with(PLAYER) { pause_player(); }
+		
+		// 
+		initialize_submenu(0);
+	}
+	
+	/// Carry over the reference to the base struct's destroy event so it can be called through the inventory
+	/// menu's destroy event function.
+	__destroy_event = destroy_event;
+	/// @description 
+	///	Called whenever the inventory menu is closed by the player. It handles cleaning up memory that was 
+	/// allocated from the str_base_menu struct while also freeing up any memory that was allocated by submenus
+	/// that were created.
+	///	
+	destroy_event = function(){
+		__destroy_event(); // Executes general menu destroy event
+		
+		// Loop through and destroy any of the three submenus (Or all of them) that were created during this
+		// lifetime of the inventory menu.
+		var _length = array_length(menuRef);
+		for (var i = 0; i < _length; i++){
+			if (menuRef[i] != noone)
+				instance_destroy_menu_struct(menuRef[i]);
+		}
+	}
+	
+	/// @description 
+	///	Creates a new instance of one of the three submenu structs that are handled by this main inventory
+	/// menu struct. Each one is only created when needed, but will stay active until the inventory window is
+	/// closed, so this function will not do anything if the same index is passed in twice during only one of
+	/// the inventory's lifetimes ("lifetime" refers to time between opening and closing the inventory).
+	///	
+	///	@param {Real}	index	The value that will determine which menu is created by calling this function.
+	initialize_submenu = function(_index){
+		if (_index < 0 || _index >= array_length(menuRef) || menuRef[_index] != noone)
+			return; // Invalid index or the menu struct already exists; don't create a menu.
+		
+		var _menu = noone;
+		switch(_index){ // Determine which of the three menus will be created based on the index value.
+			case MENUINV_INDEX_ITEM_MENU:	_menu = str_item_menu;	break;
+			case MENUINV_INDEX_NOTE_MENU:	_menu = str_note_menu;	break;
+			case MENUINV_INDEX_MAP_MENU:	_menu = str_map_menu;	break;
+		}
+		
+		// Finally, create the menu and store a reference to it within the local array for quick access. Also
+		// store the reference to this menu within the prevMenu variable so the menu system knows these are
+		// submenus that don't control the "menu_open" flag.
+		menuRef[_index]	= instance_create_menu_struct(_menu);
+		menuRef[_index].prevMenu = selfRef;
+	}
+	
+	/// @description 
+	///	Called during every frame that the menu exists for. It will be responsible for rendering its contents
+	/// to the game's GUI layer. Note that its position refers to the top-left of the menu itself, and its
+	/// contents will be offset from that point based on each of their unique position values.
+	///	
+	///	@param {Real}	xPos	The menu's current x position, rounded down.
+	/// @param {Real}	yPos	The menu's current y position, rounded down.
+	draw_gui_event = function(_xPos, _yPos){
+		draw_text_shadow(_xPos + optionX, _yPos + optionY, options[| curOption].oName, 
+			COLOR_WHITE, alpha, COLOR_BLACK, alpha * 0.75);
+			
+		// Ensure the current submenu's alpha always matches the main menu's alpha level.
+		var _alpha = alpha;
+		with(menuRef[curOption]) { alpha = _alpha; }
+	}
+	
+	/// @description 
+	///	
+	///	
+	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
+	state_default = function(_delta){
+		// 
+		process_player_input();
+		if (MINPUT_IS_RETURN_PRESSED && MENUINV_CAN_CLOSE){ // Close the menu if possible.
+			instance_destroy_struct(MENU_INVENTORY);
+			return;
+		}
+		
+		// 
+		var _prevOption = curOption;
+		update_cursor_position(_delta);
+		if (_prevOption == curOption)
+			return; // No need to change menus until the value in curOption changed.
+			
+		// 
+		with(menuRef[_prevOption])
+			flags &= ~(MENU_FLAG_ACTIVE | MENU_FLAG_VISIBLE);
+		initialize_submenu(curOption);
+		with(menuRef[curOption])
+			flags |=  MENU_FLAG_ACTIVE | MENU_FLAG_VISIBLE;
+	}
+}
+
+#endregion Inventory Menu Struct Definition

@@ -1,4 +1,4 @@
-#region Macros Utilized Primarily by the Item Inventory System
+#region Macros Utilized Primarily by the Inventory System
 
 // Macros for the numerical representations of an item's type, which will help determine how it functions within
 // the game and what options are available to the player when it is selected in the inventory (Excluding any
@@ -18,10 +18,10 @@
 #macro	WEAP_FLAG_IS_THROWN				0x00000008
 
 // Macros that represent the checks for specific bit states within the flags variable of a weapon-type item.
-#macro	WEAPON_IS_MELEE					(flags & WEAP_FLAG_IS_MELEE)
-#macro	WEAPON_IS_AUTOMATIC				(flags & WEAP_FLAG_IS_AUTOMATIC)
-#macro	WEAPON_IS_BURSTFIRE				(flags & WEAP_FLAG_IS_BURSTFIRE)
-#macro	WEAPON_IS_THROWN				(flags & WEAP_FLAG_IS_THROWN)
+#macro	WEAPON_IS_MELEE					((flags & WEAP_FLAG_IS_MELEE)		!= 0)
+#macro	WEAPON_IS_AUTOMATIC				((flags & WEAP_FLAG_IS_AUTOMATIC)	!= 0)
+#macro	WEAPON_IS_BURSTFIRE				((flags & WEAP_FLAG_IS_BURSTFIRE)	!= 0)
+#macro	WEAPON_IS_THROWN				((flags & WEAP_FLAG_IS_THROWN)		!= 0)
 
 // Macros for the bit values of the flags that exist within every consumable-type item.
 #macro	CNSM_FLAG_CURE_POISON			0x00000001
@@ -32,26 +32,26 @@
 #macro	CNSM_FLAG_TMPIMU_CRIPPLE		0x00000020
 
 // Macros that represent the checks for specific bit states within the flags variable of a consumable-type item.
-#macro	CNSM_CURES_POISON				(flags & CNSM_FLAG_CURE_POISON)
-#macro	CNSM_CURES_BLEED				(flags & CNSM_FLAG_CURE_BLEED)
-#macro	CNSM_CURES_CRIPPLE				(flags & CNSM_FLAG_CURE_CRIPPLE)
-#macro	CNSM_GIVES_TMPIMU_POISON		(flags & CNSM_FLAG_TMPIMU_POISON)
-#macro	CNSM_GIVES_TMPIMU_BLEED			(flags & CNSM_FLAG_TMPIMU_BLEED)
-#macro	CNSM_GIVES_TMPIMU_CRIPPLE		(flags & CNSM_FLAG_TMPIMU_CRIPPLE)
+#macro	CNSM_CURES_POISON				((flags & CNSM_FLAG_CURE_POISON)	!= 0)
+#macro	CNSM_CURES_BLEED				((flags & CNSM_FLAG_CURE_BLEED)		!= 0)
+#macro	CNSM_CURES_CRIPPLE				((flags & CNSM_FLAG_CURE_CRIPPLE)	!= 0)
+#macro	CNSM_GIVES_TMPIMU_POISON		((flags & CNSM_FLAG_TMPIMU_POISON)	!= 0)
+#macro	CNSM_GIVES_TMPIMU_BLEED			((flags & CNSM_FLAG_TMPIMU_BLEED)	!= 0)
+#macro	CNSM_GIVES_TMPIMU_CRIPPLE		((flags & CNSM_FLAG_TMPIMU_CRIPPLE)	!= 0)
 
 // Macro that represents an inventory slot that current has no item contained within it.
 #macro	INV_EMPTY_SLOT				   -1
 
-#endregion Macros Utilized Primarily by the Item Inventory System
+#endregion Macros Utilized Primarily by the Inventory System
 
-#region Globals Related to the Item Inventory System
+#region Globals Related to the Inventory System
 
 // Upon initialization, it stores the value -1, but will contain an array of items the player current has on
 // their person during gameplay; with the starting and maximum sizes being determined by the difficulty the
 // user selected when starting a new playthrough.
 global.curItems = -1;
 
-#endregion Globals Related to the Item Inventory System
+#endregion Globals Related to the Inventory System
 
 #region Item Inventory Initialization Function
 

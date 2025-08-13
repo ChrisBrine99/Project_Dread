@@ -42,8 +42,9 @@
 #macro	MINPUT_IS_UP_HELD				((inputFlags & MINPUT_FLAG_CURSOR_UP)		!= 0 && (inputFlags & MINPUT_FLAG_CURSOR_DOWN)		== 0)
 #macro	MINPUT_IS_DOWN_HELD				((inputFlags & MINPUT_FLAG_CURSOR_DOWN)		!= 0 && (inputFlags & MINPUT_FLAG_CURSOR_UP)		== 0)
 #macro	MINPUT_IS_SELECT_PRESSED		((inputFlags & MINPUT_FLAG_SELECT)			!= 0 && (prevInputFlags & MINPUT_FLAG_SELECT)		== 0)
+#macro	MINPUT_IS_RETURN_PRESSED		((inputFlags & MINPUT_FLAG_RETURN)			!= 0 && (prevInputFlags & MINPUT_FLAG_RETURN)		== 0)
 #macro	MINPUT_IS_AUX_SELECT_PRESSED	((inputFlags & MINPUT_FLAG_AUX_SELECT)		!= 0 && (prevInputFlags & MINPUT_FLAG_AUX_SELECT)	== 0)
-#macro	MINPUT_IS_RETURN_PRESSED		((inputFlags & MINPUT_FLAG_AUX_RETURN)		!= 0 && (prevInputFlags & MINPUT_FLAG_AUX_RETURN)	== 0)
+#macro	MINPUT_IS_AUX_RETURN_PRESSED	((inputFlags & MINPUT_FLAG_AUX_RETURN)		!= 0 && (prevInputFlags & MINPUT_FLAG_AUX_RETURN)	== 0)
 
 // A unique check to see if no cursor movement inputs are being held by the player. Prevents having to perform
 // four seperate checks on each input since they'll all equal 0 when none are held.
@@ -69,8 +70,16 @@
 
 /// @param {Function}	index	The value of "str_base_menu" as determined by GameMaker during runtime.
 function str_base_menu(_index) : str_base(_index) constructor {
-	// Stores the currently executing state, as well as the last state to be executed AND the state to shift to 
-	// at the end of the current frame if applicable (Its value matches that of "curState" otherwise).
+	// Stores the current position of the menu on the GUI layer of the screen. All elements will be offset 
+	// from this position relative to their own "origin" positions.
+	x					= 0;
+	y					= 0;
+	
+	// 
+	prevMenu			= noone;
+	
+	// Stores the currently executing state, as well as the last state to be executed AND the state to shift 
+	// to at the end of the current frame if applicable (Its value matches that of "curState" otherwise).
 	curState			= 0;
 	nextState			= 0;
 	lastState			= 0;
@@ -150,6 +159,11 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	/// and can be further extended to clean up additional memory allocated by child menu structs.
 	///	
 	destroy_event = function(){
+		// If no menu created this one (Or it shouldn't have responsibility over this flag's state) it means 
+		// that the global flag saying there is a menu open currently should be cleared.
+		if (prevMenu == noone) { global.flags &= ~GAME_FLAG_MENU_OPEN; }
+		
+		// Loop through and delete all menu options structs before deleting their management list from memory.
 		var _length = ds_list_size(options);
 		for (var i = 0; i < _length; i++)
 			delete options[| i];
@@ -158,9 +172,12 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	
 	/// @description 
 	///	Called during every frame that the menu exists for. It will be responsible for rendering its contents
-	/// to the game's GUI layer.
+	/// to the game's GUI layer. Note that its position refers to the top-left of the menu itself, and its
+	/// contents will be offset from that point based on each of their unique position values.
 	///	
-	draw_gui_event = function() {}
+	///	@param {Real}	xPos	The menu's current x position, rounded down.
+	/// @param {Real}	yPos	The menu's current y position, rounded down.
+	draw_gui_event = function(_xPos, _yPos) {}
 	
 	/// @description
 	///	Initializes some default parameters for the menu. Specifically, whether or not it should be active or
@@ -168,6 +185,8 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	/// region will be, how that visible region will shift around relative to the cursor's position within the 
 	/// menu, and whether or not the options will loop endlessly or have a defined left, right, top, and bottom.
 	///	
+	///	@param {Real}	x				Starting x position for the menu which all elements will offset themselves from.
+	/// @param {Real}	y				Starting y position for the menu which all elements will offset themselves from.
 	/// @param {Real}	isActive		When true, the menu will initialize itself to be active and receptive to user input immediately.
 	/// @param {Real}	isVisible		When true, the menu will be rendered onto the screen from the moment it is initialized.
 	///	@param {Real}	width			Sets a defined width for the menu (Minimum value of one). The height will be dynamically set as options are added/removed.
@@ -175,11 +194,13 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	/// @param {Real}	visibleHeight	Determines how many rows of options will be visible at any given time (Minimum value of one).
 	/// @param {Real}	visAreaShiftX	How close to the horizontal edge of visible options the cursor must be to shift the visible region in that direction if possible.
 	/// @param {Real}	visAreaShiftY	How close to the vertical edge of visible options the cursor must be to shift the visible region in that direction if possible.
-	initialize_params = function(_isActive, _isVisible, _width, _visibleWidth, _visibleHeight, _visAreaShiftX = 0, _visAreaShiftY = 0){
+	initialize_params = function(_x, _y, _isActive, _isVisible, _width, _visibleWidth, _visibleHeight, _visAreaShiftX = 0, _visAreaShiftY = 0){
 		if (MENU_ARE_PARAMS_INITIALIZED)
 			return; // Don't reinitialize menu parameters.
-		
-		flags |= (_isActive << 30)	// Will be either 0x00000000 or 0x40000000
+			
+		x		= _x;
+		y		= _y;
+		flags  |= (_isActive << 30)	// Will be either 0x00000000 or 0x40000000
 			   | (_isVisible << 29)	// Will be either 0x00000000 or 0x20000000
 			   | MENU_FLAG_PARAMS_INITIALIZED;
 		
@@ -385,11 +406,6 @@ function str_base_menu(_index) : str_base(_index) constructor {
 		if (MENU_NOT_PROPERLY_INITIALIZED || _menuSize < 2)
 			return;
 		
-		// Grab the player's input within the current menu for the frame. If no directional inputs are held
-		// the function will exit prematurely; resetting the cursor movement timer and the auto scrolling
-		// flag if it happens to be set.
-		process_player_input();
-		
 		// This if statement is fucking disgusting but it's the only way to ensure autoscrolling is paused
 		// when the gamepad doesn't detect input on the d-pad as well as both potential analog sticks that
 		// can also be used for moving the menu's cursor.
@@ -525,7 +541,11 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	/// version will only render the text elements of each option and ignore any potential icons that could
 	/// also exist. To draw both text and icons, draw_visible_options_ext must be used.
 	/// 
-	draw_visible_options = function(){
+	/// @param {Real}	xPos				The x position to offset the visible options by relative to their own x positions.
+	/// @param {Real}	yPos				The y position to offset the visible options by relative to their own y positions.
+	///	@param {Real}	textShadowColor		Determines the color of the drop shadow produced by a visible menu option.
+	/// @param {Real}	textShadowAlpha		Determines opacity for the option's text.
+	draw_visible_options = function(_xPos, _yPos, _textShadowColor, _textShadowAlpha){
 		draw_set_font(fnt_small);
 		draw_set_halign(optionAlignX);
 		draw_set_valign(optionAlignY);
@@ -536,8 +556,10 @@ function str_base_menu(_index) : str_base(_index) constructor {
 		var _curOption	= curOption;
 		var _selOption	= selOption;
 		var _oIndex		= 0;
-		var _xx			= optionX;
-		var _yy			= optionY;
+		var _xx			= _xPos + optionX;
+		var _yy			= _yPos + optionY;
+		var _color		= COLOR_WHITE;
+		var _alpha		= alpha;
 		for (var curY = visibleAreaY; curY < visibleAreaY + visibleAreaH; curY++){
 			for (var curX = visibleAreaX; curX < visibleAreaX + visibleAreaW; curX++){
 				_oIndex = (curY * width) + curX; // Convert to a one-dimensional index.
@@ -553,12 +575,13 @@ function str_base_menu(_index) : str_base(_index) constructor {
 				// of the option is checked to see if it is inactive, selected, highlighted, or simply visible.
 				// Each of these will cause it to show up as a different color compared to the rest.
 				with(options[| _oIndex]){
-					if (!isActive)					{ draw_set_color(COLOR_DARK_GRAY); }
-					else if (_selOption == _oIndex) { draw_set_color(COLOR_LIGHT_GREEN); }
-					else if (_curOption == _oIndex)	{ draw_set_color(COLOR_LIGHT_YELLOW); }
-					else							{ draw_set_color(COLOR_WHITE); }
+					if (!isActive)					{ _color = COLOR_DARK_GRAY; }
+					else if (_selOption == _oIndex) { _color = COLOR_LIGHT_GREEN; }
+					else if (_curOption == _oIndex)	{ _color = COLOR_LIGHT_YELLOW; }
+					else							{ _color = COLOR_WHITE; }
 					
-					draw_text(_xx, _yy, oName);
+					draw_text_shadow(_xx, _yy, oName, _color, _alpha, 
+						_textShadowColor, _textShadowAlpha * _alpha);
 				}
 				
 				// Shift the x position based on the x spacing set for the menuu when its option parameters 
@@ -570,7 +593,7 @@ function str_base_menu(_index) : str_base(_index) constructor {
 			// first initialized, and then reset the x position back to the leftmost value for the inner loop
 			// to have the correct coordinates for the next loop.
 			_yy    += optionSpacingY;
-			_xx		= optionX;
+			_xx		= _xPos + optionX;
 		}
 		
 		draw_set_halign(fa_left);

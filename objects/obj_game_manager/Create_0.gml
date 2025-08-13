@@ -41,7 +41,10 @@
 
 // Macros for referencing the instance IDs of all runtime singletons. These will return "noone" if no instance
 // exists for these special singleton types.
+#macro	MENU_INVENTORY					global.sInstances[? str_inventory_menu]
 #macro	MENU_ITEMS						global.sInstances[? str_item_menu]
+#macro	MENU_NOTES						global.sInstances[? str_note_menu]
+#macro	MENU_MAPS						global.sInstances[? str_map_menu]
 
 // Macros for retrieving the state of a given input binding on the keyboard. It simply returns if the key is
 // currently held down or not, and logic for key presses/releases is done within a controllable object using

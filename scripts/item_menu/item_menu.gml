@@ -12,7 +12,6 @@
 
 /// @param {Function}	index	The value of "str_item_menu" as determined by GameMaker during runtime.
 function str_item_menu(_index) : str_base_menu(_index) constructor {
-	
 	/// @description 
 	///	
 	///	
@@ -23,7 +22,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		var _isVisible		= true;
 		var _menuWidth		= 4;
 		var _visibleHeight	= 6;
-		initialize_params(_isActive, _isVisible, _menuWidth, _menuWidth, _visibleHeight);
+		initialize_params(x, y, _isActive, _isVisible, _menuWidth, _menuWidth, _visibleHeight);
 		
 		// 
 		var _optionX		= 100;
@@ -51,16 +50,15 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		alpha = 1.0;
 	}
 	
-	/// @description 
+	/// @description
+	///	Called during every frame that the menu exists for. It will be responsible for rendering its contents
+	/// to the game's GUI layer. Note that its position refers to the top-left of the menu itself, and its
+	/// contents will be offset from that point based on each of their unique position values.
 	///	
-	///	
-	draw_gui_event = function(){
-		//var _xPos = floor(x);
-		//var _yPos = floor(y);
-		
-		
-		
-		draw_visible_options();
+	///	@param {Real}	xPos	The menu's current x position, rounded down.
+	/// @param {Real}	yPos	The menu's current y position, rounded down.
+	draw_gui_event = function(_xPos, _yPos){
+		draw_visible_options(_xPos, _yPos, COLOR_BLACK, alpha * 0.75);
 	}
 	
 	/// @description 
@@ -68,6 +66,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_default = function(_delta){
+		process_player_input();
 		update_cursor_position(_delta);
 	}
 }
