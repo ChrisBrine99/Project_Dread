@@ -219,7 +219,7 @@ equipment = {
 	secondAmulet	: ID_INVALID,
 };
 
-// 
+// Stores the instance ID for the nearest interactable object to the player's current position.
 interactableID		= noone;
 
 #endregion Variable Inheritance and Initialization
@@ -307,6 +307,19 @@ process_movement_animation = function(_delta){
 	if (animCurFrame >= animLength) // Loop back to the start of the animation.
 		animCurFrame -= animLength;
 	image_index = floor(animFrames[animCurFrame] + animLoopStart);
+}
+
+/// @description 
+/// A function that can be called whenever the player needs to be paused while other entities and objects are 
+/// still allowed to remain active (Ex. Interacting with objects or opening a menu that isn't the pause menu).
+/// 
+pause_player = function(){
+	if (curState == method_get_index(state_player_paused) || GAME_IS_CUTSCENE_ACTIVE)
+		return; // Don't pause the player again if they've been paused previously or a cutscene is active.
+	object_set_state(state_player_paused);
+	image_index = animLoopStart;
+	moveSpeed	= 0.0;
+	flags	   &= ~PLYR_FLAG_MOVING;
 }
 
 #endregion Utility Function Definitions
@@ -539,14 +552,17 @@ state_default = function(_delta){
 object_set_state(state_default);
 curState = nextState; // Instantly applies the state specified above.
 
-/// @description 
-///	A very VERY simple function that simply checks to see if the textbox is no longer open. If that is the
-/// case, the player will be returned to whatever their previous state was prior to the textbox opening.
-/// 
+/// @description
+///	A very simple state that the player is placed in whenever they need to have their funcitonality paused
+/// without having other existing entities paused as well (Ex. Opening a menu that isn't the pause menu, an
+/// interaction textbox opening, etc.).
+///	
 ///	@param {Real}	delta	The difference in time between the execution of this frame and the last.
-state_textbox_open = function(_delta){
-	if (!GAME_IS_TEXTBOX_OPEN)
-		object_set_state(lastState);
+state_player_paused = function(_delta){
+	if (!GAME_IS_MENU_OPEN && !GAME_IS_TEXTBOX_OPEN){
+		if (lastState != 0) { object_set_state(lastState); }
+		else				{ object_set_state(state_default); }
+	}
 }
 
 #endregion State Function Definitions

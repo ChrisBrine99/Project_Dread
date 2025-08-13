@@ -6,8 +6,8 @@
 	activate_textbox();
 }*/
 
-if (MENU_INVENTORY){
-	instance_destroy_menu_struct(MENU_INVENTORY);
+if (MENU_ITEMS){
+	instance_destroy_menu_struct(MENU_ITEMS);
 	return;
 }
 instance_create_menu_struct(str_item_menu);

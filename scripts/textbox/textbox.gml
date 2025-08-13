@@ -299,17 +299,9 @@ function str_textbox(_index) : str_base(_index) constructor {
 			return;
 		global.flags |= GAME_FLAG_TEXTBOX_OPEN;
 		
-		// set the player object to its unique textbox state where it simply waits until the current textbox
-		// has been closed. It stops them from animating and places them in their standing sprite for thir
-		// facing direction. If a cutscene is active this code is skipped.
-		if (!GAME_IS_CUTSCENE_ACTIVE){
-			with(PLAYER){
-				object_set_state(state_textbox_open);
-				image_index = animLoopStart;
-				moveSpeed	= 0.0;
-				flags	   &= ~PLYR_FLAG_MOVING;
-			}
-		}
+		// Attempt to pause the player object. If a cutscene is currently occurring, this code does nothing
+		// to the player object and whatever their state may currently be because of said cutscene.
+		with(PLAYER) { pause_player(); }
 		
 		// Set the default flags that are toggled upon activation of the textbox. Then, if required, the flag
 		// will be set to true that all data will be cleared on deactivation of the textbox.
