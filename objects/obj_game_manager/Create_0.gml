@@ -69,6 +69,10 @@
 #macro	MENU_KEY_TBOX_LOG				keyboard_check(global.settings.inputs[STNG_INPUT_TBOX_LOG])
 #macro	MENU_KEY_INV_RIGHT				keyboard_check(global.settings.inputs[STNG_INPUT_INV_RIGHT])
 #macro	MENU_KEY_INV_LEFT				keyboard_check(global.settings.inputs[STNG_INPUT_INV_LEFT])
+#macro	GAME_KEY_ITEM_MENU				keyboard_check(global.settings.inputs[STNG_INPUT_ITEM_MENU])
+#macro	GAME_KEY_NOTE_MENU				keyboard_check(global.settings.inputs[STNG_INPUT_NOTE_MENU])
+#macro	GAME_KEY_MAP_MENU				keyboard_check(global.settings.inputs[STNG_INPUT_MAP_MENU])
+#macro	GAME_KEY_PAUSE_MENU				keyboard_check(global.settings.inputs[STNG_INPUT_PAUSE_MENU])
 
 // These macros are similar to above, but they are for checking gamepad inputs instead of the keyboard.
 #macro	GAME_PAD_RIGHT					gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_GAME_RIGHT		+ 1])
@@ -91,6 +95,10 @@
 #macro	MENU_PAD_TBOX_LOG				gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_TBOX_LOG		+ 1])
 #macro	MENU_PAD_INV_RIGHT				gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_INV_RIGHT		+ 1])
 #macro	MENU_PAD_INV_LEFT				gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_INV_LEFT		+ 1])
+#macro	GAME_PAD_ITEM_MENU				gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_ITEM_MENU		+ 1])
+#macro	GAME_PAD_NOTE_MENU				gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_NOTE_MENU		+ 1])
+#macro	GAME_PAD_MAP_MENU				gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_MAP_MENU		+ 1])
+#macro	GAME_PAD_PAUSE_MENU				gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_PAUSE_MENU		+ 1])
 
 // Macros for what each bit in the global.settings struct's "flags" variable represent in the context of the 
 // game's currently active settings when a given flag is set.
@@ -144,6 +152,10 @@
 #macro	STNG_INPUT_TBOX_LOG				34
 #macro	STNG_INPUT_INV_LEFT				36
 #macro	STNG_INPUT_INV_RIGHT			38
+#macro	STNG_INPUT_ITEM_MENU			40
+#macro	STNG_INPUT_NOTE_MENU			42
+#macro	STNG_INPUT_MAP_MENU				44
+#macro	STNG_INPUT_PAUSE_MENU			46
 
 #endregion General Macro Initializations
 
@@ -211,9 +223,9 @@ global.settings			= {
 		vk_z,			// Interact with Environment
 		gp_face1,
 		vk_shift,		// Activate Sprinting
-		gp_shoulderl,
+		gp_shoulderlb,
 		vk_space,		// Ready Equipped Weapon
-		gp_shoulderr,
+		gp_shoulderrb,
 		vk_f,			// Toggle Flashlight (If Equipped)
 		gp_face4,
 		vk_z,			// Uses Equipped Weapon (Only When Readied)
@@ -243,9 +255,19 @@ global.settings			= {
 		
 		// --- Inputs for the Inventory Menu (Keyboard and Gamepad Interwoven) --- //
 		vk_c,			// Tabbing to the section left of the current one
-		gp_shoulderlb,
+		gp_shoulderl,
 		vk_v,			// Tabbing to the section right of the current one
-		gp_shoulderrb,
+		gp_shoulderr,
+		
+		// --- Inputs for Opening Menus During Gameplay (Keyboard and Gamepad Interwoven) --- //
+		vk_tab,			// Shortcut for item menu
+		gp_select,
+		vk_n,			// Shortcut for note menu
+		gp_shoulderl,
+		vk_m,			// Shortcut for map menu
+		gp_shoulderr,
+		vk_escape,		// SHortcut for pause menu
+		gp_start,
 		
 	],
 	

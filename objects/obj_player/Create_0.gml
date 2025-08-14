@@ -261,6 +261,10 @@ process_player_input = function(){
 		inputFlags |= (GAME_PAD_READYWEAPON		<<  6);
 		inputFlags |= (GAME_PAD_FLASHLIGHT		<<  7);
 		inputFlags |= (GAME_PAD_USEWEAPON		<<  8);
+		inputFlags |= (GAME_PAD_ITEM_MENU		<< 28);
+		inputFlags |= (GAME_PAD_NOTE_MENU		<< 29);
+		inputFlags |= (GAME_PAD_MAP_MENU		<< 30);
+		inputFlags |= (GAME_PAD_PAUSE_MENU		<< 31);
 		return;
 	}
 	
@@ -273,6 +277,10 @@ process_player_input = function(){
 	inputFlags |= (GAME_KEY_READYWEAPON		<<  6);
 	inputFlags |= (GAME_KEY_FLASHLIGHT		<<  7);
 	inputFlags |= (GAME_KEY_USEWEAPON		<<  8);
+	inputFlags |= (GAME_KEY_ITEM_MENU		<< 28);
+	inputFlags |= (GAME_KEY_NOTE_MENU		<< 29);
+	inputFlags |= (GAME_KEY_MAP_MENU		<< 30);
+	inputFlags |= (GAME_KEY_PAUSE_MENU		<< 31);
 }
 
 /// @description
@@ -320,6 +328,7 @@ pause_player = function(){
 	image_index		= animLoopStart;
 	animCurFrame	= 0.0;
 	moveSpeed		= 0.0;
+	inputFlags		= 0;
 	flags		   &= ~PLYR_FLAG_MOVING;
 }
 
@@ -336,6 +345,14 @@ ___end_step_event = end_step_event;
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 end_step_event = function(_delta){
 	___end_step_event(_delta);
+	
+	// Check to see if the player has opening their inventory and figure out which page should be opened first.
+	// Note that these inputs are only acknowledged if there isn't a menu currently opened.
+	if (!GAME_IS_MENU_OPEN){
+		if (PINPUT_OPENING_ITEM_MENU)		{ menu_inventory_open(MENUINV_INDEX_ITEM_MENU); }
+		else if (PINPUT_OPENING_NOTES_MENU) { menu_inventory_open(MENUINV_INDEX_NOTE_MENU); }
+		else if (PINPUT_OPENING_MAP_MENU)	{ menu_inventory_open(MENUINV_INDEX_MAP_MENU); }
+	}
 	
 	// Decrement all timers by the current delta time; preventing them from going below a value of zero.
 	for (var i = 0; i < PLYR_TOTAL_TIMERS; i++){

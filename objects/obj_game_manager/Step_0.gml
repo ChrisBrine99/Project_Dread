@@ -6,7 +6,7 @@ if (GAME_IS_PAUSED)
 var _delta = global.deltaTime;
 if (!GAME_IS_ROOM_WARP_OCCURRING){ // All entities should pause during a room transition.
 	with(par_dynamic_entity){
-		if (curState == 0 || curState != nextState || !ENTT_IS_ACTIVE)
+		if (curState == 0 || !ENTT_IS_ACTIVE)
 			continue;
 		script_execute(curState, _delta);
 	}

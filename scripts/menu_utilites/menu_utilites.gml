@@ -5,8 +5,8 @@ global.menus = ds_list_create();
 
 /// @description 
 ///	Attempts to create an instance of the provided struct function. It will fail this attempt should the struct
-/// provided not be a valid menu struct (See "struct_is_menu" definition for list of valid menu structs), or
-/// the struct itself be what is considered a "special" menu struct that shouldn't be created during runtime.
+/// provided not be a valid menu struct, or the struct itself be what is considered a "special" menu struct 
+/// that shouldn't be created during runtime.
 ///	
 /// @param {Function}	structFunc		The menu struct to create an instance of.
 function instance_create_menu_struct(_structFunc){

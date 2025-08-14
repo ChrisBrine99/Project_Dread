@@ -55,10 +55,6 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		
 		// 
 		with(PLAYER) { pause_player(); }
-		
-		// 
-		initialize_submenu(0);
-		show_debug_message("Inventory Menu has been initialized.");
 	}
 	
 	/// Carry over the reference to the base struct's destroy event so it can be called through the inventory
@@ -108,6 +104,8 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		// submenus that don't control the "menu_open" flag.
 		menuRef[_index]	= instance_create_menu_struct(_menu);
 		menuRef[_index].prevMenu = selfRef;
+		with(menuRef[_index]) // Activate the menu by toggling the required flags for functionality.
+			flags |=  MENU_FLAG_ACTIVE | MENU_FLAG_VISIBLE;
 	}
 	
 	/// @description 
@@ -149,11 +147,16 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	}
 	
 	/// @description 
-	///	
+	///	The inventory's default state, whichis responsible for managing which page of the inventory is
+	/// currently active out of the three: items, notes, and maps. It also handles closing the inventory and
+	/// all of those pages (If they have been instantiated throughout the lifetime of the inventory) if 
+	/// required.
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_default = function(_delta){
-		// 
+		// Get the player's input state for the frame, and then check if they have closed the menu. Note that
+		// the menu will not close if the menu isn't allowed to close itself currently. Switch to another page
+		// of the inventory is still possible despite being unable to close it if required.
 		process_player_input();
 		if (MINPUT_IS_RETURN_PRESSED && MENUINV_CAN_CLOSE){ // Close the menu if possible.
 			instance_destroy_struct(MENU_INVENTORY);
@@ -168,13 +171,32 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		if (_prevOption == curOption)
 			return; // No need to change menus until the value in curOption changed.
 			
-		// 
+		// Deactivate the previous inventory page/menu and the initialize the current one (If it hasn't already
+		// been initialized during this lifetime of the inventory) before activating it.
 		with(menuRef[_prevOption])
 			flags &= ~(MENU_FLAG_ACTIVE | MENU_FLAG_VISIBLE);
 		initialize_submenu(curOption);
-		with(menuRef[curOption])
-			flags |=  MENU_FLAG_ACTIVE | MENU_FLAG_VISIBLE;
 	}
 }
 
 #endregion Inventory Menu Struct Definition
+
+#region Inventory Menu Global Function Definitions
+
+/// @description 
+///	
+///	
+///	@param {Real}	index	Determines which of the three pages of the inventory to open up first.
+function menu_inventory_open(_index){
+	var _ref = instance_create_menu_struct(str_inventory_menu);
+	if (_ref == noone) // THe inventory already exists; don't attempt to create another instance.
+		return;
+	with(_ref){
+		_index = clamp(_index, MENUINV_INDEX_ITEM_MENU, MENUINV_INDEX_MAP_MENU);
+		initialize_submenu(_index);
+		curOption = _index;
+	}
+	show_debug_message("Inventory Menu has been initialized.");
+}
+
+#endregion Inventory Menu Global Function Definitions

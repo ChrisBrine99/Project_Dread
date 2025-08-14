@@ -58,8 +58,9 @@ function object_set_state(_state){
 	
 	var _index = method_get_index(_state);
 	if (is_undefined(_index) || _index == curState){
-		nextState = 0;
+		nextState = curState;
 		return; // Don't update to an invalid state or if the state is identical to the current one.
 	}
-	nextState = _index;
+	curState	= 0;		// Temporarily set to 0 in case the state was changed before it could execute for the frame.
+	nextState	= _index;
 }
