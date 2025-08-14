@@ -326,10 +326,9 @@ pause_player = function(){
 		return; // Don't pause the player again if they've been paused previously or a cutscene is active.
 	object_set_state(state_player_paused);
 	image_index		= animLoopStart;
+	flags		   &= ~(PLYR_FLAG_MOVING | PLYR_FLAG_SPRINTING);
 	animCurFrame	= 0.0;
 	moveSpeed		= 0.0;
-	inputFlags		= 0;
-	flags		   &= ~PLYR_FLAG_MOVING;
 }
 
 #endregion Utility Function Definitions
@@ -345,14 +344,6 @@ ___end_step_event = end_step_event;
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 end_step_event = function(_delta){
 	___end_step_event(_delta);
-	
-	// Check to see if the player has opening their inventory and figure out which page should be opened first.
-	// Note that these inputs are only acknowledged if there isn't a menu currently opened.
-	if (!GAME_IS_MENU_OPEN){
-		if (PINPUT_OPENING_ITEM_MENU)		{ menu_inventory_open(MENUINV_INDEX_ITEM_MENU); }
-		else if (PINPUT_OPENING_NOTES_MENU) { menu_inventory_open(MENUINV_INDEX_NOTE_MENU); }
-		else if (PINPUT_OPENING_MAP_MENU)	{ menu_inventory_open(MENUINV_INDEX_MAP_MENU); }
-	}
 	
 	// Decrement all timers by the current delta time; preventing them from going below a value of zero.
 	for (var i = 0; i < PLYR_TOTAL_TIMERS; i++){
@@ -444,7 +435,7 @@ state_default = function(_delta){
 	if (moveDirectionX != 0.0 || moveDirectionY != 0.0){ // Handling acceleration
 		if (!PLYR_IS_MOVING){
 			flags		   |= PLYR_FLAG_MOVING;
-			animCurFrame	= 1;
+			animCurFrame	= 1; // Ensures the player's animation starts on their first step frame immediately.
 		}
 		moveSpeed	   += accel * _delta;
 		direction		= point_direction(0.0, 0.0, moveDirectionX, moveDirectionY);
@@ -513,23 +504,29 @@ state_default = function(_delta){
 	// can be interacted with (This is decided by the state of its interaction flag). If it can, its function
 	// for the interaction is executed.
 	if (PINPUT_INTERACT_PRESSED){
-		var _didInteract = false;
 		with(interactableID){
 			if (INTR_CAN_PLAYER_INTERACT){
 				on_player_interact(_delta);
-				flags	    &= ~INTR_FLAG_INTERACT;
-				_didInteract = true;
+				flags	   &= ~INTR_FLAG_INTERACT;
+				_isMoving	= false;
 			}
 		}
 		
-		// If an interaction was successful, the player will be set to stand and the interactable in question
-		// is cleared from the "interactableID" variable in case the object is deleted upon interaction.
-		if (_didInteract){
-			image_index		= animLoopStart;
-			interactableID	= noone;
-			return; // Interactions stop movement, so movement and world collision don't need to be processed.
+		// Remove the reference to the interactable since it isn't required during the interaction process.
+		// Then, exit the state early so collision with the world and opening the inventory/pause menu are
+		// prevented if those inputs were hit at the same time as the interaction input was.
+		if (!_isMoving){ 
+			interactableID = noone;
+			return;
 		}
 	}
+	
+	// Check to see if the player has opening their inventory and figure out which page should be opened first.
+	// Note that these inputs are only acknowledged if there isn't a menu or textbox currently opened, and a
+	// curscene isn't currently occurring.
+	if (PINPUT_OPENING_ITEM_MENU)		{ menu_inventory_open(MENUINV_INDEX_ITEM_MENU); }
+	else if (PINPUT_OPENING_NOTES_MENU) { menu_inventory_open(MENUINV_INDEX_NOTE_MENU); }
+	else if (PINPUT_OPENING_MAP_MENU)	{ menu_inventory_open(MENUINV_INDEX_MAP_MENU); }
 	
 	// Don't bother with collision, sprinting or animation if the player isn't current considered moving.
 	if (!_isMoving)

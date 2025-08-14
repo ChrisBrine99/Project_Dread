@@ -135,8 +135,11 @@ function struct_is_singleton(_structFunc, _isDestroying = false){
 	if (_structType == STRUCT_TYPE_RT_SINGLETON){
 		if (!_isDestroying){ // Only bother checking for a valid instance id if destroying the struct in question.
 			var _structID = ds_map_find_value(global.sInstances, _structFunc);
-			if (!is_undefined(_structID) && _structID != noone)
+			if (!is_undefined(_structID) && _structID != noone){
+				show_debug_message("Runtime singleton {0} already exists!", _structFunc);
 				return true;
+			}
+			show_debug_message("Runtime singleton {0} created!", _structFunc);
 		}
 			
 		// Creates a spot in the sInstances map for this runtime singleton's single allowed instance; sets the

@@ -89,8 +89,14 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	///	
 	///	@param {Real}	index	The value that will determine which menu is created by calling this function.
 	initialize_submenu = function(_index){
-		if (_index < 0 || _index >= array_length(menuRef) || menuRef[_index] != noone)
-			return; // Invalid index or the menu struct already exists; don't create a menu.
+		if (_index < 0 || _index >= array_length(menuRef))
+			return; // Invalid index; don't create a menu.
+		
+		if (menuRef[_index] != noone){
+			with(menuRef[_index]) // Simply activate the menu in question if it has already been created.
+				flags |= MENU_FLAG_ACTIVE | MENU_FLAG_VISIBLE;
+			return;
+		}
 		
 		var _menu = noone;
 		switch(_index){ // Determine which of the three menus will be created based on the index value.
@@ -99,13 +105,16 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 			case MENUINV_INDEX_MAP_MENU:	_menu = str_map_menu;	break;
 		}
 		
-		// Finally, create the menu and store a reference to it within the local array for quick access. Also
-		// store the reference to this menu within the prevMenu variable so the menu system knows these are
-		// submenus that don't control the "menu_open" flag.
-		menuRef[_index]	= instance_create_menu_struct(_menu);
-		menuRef[_index].prevMenu = selfRef;
-		with(menuRef[_index]) // Activate the menu by toggling the required flags for functionality.
-			flags |=  MENU_FLAG_ACTIVE | MENU_FLAG_VISIBLE;
+		// 
+		var _menuInstance = instance_create_menu_struct(_menu);
+		if (_menuInstance == noone) { _menuInstance = ds_map_find_value(global.sInstances, _menu); }
+		
+		// 
+		menuRef[_index]	= _menuInstance;
+		with(_menuInstance){
+			flags	   |= MENU_FLAG_ACTIVE | MENU_FLAG_VISIBLE;
+			prevMenu	= other.selfRef;
+		}
 	}
 	
 	/// @description 
