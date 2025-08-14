@@ -75,7 +75,9 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	x					= 0;
 	y					= 0;
 	
-	// 
+	// Stores a reference to the menu that was responsible for creating the new on in question. If this value
+	// isn't set, it is assumed that the menu with the unset "prevMenu" value is the root of the tree and
+	// should return gameplay back to normal upon its closing.
 	prevMenu			= noone;
 	
 	// Stores the currently executing state, as well as the last state to be executed AND the state to shift 
@@ -168,6 +170,10 @@ function str_base_menu(_index) : str_base(_index) constructor {
 		for (var i = 0; i < _length; i++)
 			delete options[| i];
 		ds_list_destroy(options);
+		
+		// Finally, clear the flags that are responsible for allowing the menu to have its current state code
+		// executed and render itself to the game's GUI layer.
+		flags &= ~(MENU_FLAG_VISIBLE | MENU_FLAG_ACTIVE);
 	}
 	
 	/// @description 

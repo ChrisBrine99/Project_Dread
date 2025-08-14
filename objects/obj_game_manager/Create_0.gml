@@ -67,6 +67,8 @@
 #macro	MENU_KEY_FILE_DELETE			keyboard_check(global.settings.inputs[STNG_INPUT_FILE_DELETE])
 #macro	MENU_KEY_TBOX_ADVANCE			keyboard_check(global.settings.inputs[STNG_INPUT_TBOX_ADVANCE])
 #macro	MENU_KEY_TBOX_LOG				keyboard_check(global.settings.inputs[STNG_INPUT_TBOX_LOG])
+#macro	MENU_KEY_INV_RIGHT				keyboard_check(global.settings.inputs[STNG_INPUT_INV_RIGHT])
+#macro	MENU_KEY_INV_LEFT				keyboard_check(global.settings.inputs[STNG_INPUT_INV_LEFT])
 
 // These macros are similar to above, but they are for checking gamepad inputs instead of the keyboard.
 #macro	GAME_PAD_RIGHT					gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_GAME_RIGHT		+ 1])
@@ -87,6 +89,8 @@
 #macro	MENU_PAD_FILE_DELETE			gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_FILE_DELETE	+ 1])
 #macro	MENU_PAD_TBOX_ADVANCE			gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_TBOX_ADVANCE	+ 1])
 #macro	MENU_PAD_TBOX_LOG				gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_TBOX_LOG		+ 1])
+#macro	MENU_PAD_INV_RIGHT				gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_INV_RIGHT		+ 1])
+#macro	MENU_PAD_INV_LEFT				gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_INV_LEFT		+ 1])
 
 // Macros for what each bit in the global.settings struct's "flags" variable represent in the context of the 
 // game's currently active settings when a given flag is set.
@@ -138,6 +142,8 @@
 #macro	STNG_INPUT_FILE_DELETE			30
 #macro	STNG_INPUT_TBOX_ADVANCE			32
 #macro	STNG_INPUT_TBOX_LOG				34
+#macro	STNG_INPUT_INV_LEFT				36
+#macro	STNG_INPUT_INV_RIGHT			38
 
 #endregion General Macro Initializations
 
@@ -228,10 +234,18 @@ global.settings			= {
 		gp_face2,
 		vk_d,			// Delete Save Data of Highlighted Save
 		gp_face4,
+		
+		// --- Inputs for the Textbox (Keyboard and Gamepad Interwoven) --- //
 		vk_z,			// Advance Textbox/Skip Typing Animation
 		gp_face1,
 		vk_space,		// Open Current Conversation Log
 		gp_face4,
+		
+		// --- Inputs for the Inventory Menu (Keyboard and Gamepad Interwoven) --- //
+		vk_c,			// Tabbing to the section left of the current one
+		gp_shoulderlb,
+		vk_v,			// Tabbing to the section right of the current one
+		gp_shoulderrb,
 		
 	],
 	

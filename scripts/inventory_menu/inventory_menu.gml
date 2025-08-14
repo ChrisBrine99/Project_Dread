@@ -58,6 +58,7 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		
 		// 
 		initialize_submenu(0);
+		show_debug_message("Inventory Menu has been initialized.");
 	}
 	
 	/// Carry over the reference to the base struct's destroy event so it can be called through the inventory
@@ -75,9 +76,13 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		// lifetime of the inventory menu.
 		var _length = array_length(menuRef);
 		for (var i = 0; i < _length; i++){
-			if (menuRef[i] != noone)
+			if (menuRef[i] != noone){
+				show_debug_message("Submenu {0} ({1}, ID: {2}) has been destroyed.", i, menuRef[i].structIndex, menuRef[i].structID);
 				instance_destroy_menu_struct(menuRef[i]);
+			}
 		}
+		
+		show_debug_message("Inventory Menu has been Destroyed.");
 	}
 	
 	/// @description 
@@ -122,6 +127,28 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	}
 	
 	/// @description 
+	///	Since the inventory menu only needs to care about three inputs ("Tabbing" left and right to open each
+	/// respectively section of the inventory: items, notes, and maps), those will be the only three inputs
+	/// checked. The right and left inputs are also unique to the inventory, and default to the 'C' and 'V'
+	/// keys on the keyboard, or the left and right shoulder buttons of the gamepad, respectively.
+	///	
+	process_player_input = function(){
+		prevInputFlags	= inputFlags;
+		inputFlags		= 0;
+		
+		if (GAME_IS_GAMEPAD_ACTIVE){
+			inputFlags |= (MENU_PAD_INV_RIGHT			 ); // Offset based on position of the bit within the variable.
+			inputFlags |= (MENU_PAD_INV_LEFT		<<  1);
+			inputFlags |= (MENU_PAD_RETURN			<<  6);
+			return;
+		}
+		
+		inputFlags |= (MENU_KEY_INV_RIGHT			 ); // Offset based on position of the bit within the variable.
+		inputFlags |= (MENU_KEY_INV_LEFT		<<  1);
+		inputFlags |= (MENU_KEY_RETURN			<<  6);
+	}
+	
+	/// @description 
 	///	
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
@@ -133,7 +160,9 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 			return;
 		}
 		
-		// 
+		// Store the current option index before calling the function to possibly update the cursor's position.
+		// If the value happens to change, the check below will pass and the currently active submenu will be
+		// updated accordingly.
 		var _prevOption = curOption;
 		update_cursor_position(_delta);
 		if (_prevOption == curOption)

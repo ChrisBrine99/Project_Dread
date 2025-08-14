@@ -317,9 +317,10 @@ pause_player = function(){
 	if (curState == method_get_index(state_player_paused) || GAME_IS_CUTSCENE_ACTIVE)
 		return; // Don't pause the player again if they've been paused previously or a cutscene is active.
 	object_set_state(state_player_paused);
-	image_index = animLoopStart;
-	moveSpeed	= 0.0;
-	flags	   &= ~PLYR_FLAG_MOVING;
+	image_index		= animLoopStart;
+	animCurFrame	= 0.0;
+	moveSpeed		= 0.0;
+	flags		   &= ~PLYR_FLAG_MOVING;
 }
 
 #endregion Utility Function Definitions
@@ -449,8 +450,10 @@ state_default = function(_delta){
 	} else if (moveSpeed > 0.0){ // Handling deceleration
 		moveSpeed		   -= accel * _delta;
 		if (moveSpeed <= 0.0){
-			flags		   &= ~PLYR_FLAG_MOVING;
+			flags		   &= ~(PLYR_FLAG_MOVING | PLYR_FLAG_SPRINTING);
 			image_index		= animLoopStart;
+			accel			= PLYR_ACCEL_NORMAL;
+			maxMoveSpeed	= PLYR_SPEED_NORMAL;
 			animCurFrame	= 0.0;
 			moveSpeed		= 0.0;
 		}

@@ -7,6 +7,7 @@ function str_map_menu(_index) : str_base_menu(_index) constructor {
 	///	
 	create_event = function(){
 		alpha = 1.0;
+		show_debug_message("Map Menu has been initialized!");
 	}
 	
 	/// @description

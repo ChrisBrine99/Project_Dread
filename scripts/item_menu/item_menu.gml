@@ -16,6 +16,9 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	///	
 	///	
 	create_event = function(){
+		alpha				= 1.0;
+		object_set_state(state_default);
+		
 		// Initialize base menu parameters. The inventory is a 4 by 6 grid of options. Despite being able to
 		// show 24 elements, only the slots currently available to the player will be created.
 		var _isActive		= true;
@@ -38,16 +41,12 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			_invItem = item_inventory_slot_get_data(i);
 			if (_invItem == INV_EMPTY_SLOT){ // Occupy the slot with an empty option.
 				add_option("---", "---");
-				show_debug_message("Inventory slot {0} is empty.", i + 1);
 				continue;
 			}
 			add_option(_invItem.itemName, _invItem.itemInfo);
-			show_debug_message("Inventory slot {0} contains {1} of the item {2}.", 
-				i + 1, global.curItems[i].quantity, _invItem.itemName);
 		}
-			
-		object_set_state(state_default);
-		alpha = 1.0;
+		
+		show_debug_message("Item Menu has been initialized!");
 	}
 	
 	/// @description
