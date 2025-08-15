@@ -114,6 +114,7 @@
     {"id":{"name":"spr_rectangle","path":"sprites/spr_rectangle/spr_rectangle.yy",},},
     {"id":{"name":"spr_solid_collider","path":"sprites/spr_solid_collider/spr_solid_collider.yy",},},
     {"id":{"name":"spr_table_small1","path":"sprites/spr_table_small1/spr_table_small1.yy",},},
+    {"id":{"name":"spr_world_items","path":"sprites/spr_world_items/spr_world_items.yy",},},
     {"id":{"name":"ts_apartment_ceiling","path":"tilesets/ts_apartment_ceiling/ts_apartment_ceiling.yy",},},
     {"id":{"name":"ts_apartment_floors","path":"tilesets/ts_apartment_floors/ts_apartment_floors.yy",},},
     {"id":{"name":"ts_apartment_wall_details","path":"tilesets/ts_apartment_wall_details/ts_apartment_wall_details.yy",},},

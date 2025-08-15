@@ -22,6 +22,9 @@ interactRadius	= 8.0;
 // room).
 textboxMessage	= "Nothing special.";
 
+// 
+interactMessage	= "Interact";
+
 #endregion Variable Initializations
 
 #region Function Initializations
@@ -41,11 +44,30 @@ on_player_interact = function(_delta){
 }
 
 /// @description
-/// 
+/// The default GUI overlay for an interactable that the player is able to interact with currently. It simply
+///	shows the appropriate icon for the current input method's interact command; along with the text "interact".
 ///	
-/// @param {Real}	delta	The difference in time between the execution of this frame and the last.
-draw_gui_event = function(_delta){
-	draw_text_shadow(100, 100, "Interaction possible.", COLOR_WHITE);
+draw_gui_event = function(){
+	// 
+	var _guiWidth		= display_get_gui_width();
+	var _guiHeight		= display_get_gui_height();
+	var _messageWidth	= string_width(interactMessage);
+	var _iconData		= CONTROL_UI_MANAGER.get_control_icon(ICONUI_INTERACT);
+	if (_iconData != ICONUI_NO_ICON){
+		// 
+		var _iconWidth	= sprite_get_width(_iconData[ICONUI_ICON_SPRITE]);
+		var _xOffset	= (_guiWidth - _messageWidth - _iconWidth - 2) >> 1;
+		draw_sprite_ext(_iconData[ICONUI_ICON_SPRITE], _iconData[ICONUI_ICON_SUBIMAGE], 
+			_xOffset, _guiHeight - 32, 1.0, 1.0, 0.0, COLOR_TRUE_WHITE, 1.0);
+		
+		// 
+		_xOffset	   += _iconWidth + 2;
+		draw_text_shadow(_xOffset, _guiHeight - 30, interactMessage, COLOR_WHITE);
+		return;
+	}
+	
+	// 
+	draw_text_shadow((_guiWidth - _messageWidth) >> 2, _guiHeight - 30, interactMessage, COLOR_WHITE);
 }
 
 #endregion Function Initializations

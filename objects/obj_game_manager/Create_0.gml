@@ -34,6 +34,7 @@
 
 // Macros for referencing the instance IDs for all compile-time singletons.
 #macro	GAME_MANAGER					global.sInstances[? obj_game_manager]
+#macro	CONTROL_UI_MANAGER				global.sInstances[? str_control_ui_manager]
 #macro	CAMERA							global.sInstances[? str_camera]
 #macro	TEXTBOX							global.sInstances[? str_textbox]
 #macro	SCREEN_FADE						global.sInstances[? str_screen_fade]

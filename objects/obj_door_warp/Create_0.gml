@@ -25,6 +25,9 @@ event_inherited();
 interactRadius	= 12;
 textboxMessage	= "The door is locked. I can't get it open without its key.";
 
+// Also edit the dfault interaction input prompt to reference that this is a door.
+interactMessage	= "Open Door";
+
 // Variables relating to the door's lock/key system. There will be a list containing all the items (AKA keys)
 // required within the player's inventory upon interaction to unlock the door, and the last two variables hold
 // text that is shown to the player when they've unlocked some of the locks or all of them, respectively.
@@ -40,7 +43,7 @@ targetRoom		= undefined;
 
 #endregion Variable Initializations
 
-#region Function Overrides
+#region Interaction Funciton Override
 
 /// @description 
 /// The function that is called whenever the player interacts with the interactable object in question. It 
@@ -130,19 +133,7 @@ on_player_interact = function(_delta){
 	}
 }
 
-/// 
-__draw_gui_event = draw_gui_event;
-/// @description
-/// 
-///	
-/// @param {Real}	delta	The difference in time between the execution of this frame and the last.
-draw_gui_event = function(_delta){
-	
-	
-	__draw_gui_event(_delta);
-}
-
-#endregion Function Overrides
+#endregion Interaction Function Override
 
 #region Unique Function Initializations
 

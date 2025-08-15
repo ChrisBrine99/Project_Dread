@@ -9,8 +9,12 @@
 #macro	ICONUI_GAME_LEFT				"g_left"
 #macro	ICONUI_GAME_UP					"g_up"
 #macro	ICONUI_GAME_DOWN				"g_down"
-#macro	ICONUI_GAME_RUN					"g_run"
-#macro	ICONUI_GAME_INTERACT			"g_interact"
+#macro	ICONUI_RUN						"g_run"
+#macro	ICONUI_INTERACT					"g_interact"
+
+// 
+#macro	ICONUI_ICON_SPRITE				0
+#macro	ICONUI_ICON_SUBIMAGE			1
 
 #endregion Control UI Manager Macro Definitions
 
@@ -24,20 +28,34 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	controlIcons	= ds_map_create();
 	
 	/// @description 
+	///	
+	///	
+	create_event = function(){
+		if (room != rm_init)
+			return; // Prevents a call to this function from executing outside of the game's initialization.
+			
+		var _inputs = global.settings.inputs;
+		set_control_icon(ICONUI_INTERACT, _inputs[STNG_INPUT_INTERACT]);
+	}
+	
+	/// @description 
 	///	The control ui manager struct's destroy event. It will clean up anything that isn't automatically 
 	/// cleaned up by GameMaker when this struct is destroyed/out of scope.
 	///	
 	destroy_event = function(){
 		var _key = ds_map_find_first(controlIcons);
 		while(!is_undefined(_key)){
-			delete controlIcons[? _key]; controlIcons[? _key] = undefined;
+			delete controlIcons[? _key];
 			_key = ds_map_find_next(controlIcons, _key);
 		}
 		ds_map_destroy(controlIcons);
 	}
 	
 	/// @description 
-	///	
+	///	Create a struct containing information about a key/gamepad binding's graphical representation on the
+	/// ui whenever the binding needs to be shown to the user to describe its functionality in the current
+	/// context. When the struct already exists, it will simply update the contents for the icon data if the
+	/// key or gamepad bindings happen to differ from their previous values, respectively.
 	///	
 	///	@param {Any}	key			What will be used to reference the control icon data within the controlIcons map.
 	/// @param {Real}	keyBinding	Keyboard constant that will be used to get its icon index.
@@ -54,12 +72,30 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 			return;
 		}
 		
-		// The struct already exist for the current control icon pair, so they will be updated should the
+		// The struct already exists for the current control icon pair, so they will be updated should the
 		// bindings provided in the argument parameters be different from what the icons currently represent.
 		with(_value){
 			if (keyBinding != _keyBinding) { keyIcon = get_keyboard_icon(_keyBinding); }
 			if (padBinding != _padBinding) { padIcon = get_gamepad_icon(_padBinding); }
 		}
+	}
+	
+	/// @description
+	///	Grabs the control icon for the gamepad or the keyboard depending on which of the two is currently the
+	/// active method of input. If no valid data exists, the value -1 will be returned as a default value.
+	///	
+	///	@param {Any}	key		The value tied to ui icon information for a given input in the game.
+	get_control_icon = function(_key){
+		var _data = ds_map_find_value(controlIcons, _key);
+		if (is_undefined(_data)) // No icon data found for the key; return -1 to signify no icon exists.
+			return ICONUI_NO_ICON;
+		
+		// Determine whether the gamepad's icon data or the keyboard's icon data should be returned by the
+		// function call. Note that if there isn't a valid array for icon data contained in the required
+		// variable given the input method, the function will return -1 to signify no icon exists.
+		if (GAME_IS_GAMEPAD_ACTIVE)
+			return _data.padIcon;
+		return _data.keyIcon;
 	}
 	
 	/// @description
@@ -81,7 +117,7 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 		// ensure the correct one is grabbed for the keycode in question. It is offset by 9 to account for the
 		// top-row number keys that are placed before the letters in the sprite's images.
 		if (_keyBinding >= vk_a && _keyBinding <= vk_z)
-			return [spr_key_icons_small, 9 + _keyBinding - vk_a];
+			return [spr_key_icons_small, 10 + _keyBinding - vk_a];
 			
 		// All function keys are stored in order within the sprite, so a formula will be used again to get the
 		// correct image index relative to the function key that is required. No offset is required since these
@@ -93,7 +129,7 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 		// correct image index. The value is offset by 11 to account for the function key icons that are in
 		// front of the number pad key icons in the sprite's image sequence.
 		if (_keyBinding >= vk_numpad0 && _keyBinding <= vk_numpad9)
-			return [spr_key_icons_medium, 11 + _keyBinding - vk_numpad0];
+			return [spr_key_icons_medium, 12 + _keyBinding - vk_numpad0];
 			
 		// The remaining keys have no real pattern to them, so they are all thrown into a single switch
 		// statement that looks incredibly disgusting but probably performs faster than anything else I can

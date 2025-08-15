@@ -6,8 +6,8 @@ var _minAlpha = gpu_get_alphatestref() / 255.0;
 with(PLAYER){
 	with(interactableID){
 		if (!INTR_CAN_PLAYER_INTERACT)
-			continue;
-		draw_gui_event(global.deltaTime);
+			break;
+		draw_gui_event();
 	}
 }
 
