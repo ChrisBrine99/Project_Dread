@@ -157,7 +157,7 @@ on_player_interact = function(_delta){
 ///	
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 custom_draw_default = function(_delta){
-	if (!INTR_CAN_PLAYER_INTERACT)
+	if (!INTR_CAN_PLAYER_INTERACT || DOOR_IS_LOCKED)
 		return;
 	
 	arrowOffset += DOOR_ARROW_MOVE_SPEED * _delta;

@@ -408,11 +408,11 @@ custom_draw_default = function(_delta){
 	draw_sprite_ext(sprite_index, image_index, x, y, 
 			image_xscale, image_yscale, image_angle, image_blend, image_alpha);
 			
-	var _interactX = x + lengthdir_x(10, direction);
+	/*var _interactX = x + lengthdir_x(8, direction);
 	var _interactY = y + lengthdir_y(8, direction) - 8;
 	draw_set_color(COLOR_TRUE_WHITE);
 	draw_set_alpha(1.0);
-	draw_sprite(spr_rectangle, 0, _interactX, _interactY);
+	draw_sprite(spr_rectangle, 0, _interactX, _interactY);*/
 }
 drawFunction = method_get_index(custom_draw_default);
 
@@ -488,7 +488,7 @@ state_default = function(_delta){
 	// item.
 	var _isMoving = PLYR_IS_MOVING;
 	if (_isMoving || interactableID == noone){
-		var _interactX			= x + lengthdir_x(10, direction);		// Calculate the interaction point based on facing direction.
+		var _interactX			= x + lengthdir_x(8, direction); // Calculate the interaction point based on facing direction.
 		var _interactY			= y + lengthdir_y(8, direction) - 8;
 		interactableID			= instance_nearest(_interactX, _interactY, par_interactable);
 		with(interactableID){ // Check to see if the distance of the point if within the interaction radius.

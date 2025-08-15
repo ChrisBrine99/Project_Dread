@@ -44,6 +44,77 @@
 
 #endregion Macros Utilized Primarily by the Inventory System
 
+#region Item Name/Key Value Macros
+
+// --- Weapon Item Keys --- //
+#macro	ITEM_HANDGUN					"9mm Handgun"
+#macro	ITEM_INF_HANDGUN				"Inf. Handgun"
+#macro	ITEM_PUMP_SHOTGUN				"Pump Shotgun"
+#macro	ITEM_AUTO_SHOTGUN				"Full-Auto Shotgun"
+#macro	ITEM_BOLT_RIFLE					"Bolt-Action Rifle"
+#macro	ITEM_SUBMACHINE_GUN				"Submachine Gun"
+#macro	ITEM_INF_SUBMACHINE_GUN			"Inf. Submachine Gun"
+#macro	ITEM_MAGNUM_REVOLVER			"Magnum Revolver"
+#macro	ITEM_HAND_CANNON				"Hand Cannon"
+#macro	ITEM_GRENADE_LAUNCHER			"Grenade Launcher"
+#macro	ITEM_INF_NAPALM_LAUNCHER		"Inf. Napalm Launcher"
+#macro	ITEM_POCKET_KNIFE				"Pocket Knife"
+#macro	ITEM_SHARP_POCKET_KNIFE			"Sharp Pocket Knife"
+#macro	ITEM_RUSTY_PIPE					"Rusty Pipe"
+#macro	ITEM_STURDY_PIPE				"Sturdy Pipe"
+#macro	ITEM_DULL_FIRE_AXE				"Dull Fire Axe"
+#macro	ITEM_SHARP_FIRE_AXE				"Sharpened Fire Axe"
+#macro	ITEM_CHAINSAW					"Chainsaw"
+#macro	ITEM_INF_CHAINSAW				"Inf. Chainsaw"
+#macro	ITEM_MOLOTOV					"Molotov Cocktail"
+#macro	ITEM_GRENADE					"Makeshift Grenade"
+#macro	ITEM_INF_MOLOTOV				"Inf. Molotov"
+#macro	ITEM_SEMI_RIFLE					"Semi-Auto Rifle"
+#macro	ITEM_TRIPLE_HANDGUN				"Triple-Burst Handgun"
+#macro	ITEM_AUTO_RIFLE					"Full-Auto Rifle"
+
+// --- Ammunition Item Keys --- //
+#macro	ITEM_HANDGUN_AMMO				"Handgun Ammo"
+#macro	ITEM_HANDGUN_AMMO_POOR			"Handgun Ammo (-)"
+#macro	ITEM_HANDGUN_AMMO_GOOD			"Handgun Ammo (+)"
+#macro	ITEM_SHOTGUN_SHELL				"Shotgun Shell"
+#macro	ITEM_SHOTGUN_SHELL_POOR			"Shotgun Shell (-)"
+#macro	ITEM_SHOTGUN_SHELL_GOOD			"Shotgun Shell (+)"
+#macro	ITEM_RIFLE_ROUND				"Rifle Round"
+#macro	ITEM_RIFLE_ROUND_POOR			"Rifle Round (-)"
+#macro	ITEM_RIFLE_ROUND_GOOD			"Rifle Round (+)"
+#macro	ITEM_SMG_AMMO					"SMG Ammo"
+#macro	ITEM_SMG_AMMO_POOR				"SMG Ammo (-)"
+#macro	ITEM_SMG_AMMO_GOOD				"SMG Ammo (+)"
+#macro	ITEM_MAGNUM_ROUND				"Magnum Round"
+#macro	ITEM_MAGNUM_ROUND_POOR			"Magnum Round (-)"
+#macro	ITEM_MAGNUM_ROUND_GOOD			"Magnum Round (+)"
+#macro	ITEM_EXPLOSIVE_SHELL			"Explosive Shell"
+#macro	ITEM_EXPLOSIVE_SHELL_POOR		"Explosive Shell (-)"
+#macro	ITEM_FRAGMENT_SHELL				"Fragment Shell"
+#macro	ITEM_FRAGMENT_SHELL_POOR		"Fragment Shell (-)"
+#macro	ITEM_FROST_SHELL				"Frost Shell"
+#macro	ITEM_NAPALM_SHELL				"Napalm Shell"
+#macro	ITEM_CRUDE_FUEL					"Crude Fuel"
+#macro	ITEM_CRUDE_FUEL_POOR			"Crude Fuel (-)"
+#macro	ITEM_REFINED_FUEL				"Refined Fuel"
+#macro	ITEM_REFINED_FUEL_GOOD			"Refined Fuel (+)"
+
+// --- Consumable Item Keys --- //
+#macro	ITEM_WEAK_MEDICINE				"Weak Medicine"
+#macro	ITEM_POTENT_MEDICINE			"Potent Medicine"
+#macro	ITEM_WEAK_PAINKILLER			"Weak Painkiller"
+#macro	ITEM_POTENT_PAINKILLER			"Potent Painkiller"
+#macro	ITEM_CALMING_COMPOUND			"Calming Compound"
+#macro	ITEM_DETOXING_COMPOUND			"Detoxing Compound"
+#macro	ITEM_CHEM_MIX_WM_PM				"Chemical Mix (WM+PM)"
+#macro	ITEM_CHEM_MIX_WM_WP				"Chemical Mix (WM+WP)"
+#macro	ITEM_CHEM_MIX_WM_PP				"Chemical Mix (WM+PP)"
+#macro	ITEM_CHEM_MIX_WM_CC				"Chemical Mix (WM+CC)"
+#macro	ITEM_CHEM_MIX_WM_DC				"Chemical Mix (WM+DC)"
+
+#endregion Item Name/Key Value Macros
+
 #region Globals Related to the Inventory System
 
 // Upon initialization, it stores the value -1, but will contain an array of items the player current has on
@@ -121,7 +192,7 @@ function item_inventory_add(_itemID, _amount){
 			with(_invItem){
 				// Either the item id doesn't match the current item in the slot OR the slot is already maxed
 				// out in capacity for the item in question. Move onto the next slot.
-				if (index != _itemID || quantity == _maxPerSlot)
+				if (itemID != _itemID || quantity == _maxPerSlot)
 					break;
 				
 				// The amount to be added exceeds what can be stored inside a single slot. So, the amount that
@@ -145,7 +216,7 @@ function item_inventory_add(_itemID, _amount){
 		
 		// Create a new inventory item struct and set the inventory slot to its reference value.
 		_invItem = {
-			index		: _itemID,
+			itemID		: _itemID,
 			quantity	: _amount,
 			durability	: 0	// This function will always set this value to 0.
 		};
@@ -278,8 +349,11 @@ function item_inventory_slot_get_data(_slot){
 	if (!is_array(global.curItems) || _slot < 0 || _slot >= array_length(global.curItems))
 		return INV_EMPTY_SLOT;	// Default value will simply be treated as an empty inventory slot.
 		
-	var _slotContents	= global.curItems[_slot];
-	var _itemData		= ds_map_find_value(global.itemData, _slotContents);
+	var _slotContents = global.curItems[_slot];
+	if (_slotContents == INV_EMPTY_SLOT) // The inventory slot is empty; return -1 to signify such.
+		return INV_EMPTY_SLOT;
+	
+	var _itemData		= ds_map_find_value(global.itemData, _slotContents.itemID);
 	if (is_undefined(_itemData)) // No item data exists for the id value in the slot; return default value.
 		return INV_EMPTY_SLOT;
 	return _itemData;

@@ -17,9 +17,9 @@ visible			= false;
 
 #region Adding Entity To Depth Sorting Grid
 
-var _height = ds_grid_height(global.sortOrder);
-ds_grid_resize(global.sortOrder, 2, _height + 1);
-ds_grid_set(global.sortOrder, 0, _height, id);
+//var _height = ds_grid_height(global.sortOrder);
+//ds_grid_resize(global.sortOrder, 2, _height + 1);
+//ds_grid_set(global.sortOrder, 0, _height, id);
 
 #endregion Adding Entity To Depth Sorting Grid
 

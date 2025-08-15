@@ -23,7 +23,7 @@ for (var i = _length; i >= 0; i--){ // Has to loop backwards since elements will
 }
 
 // Skip over the code below if there aren't any entities within the sorting grid yet.
-_length	= ds_grid_height(global.sortOrder);
+/*_length	= ds_grid_height(global.sortOrder);
 if (_length == 0) { return; }
 
 // Update the sort order grid to ensure only persistent entity IDs remain within it. This will start by copying
@@ -40,6 +40,6 @@ _length = ds_list_size(_sortOrder);	// Get the size of the list so we know what 
 ds_grid_resize(global.sortOrder, 2, _length);
 for (var i = 0; i < _length; i++)
 	ds_grid_set(global.sortOrder, 0, i, _sortOrder[| i]);
-ds_list_destroy(_sortOrder);		// Remove the temporary list from memory.
+ds_list_destroy(_sortOrder);		// Remove the temporary list from memory.*/
 
 show_debug_message("Room Transition took {0} microseconds to execute.", get_timer() - _startTime);

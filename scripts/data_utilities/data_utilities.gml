@@ -136,7 +136,7 @@ function load_item_data(_filename){
 			if (is_undefined(_itemContents))
 				break;
 			
-			load_item(_curSection, _curItemID, _itemContents);
+			load_item(_curSection, _itemContents[? KEY_NAME], _curItemID, _itemContents);
 			_curItemID = ds_map_find_next(_sectionContents, _curItemID);
 		}
 		
@@ -158,21 +158,21 @@ function load_item_data(_filename){
 /// in their inventory depending on that parameter's determined numerical value.
 ///	
 /// @param {String}		section		The key that determines how the item's data will be considered when parsed.
-/// @param {String}		itemID		String value of the numerical id value as read in from the raw item JSON data.
+/// @param {String}		itemKey		What will be used to reference the item within the map; it is equal to the name of the item itself.
+/// @param {String}		itemIndex	The string numerical value that will be used for the item's index value.
 ///	@param {Id.DsMap}	data		The raw contents of the item within the unprocessed data.
-function load_item(_section, _itemID, _data){
-	if (string_digits(_itemID) == "")
+function load_item(_section, _itemKey, _itemIndex, _data){
+	if (string_digits(_itemIndex) == "")
 		return;
-	var _index = real(_itemID);
-	ds_map_add(global.itemData, _index, {
-		index		:	_index,
-		type		:   ITEM_TYPE_INVALID,
-		itemName	:	_data[? KEY_NAME],
+	ds_map_add(global.itemData, _itemKey, {
+		index		:	real(_itemIndex),
+		typeID		:   ITEM_TYPE_INVALID,
+		itemName	:	_itemKey,
 		itemInfo	:	"",
 		stackLimit	:	0,
 		flags		:	0,
 	});
-	var _item = global.itemData[? _index];
+	var _item = global.itemData[? _itemKey];
 	
 	// Before implementing anything about the item, the first step is to check if there is a list of valid
 	// combos and resulting item from said combo being performed. If they both exist, their lists will be
@@ -206,7 +206,7 @@ function load_item(_section, _itemID, _data){
 	switch(_section){
 		case KEY_WEAPONS: // Parse through the data of a weapon item.
 			with(_item){
-				type		= ITEM_TYPE_WEAPON;
+				typeID		= ITEM_TYPE_WEAPON;
 				stackLimit	=_data[? KEY_STACK];
 				
 				// Begin adding parameters that are unique to a weapon type item (Some are also the same as 
@@ -238,7 +238,7 @@ function load_item(_section, _itemID, _data){
 			break;
 		case KEY_AMMO: // Parse through the data of an ammo item.
 			with(_item){
-				type		= ITEM_TYPE_AMMO;
+				typeID		= ITEM_TYPE_AMMO;
 				stackLimit	= _data[? KEY_STACK];
 				
 				// Begin adding parameters to the default item struct so that it can contain all the values
@@ -255,7 +255,7 @@ function load_item(_section, _itemID, _data){
 			break;
 		case KEY_CONSUMABLE: // Parse through the data of a consumable item.
 			with(_item){
-				type		= ITEM_TYPE_CONSUMABLE;
+				typeID		= ITEM_TYPE_CONSUMABLE;
 				stackLimit	= 1;	// Consumable items will ALWAYS have a limit of one per inventory slot.
 				
 				// Begin adding parameters to the default item struct so that it can contain all the values
@@ -283,7 +283,7 @@ function load_item(_section, _itemID, _data){
 			break;
 		case KEY_COMBINABLE: // Parse through the data of a combinable item.
 			with(_item){
-				type		= ITEM_TYPE_COMBINABLE;
+				typeID		= ITEM_TYPE_COMBINABLE;
 				stackLimit	= 1;	// Combinable items will ALWAYS have a limit of one per inventory slot.
 				
 				// Initialize these two variables with the default values of -1 should they not exist. 
@@ -295,7 +295,7 @@ function load_item(_section, _itemID, _data){
 			break;
 		case KEY_EQUIPABLE: // Parse through the data of an equipable item.
 			with(_item){
-				type		= ITEM_TYPE_EQUIPABLE;
+				typeID		= ITEM_TYPE_EQUIPABLE;
 				stackLimit	= 1;	// Equipable items will ALWAYS have a limit of one per inventory slot.
 				
 				// Begin adding parameters to the default item struct so that it can contain all the values
@@ -308,7 +308,7 @@ function load_item(_section, _itemID, _data){
 			break;
 		case KEY_KEY_ITEMS: // Parse through the data of a key item.
 			with(_item){
-				type		= ITEM_TYPE_KEY_ITEM;
+				typeID		= ITEM_TYPE_KEY_ITEM;
 				stackLimit	= _data[? KEY_STACK];
 				
 				// Initialize these two variables with the default values of -1 should they not exist. 
@@ -319,7 +319,7 @@ function load_item(_section, _itemID, _data){
 			}
 			break;
 	}
-	// show_debug_message("item {0} has been created. (structRef: {1})", _index, _item);
+	// show_debug_message("item {1} ({0}) has been created.", _item.index, _item.itemName);
 }
 
 /// @description 

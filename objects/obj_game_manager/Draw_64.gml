@@ -2,10 +2,12 @@
 // ignored during the rendering process.
 var _minAlpha = gpu_get_alphatestref() / 255.0;
 
-// 
+// Display the interaction prompt for the current interactable the player is focused on. If that interactable
+// objects happens to not be active/visible or the player cannot currently interact with it, the prompt will
+// not be displayed on the UI.
 with(PLAYER){
 	with(interactableID){
-		if (!INTR_CAN_PLAYER_INTERACT)
+		if (!ENTT_IS_VISIBLE || !INTR_CAN_PLAYER_INTERACT)
 			break;
 		draw_gui_event();
 	}
