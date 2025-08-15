@@ -44,6 +44,15 @@ function str_camera(_index) : str_base(_index) constructor {
 	followedObject	= noone;
 	
 	/// @description 
+	///	The camera struct's create event. It simply assigns the dimensions for the viewport, and assigns an 
+	/// object to start following (The player object is the default).
+	///	
+	create_event = function(){
+		camera_set_viewport(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
+		camera_set_followed_object(PLAYER, true);
+	}
+	
+	/// @description 
 	///	The camera struct's destroy event. It will clean up anything that isn't automatically cleaned up by
 	/// GameMaker when this struct is destroyed/out of scope.
 	///

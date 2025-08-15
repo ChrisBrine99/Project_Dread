@@ -1,18 +1,22 @@
 #region Macro Initializations
 
-// 
+// Macros for the bits the door warp will utilize for various characteristics about itself at a given moment
+// of time.
 #macro	DOOR_FLAG_LOCKED				0x00000001
 #macro	DOOR_FLAG_NORTHBOUND			0x00000002
 #macro	DOOR_FLAG_SOUTHBOUND			0x00000004
 #macro	DOOR_FLAG_EASTBOUND				0x00000008
 #macro	DOOR_FLAG_WESTBOUND				0x00000010
 
-// 
+// Macros for referencing the state of the door warp's flags; if they are set or cleared.
 #macro	DOOR_IS_LOCKED					((flags & DOOR_FLAG_LOCKED)		!= 0)
 #macro	DOOR_FACING_NORTH				((flags & DOOR_FLAG_NORTHBOUND) != 0)
 #macro	DOOR_FACING_SOUTH				((flags & DOOR_FLAG_SOUTHBOUND) != 0)
 #macro	DOOR_FACING_EAST				((flags & DOOR_FLAG_EASTBOUND)	!= 0)
 #macro	DOOR_FACING_WEST				((flags & DOOR_FLAG_WESTBOUND)	!= 0)
+
+// 
+#macro	DOOR_ARROW_MOVE_SPEED			0.03
 
 #endregion Macro Initializations
 
@@ -24,6 +28,10 @@
 event_inherited();
 interactRadius	= 12;
 textboxMessage	= "The door is locked. I can't get it open without its key.";
+
+// Ensure the entity sorting/rendering systems know that the door warp will use a custom draw function and 
+// that it is an active entity (Without being set to active, rendering always gets skipped).
+flags = ENTT_FLAG_OVERRIDE_DRAW | ENTT_FLAG_VISIBLE | ENTT_FLAG_ACTIVE;
 
 // Also edit the dfault interaction input prompt to reference that this is a door.
 interactMessage	= "Open Door";
@@ -40,6 +48,9 @@ unlockMessage	= "The door has been unlocked.";
 targetX			= 0;
 targetY			= 0;
 targetRoom		= undefined;
+
+// 
+arrowOffset		= 0.0;
 
 #endregion Variable Initializations
 
@@ -135,6 +146,38 @@ on_player_interact = function(_delta){
 
 #endregion Interaction Function Override
 
+#region Custom Draw Function Definition
+
+/// @description 
+///	
+///	
+/// @param {Real}	delta	The difference in time between the execution of this frame and the last.
+custom_draw_default = function(_delta){
+	if (!INTR_CAN_PLAYER_INTERACT)
+		return;
+	
+	arrowOffset += DOOR_ARROW_MOVE_SPEED * _delta;
+	if (arrowOffset >= 2.0) // Reset back to 0 so door indication switches between two positions.
+		arrowOffset -= 2.0;
+		
+	// 
+	var _arrowOffset	= floor(arrowOffset % 2.0);
+	var _xPosition		= x;
+	var _yPosition		= y;
+	
+	// 
+	if (DOOR_FACING_NORTH)		{ _yPosition = y - _arrowOffset; } 
+	else if (DOOR_FACING_SOUTH)	{ _yPosition = y + _arrowOffset; }
+	else if (DOOR_FACING_EAST)	{ _xPosition = x + _arrowOffset; }
+	else if (DOOR_FACING_WEST)	{ _xPosition = x - _arrowOffset; }
+		
+	// 
+	draw_sprite_ext(sprite_index, image_index, _xPosition, _yPosition, 1.0, 1.0, 0.0, COLOR_TRUE_WHITE, 1.0);
+}
+drawFunction = method_get_index(custom_draw_default);
+
+#endregion Custom Draw Function Definition
+
 #region Unique Function Initializations
 
 /// @description 
@@ -172,6 +215,42 @@ set_warp_params = function(_targetX, _targetY, _targetRoom){
 	targetX		= _targetX;
 	targetY		= _targetY;
 	targetRoom	= _targetRoom;
+}
+
+/// @description 
+///	Sets up the door to internally face a given "direction" which can be one of four different possibilities:
+/// north, south, east, or west. This will determine where to place the door indicator arrow and which one to
+/// use relative to the desired direction.
+///	
+/// @param {Real}	flag 
+set_facing_direction = function(_flag){
+	// Don't set a facing direction if the flag specified isn't a valid direction flag. Instead, set the door
+	// to not be active so it doesn't get rendered pointing in the wrong direction.
+	if ((_flag & (DOOR_FLAG_NORTHBOUND | DOOR_FLAG_SOUTHBOUND | DOOR_FLAG_EASTBOUND | DOOR_FLAG_WESTBOUND)) == 0){
+		flags &= ~ENTT_FLAG_ACTIVE;
+		return; 
+	}
+	flags |= _flag;
+	
+	// Offset along the x or y position, and assign the proper subimage based on the _flag value. Note that if 
+	// for some reason this value is a combination of multiple direction flags, the offset and proper subimage 
+	// will not be set.
+	if (_flag == DOOR_FLAG_NORTHBOUND){
+		image_index	= 0;
+		y		   -= 8;
+	} else if (_flag == DOOR_FLAG_SOUTHBOUND){
+		image_index	= 2;
+		y		   += 6;
+		interactY  += 8; // Interaction origin is also offset downward.
+	} else if (_flag == DOOR_FLAG_EASTBOUND){
+		image_index = 3;
+		x		   += 8;
+		interactX  += 8; // Shift interaction origin to the right.
+	} else if (_flag == DOOR_FLAG_WESTBOUND){
+		image_index	= 1;
+		x		   -= 8;
+		interactX  -= 8; // Shift interaction origin to the left.
+	}
 }
 
 #endregion Unique Function Initializations

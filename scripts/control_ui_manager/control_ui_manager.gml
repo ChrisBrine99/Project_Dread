@@ -1,18 +1,26 @@
 #region Control UI Manager Macro Definitions
 
-// 
+// Some default values for "error" states within the control ui manager. They each represent a situation where
+// no icon information exists for an input (Ex. gamepad information is only added when a gamepad is connected
+// for the first time, and doesn't exist by default).
 #macro	ICONUI_BINDING_NONE				0
 #macro	ICONUI_NO_ICON				   -1
 
-// 
+// Macros for the keys that allow access to the control icon information for the input they represent within
+// the game. Both keyboard and gamepad information is stored together so there is no need to create seperate
+// macros for both.
 #macro	ICONUI_GAME_RIGHT				"g_right"
 #macro	ICONUI_GAME_LEFT				"g_left"
 #macro	ICONUI_GAME_UP					"g_up"
 #macro	ICONUI_GAME_DOWN				"g_down"
-#macro	ICONUI_RUN						"g_run"
-#macro	ICONUI_INTERACT					"g_interact"
+#macro	ICONUI_SPRINT					"run"
+#macro	ICONUI_INTERACT					"interact"
+#macro	ICONUI_READYWEAPON				"readyWeapon"
+#macro	ICONUI_FLASHLIGHT				"flashlight"
+#macro	ICONUI_USEWEAPON				"useWeapon"
 
-// 
+// Two values that represent the information stored for a keyboard/gamepad binding's icon; the sprite resource
+// is uses and the subimage/frame to use out of the entire sprite, respectively.
 #macro	ICONUI_ICON_SPRITE				0
 #macro	ICONUI_ICON_SUBIMAGE			1
 
@@ -24,7 +32,8 @@
 function str_control_ui_manager(_index) : str_base(_index) constructor {
 	flags			= STR_FLAG_PERSISTENT;
 	
-	// 
+	// Stores all the currently loaded input binding icon data. This data is stored into structs that contain
+	// both the current keyboard and gamepad icons; the latter not loading until a gamepad is connected.
 	controlIcons	= ds_map_create();
 	
 	/// @description 
@@ -33,9 +42,20 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	create_event = function(){
 		if (room != rm_init)
 			return; // Prevents a call to this function from executing outside of the game's initialization.
-			
+		
+		// Gets the keyboard binding icons as they exist at the start of the game (This occurs after the 
+		// "gameSettings.ini" file is loaded if it exists).
 		var _inputs = global.settings.inputs;
-		set_control_icon(ICONUI_INTERACT, _inputs[STNG_INPUT_INTERACT]);
+		
+		set_keyboard_control_icon(ICONUI_GAME_RIGHT,	_inputs[STNG_INPUT_GAME_RIGHT]);	// Getting icon info for in-game keyboard bindings.
+		set_keyboard_control_icon(ICONUI_GAME_LEFT,		_inputs[STNG_INPUT_GAME_LEFT]);
+		set_keyboard_control_icon(ICONUI_GAME_UP,		_inputs[STNG_INPUT_GAME_UP]);
+		set_keyboard_control_icon(ICONUI_GAME_DOWN,		_inputs[STNG_INPUT_GAME_DOWN]);
+		set_keyboard_control_icon(ICONUI_SPRINT,		_inputs[STNG_INPUT_SPRINT]);
+		set_keyboard_control_icon(ICONUI_INTERACT,		_inputs[STNG_INPUT_INTERACT]);
+		set_keyboard_control_icon(ICONUI_READYWEAPON,	_inputs[STNG_INPUT_READYWEAPON]);
+		set_keyboard_control_icon(ICONUI_FLASHLIGHT,	_inputs[STNG_INPUT_FLASHLIGHT]);
+		set_keyboard_control_icon(ICONUI_USEWEAPON,		_inputs[STNG_INPUT_USEWEAPON]);
 	}
 	
 	/// @description 
@@ -52,32 +72,57 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	///	Create a struct containing information about a key/gamepad binding's graphical representation on the
-	/// ui whenever the binding needs to be shown to the user to describe its functionality in the current
-	/// context. When the struct already exists, it will simply update the contents for the icon data if the
-	/// key or gamepad bindings happen to differ from their previous values, respectively.
+	///	Sets the icon for a given input's keyboard binding. If the same binding that the data already 
+	/// represents is passed in as the parameter, no updating logic will occur to prevent wasting time getting 
+	/// the same icon information.
 	///	
-	///	@param {Any}	key			What will be used to reference the control icon data within the controlIcons map.
-	/// @param {Real}	keyBinding	Keyboard constant that will be used to get its icon index.
-	/// @param {Real}	padBinding	(Optional) Gamepad constant that will be used to get its icon index.
-	set_control_icon = function(_key, _keyBinding, _padBinding = ICONUI_BINDING_NONE){
+	///	@param {Any}	key			What will be used to reference the control icon data.
+	/// @param {Real}	keyBinding	Keyboard constant that will be used to get its icon sprite/subimage data.
+	set_keyboard_control_icon = function(_key, _keyBinding){
+		with(create_control_icon_struct(_key)){
+			if (keyBinding == _keyBinding) // Don't update if there is no need.
+				return;
+			keyBinding	= _keyBinding;
+			keyIcon		= other.get_keyboard_icon(_keyBinding);
+		}
+	}
+	
+	/// @description 
+	///	Sets the icon for a given input's gamepad binding. If the same binding that the data already represents
+	/// is passed in as the parameter, no updating logic will occur to prevent wasting time getting the same
+	/// icon information.
+	///	
+	///	@param {Any}	key			What will be used to reference the control icon data.
+	/// @param {Real}	padBinding	Gamepad constant that will be used to get its icon sprite/subimage data.
+	set_gamepad_control_icon = function(_key, _padBinding){
+		with(create_control_icon_struct(_key)){
+			if (padBinding == _padBinding) // Don't update if there is no need.
+				return;
+			keyBinding	= _padBinding;
+			keyIcon		= other.get_gamepad_icon(_padBinding);
+		}
+	}
+	
+	/// @description 
+	///	Creates an instance of the struct that is responsible for storing infomation about a given input's
+	/// keyboard and gamepad control icon data for use across the entire game's UI.
+	///	
+	///	@param {Any}	key			What will be used to reference the control icon data.
+	create_control_icon_struct = function(_key){
 		var _value = ds_map_find_value(controlIcons, _key);
-		if (is_undefined(_value)){ // Create new struct to manage the control ui icon pair.
-			ds_map_add(controlIcons, _key, {
-				keyBinding	: _keyBinding,
-				keyIcon		: get_keyboard_icon(_keyBinding),
-				padBinding	: _padBinding,
-				padIcon		: get_gamepad_icon(_padBinding),
-			});
-			return;
-		}
+		if (!is_undefined(_value)) // Struct already exists; return its reference.
+			return _value;
 		
-		// The struct already exists for the current control icon pair, so they will be updated should the
-		// bindings provided in the argument parameters be different from what the icons currently represent.
-		with(_value){
-			if (keyBinding != _keyBinding) { keyIcon = get_keyboard_icon(_keyBinding); }
-			if (padBinding != _padBinding) { padIcon = get_gamepad_icon(_padBinding); }
-		}
+		// Create the struct with its reference stored locally so it can be easily returned after it has been
+		// added to the control icon data structure for later use.
+		var _controlIconData = {
+			keyBinding	: ICONUI_BINDING_NONE,
+			keyIcon		: ICONUI_NO_ICON,
+			padBinding	: ICONUI_BINDING_NONE,
+			padIcon		: ICONUI_NO_ICON,
+		};
+		ds_map_add(controlIcons, _key, _controlIconData);
+		return _controlIconData;
 	}
 	
 	/// @description

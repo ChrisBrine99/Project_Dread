@@ -23,15 +23,11 @@ ds_map_add(global.sInstances, str_textbox,				new str_textbox(str_textbox));
 ds_map_add(global.sInstances, str_screen_fade,			new str_screen_fade(str_screen_fade));
 // NOTE -- This is the only time the default ways of struct and object creation should be used!!!
 
-// Initialize the control UI manager by manually calling its create event (If it wasn't a "compile-time"
-// singleton like it is within this game, the event would've been invoked automatically when it was created.
+// Initialize what needs initialization above by manually calling its create event (If it wasn't a "compile-
+// time" singleton like it is within this game, the event would've been invoked automatically when it was 
+// created).
 with(CONTROL_UI_MANAGER) { create_event(); }
-
-// Initialize the camera viewport and the window's dimensions; settings the starting coordinates as well.
-with(CAMERA){
-	camera_set_viewport(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
-	camera_set_followed_object(PLAYER, true);
-}
+with(CAMERA)			 { create_event(); }
 
 // Once everything has been initialized, the first official room for the game is loaded, and the game is 
 // unpaused to allow various game elements to start updating.

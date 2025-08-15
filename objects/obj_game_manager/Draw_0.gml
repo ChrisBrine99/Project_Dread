@@ -17,6 +17,7 @@ for (var i = 0; i < _length; i++){
 	}
 }
 
-draw_set_alpha(0.75);
+/*draw_set_alpha(0.75);
 draw_set_color(COLOR_LIGHT_BLUE);
 with(par_interactable){ draw_circle(interactX, interactY, interactRadius, false); }
+*/

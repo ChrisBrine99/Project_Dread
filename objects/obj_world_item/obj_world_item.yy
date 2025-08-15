@@ -34,6 +34,9 @@
     "name":"spr_world_items",
     "path":"sprites/spr_world_items/spr_world_items.yy",
   },
-  "spriteMaskId":null,
+  "spriteMaskId":{
+    "name":"spr_empty_mask",
+    "path":"sprites/spr_empty_mask/spr_empty_mask.yy",
+  },
   "visible":false,
 }

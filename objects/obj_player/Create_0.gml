@@ -496,7 +496,7 @@ state_default = function(_delta){
 				flags |= INTR_FLAG_INTERACT;
 				break;
 			}
-			flags &= ~INTR_FLAG_INTERACT; // Always clear the flag when an interaction can't occur.
+			flags &= ~INTR_FLAG_INTERACT; // Always clear flag when an interaction can't occur.
 		}
 	}
 	
