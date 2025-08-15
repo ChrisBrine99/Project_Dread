@@ -15,7 +15,8 @@
 #macro	DOOR_FACING_EAST				((flags & DOOR_FLAG_EASTBOUND)	!= 0)
 #macro	DOOR_FACING_WEST				((flags & DOOR_FLAG_WESTBOUND)	!= 0)
 
-// 
+// Determines how fast the door's direction arrow indicator will bob up/down or left/right to signify the
+// player is able to interact with it (Locked doors won't display this indicator).
 #macro	DOOR_ARROW_MOVE_SPEED			0.03
 
 #endregion Macro Initializations
@@ -49,7 +50,8 @@ targetX			= 0;
 targetY			= 0;
 targetRoom		= undefined;
 
-// 
+// Acts as both the offset and the timer for the arrow indicator's bobbing effect. It will increase until 2.0
+// before rolling back to zero to repeat the process indefinitely.
 arrowOffset		= 0.0;
 
 #endregion Variable Initializations
@@ -149,7 +151,9 @@ on_player_interact = function(_delta){
 #region Custom Draw Function Definition
 
 /// @description 
-///	
+///	A custom drawing function for the door. It will display an arrow pointing in the direction that the door
+/// is flagged as facing towards; bobbing up and down or left and right for a small animation while it is
+/// visible to the player.
 ///	
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 custom_draw_default = function(_delta){
@@ -160,18 +164,22 @@ custom_draw_default = function(_delta){
 	if (arrowOffset >= 2.0) // Reset back to 0 so door indication switches between two positions.
 		arrowOffset -= 2.0;
 		
-	// 
-	var _arrowOffset	= floor(arrowOffset % 2.0);
+	// Calculate the arrow's offset by rounding the value downward; allowing it to bob up and down pixel-by-
+	// pixel instead of slowly shifting through subpixels relative to the value plus its fraction part. Then,
+	// store the door's position into local variables so the calculated offset can be added as required.
+	var _arrowOffset	= floor(arrowOffset);
 	var _xPosition		= x;
 	var _yPosition		= y;
 	
-	// 
+	// Check which direction the doorway is facing. If it is up or down, the arrow's offset will be placed
+	// on the indicator's y position. Otherwise, the offset is applied to the x position.
 	if (DOOR_FACING_NORTH)		{ _yPosition = y - _arrowOffset; } 
 	else if (DOOR_FACING_SOUTH)	{ _yPosition = y + _arrowOffset; }
 	else if (DOOR_FACING_EAST)	{ _xPosition = x + _arrowOffset; }
 	else if (DOOR_FACING_WEST)	{ _xPosition = x - _arrowOffset; }
 		
-	// 
+	// Finally, take the positional values and draw the arrow indicator. Note that since it is drawn in what
+	// could be considered "world space", the indicator is affected by the current area's lighting.
 	draw_sprite_ext(sprite_index, image_index, _xPosition, _yPosition, 1.0, 1.0, 0.0, COLOR_TRUE_WHITE, 1.0);
 }
 drawFunction = method_get_index(custom_draw_default);
@@ -238,6 +246,7 @@ set_facing_direction = function(_flag){
 	if (_flag == DOOR_FLAG_NORTHBOUND){
 		image_index	= 0;
 		y		   -= 8;
+		// No adjusts to the interaction origin required.
 	} else if (_flag == DOOR_FLAG_SOUTHBOUND){
 		image_index	= 2;
 		y		   += 6;

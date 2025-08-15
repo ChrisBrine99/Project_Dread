@@ -41,10 +41,10 @@
 #macro	MINPUT_IS_LEFT_HELD				((inputFlags & MINPUT_FLAG_CURSOR_LEFT)		!= 0 && (inputFlags & MINPUT_FLAG_CURSOR_RIGHT)		== 0)
 #macro	MINPUT_IS_UP_HELD				((inputFlags & MINPUT_FLAG_CURSOR_UP)		!= 0 && (inputFlags & MINPUT_FLAG_CURSOR_DOWN)		== 0)
 #macro	MINPUT_IS_DOWN_HELD				((inputFlags & MINPUT_FLAG_CURSOR_DOWN)		!= 0 && (inputFlags & MINPUT_FLAG_CURSOR_UP)		== 0)
-#macro	MINPUT_IS_SELECT_PRESSED		((inputFlags & MINPUT_FLAG_SELECT)			!= 0 && (prevInputFlags & MINPUT_FLAG_SELECT)		== 0)
-#macro	MINPUT_IS_RETURN_PRESSED		((inputFlags & MINPUT_FLAG_RETURN)			!= 0 && (prevInputFlags & MINPUT_FLAG_RETURN)		== 0)
-#macro	MINPUT_IS_AUX_SELECT_PRESSED	((inputFlags & MINPUT_FLAG_AUX_SELECT)		!= 0 && (prevInputFlags & MINPUT_FLAG_AUX_SELECT)	== 0)
-#macro	MINPUT_IS_AUX_RETURN_PRESSED	((inputFlags & MINPUT_FLAG_AUX_RETURN)		!= 0 && (prevInputFlags & MINPUT_FLAG_AUX_RETURN)	== 0)
+#macro	MINPUT_IS_SELECT_RELEASED		((inputFlags & MINPUT_FLAG_SELECT)			== 0 && (prevInputFlags & MINPUT_FLAG_SELECT)		!= 0)
+#macro	MINPUT_IS_RETURN_RELEASED		((inputFlags & MINPUT_FLAG_RETURN)			== 0 && (prevInputFlags & MINPUT_FLAG_RETURN)		!= 0)
+#macro	MINPUT_IS_AUX_SELECT_RELEASED	((inputFlags & MINPUT_FLAG_AUX_SELECT)		== 0 && (prevInputFlags & MINPUT_FLAG_AUX_SELECT)	!= 0)
+#macro	MINPUT_IS_AUX_RETURN_RELEASED	((inputFlags & MINPUT_FLAG_AUX_RETURN)		== 0 && (prevInputFlags & MINPUT_FLAG_AUX_RETURN)	!= 0)
 
 // A unique check to see if no cursor movement inputs are being held by the player. Prevents having to perform
 // four seperate checks on each input since they'll all equal 0 when none are held.
@@ -379,8 +379,8 @@ function str_base_menu(_index) : str_base(_index) constructor {
 			
 			// Only check for auxiliary select/return inputs so long as their variables responsible for storing
 			// those gamepad bindings are set to something other than their default value, respectively.
-			if (padAuxSelect != 0) { inputFlags |= (gamepad_button_check_pressed(global.gamepadID, padAuxSelect) <<  5); }
-			if (padAuxReturn != 0) { inputFlags |= (gamepad_button_check_pressed(global.gamepadID, padAuxReturn) <<  7); }
+			if (padAuxSelect != 0) { inputFlags |= (gamepad_button_check(global.gamepadID, padAuxSelect) <<  5); }
+			if (padAuxReturn != 0) { inputFlags |= (gamepad_button_check(global.gamepadID, padAuxReturn) <<  7); }
 			
 			return;
 		}
@@ -394,8 +394,8 @@ function str_base_menu(_index) : str_base(_index) constructor {
 		
 		// Only check for auxiliary select/return inputs so long as their variables responsible for storing
 		// those keyboard bindings are set to something other than their default value, respectively.
-		if (keyAuxSelect != vk_nokey) { inputFlags |= (keyboard_check_pressed(keyAuxSelect) <<  5); }
-		if (keyAuxReturn != vk_nokey) { inputFlags |= (keyboard_check_pressed(keyAuxReturn) <<  7); }
+		if (keyAuxSelect != vk_nokey) { inputFlags |= (keyboard_check(keyAuxSelect) <<  5); }
+		if (keyAuxReturn != vk_nokey) { inputFlags |= (keyboard_check(keyAuxReturn) <<  7); }
 	}
 	
 	/// @description 

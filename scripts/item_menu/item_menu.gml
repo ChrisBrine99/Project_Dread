@@ -12,6 +12,12 @@
 
 /// @param {Function}	index	The value of "str_item_menu" as determined by GameMaker during runtime.
 function str_item_menu(_index) : str_base_menu(_index) constructor {
+	// Set up the "auxilliary" return inputs to the input that opens up this menu during gameplay, so it can
+	// also close the menu should the player choose to use it instead of the standard menu return input.
+	var _inputs		= global.settings.inputs;
+	keyAuxReturn	= _inputs[STNG_INPUT_ITEM_MENU];
+	padAuxReturn	= _inputs[STNG_INPUT_ITEM_MENU + 1];
+	
 	/// @description 
 	///	
 	///	
@@ -66,6 +72,12 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_default = function(_delta){
 		process_player_input();
+		if (MINPUT_IS_AUX_RETURN_RELEASED){
+			with(prevMenu) { instance_destroy_struct(selfRef); }
+			return;
+		}
+		
+		// 
 		update_cursor_position(_delta);
 	}
 }

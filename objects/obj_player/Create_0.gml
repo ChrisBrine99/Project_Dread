@@ -55,10 +55,10 @@
 #macro	PINPUT_READY_WEAPON_RELEASED	((inputFlags & PINPUT_FLAG_READY_WEAPON)	== 0 && (prevInputFlags & PINPUT_FLAG_READY_WEAPON)	!= 0)
 #macro	PINPUT_FLASHLIGHT_RELEASED		((inputFlags & PINPUT_FLAG_FLASHLIGHT)		== 0 && (prevInputFlags & PINPUT_FLAG_FLASHLIGHT)	!= 0)
 #macro	PINPUT_USE_WEAPON_HELD			((inputFlags & PINPUT_FLAG_USE_WEAPON)		!= 0)
-#macro	PINPUT_OPENING_ITEM_MENU		((inputFlags & PINPUT_FLAG_ITEM_MENU)		!= 0 && (prevInputFlags & PINPUT_FLAG_ITEM_MENU)	== 0)
-#macro	PINPUT_OPENING_NOTES_MENU		((inputFlags & PINPUT_FLAG_NOTES_MENU)		!= 0 && (prevInputFlags & PINPUT_FLAG_NOTES_MENU)	== 0)
-#macro	PINPUT_OPENING_MAP_MENU			((inputFlags & PINPUT_FLAG_MAP_MENU)		!= 0 && (prevInputFlags & PINPUT_FLAG_MAP_MENU)		== 0)
-#macro	PINPUT_OPENING_PAUSE_MENU		((inputFlags & PINPUT_FLAG_PAUSE_MENU)		!= 0 && (prevInputFlags & PINPUT_FLAG_PAUSE_MENU)	== 0)
+#macro	PINPUT_OPEN_ITEMS_RELEASED		((inputFlags & PINPUT_FLAG_ITEM_MENU)		== 0 && (prevInputFlags & PINPUT_FLAG_ITEM_MENU)	!= 0)
+#macro	PINPUT_OPEN_NOTES_RELEASED		((inputFlags & PINPUT_FLAG_NOTES_MENU)		== 0 && (prevInputFlags & PINPUT_FLAG_NOTES_MENU)	!= 0)
+#macro	PINPUT_OPEN_MAPS_RELEASED		((inputFlags & PINPUT_FLAG_MAP_MENU)		== 0 && (prevInputFlags & PINPUT_FLAG_MAP_MENU)		!= 0)
+#macro	PINPUT_OPEN_PAUSE_RELEASED		((inputFlags & PINPUT_FLAG_PAUSE_MENU)		== 0 && (prevInputFlags & PINPUT_FLAG_PAUSE_MENU)	!= 0)
 
 // Variants of the above pressed/released inputs for readying a weapon and sprinting that can be toggled to 
 // be hold inputs or not in the game's accessibility settings.
@@ -524,9 +524,9 @@ state_default = function(_delta){
 	// Check to see if the player has opening their inventory and figure out which page should be opened first.
 	// Note that these inputs are only acknowledged if there isn't a menu or textbox currently opened, and a
 	// curscene isn't currently occurring.
-	if (PINPUT_OPENING_ITEM_MENU)		{ menu_inventory_open(MENUINV_INDEX_ITEM_MENU); }
-	else if (PINPUT_OPENING_NOTES_MENU) { menu_inventory_open(MENUINV_INDEX_NOTE_MENU); }
-	else if (PINPUT_OPENING_MAP_MENU)	{ menu_inventory_open(MENUINV_INDEX_MAP_MENU); }
+	if (PINPUT_OPEN_ITEMS_RELEASED)			{ menu_inventory_open(MENUINV_INDEX_ITEM_MENU); }
+	else if (PINPUT_OPEN_NOTES_RELEASED)	{ menu_inventory_open(MENUINV_INDEX_NOTE_MENU); }
+	else if (PINPUT_OPEN_MAPS_RELEASED)		{ menu_inventory_open(MENUINV_INDEX_MAP_MENU); }
 	
 	// Don't bother with collision, sprinting or animation if the player isn't current considered moving.
 	if (!_isMoving)

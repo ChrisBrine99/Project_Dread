@@ -1,13 +1,16 @@
 #region Macros for Inventory Menu Struct
 
-// 
+// A flag bit that has unique functionality in the inventory menu. When set, the inventory is allowed to close
+// when the player presses the "return" input.
 #macro	MENUINV_FLAG_CAN_CLOSE			0x00000001
 #macro	MENUINV_CAN_CLOSE				((flags & MENUINV_FLAG_CAN_CLOSE) != 0)
 
-// 
+// Index values for the positions of the submenu references within the inventory's "menuRef" array. The final
+// value is the sum of the number of submenus which is also the length of the array the references reside in.
 #macro	MENUINV_INDEX_ITEM_MENU			0
 #macro	MENUINV_INDEX_NOTE_MENU			1
 #macro	MENUINV_INDEX_MAP_MENU			2
+#macro	MENUINV_TOTAL_SUBMENUS			3
 
 #endregion Macros for Inventory Menu Struct
 
@@ -17,22 +20,26 @@
 function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	// Stores a reference to the three "submenus" that are managed by this main menu: the item menu, note
 	// menu, and the map menu, respectively.
-	menuRef = [noone, noone, noone];
+	menuRef = array_create(MENUINV_TOTAL_SUBMENUS, noone);
 	
-	// 
+	// Holds a reference to the inventory menu itself which is then passed along to the submenus when they
+	// are created by the player shifting through its various pages.
 	selfRef	= noone;
 	
 	/// @description 
-	///	
+	///	Called when the inventory menu is first created through "instance_create_menu_struct". It handles
+	/// initializing the various parameters required for the menu to function properly, and also pauses the
+	/// player's functionality so they don't move while the menu is open.
 	///	
 	create_event = function(){
+		// Get a reference to this menu so it can be passed into the submenus that it manages.
 		selfRef				= instance_find_struct(structID);
 		alpha				= 1.0;
 		object_set_state(state_default);
 		
-		// 
-		var _x				= 50;
-		var _y				= 50;
+		// Initialize the base parameters for the menu.
+		var _x				= 0;
+		var _y				= 0;
 		var _isActive		= true;
 		var _isVisible		= true;
 		var _menuWidth		= 3;	// Three "elements" AKA Items, Notes, and Maps
@@ -41,19 +48,20 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		initialize_params(_x, _y, _isActive, _isVisible, _menuWidth, _visibleWidth, _visibleHeight);
 		flags |= MENUINV_FLAG_CAN_CLOSE; // Initially enable the flag to allow this menu to close.
 		
-		// 
+		// Initialize the option parameters for the menu.
 		var _optionX		= 5;
 		var _optionY		= 1;
 		var _optionSpacingX	= 0; // No spacing needed since only one option is visible at a time.
 		var _optionSpacingY	= 0;
 		initialize_option_params(_optionX, _optionY, _optionSpacingX, _optionSpacingY);
 		
-		// 
+		// Add "options" for the menu that are simply the names for each page of the inventory. Those pages
+		// themselves are unique menu instances that manage their own data and input independent of this one.
 		add_option("Items");
 		add_option("Notes");
 		add_option("Map");
 		
-		// 
+		// Finally, pause the player object's functionality as this menu takes over input while it exists.
 		with(PLAYER) { pause_player(); }
 	}
 	
@@ -105,11 +113,15 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 			case MENUINV_INDEX_MAP_MENU:	_menu = str_map_menu;	break;
 		}
 		
-		// 
+		// Attempt to create an instance for the new page of the menu. If an instance already exists somehow
+		// this function will return the value "noone" which will then cause the value to be grabbed from the
+		// menu's sInstance reference value.
 		var _menuInstance = instance_create_menu_struct(_menu);
 		if (_menuInstance == noone) { _menuInstance = ds_map_find_value(global.sInstances, _menu); }
 		
-		// 
+		// Store the reference to the inventory's page and then set the flags that activate the menu as the
+		// current page. A reference to this main management menu is also passed in as the page's previous
+		// menu, so it knows it is not the root menu.
 		menuRef[_index]	= _menuInstance;
 		with(_menuInstance){
 			flags	   |= MENU_FLAG_ACTIVE | MENU_FLAG_VISIBLE;
@@ -167,7 +179,7 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		// the menu will not close if the menu isn't allowed to close itself currently. Switch to another page
 		// of the inventory is still possible despite being unable to close it if required.
 		process_player_input();
-		if (MINPUT_IS_RETURN_PRESSED && MENUINV_CAN_CLOSE){ // Close the menu if possible.
+		if (MINPUT_IS_RETURN_RELEASED && MENUINV_CAN_CLOSE){ // Close the menu if possible.
 			instance_destroy_struct(MENU_INVENTORY);
 			return;
 		}
@@ -193,7 +205,8 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 #region Inventory Menu Global Function Definitions
 
 /// @description 
-///	
+///	Create the invnetory menu, which will pause the player's movements until it is closed once again. Remaining
+/// entities will still function normally.
 ///	
 ///	@param {Real}	index	Determines which of the three pages of the inventory to open up first.
 function menu_inventory_open(_index){
