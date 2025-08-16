@@ -3,7 +3,15 @@
 // Upon initialization, it stores the value -1, but will contain a map of structs that contain all the info
 // about every item that can be collected within the game. This data is loaded in when a save file is loaded
 // or a new playthrough is started.
-global.itemData = -1;
+global.itemData			= -1;
+
+// A map struct that will contain information about items in the game world. It will contain items that have
+// been placed manually and also any items that were dropped from the item inventory by the player.
+global.worldItems		= ds_map_create();
+
+// A list containing the keys for items that have been collected by the player. This prevents the item from
+// being collected multiple times since the game's rooms/areas aren't flagged as persistent.
+global.collectedItems	= ds_list_create();
 
 #endregion Globals Related to General Data Management
 
@@ -472,3 +480,81 @@ function create_result_combo_struct(_indexString, _minString, _maxString){
 }
 
 #endregion Item Data Parsing Functions
+
+#region World Item Data Management Functions
+
+/// @description 
+///	Initializes a new element within the world item data structure. This element will store information about
+/// an item: the room it exists in (This is useful for items that were dropped by the player form their current
+/// items), the item's ID, the amount of the item that can be collected, and its durability.
+///	
+/// @param {Any}			key			The value tied to this world item's information.
+/// @param {Asset.GMRoom}	room		Where the item is found within the game.
+///	@param {String}			itemID		ID value that can be used to reference the item's characteristics from the item data.
+/// @param {Real}			quantity	The current amount of the item found within this world item.
+/// @param {Real}			durability	The condition of the item (This value is only used on higher difficulties).
+function world_item_initialize(_key, _room, _itemID, _quantity, _durability){
+	var _value = ds_map_find_value(global.worldItems, _key);
+	if (!is_undefined(_value)) // The item already exists; don't try to initialize it again.
+		return;
+		
+	ds_map_add(global.worldItems, _key, {
+		roomIndex	: _room,
+		itemID		: _itemID,
+		quantity	: _quantity,
+		durability	: _durability
+	});
+}
+
+/// @description 
+///	A function that allows all elements within the desired world item struct to be updated at once. If an 
+/// invalid key was passed as the "key" parameter the function will exit before processing anything.
+///	
+/// @param {Any}			key			The value tied to this world item's information.
+/// @param {Asset.GMRoom}	room		Where the item is found within the game.
+///	@param {String}			itemID		ID value that can be used to reference the item's characteristics from the item data.
+/// @param {Real}			quantity	The current amount of the item found within this world item.
+/// @param {Real}			durability	The condition of the item (This value is only used on higher difficulties).
+function world_item_update(_key, _room, _itemID, _quantity, _durability){
+	var _value = ds_map_find_value(global.worldItems, _key);
+	if (is_undefined(_value)) // An item with this key doesn't exist; exit early.
+		return;
+	
+	with(_value){ // Jump into world item struct's scope and update all values.
+		roomIndex	= _room;
+		itemID		= _itemID;
+		quantity	= _quantity;
+		durability	= _durability;
+	}
+}
+
+/// @description 
+///	Returns a reference to the struct containing an item's data in respect to the world and not just the area
+/// it exists in. If there is no data found with the provided key, the value returned is -1 to signify there
+/// isn't any data for the item.
+///	
+///	@param {Any}	key		The value tied to the world item struct reference that will be returned.
+function world_item_get(_key){
+	var _value = ds_map_find_value(global.worldItems, _key);
+	if (is_undefined(_value)) // Return the value -1 to signify the key doesn't exist in the map.
+		return ID_INVALID;
+	return _value;
+}
+
+/// @description 
+///	Removes an element from the current world item data structure while adding its key to the list of collected
+/// items. This means that the item object that used this data will no longer exist within the game, as it will 
+/// destory itself during its room start event.
+///	
+///	@param {Any}	key		The value tied to the to-be-deleted world item information.
+function world_item_remove(_key){
+	var _value = ds_map_find_value(global.worldItems, _key);
+	if (is_undefined(_value)) // Item with the desired key doesn't exist; don't delete anything.
+		return;
+		
+	ds_map_delete(global.worldItems, _key);
+	ds_list_add(global.collectedItems, _key);
+	delete _value; // Signals to GM's garbage collector to come and collect.
+}
+
+#endregion World Item Data Management Functions

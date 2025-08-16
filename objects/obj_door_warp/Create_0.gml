@@ -34,7 +34,7 @@ textboxMessage	= "The door is locked. I can't get it open without its key.";
 // that it is an active entity (Without being set to active, rendering always gets skipped).
 flags = ENTT_FLAG_OVERRIDE_DRAW | ENTT_FLAG_VISIBLE | ENTT_FLAG_ACTIVE;
 
-// Also edit the dfault interaction input prompt to reference that this is a door.
+// Also edit the default interaction input prompt to reference that this is a door.
 interactMessage	= "Open Door";
 
 // Variables relating to the door's lock/key system. There will be a list containing all the items (AKA keys)
@@ -85,7 +85,7 @@ on_player_interact = function(_delta){
 		// Finally, initialize the screen fading effect that is used in tandem with the room warp logic. It is
 		// toggled to manually activating its fade out so it doesn't begin fading out until AFTER the target
 		// room has completely loaded in.
-		with(SCREEN_FADE) { activate_screen_fade(0.05, 0.05, COLOR_BLACK, true); }
+		with(SCREEN_FADE) { activate_screen_fade(0.08, 0.04, COLOR_BLACK, true); }
 		return;
 	}
 	

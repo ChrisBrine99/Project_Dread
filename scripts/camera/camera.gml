@@ -198,10 +198,13 @@ function str_camera(_index) : str_base(_index) constructor {
 		
 		// Finally, update the window size and positioning if the game isn't set to be full-screen.
 		var _scale		= global.settings.windowScale;
-		_width			= _width * _scale;	// Update "_width" and "_height" variables to apply scaling to them.
-		_height			= _height * _scale;
+		_width			= _width	* _scale;	// Update "_width" and "_height" variables to apply scaling to them.
+		_height			= _height	* _scale;
 		window_set_size(_width, _height);
-		window_set_position(floor((display_get_width() - _width) / 2), floor((display_get_height() - _height) / 2));
+		window_set_position(
+			floor((display_get_width() - _width) / 2), 
+			floor((display_get_height() - _height) / 2)
+		);
 	}
 	
 	/// @description 

@@ -170,7 +170,8 @@ function item_inventory_initialize(_cmbDiffFlagBit){
 ///	
 ///	@param {Real}	itemID		Number representing the item within the game's data.
 ///	@param {Real}	amount		How many of said item will be added to the inventory.
-function item_inventory_add(_itemID, _amount){
+/// @param {Real}	durability	The item's current condition (This value is only used on higher difficulties).
+function item_inventory_add(_itemID, _amount, _durability){
 	// Don't try adding anything to an uninitialized inventory.
 	if (!is_array(global.curItems))
 		return _amount;
@@ -189,6 +190,11 @@ function item_inventory_add(_itemID, _amount){
 	for (var i = 0; i < _length; i++){
 		_invItem = global.curItems[i];
 		if (is_struct(_invItem)){
+			// Immediately skip to the next slot in the inventory if the item is a weapon, piece of equipment,
+			// or has a stack limit of one since all cases mean the item cannot be stacked.
+			if (_itemData.stackLimit == 1 || _itemData.typeID == ITEM_TYPE_WEAPON || _itemData.typeID == ITEM_TYPE_EQUIPABLE)
+				continue;
+			
 			with(_invItem){
 				// Either the item id doesn't match the current item in the slot OR the slot is already maxed
 				// out in capacity for the item in question. Move onto the next slot.
@@ -218,7 +224,7 @@ function item_inventory_add(_itemID, _amount){
 		_invItem = {
 			itemID		: _itemID,
 			quantity	: _amount,
-			durability	: 0	// This function will always set this value to 0.
+			durability	: _durability
 		};
 		global.curItems[i] = _invItem;
 		
@@ -260,7 +266,7 @@ function item_inventory_remove(_itemID, _amount){
 	var _length		= array_length(global.curItems);
 	for (var i = 0; i < _length; i++){
 		_invItem = global.curItems[i];
-		if (!is_struct(_invItem) || _invItem.index != _itemID) // Ignore all empty inventory slots or items with non-matching IDs.
+		if (!is_struct(_invItem) || _invItem.itemID != _itemID) // Ignore all empty inventory slots or items with non-matching IDs.
 			continue;
 		
 		// Check to see if there is enough of the item within the slot to meet the required amount to remove.
@@ -294,7 +300,7 @@ function item_inventory_remove(_itemID, _amount){
 ///	@param {Real}	slot		The slot that will have quantity removed from it.
 /// @param {Real}	amount		How many of the item within the slot will be removed.
 function item_inventory_remove_slot(_slot, _amount){
-	// Don't try removing anything to an uninitialized inventory, an out of bounds index.
+	// Don't try removing anything to an uninitialized inventory, or an out of bounds index.
 	if (!is_array(global.curItems) || _slot < 0 || _slot >= array_length(global.curItems))
 		return _amount;
 	
@@ -329,9 +335,9 @@ function item_inventory_slot_swap(_first, _second){
 			_first >= array_length(global.curItems) || _second >= array_length(global.curItems))
 		return;
 		
-	var _temp = global.curItems[_first];
-	global.curItems[_first] = global.curItems[_second];
-	global.curItems[_second] = _temp;
+	var _temp					= global.curItems[_first];
+	global.curItems[_first]		= global.curItems[_second];
+	global.curItems[_second]	= _temp;
 }
 
 #endregion Functions for Manipulating the Item Inventory's Contents
@@ -353,7 +359,7 @@ function item_inventory_slot_get_data(_slot){
 	if (_slotContents == INV_EMPTY_SLOT) // The inventory slot is empty; return -1 to signify such.
 		return INV_EMPTY_SLOT;
 	
-	var _itemData		= ds_map_find_value(global.itemData, _slotContents.itemID);
+	var _itemData = ds_map_find_value(global.itemData, _slotContents.itemID);
 	if (is_undefined(_itemData)) // No item data exists for the id value in the slot; return default value.
 		return INV_EMPTY_SLOT;
 	return _itemData;
@@ -374,7 +380,7 @@ function item_inventory_count(_itemID){
 	var _length		= array_length(global.curItems);
 	for (var i = 0; i < _length; i++){
 		_invItem = global.curItems[i];
-		if (is_struct(_invItem) && _invItem.index == _itemID)
+		if (is_struct(_invItem) && _invItem.itemID == _itemID)
 			_count += _invItem.quantity;
 	}
 	return _count;

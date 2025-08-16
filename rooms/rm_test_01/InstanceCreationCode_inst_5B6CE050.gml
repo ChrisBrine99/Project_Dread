@@ -1,0 +1,1 @@
+set_item_params("test_item_02", ITEM_RIFLE_ROUND, 100, 0);

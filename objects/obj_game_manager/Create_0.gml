@@ -198,7 +198,7 @@ global.settings			= {
 							STNG_FLAG_MUSIC | STNG_FLAG_VIBRATION, // These flags are set by default.
 	
 	// --- Video Settings --- //
-	windowScale			: 4,
+	windowScale			: 6,
 	
 	// --- Audio Setting Array --- //
 	audio				: [

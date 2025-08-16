@@ -37,8 +37,8 @@ void main(void) {
 	}
 	
 	// Apply the quantization effect to reduce the output values color depth to what is specified by the 
-	// uniform value for it. The calculated value is clamps to avoid exceeding the valid range of colors before
-	// the value is again divided to revert back to a value range of 0.0 to 1.0.
+	// uniform value for it. The calculated value is clamped to avoid exceeding the valid range of colors 
+	// before the value is again divided to revert back to a value range of 0.0 to 1.0.
 	if (quantizationActive){
 		_currentColor		= clamp(floor(_currentColor * quantizeLevel + _noise), vec3(0.0), vec3(quantizeLevel));
 		_currentColor		= _currentColor / quantizeLevel;
