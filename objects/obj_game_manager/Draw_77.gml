@@ -1,5 +1,4 @@
 var _scale = global.settings.windowScale;
-
 shader_set(shd_retro_effects);
 
 // Set the properties of the three major effects this shader handles, and the constant dither matrix for the PS1-

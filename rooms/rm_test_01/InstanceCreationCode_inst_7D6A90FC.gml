@@ -1,1 +1,1 @@
-set_item_params("test_item_01", ITEM_HANDGUN_AMMO, 48, 0);
+set_item_params("test_item_01", ITEM_HANDGUN_AMMO, 1000, 0);

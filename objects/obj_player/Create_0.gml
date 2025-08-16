@@ -407,7 +407,6 @@ end_step_event = function(_delta){
 custom_draw_default = function(_delta){
 	draw_sprite_ext(sprite_index, image_index, x, y, 
 			image_xscale, image_yscale, image_angle, image_blend, image_alpha);
-			
 	/*var _interactX = x + lengthdir_x(8, direction);
 	var _interactY = y + lengthdir_y(8, direction) - 8;
 	draw_set_color(COLOR_TRUE_WHITE);

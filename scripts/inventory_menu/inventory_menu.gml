@@ -90,6 +90,25 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	}
 	
 	/// @description 
+	///	Called during every frame that the menu exists for. It will be responsible for rendering its contents
+	/// to the game's GUI layer. Note that its position refers to the top-left of the menu itself, and its
+	/// contents will be offset from that point based on each of their unique position values.
+	///	
+	///	@param {Real}	xPos	The menu's current x position, rounded down.
+	/// @param {Real}	yPos	The menu's current y position, rounded down.
+	draw_gui_event = function(_xPos, _yPos){
+		draw_sprite_ext(spr_rectangle, 0, _xPos, _yPos, display_get_gui_width(), display_get_gui_height(), 
+			0.0, COLOR_BLACK, alpha * 0.5);
+		
+		draw_text_shadow(_xPos + optionX, _yPos + optionY, options[| curOption].oName, 
+			COLOR_WHITE, alpha, COLOR_BLACK, alpha * 0.75);
+			
+		// Ensure the current submenu's alpha always matches the main menu's alpha level.
+		var _alpha = alpha;
+		with(menuRef[curOption]) { alpha = _alpha; }
+	}
+	
+	/// @description 
 	///	Creates a new instance of one of the three submenu structs that are handled by this main inventory
 	/// menu struct. Each one is only created when needed, but will stay active until the inventory window is
 	/// closed, so this function will not do anything if the same index is passed in twice during only one of
@@ -127,22 +146,6 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 			flags	   |= MENU_FLAG_ACTIVE | MENU_FLAG_VISIBLE;
 			prevMenu	= other.selfRef;
 		}
-	}
-	
-	/// @description 
-	///	Called during every frame that the menu exists for. It will be responsible for rendering its contents
-	/// to the game's GUI layer. Note that its position refers to the top-left of the menu itself, and its
-	/// contents will be offset from that point based on each of their unique position values.
-	///	
-	///	@param {Real}	xPos	The menu's current x position, rounded down.
-	/// @param {Real}	yPos	The menu's current y position, rounded down.
-	draw_gui_event = function(_xPos, _yPos){
-		draw_text_shadow(_xPos + optionX, _yPos + optionY, options[| curOption].oName, 
-			COLOR_WHITE, alpha, COLOR_BLACK, alpha * 0.75);
-			
-		// Ensure the current submenu's alpha always matches the main menu's alpha level.
-		var _alpha = alpha;
-		with(menuRef[curOption]) { alpha = _alpha; }
 	}
 	
 	/// @description 

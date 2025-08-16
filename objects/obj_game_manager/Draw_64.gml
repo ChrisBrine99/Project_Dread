@@ -32,25 +32,3 @@ with(TEXTBOX){
 		break;
 	draw_gui_event();
 }
-
-draw_set_font(fnt_small);
-
-draw_set_halign(fa_right);
-draw_text_shadow(90, 5, 
-	string("\n{0}\n{1}\n\n{2}\n{3}\n{4}\n{5}\n{6}\n{7}\n{8}\n{9}", 
-		floor(fps_real), 
-		global.deltaTime, 
-		GAME_IS_IN_GAME,
-		GAME_IS_MENU_OPEN,
-		GAME_IS_CUTSCENE_ACTIVE,
-		GAME_IS_PAUSED,
-		GAME_IS_ROOM_WARP_OCCURRING,
-		GAME_IS_TRANSITION_ACTIVE,
-		GAME_IS_TEXTBOX_OPEN,
-		GAME_IS_GAMEPAD_ACTIVE,
-	), 
-	COLOR_DARK_RED
-);
-
-draw_set_halign(fa_left);
-draw_text_shadow(5, 5, string("-- Frame Data --\ncurFPS\nDelta\n-- Global Flags --\ninGame\ninMenu\ninCutscene\nisPaused\nroomWarp\ntransitionActive\ntextboxOpen\ngamepadActive"), COLOR_WHITE);
