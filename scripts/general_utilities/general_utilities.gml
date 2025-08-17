@@ -308,7 +308,7 @@ function string_split_lines(_string, _font, _maxWidth, _maxLines = 1){
 		if (_curChar == CHAR_NEWLINE){
 			if (_totalLines == _maxLines)
 					break;
-			_newString	   += _curLine + CHAR_NEWLINE;
+			_newString	   += _curLine + _curWord + CHAR_NEWLINE;
 			_totalLines    += 1;
 			_curLine		= "";
 			_curWord		= "";

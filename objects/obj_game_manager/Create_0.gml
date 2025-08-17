@@ -22,6 +22,14 @@
 
 // Macros that allow the state of a given flag within global.flags to be checked; returning either a 0 AKA "false"
 // or the value of the flag itself which is non-zero AKA "true".
+#macro	GAME_IS_CMBTDIFF_FORGIVING		((global.flags & GAME_FLAG_CMBTDIFF_FORGIVING)	!= 0)
+#macro	GAME_IS_CMBTDIFF_STANDARD		((global.flags & GAME_FLAG_CMBTDIFF_STANDARD)	!= 0)
+#macro	GAME_IS_CMBTDIFF_PUNISHING		((global.flags & GAME_FLAG_CMBTDIFF_PUNISHING)	!= 0)
+#macro	GAME_IS_CMBTDIFF_NIGHTMARE		((global.flags & GAME_FLAG_CMBTDIFF_NIGHTMARE)	!= 0)
+#macro	GAME_IS_CMBTDIFF_ONELIFE		((global.flags & GAME_FLAG_CMBTDIFF_ONELIFE)	!= 0)
+#macro	GAME_IS_PUZZDIFF_FORGIVING		((global.flags & GAME_FLAG_PUZZDIFF_FORGIVING)	!= 0)
+#macro	GAME_IS_PUZZDIFF_STANDARD		((global.flags & GAME_FLAG_PUZZDIFF_STANDARD)	!= 0)
+#macro	GAME_IS_PUZZDIFF_PUNISHING		((global.flags & GAME_FLAG_PUZZDIFF_PUNISHING)	!= 0)
 #macro	GAME_IS_PLAYTIME_ACTIVE			((global.flags & GAME_FLAG_PLAYTIME_ACTIVE)		!= 0)
 #macro	GAME_IS_TRANSITION_ACTIVE		((global.flags & GAME_FLAG_TRANSITION_ACTIVE)	!= 0)
 #macro	GAME_IS_ROOM_WARP_OCCURRING		((global.flags & GAME_FLAG_ROOM_WARP)			!= 0)

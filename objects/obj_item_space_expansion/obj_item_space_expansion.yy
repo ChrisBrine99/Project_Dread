@@ -1,12 +1,12 @@
 {
   "$GMObject":"",
-  "%Name":"obj_world_item",
+  "%Name":"obj_item_space_expansion",
   "eventList":[
     {"$GMEvent":"v1","%Name":"","collisionObjectId":null,"eventNum":0,"eventType":0,"isDnD":false,"name":"","resourceType":"GMEvent","resourceVersion":"2.0",},
     {"$GMEvent":"v1","%Name":"","collisionObjectId":null,"eventNum":4,"eventType":7,"isDnD":false,"name":"","resourceType":"GMEvent","resourceVersion":"2.0",},
   ],
   "managed":true,
-  "name":"obj_world_item",
+  "name":"obj_item_space_expansion",
   "overriddenProperties":[],
   "parent":{
     "name":"Items",

@@ -42,6 +42,20 @@
 // Macro that represents an inventory slot that current has no item contained within it.
 #macro	INV_EMPTY_SLOT				   -1
 
+//
+#macro	ITEMINV_START_SIZE_FORGIVING	10
+#macro	ITEMINV_START_SIZE_STANDARD		10
+#macro	ITEMINV_START_SIZE_PUNISHING	8
+#macro	ITEMINV_START_SIZE_NIGHTMARE	8
+#macro	ITEMINV_START_SIZE_ONELIFE		6
+
+// 
+#macro	ITEMINV_MAX_SIZE_FORGIVING		24
+#macro	ITEMINV_MAX_SIZE_STANDARD		20
+#macro	ITEMINV_MAX_SIZE_PUNISHING		16
+#macro	ITEMINV_MAX_SIZE_NIGHTMARE		14
+#macro	ITEMINV_MAX_SIZE_ONELIFE		12
+
 #endregion Macros Utilized Primarily by the Inventory System
 
 #region Item Name/Key Value Macros
@@ -144,12 +158,29 @@ function item_inventory_initialize(_cmbDiffFlagBit){
 	}
 	
 	switch(_cmbDiffFlagBit){
-		default: /* Invalid difficulty param */	array_resize(global.curItems,  0);		break;
-		case GAME_FLAG_CMBTDIFF_FORGIVING:		array_resize(global.curItems, 10);		break;
-		case GAME_FLAG_CMBTDIFF_STANDARD:		// Also starts with 8 slots available.
-		case GAME_FLAG_CMBTDIFF_PUNISHING:		array_resize(global.curItems,  8);		break;
-		case GAME_FLAG_CMBTDIFF_NIGHTMARE:		// Also starts with 6 slots available.
-		case GAME_FLAG_CMBTDIFF_ONELIFE:		array_resize(global.curItems,  6);		break;
+		default: // Inventory's size set to 0 slots for an initialization error if that occurs.
+			global.maxItemInvCapacity = 0;
+			break;
+		case GAME_FLAG_CMBTDIFF_FORGIVING:	// Start with 10 slots; max out at 24 slots.
+			array_resize(global.curItems, ITEMINV_START_SIZE_FORGIVING);
+			global.maxItemInvCapacity = ITEMINV_MAX_SIZE_FORGIVING;
+			break;
+		case GAME_FLAG_CMBTDIFF_STANDARD:	// Start with 10 slots; max out at 20 slots.
+			array_resize(global.curItems, ITEMINV_START_SIZE_STANDARD);
+			global.maxItemInvCapacity = ITEMINV_MAX_SIZE_STANDARD;
+			break;
+		case GAME_FLAG_CMBTDIFF_PUNISHING:	// Start with  8 slots; max out at 16 slots.
+			array_resize(global.curItems, ITEMINV_START_SIZE_PUNISHING);
+			global.maxItemInvCapacity = ITEMINV_MAX_SIZE_PUNISHING;
+			break;
+		case GAME_FLAG_CMBTDIFF_NIGHTMARE:	// Start with  8 slots; max out at 14 slots.
+			array_resize(global.curItems, ITEMINV_START_SIZE_NIGHTMARE);
+			global.maxItemInvCapacity = ITEMINV_MAX_SIZE_NIGHTMARE;
+			break;
+		case GAME_FLAG_CMBTDIFF_ONELIFE:	// Start with  6 slots; max out at 12 slots.
+			array_resize(global.curItems, ITEMINV_START_SIZE_ONELIFE);
+			global.maxItemInvCapacity = ITEMINV_MAX_SIZE_ONELIFE;
+			break;
 	}
 	
 	// Fill the array with -1 values since each index defaults to 0 when a resize adds new indices.

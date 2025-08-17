@@ -1,3 +1,10 @@
+#region Macro Initializations
+
+#macro	ITMPCKUP_MESSAGE_STANDARD		"Picked up @0x00F8F8{" + _itemID + "}."
+#macro	ITMPCKUP_MESSAGE_SHOW_AMOUNT	"Picked up @0x00F8F8{" + _itemID + "} (@0x3050F8{" + string(_quantity) + "})."
+
+#endregion Macro Initializations
+
 #region Variable Initializations
 
 // Inherit all functions and variables from the parent object and its parent objects. Then, toggle the item
@@ -47,17 +54,19 @@ on_player_interact = function(_delta){
 	// Only a portion of the available amount could be added to the player's item inventory. The text shown in
 	// the textbox will say how much was picked up; along with flavor text letting the player know that they
 	// have no room left in their item inventory.
-	var _itemID = itemID;
+	var _itemID		= itemID;
+	var _quantity	= itemQuantity - _amount;
 	if (_amount > 0){
-		var _remainder = itemQuantity - _amount;
 		with(TEXTBOX){
-			queue_new_text(string("Picked up {1} {0}. There's no room for the rest, though...", _itemID, _remainder));
+			queue_new_text(ITMPCKUP_MESSAGE_SHOW_AMOUNT + " There's no room for the rest, though...");
 			activate_textbox();
 		}
 		
-		// Update the quantity stored in the item's world data to match how much was left behind.
+		// Update the quantity stored in the item's world data to match how much was left behind. Also update
+		// the object's stored quantity to match the amount leftover as well.
 		with(world_item_get(worldItemID))
-			quantity = _remainder;
+			quantity = _amount;
+		itemQuantity = _amount;
 		return;
 	}
 	
@@ -73,10 +82,9 @@ on_player_interact = function(_delta){
 	// Create the message that will be displayed in the textbox. If the value in _itemStackLimit is one it
 	// means that the quantity added to the inventory isn't displayed in the textbox. Otherwise, it will be
 	// shown next to the item's name in brackets.
-	var _quantity		= itemQuantity;
 	with(TEXTBOX){
-		if (_itemStackLimit == 1)	{ queue_new_text(string("Picked up {0}.", _itemID)); } 
-		else						{ queue_new_text(string("Picked up {0} (x{1}).", _itemID, _quantity)); }
+		if (_itemStackLimit == 1)	{ queue_new_text(ITMPCKUP_MESSAGE_STANDARD); }
+		else						{ queue_new_text(ITMPCKUP_MESSAGE_SHOW_AMOUNT); }
 		activate_textbox();
 	}
 	
