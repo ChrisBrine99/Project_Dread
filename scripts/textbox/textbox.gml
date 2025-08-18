@@ -57,6 +57,9 @@
 #macro	TBOX_ARROW_X_OFFSET				TBOX_BG_X_OFFSET + TBOX_BG_WIDTH - 14
 #macro	TBOX_ARROW_Y_OFFSET				TBOX_BG_Y_OFFSET + TBOX_BG_HEIGHT - 9
 
+// Determines how many pixels the arrow's offset/timer will roughly move in 1/60th of a second.
+#macro	TBOX_ARROW_MOVE_SPEED			0.07
+
 // Determines the opacity levels for the text as well as its drop shadow.
 #macro	TBOX_TEXT_ALPHA					1.0
 #macro	TBOX_TEXT_SHADOW_ALPHA			0.75
@@ -267,18 +270,23 @@ function str_textbox(_index) : str_base(_index) constructor {
 		var _xPos = floor(x);
 		var _yPos = floor(y);
 		
-		// 
+		// Display the background contents of the textbox, which includes the background that is always shown
+		// behind the text being displayed, and an arrow that shows up once it is possible to advance to the
+		// next chunk of text or close the texxtbox.
 		draw_sprite_stretched_ext(spr_tbox_background, 0, _xPos + TBOX_BG_X_OFFSET, _yPos + TBOX_BG_Y_OFFSET, 
 			TBOX_BG_WIDTH, TBOX_BG_HEIGHT, COLOR_TRUE_WHITE, alpha);
 		if (curChar == textLength){
-			// 
+			// Display the advance indicator at the bottom-right of the textbox window relative to the value 
+			// of the offset timer/value with the fraction component removed. 
 			draw_sprite_ext(spr_tbox_advance_indicator, 0, 
 				_xPos + TBOX_ARROW_X_OFFSET, 
 				_yPos + TBOX_ARROW_Y_OFFSET + floor(advArrowOffset),
 				1.0, 1.0, 0.0, COLOR_TRUE_WHITE, alpha
 			);
 			
-			advArrowOffset += 0.07 * _delta;
+			// Increment the value until it reaches 2.0 or higher, and then reduce it by two to bring it back
+			// to zero; allowing the arrow to bob up and down rhythmically on screen.
+			advArrowOffset += TBOX_ARROW_MOVE_SPEED * _delta;
 			if (advArrowOffset > 2.0)
 				advArrowOffset -= 2.0;
 		}
