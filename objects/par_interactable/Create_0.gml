@@ -55,6 +55,8 @@ on_player_interact = function(_delta){
 ///	shows the appropriate icon for the current input method's interact command; along with the text "interact".
 ///	
 draw_gui_event = function(){
+	draw_set_font(fnt_small); // Assign the proper font.
+	
 	// Get the current dimensions of the GUI layer in order to properly center the input binding icon (If one
 	// currently exists for the input) and the descriptive text that goes alongside it. If no icon exists,
 	// only the text will be shown to tell the player they can interact with an object.

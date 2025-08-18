@@ -27,8 +27,9 @@ for (var i = 0; i < _length; i++){
 
 // Attempt to render the textbox onto the screen, but only if the alpha isn't below the minimum threshold and
 // if its current y coordinate has it visible on the screen. Otherwise, it will not be rendered.
+var _delta = global.deltaTime;
 with(TEXTBOX){
 	if (alpha <= _minAlpha || y >= VIEWPORT_HEIGHT)
 		break;
-	draw_gui_event();
+	draw_gui_event(_delta);
 }

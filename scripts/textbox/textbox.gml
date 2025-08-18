@@ -38,9 +38,10 @@
 
 // Macros for the characteristics of the textbox's background texture that the text surface will be drawn onto.
 // They represent the width, height, and opacity/alpha value of said background, respectively.
+#macro	TBOX_BG_X_OFFSET				0
+#macro	TBOX_BG_Y_OFFSET				8
 #macro	TBOX_BG_WIDTH					VIEWPORT_WIDTH - 20
-#macro	TBOX_BG_HEIGHT					50
-#macro	TBOX_BG_ALPHA					0.75
+#macro	TBOX_BG_HEIGHT					42
 
 // The pixel offsets from the current x/y position of the textbox that the text contents will be rendered at.
 // The shadow for the text is offset one to the left and down to create a simple drop shadow effect on the text.
@@ -51,9 +52,14 @@
 #macro	TBOX_SURFACE_X_PADDING			1
 #macro	TBOX_SURFACE_Y_PADDING			2
 
+// Constants for the x and y position of the textbox's advance arrow indicator which appears when the current 
+// text to display has completely typed itself out onto the main textbox window.
+#macro	TBOX_ARROW_X_OFFSET				TBOX_BG_X_OFFSET + TBOX_BG_WIDTH - 14
+#macro	TBOX_ARROW_Y_OFFSET				TBOX_BG_Y_OFFSET + TBOX_BG_HEIGHT - 9
+
 // Determines the opacity levels for the text as well as its drop shadow.
 #macro	TBOX_TEXT_ALPHA					1.0
-#macro	TBOX_TEXT_SHADOW_ALPHA			0.5
+#macro	TBOX_TEXT_SHADOW_ALPHA			0.75
 
 // Determines how much additional time is applied to the "wait" timer during the textbox's text typing process
 // whenever a given punctuation character has been hit.
@@ -133,6 +139,9 @@ function str_textbox(_index) : str_base(_index) constructor {
 	colorDataRef	= -1;
 	totalColors		= 0;
 	charColorIndex	= 0;
+	
+	// 
+	advArrowOffset	= 0.0;
 
 	/// @description 
 	///	The textbox struct's destroy event. It will clean up anything that isn't automatically cleaned up by
@@ -151,7 +160,8 @@ function str_textbox(_index) : str_base(_index) constructor {
 	///	Called to render the textbox and its current contents whenever the textbox struct is currently showing
 	/// information taht has been queued up for the player to see.
 	///	
-	draw_gui_event = function(){
+	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
+	draw_gui_event = function(_delta){
 		// Ensures that the surface will be valid should it randomly be flushed from memory by the GPU. Then,
 		// the previous surface's contents are copied from their buffer onto the newly formed surface.
 		if (!surface_exists(textSurface)){
@@ -257,9 +267,21 @@ function str_textbox(_index) : str_base(_index) constructor {
 		var _xPos = floor(x);
 		var _yPos = floor(y);
 		
-		// TODO -- Replace this rectangle with an actual textbox graphic.
-		draw_sprite_ext(spr_rectangle, 0, _xPos, _yPos, 
-			TBOX_BG_WIDTH, TBOX_BG_HEIGHT, 0.0, COLOR_LIGHT_GRAY, alpha * TBOX_BG_ALPHA);
+		// 
+		draw_sprite_stretched_ext(spr_tbox_background, 0, _xPos + TBOX_BG_X_OFFSET, _yPos + TBOX_BG_Y_OFFSET, 
+			TBOX_BG_WIDTH, TBOX_BG_HEIGHT, COLOR_TRUE_WHITE, alpha);
+		if (curChar == textLength){
+			// 
+			draw_sprite_ext(spr_tbox_advance_indicator, 0, 
+				_xPos + TBOX_ARROW_X_OFFSET, 
+				_yPos + TBOX_ARROW_Y_OFFSET + floor(advArrowOffset),
+				1.0, 1.0, 0.0, COLOR_TRUE_WHITE, alpha
+			);
+			
+			advArrowOffset += 0.07 * _delta;
+			if (advArrowOffset > 2.0)
+				advArrowOffset -= 2.0;
+		}
 		
 		// Simply draw the currently rendered text onto the screen with this single draw call.
 		draw_surface_ext(textSurface, _xPos + TBOX_TEXT_X_OFFSET, _yPos + TBOX_TEXT_Y_OFFSET, 

@@ -46,6 +46,7 @@
     {"$GMFolder":"","%Name":"Sprites","folderPath":"folders/Sprites/Tilesets/Apartment/Sprites.yy","name":"Sprites","resourceType":"GMFolder","resourceVersion":"2.0",},
     {"$GMFolder":"","%Name":"UI","folderPath":"folders/Sprites/UI.yy","name":"UI","resourceType":"GMFolder","resourceVersion":"2.0",},
     {"$GMFolder":"","%Name":"Control Icons","folderPath":"folders/Sprites/UI/Control Icons.yy","name":"Control Icons","resourceType":"GMFolder","resourceVersion":"2.0",},
+    {"$GMFolder":"","%Name":"Textbox","folderPath":"folders/Sprites/UI/Textbox.yy","name":"Textbox","resourceType":"GMFolder","resourceVersion":"2.0",},
   ],
   "ForcedPrefabProjectReferences":[],
   "IncludedFiles":[
@@ -116,6 +117,8 @@
     {"id":{"name":"spr_rectangle","path":"sprites/spr_rectangle/spr_rectangle.yy",},},
     {"id":{"name":"spr_solid_collider","path":"sprites/spr_solid_collider/spr_solid_collider.yy",},},
     {"id":{"name":"spr_table_small1","path":"sprites/spr_table_small1/spr_table_small1.yy",},},
+    {"id":{"name":"spr_tbox_advance_indicator","path":"sprites/spr_tbox_advance_indicator/spr_tbox_advance_indicator.yy",},},
+    {"id":{"name":"spr_tbox_background","path":"sprites/spr_tbox_background/spr_tbox_background.yy",},},
     {"id":{"name":"spr_world_items","path":"sprites/spr_world_items/spr_world_items.yy",},},
     {"id":{"name":"ts_apartment_ceiling","path":"tilesets/ts_apartment_ceiling/ts_apartment_ceiling.yy",},},
     {"id":{"name":"ts_apartment_floors","path":"tilesets/ts_apartment_floors/ts_apartment_floors.yy",},},
