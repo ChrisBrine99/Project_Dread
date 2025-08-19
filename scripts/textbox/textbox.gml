@@ -62,7 +62,7 @@
 
 // Determines the opacity levels for the text as well as its drop shadow.
 #macro	TBOX_TEXT_ALPHA					1.0
-#macro	TBOX_TEXT_SHADOW_ALPHA			0.75
+#macro	TBOX_TEXT_SHADOW_ALPHA			0.8
 
 // Determines how much additional time is applied to the "wait" timer during the textbox's text typing process
 // whenever a given punctuation character has been hit.
@@ -255,7 +255,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 				// Once the proper coordinates have been set as required, the character is drawn and the width
 				// of the drawn character is added to properly offset the next character in the string.
 				draw_text_shadow(charX, charY, _curChar, 
-					_curColor, TBOX_TEXT_ALPHA, COLOR_BLACK, TBOX_TEXT_SHADOW_ALPHA);
+					_curColor, TBOX_TEXT_ALPHA, COLOR_DARK_GRAY, TBOX_TEXT_SHADOW_ALPHA);
 				charX    += string_width(_curChar);
 			}
 			

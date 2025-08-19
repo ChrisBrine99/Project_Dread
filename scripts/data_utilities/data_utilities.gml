@@ -1,9 +1,8 @@
 #region Globals Related to General Data Management
 
-// Upon initialization, it stores the value -1, but will contain a map of structs that contain all the info
-// about every item that can be collected within the game. This data is loaded in when a save file is loaded
-// or a new playthrough is started.
+// 
 global.itemData			= -1;
+global.itemIDs			= -1;
 
 // A map struct that will contain information about items in the game world. It will contain items that have
 // been placed manually and also any items that were dropped from the item inventory by the player.
@@ -124,10 +123,12 @@ function load_item_data(_filename){
 		
 	var _startTime = get_timer();
 	
+	// Attempt to load in the data from the JSON file specified. If the load fails no items will be loaded.
 	var _itemData = load_json(_filename);
 	if (_itemData == -1) // Invalid file was provided; no data was parsed.
 		return;
-	global.itemData = ds_map_create();
+	global.itemData = ds_map_create();	// Stores the item data in structs; manages the references.
+	global.itemIDs	= array_create(0, ID_INVALID); // Stores an ID/reference pair for access via ID instead of name/key.
 	
 	var _sectionContents = -1;
 	var _itemContents	 = -1;
@@ -135,17 +136,21 @@ function load_item_data(_filename){
 	var _curItemID		 = "";
 	while(!is_undefined(_curSection)){
 		_sectionContents = _itemData[? _curSection];
-		if (is_undefined(_sectionContents))
+		if (is_undefined(_sectionContents)) // The section in question doesn't exist; exit main loop early.
 			break;
 			
+		// Find the first element in the section that is being parsed. Then, loop through that section until
+		// there are no more items in the sections to parse (The loop exits early if invalid data is found).
 		_curItemID = ds_map_find_first(_sectionContents);
 		while(!is_undefined(_curItemID)){
 			_itemContents = _sectionContents[? _curItemID];
-			if (is_undefined(_itemContents))
+			if (is_undefined(_itemContents)) // Item with the current ID is invalid; exit inner loop early.
 				break;
 			
+			// Load the item into the correct format that the game expects; parsing out its combo data from a
+			// string into structs containing the requirements and outcomes for a combo.
 			load_item(_curSection, _itemContents[? KEY_NAME], _curItemID, _itemContents);
-			_curItemID = ds_map_find_next(_sectionContents, _curItemID);
+			_curItemID = ds_map_find_next(_sectionContents, _curItemID); // Move onto the next item.
 		}
 		
 		_curSection = ds_map_find_next(_itemData, _curSection);
@@ -171,21 +176,26 @@ function load_item_data(_filename){
 ///	@param {Id.DsMap}	data		The raw contents of the item within the unprocessed data.
 function load_item(_section, _itemKey, _itemIndex, _data){
 	if (string_digits(_itemIndex) == "")
-		return;
-	ds_map_add(global.itemData, _itemKey, {
-		index		:	real(_itemIndex),
+		return; // Don't load the item if there isn't a proper ID that can be used for storing the item's data.
+		
+	// Create the struct and add it to the global item data structure (This data struct is responsible for 
+	// deleting the struct once it is no longer needed). Also add that reference to a list at the position
+	// that matches the id value of the item.
+	var _itemID			= real(_itemIndex);
+	var _itemStructRef	= {
 		typeID		:   ITEM_TYPE_INVALID,
 		itemName	:	_itemKey,
 		itemInfo	:	"",
 		stackLimit	:	0,
 		flags		:	0,
-	});
-	var _item = global.itemData[? _itemKey];
+	};
+	array_set(global.itemIDs, _itemID, _itemStructRef);
+	ds_map_add(global.itemData, _itemKey, _itemStructRef);
 	
 	// Before implementing anything about the item, the first step is to check if there is a list of valid
 	// combos and resulting item from said combo being performed. If they both exist, their lists will be
 	// parsed and processed here instead of repeating this chunk of code for various items based on type.
-	with(_item){
+	with(_itemStructRef){
 		// Immediately stops attempting to parse any combination data if either piece of data doesn't exist.
 		if (is_undefined(_data[? KEY_VALID_COMBOS]) || is_undefined(_data[? KEY_COMBO_RESULTS]))
 			continue;
@@ -213,7 +223,7 @@ function load_item(_section, _itemKey, _itemIndex, _data){
 	
 	switch(_section){
 		case KEY_WEAPONS: // Parse through the data of a weapon item.
-			with(_item){
+			with(_itemStructRef){
 				typeID		= ITEM_TYPE_WEAPON;
 				stackLimit	=_data[? KEY_STACK];
 				
@@ -245,7 +255,7 @@ function load_item(_section, _itemKey, _itemIndex, _data){
 			}
 			break;
 		case KEY_AMMO: // Parse through the data of an ammo item.
-			with(_item){
+			with(_itemStructRef){
 				typeID		= ITEM_TYPE_AMMO;
 				stackLimit	= _data[? KEY_STACK];
 				
@@ -262,7 +272,7 @@ function load_item(_section, _itemKey, _itemIndex, _data){
 			}
 			break;
 		case KEY_CONSUMABLE: // Parse through the data of a consumable item.
-			with(_item){
+			with(_itemStructRef){
 				typeID		= ITEM_TYPE_CONSUMABLE;
 				stackLimit	= 1;	// Consumable items will ALWAYS have a limit of one per inventory slot.
 				
@@ -285,24 +295,24 @@ function load_item(_section, _itemKey, _itemIndex, _data){
 				// Initialize these two variables with the default values of -1 should they not exist. 
 				// Otherwise, they will have already been initialized as arrays in the code block directly 
 				// above this switch statement.
-				if (!variable_struct_exists(_item, "validCombo"))	{ validCombo = -1; }
-				if (!variable_struct_exists(_item, "comboResult"))	{ comboResult = -1; }
+				if (!variable_struct_exists(_itemStructRef, "validCombo"))	{ validCombo = -1; }
+				if (!variable_struct_exists(_itemStructRef, "comboResult"))	{ comboResult = -1; }
 			}
 			break;
 		case KEY_COMBINABLE: // Parse through the data of a combinable item.
-			with(_item){
+			with(_itemStructRef){
 				typeID		= ITEM_TYPE_COMBINABLE;
 				stackLimit	= 1;	// Combinable items will ALWAYS have a limit of one per inventory slot.
 				
 				// Initialize these two variables with the default values of -1 should they not exist. 
 				// Otherwise, they will have already been initialized as arrays in the code block directly 
 				// above this switch statement.
-				if (!variable_struct_exists(_item, "validCombo"))	{ validCombo = -1; }
-				if (!variable_struct_exists(_item, "comboResult"))	{ comboResult = -1; }
+				if (!variable_struct_exists(_itemStructRef, "validCombo"))	{ validCombo = -1; }
+				if (!variable_struct_exists(_itemStructRef, "comboResult"))	{ comboResult = -1; }
 			}
 			break;
 		case KEY_EQUIPABLE: // Parse through the data of an equipable item.
-			with(_item){
+			with(_itemStructRef){
 				typeID		= ITEM_TYPE_EQUIPABLE;
 				stackLimit	= 1;	// Equipable items will ALWAYS have a limit of one per inventory slot.
 				
@@ -315,15 +325,15 @@ function load_item(_section, _itemKey, _itemIndex, _data){
 			}
 			break;
 		case KEY_KEY_ITEMS: // Parse through the data of a key item.
-			with(_item){
+			with(_itemStructRef){
 				typeID		= ITEM_TYPE_KEY_ITEM;
 				stackLimit	= _data[? KEY_STACK];
 				
 				// Initialize these two variables with the default values of -1 should they not exist. 
 				// Otherwise, they will have already been initialized as arrays in the code block directly 
 				// above this switch statement.
-				if (!variable_struct_exists(_item, "validCombo"))	{ validCombo = -1; }
-				if (!variable_struct_exists(_item, "comboResult"))	{ comboResult = -1; }
+				if (!variable_struct_exists(_itemStructRef, "validCombo"))	{ validCombo = -1; }
+				if (!variable_struct_exists(_itemStructRef, "comboResult"))	{ comboResult = -1; }
 			}
 			break;
 	}
