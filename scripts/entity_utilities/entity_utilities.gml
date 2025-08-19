@@ -80,7 +80,7 @@ function entity_set_sprite(_sprite, _speed = 1.0, _start = 0, _loopStart = 0){
 ///	@param {Real}	strength	(Optional) How bright the light source appears in the world (Alpha under a different name).
 /// @param {Real}	lifetime	(Optional) Determines how long the light is alive for relative to its creation.
 /// @param {Real}	flags		(Optional) Determines which substate bits to toggle on for the light.
-function entity_add_basic_light(_x, _y, _radius, _color = COLOR_TRUE_WHITE, _strength = 1.0, _lifetime = 0.0, _flags = 0){
+function entity_add_basic_light(_x, _y, _radius, _color = COLOR_TRUE_WHITE, _strength = 1.0, _lifetime = 0.0, _flags = LGHT_FLAG_ACTIVE){
 	// Don't attempt to create a light source if a reference already occupies the storage variable.
 	if (lightSource)
 		return;

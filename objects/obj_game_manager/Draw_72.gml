@@ -1,0 +1,1 @@
+draw_clear(COLOR_BLACK);	// Manually clearing the frame buffer.

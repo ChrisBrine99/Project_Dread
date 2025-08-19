@@ -11,6 +11,15 @@
 #macro	ITEM_TYPE_EQUIPABLE				4
 #macro	ITEM_TYPE_KEY_ITEM				5
 
+// Macros for the equipment index values for certain item types which will determine which slot of the player's
+// current equipment will be occupied by it when equipped.
+#macro	ITEM_EQUIP_TYPE_INVALID		   -2
+#macro	ITEM_EQUIP_TYPE_FLASHLIGHT		10
+#macro	ITEM_EQUIP_TYPE_ARMOR			11
+#macro	ITEM_EQUIP_TYPE_MAINWEAPON		12
+#macro	ITEM_EQUIP_TYPE_SUBWEAPON		13 // Throwables are considered subweapons.
+#macro	ITEM_EQUIP_TYPE_AMULET			14
+
 // Macros for the bit values of the flags that exist within every weapon-type item.
 #macro	WEAP_FLAG_IS_MELEE				0x00000001
 #macro	WEAP_FLAG_IS_AUTOMATIC			0x00000002
@@ -39,17 +48,22 @@
 #macro	CNSM_GIVES_TMPIMU_BLEED			((flags & CNSM_FLAG_TMPIMU_BLEED)	!= 0)
 #macro	CNSM_GIVES_TMPIMU_CRIPPLE		((flags & CNSM_FLAG_TMPIMU_CRIPPLE)	!= 0)
 
+// Macros that explain what each index in the equipParams array does when the item is considered a flashlight.
+#macro	EQUP_PARAM_LIGHT_RADIUS			0
+#macro	EQUP_PARAM_LIGHT_COLOR			1
+#macro	EQUP_PARAM_LIGHT_STRENGTH		2
+
 // Macro that represents an inventory slot that current has no item contained within it.
 #macro	INV_EMPTY_SLOT				   -1
 
-//
+// Macros that store the starting size of the item inventory for each combat difficulty level.
 #macro	ITEMINV_START_SIZE_FORGIVING	10
 #macro	ITEMINV_START_SIZE_STANDARD		10
 #macro	ITEMINV_START_SIZE_PUNISHING	8
 #macro	ITEMINV_START_SIZE_NIGHTMARE	8
 #macro	ITEMINV_START_SIZE_ONELIFE		6
 
-// 
+// Macros that store the maximum possible size of the item inventory for each combat difficulty level.
 #macro	ITEMINV_MAX_SIZE_FORGIVING		24
 #macro	ITEMINV_MAX_SIZE_STANDARD		20
 #macro	ITEMINV_MAX_SIZE_PUNISHING		16
@@ -199,16 +213,16 @@ function item_inventory_initialize(_cmbDiffFlagBit){
 /// it couldn't be added to the inventory due to the inventory not being initialized, the item id being invalid
 /// or the inventory being completely full.
 ///	
-///	@param {Real}	itemID		Number representing the item within the game's data.
+///	@param {String}	item		String representing the name/key of the item.
 ///	@param {Real}	amount		How many of said item will be added to the inventory.
 /// @param {Real}	durability	The item's current condition (This value is only used on higher difficulties).
-function item_inventory_add(_itemID, _amount, _durability){
+function item_inventory_add(_item, _amount, _durability){
 	// Don't try adding anything to an uninitialized inventory.
 	if (!is_array(global.curItems))
 		return _amount;
 	
 	// Make sure the item id points to a valid item. Otherwise, don't even attempt to add it to the inventory.
-	var _itemData = global.itemData[? _itemID];
+	var _itemData = global.itemData[? _item];
 	if (is_undefined(_itemData))
 		return _amount;
 	
@@ -229,7 +243,7 @@ function item_inventory_add(_itemID, _amount, _durability){
 			with(_invItem){
 				// Either the item id doesn't match the current item in the slot OR the slot is already maxed
 				// out in capacity for the item in question. Move onto the next slot.
-				if (itemID != _itemID || quantity == _maxPerSlot)
+				if (itemID != _item || quantity == _maxPerSlot)
 					break;
 				
 				// The amount to be added exceeds what can be stored inside a single slot. So, the amount that
@@ -253,7 +267,8 @@ function item_inventory_add(_itemID, _amount, _durability){
 		
 		// Create a new inventory item struct and set the inventory slot to its reference value.
 		_invItem = {
-			itemID		: _itemID,
+			itemName	: _item,
+			itemID		: _itemData.itemID,
 			quantity	: _amount,
 			durability	: _durability
 		};

@@ -89,6 +89,11 @@ function load_json(_filename){
 #macro	KEY_TYPE						"Type"
 #macro	KEY_EQUIP_PARAMS				"Equip_Params"
 
+// Macros for the unprocessed string representations of the non-weapon/ammo equipment types.
+#macro	IDATA_STR_TYPE_LIGHT			"light"
+#macro	IDATA_STR_TYPE_ARMOR			"armor"
+#macro	IDATA_STR_TYPE_AMULET			"amulet"
+
 // Macros for keys that only appear within the Key_Items section of the unprocessed item data structure.
 #macro	KEY_CAN_USE_FLAG				"Can_Use"
 #macro	KEY_CAN_DROP_FLAG				"Can_Drop"
@@ -185,6 +190,7 @@ function load_item(_section, _itemKey, _itemIndex, _data){
 	var _itemStructRef	= {
 		typeID		:   ITEM_TYPE_INVALID,
 		itemName	:	_itemKey,
+		itemID		:	_itemID,
 		itemInfo	:	"",
 		stackLimit	:	0,
 		flags		:	0,
@@ -244,6 +250,11 @@ function load_item(_section, _itemKey, _itemIndex, _data){
 							  (bool(_data[? KEY_IS_AUTO_FLAG])		<<	 1	) |
 							  (bool(_data[? KEY_IS_BURST_FLAG])		<<	 2	) |
 							  (bool(_data[? KEY_IS_THROWN_FLAG])	<<	 3	);
+							  
+				// Determine which type of weapon this is when equipped by checking if the item is thrown or
+				// not. If it is thrown, it will always be considered a subweapon.
+				if (WEAPON_IS_THROWN)	{ equipType = ITEM_EQUIP_TYPE_SUBWEAPON; }
+				else					{ equipType = ITEM_EQUIP_TYPE_MAINWEAPON; }
 				
 				// Copy over the item IDs for the various ammo types the given weapon can utilize from the raw
 				// JSON data's ds_list that the text arrays are converted to by GML.
@@ -320,8 +331,17 @@ function load_item(_section, _itemKey, _itemIndex, _data){
 				// needed for an equipable-type item (The durability variable serves the same purpose as the 
 				// one found in weapon-type items).
 				durability	= _data[? KEY_DURABILITY];
-				equipType	= _data[? KEY_TYPE];
-				equipParams	= _data[? KEY_EQUIP_PARAMS];
+				equipType	= equipment_get_type_index(_data[? KEY_TYPE]);
+				
+				// 
+				var _paramList	 = _data[? KEY_EQUIP_PARAMS];
+				var _totalParams = ds_list_size(_paramList);
+				if (_totalParams == 0) { break; }
+				
+				// 
+				equipParams = array_create(_totalParams, -1);
+				for (var i = 0; i < _totalParams; i++)
+					equipParams[i] = _paramList[| i];
 			}
 			break;
 		case KEY_KEY_ITEMS: // Parse through the data of a key item.
@@ -487,6 +507,20 @@ function create_result_combo_struct(_indexString, _minString, _maxString){
 		minResult	: _minResult,
 		maxResult	: max(_minResult, _maxResult),
 	};
+}
+
+/// @description 
+///	Returns a numerical value that is tied to the human-readable string version of that number's purpose
+/// within the game's logic.
+///	
+/// @param {String}		typeString	The unformatted version of the euqipment's "type", which will be converted to its proper numerical value.
+function equipment_get_type_index(_typeString){
+	switch(string_lower(_typeString)){
+		default:						return ITEM_EQUIP_TYPE_INVALID;
+		case IDATA_STR_TYPE_LIGHT:		return ITEM_EQUIP_TYPE_FLASHLIGHT;
+		case IDATA_STR_TYPE_ARMOR:		return ITEM_EQUIP_TYPE_ARMOR;
+		case IDATA_STR_TYPE_AMULET:		return ITEM_EQUIP_TYPE_AMULET;
+	}
 }
 
 #endregion Item Data Parsing Functions

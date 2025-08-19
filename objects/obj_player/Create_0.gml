@@ -154,7 +154,7 @@ maxMoveSpeed		= PLYR_SPEED_NORMAL;
 
 // Create a very dim ambient light that will illuminate the player's face when in complete darkness.
 entity_add_basic_light(PLYR_AMBLIGHT_XOFFSET, PLYR_AMBLIGHT_YOFFSET, 
-	PLYR_AMBLIGHT_RADIUS, PLYR_AMBLIGHT_COLOR, PLYR_AMBLIGHT_STRENGTH, 0.0, STR_FLAG_PERSISTENT);
+	PLYR_AMBLIGHT_RADIUS, PLYR_AMBLIGHT_COLOR, PLYR_AMBLIGHT_STRENGTH, 0.0, STR_FLAG_PERSISTENT | LGHT_FLAG_ACTIVE);
 
 // Set the starting sprite for the player.
 entity_set_sprite(spr_player_unarmed);
@@ -211,12 +211,14 @@ poisonDamagePercent	= PLYR_POISON_BASE_DAMAGE;
 // throughout the game. The first four are used in all playthroughs, and the remaining two "amulet" slots are 
 // exclusive to new game+ modes.
 equipment = {
-	weapon			: ID_INVALID,
-	weaponAmmo		: ID_INVALID,
-	armor			: ID_INVALID,
-	flashlight		: ID_INVALID,
-	firstAmulet		: ID_INVALID,
-	secondAmulet	: ID_INVALID,
+	weapon				: INV_EMPTY_SLOT,
+	ammoArrayRef		: ID_INVALID,
+	curAmmoIndex		: INV_EMPTY_SLOT,
+	armor				: INV_EMPTY_SLOT,
+	light				: INV_EMPTY_SLOT,
+	lightParamRef		: ID_INVALID,
+	firstAmulet			: INV_EMPTY_SLOT,
+	secondAmulet		: INV_EMPTY_SLOT,
 };
 
 // Stores the instance ID for the nearest interactable object to the player's current position.
@@ -332,6 +334,56 @@ pause_player = function(){
 }
 
 #endregion Utility Function Definitions
+
+#region Equipment Function Definitions
+
+/// @description 
+///	
+///	
+///	@param {Real}	itemSLot		Slot in the item inventory where the flashlight being equipped is located.
+equip_flashlight = function(_itemSlot){
+	if (_itemSlot < 0 || _itemSlot >= array_length(global.curItems) || global.curItems[_itemSlot] == INV_EMPTY_SLOT)
+		return; // Exit early if the slot value is out of bounds or the slot provided is actually empty.
+	
+	var _itemID			= global.curItems[_itemSlot].itemID;
+	var _itemStructRef	= array_get(global.itemIDs, _itemID);
+	if (is_undefined(_itemStructRef) || _itemStructRef.equipType != ITEM_EQUIP_TYPE_FLASHLIGHT)
+		return; // The item with the given ID doesn't exist or the equipment isn't a flashlight; exit early.
+	
+	// 
+	var _paramRef = 0;
+	with(equipment){
+		light			= _itemSlot;
+		lightParamRef	= _itemStructRef.equipParams;
+		_paramRef		= lightParamRef;
+	}
+	
+	// 
+	flags |= PLYR_FLAG_FLASHLIGHT;
+	lightSource.light_set_properties(
+		_paramRef[EQUP_PARAM_LIGHT_RADIUS],
+		_paramRef[EQUP_PARAM_LIGHT_COLOR], 
+		_paramRef[EQUP_PARAM_LIGHT_STRENGTH]
+	);
+}
+
+/// @description 
+///	
+///	
+unequip_flashlight = function(){
+	if (equipment.light == INV_EMPTY_SLOT)
+		return; // No need to uneuqip since no flashlight is equipped; exit the function.
+	
+	flags		   &= ~PLYR_FLAG_FLASHLIGHT;
+	lightSource.light_set_properties(PLYR_AMBLIGHT_RADIUS, PLYR_AMBLIGHT_COLOR, PLYR_AMBLIGHT_STRENGTH);
+	
+	with(equipment){
+		light			= INV_EMPTY_SLOT;
+		lightParamRef	= ID_INVALID;
+	}
+}
+
+#endregion Equipment Function Definitions
 
 #region End Step Event Function Override Definition
 
@@ -467,7 +519,7 @@ state_default = function(_delta){
 	}
 	
 	// Handling the input for toggling the flashlight on and off (If one happens to be equipped).
-	if (PINPUT_FLASHLIGHT_PRESSED && equipment.flashlight != ID_INVALID){
+	if (PINPUT_FLASHLIGHT_PRESSED && equipment.light != INV_EMPTY_SLOT){
 		// Turning off the flashlight; returning the player's ambient light to its default parameters.
 		if (PLYR_IS_FLASHLIGHT_ON){
 			flags &= ~PLYR_FLAG_FLASHLIGHT;
@@ -476,7 +528,14 @@ state_default = function(_delta){
 			lightSource.light_set_properties(PLYR_AMBLIGHT_RADIUS, PLYR_AMBLIGHT_COLOR, PLYR_AMBLIGHT_STRENGTH);
 		} else{ // Turning on the flashlight; using the properties of the equipped flashlight.
 			flags |= PLYR_FLAG_FLASHLIGHT;
-			//lightSource.light_set_properties(64.0, COLOR_VERY_LIGHT_YELLOW, 0.8);
+			var _light = lightSource;
+			with(equipment){ // Jump into the equipment struct so the light's parameters can be referenced.
+				_light.light_set_properties(
+					lightParamRef[EQUP_PARAM_LIGHT_RADIUS], 
+					lightParamRef[EQUP_PARAM_LIGHT_COLOR],
+					lightParamRef[EQUP_PARAM_LIGHT_STRENGTH]
+				);
+			}
 		}
 	}
 	
@@ -582,3 +641,6 @@ state_player_paused = function(_delta){
 }
 
 #endregion State Function Definitions
+
+item_inventory_add("Flashlight", 1, 0);
+equip_flashlight(0);
