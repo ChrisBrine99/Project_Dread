@@ -285,12 +285,17 @@ function string_split_lines(_string, _font, _maxWidth, _maxLines = 1){
 		// ignored and whatever is formatted already is returned.
 		if (_curChar == CHAR_SPACE || i == _numChars){
 			var _wordWidth = string_width(_curWord);
-			if (_lineWidth + _wordWidth > _maxWidth){
+			if (_lineWidth + _wordWidth + _spaceWidth > _maxWidth){
 				if (_totalLines == _maxLines)
 					break;
+				 // Remove the unnecessary space at the end of the line. Then, add the line the the formatted
+				 // string with the space character replaces with a newline character instead.
+				if (string_ends_with(_curLine, CHAR_SPACE))
+					_newString  = string_delete(_newString, string_length(_newString), 1);
+					
 				_newString	   += _curLine + CHAR_NEWLINE;
 				_totalLines	   += 1;
-				_lineWidth		= _wordWidth;
+				_lineWidth		= _wordWidth + _spaceWidth;
 				_curLine		= _curWord + _curChar;
 				_curWord		= "";
 				continue;
@@ -310,6 +315,7 @@ function string_split_lines(_string, _font, _maxWidth, _maxLines = 1){
 					break;
 			_newString	   += _curLine + _curWord + CHAR_NEWLINE;
 			_totalLines    += 1;
+			_lineWidth		= 0;
 			_curLine		= "";
 			_curWord		= "";
 			continue;
@@ -369,6 +375,7 @@ function string_parse_color_data(_string){
 		var _endRegionIndex	= string_pos_ext(CHAR_REGION_END, _string, _charIndex);
 		if (_endRegionIndex == 0) 
 			_endRegionIndex = _strLength;
+		_string = string_delete(_string, _endRegionIndex, 1);
 		
 		// Finally, add the parsed data into a struck that will hold the information of the color to use, the
 		// first character to use it on, and the final character to use it on.

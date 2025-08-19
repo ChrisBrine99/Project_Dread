@@ -223,8 +223,8 @@ function str_textbox(_index) : str_base(_index) constructor {
 						if (_curCharIndex > endIndex){
 							_curColor = COLOR_WHITE;
 							other.charColorIndex++; 
-						} else if (_curCharIndex >= startIndex){
-							_curColor = colorCode; 
+						} else if (_curCharIndex > startIndex){
+							_curColor = colorCode;
 						}
 					}
 				}
@@ -390,6 +390,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 		if (_prevActorIndex != _newActorIndex)
 			object_set_state(state_close_animation);
 		
+		process_text_to_show(_index); // Format and parse the text before anything below is executed.
 		flags		   |= TBOX_FLAG_CLEAR_SURFACE;
 		textLength		= string_length(_textData.content) + 1;
 		textIndex		= _index;
@@ -420,15 +421,36 @@ function str_textbox(_index) : str_base(_index) constructor {
 	/// @param {Real}	actorIndex	(Optional) If set to a value greater than 0, the actor's name relative to the index will be shown.
 	///	@param {Real}	nextIndex	(Optional) Determines which textbox out of the current data is after this one.
 	queue_new_text = function(_text, _actorIndex = 0, _nextIndex = -1){
-		var _parsedData = string_parse_color_data(_text);
+		if (_text == "") // Don't attempt to add empty text to the queue.
+			return;
 		ds_list_add(textData, {
-			content		: string_split_lines(_parsedData.fullText, fnt_small, 
-							TBOX_SURFACE_WIDTH - (TBOX_SURFACE_X_PADDING * 2), TBOX_MAX_LINES_PER_BOX),
-			colorData	: _parsedData.colorData,
+			content		: _text,
+			colorData	: -1,
 			actorIndex	: _actorIndex,
 			nextIndex	: _nextIndex == -1 ? ds_list_size(textData) + 1 : _nextIndex,
 		});
-		delete _parsedData;
+	}
+	
+	/// @description 
+	///	The function that is responsible for actually parsing the data and formatting itself to meet the
+	/// requirements of the textbox. This means only one chunk of text is parsed per textbox shown instead
+	/// of every texxtbox being parsed and formatted immediately when the textbox is activated.
+	///	
+	/// @param {Real}	index	The text data to process since it will be shown soon or immediately.
+	process_text_to_show = function(_index){
+		// Don't bother considering an index that exists outside the bounds of the current amount of text data.
+		if (_index < 0 || _index >= ds_list_size(textData))
+			return;
+		
+		// Jump into the struct containing the data we want, and parse out any color information alongside the
+		// text that is then formatted to contain itself within the bounds of the textbox's available space.
+		with(textData[| _index]){
+			var _parsedData = string_parse_color_data(content);
+			content			= string_split_lines(_parsedData.fullText, fnt_small, 
+								TBOX_SURFACE_WIDTH - (TBOX_SURFACE_X_PADDING * 2), TBOX_MAX_LINES_PER_BOX);
+			colorData		= _parsedData.colorData;
+			delete _parsedData;
+		}
 	}
 	
 	/// @description

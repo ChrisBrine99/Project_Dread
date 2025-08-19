@@ -11,7 +11,7 @@ interactY	   += 8;
 // technically an item as well; it just immediately has its effect applied to the player's item inventory
 // capacity. THe textbox message is replaced to be a blurb about now being able to hold more items.
 interactMessage = "Pick Up Item";
-textboxMessage	= "Hmm... If I use this I should be able to hold more on me at the same time.\n@0xF87C58{(Two slots have been added to your item inventory)}";
+textboxMessage	= "Hmm... If I use this I should be able to hold more on me at the same time.\n(@0xF87C58{Two slots have been added to your item inventory})";
 
 // The only value that is needed here is a value that ties it to a bit within the event flag buffer. When set,
 // this flag will prevent the expansion in question from spawning in again for the player to pick up.
