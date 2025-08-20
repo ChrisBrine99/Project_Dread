@@ -10,7 +10,7 @@
   "overriddenProperties":[],
   "parent":{
     "name":"Items",
-    "path":"folders/Objects/Entity/Static/Other/Items.yy",
+    "path":"folders/Objects/Entity/Static/Interactable/Other/Items.yy",
   },
   "parentObjectId":{
     "name":"par_interactable",

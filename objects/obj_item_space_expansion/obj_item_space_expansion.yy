@@ -10,7 +10,7 @@
   "overriddenProperties":[],
   "parent":{
     "name":"Items",
-    "path":"folders/Objects/Entity/Static/Other/Items.yy",
+    "path":"folders/Objects/Entity/Static/Interactable/Other/Items.yy",
   },
   "parentObjectId":{
     "name":"par_interactable",
@@ -34,8 +34,8 @@
   "resourceVersion":"2.0",
   "solid":false,
   "spriteId":{
-    "name":"spr_world_items",
-    "path":"sprites/spr_world_items/spr_world_items.yy",
+    "name":"spr_item_pouch",
+    "path":"sprites/spr_item_pouch/spr_item_pouch.yy",
   },
   "spriteMaskId":{
     "name":"spr_empty_mask",

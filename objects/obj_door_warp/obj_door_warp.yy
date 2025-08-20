@@ -11,7 +11,7 @@
   "overriddenProperties":[],
   "parent":{
     "name":"Other",
-    "path":"folders/Objects/Entity/Static/Other.yy",
+    "path":"folders/Objects/Entity/Static/Interactable/Other.yy",
   },
   "parentObjectId":{
     "name":"par_interactable",

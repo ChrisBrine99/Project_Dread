@@ -8,8 +8,8 @@
   "name":"par_interactable",
   "overriddenProperties":[],
   "parent":{
-    "name":"Static",
-    "path":"folders/Objects/Entity/Static.yy",
+    "name":"Interactable",
+    "path":"folders/Objects/Entity/Static/Interactable.yy",
   },
   "parentObjectId":{
     "name":"par_static_entity",

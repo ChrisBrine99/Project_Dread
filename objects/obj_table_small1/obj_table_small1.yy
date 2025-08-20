@@ -9,7 +9,7 @@
   "overriddenProperties":[],
   "parent":{
     "name":"Interior",
-    "path":"folders/Objects/Entity/Static/Interior.yy",
+    "path":"folders/Objects/Entity/Static/Interactable/Interior.yy",
   },
   "parentObjectId":{
     "name":"par_interactable",

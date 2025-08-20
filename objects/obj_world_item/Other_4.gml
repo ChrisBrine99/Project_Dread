@@ -2,7 +2,7 @@
 // world item ID (This allows reference to the data struccture managing the item's properties between rooms), a
 // valid item ID, as well as a valid quantity (Greater than zero) and durability (Greater than or equals zero).
 if (worldItemID == ID_INVALID || itemID == ID_INVALID || itemQuantity <= 0 || itemDurability < 0){
-	instance_destroy(self);
+	instance_destroy(id);
 	return;
 }
 	
@@ -11,7 +11,7 @@ if (worldItemID == ID_INVALID || itemID == ID_INVALID || itemQuantity <= 0 || it
 var _data = world_item_get(worldItemID);
 if (_data == ID_INVALID){ // No value exists, check if the value exists in the "collected items" list and destroy if so.
 	if (ds_list_find_index(global.collectedItems, worldItemID) != -1){
-		instance_destroy(self);
+		instance_destroy(id);
 		return; // Exit early since the object was destoryed.
 	}
 	

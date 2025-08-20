@@ -3,14 +3,6 @@ image_speed		= 0.0;
 image_index		= 0;
 visible			= false;
 
-#region Adding Entity To Depth Sorting Grid
-
-var _height = ds_grid_height(global.sortOrder);
-ds_grid_resize(global.sortOrder, 2, _height + 1);
-ds_grid_set(global.sortOrder, 0, _height, id);
-
-#endregion Adding Entity To Depth Sorting Grid
-
 #region Variable Initializations
 
 // A value storing bits that enable/disable various aspects of the Entity's general functionality.

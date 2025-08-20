@@ -11,8 +11,8 @@
 
 // Macros that condense the checks required for specific states that the textbox must be in for it to process
 // certain aspects of the data it is displaying the user, if it is allowed to do that currently to begin with.
-#macro	TBOX_WAS_ADVANCE_PRESSED		((flags & TBOX_INFLAG_ADVANCE)		!= 0 && (prevInputFlags & TBOX_INFLAG_ADVANCE)	== 0)
-#macro	TBOX_WAS_TEXT_LOG_PRESSED		((flags & TBOX_INFLAG_TEXT_LOG)		!= 0 && (prevInputFlags & TBOX_INFLAG_TEXT_LOG)	== 0)
+#macro	TBOX_WAS_ADVANCE_PRESSED		((flags & TBOX_INFLAG_ADVANCE)		!= 0) && ((prevInputFlags & TBOX_INFLAG_ADVANCE)	== 0)
+#macro	TBOX_WAS_TEXT_LOG_PRESSED		((flags & TBOX_INFLAG_TEXT_LOG)		!= 0) && ((prevInputFlags & TBOX_INFLAG_TEXT_LOG)	== 0)
 #macro	TBOX_IS_ACTIVE					((flags & TBOX_FLAG_ACTIVE)			!= 0)
 #macro	TBOX_CAN_WIPE_DATA				((flags & TBOX_FLAG_WIPE_DATA)		!= 0)
 #macro	TBOX_SHOULD_CLEAR_SURFACE		((flags & TBOX_FLAG_CLEAR_SURFACE)	!= 0)
@@ -220,10 +220,10 @@ function str_textbox(_index) : str_base(_index) constructor {
 						// will be utilized on the next iteration of this character rendering logic. Otherwise,
 						// the desired color is set if the current character's index is higher than whatever
 						// the starting index for the color data is.
-						if (_curCharIndex > endIndex){
+						if (_curCharIndex >= endIndex){
 							_curColor = COLOR_WHITE;
 							other.charColorIndex++; 
-						} else if (_curCharIndex > startIndex){
+						} else if (_curCharIndex >= startIndex){
 							_curColor = colorCode;
 						}
 					}
@@ -357,7 +357,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 		global.flags   &= ~GAME_FLAG_TEXTBOX_OPEN;
 		if (!TBOX_CAN_WIPE_DATA) // Prevent deleting any text information if the flag isn't toggled.
 			return;
-		flags &= ~TBOX_CAN_WIPE_DATA;
+		flags &= ~TBOX_FLAG_WIPE_DATA;
 		
 		// Loop through and clear out the structs from within the textData data structures. All now undefined
 		// references will also be cleared and the structure is set back to a size of 0.

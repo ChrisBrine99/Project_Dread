@@ -288,11 +288,14 @@ function string_split_lines(_string, _font, _maxWidth, _maxLines = 1){
 			if (_lineWidth + _wordWidth + _spaceWidth > _maxWidth){
 				if (_totalLines == _maxLines)
 					break;
-				 // Remove the unnecessary space at the end of the line. Then, add the line the the formatted
-				 // string with the space character replaces with a newline character instead.
-				if (string_ends_with(_curLine, CHAR_SPACE))
-					_newString  = string_delete(_newString, string_length(_newString), 1);
 					
+				// Remove the unnecessary space at the end of the line (If one happens to be there). 
+				if (string_ends_with(_curLine, CHAR_SPACE))
+					_curLine = string_delete(_curLine, string_length(_curLine), 1);
+				
+				// After handling the potential extra space at the end of the line, add it to the formatted 
+				// with a newline character where the space used to be (If there was one). Then, set up a new
+				// line of text to be parsed.
 				_newString	   += _curLine + CHAR_NEWLINE;
 				_totalLines	   += 1;
 				_lineWidth		= _wordWidth + _spaceWidth;
@@ -301,6 +304,8 @@ function string_split_lines(_string, _font, _maxWidth, _maxLines = 1){
 				continue;
 			}
 			
+			// No newline character required, add the string to the end of the line alongside the current word.
+			// Update the width of the line to match these newly added characters.
 			_lineWidth += _wordWidth + _spaceWidth;
 			_curLine   += _curWord + _curChar;
 			_curWord	= "";

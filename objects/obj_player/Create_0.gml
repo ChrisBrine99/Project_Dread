@@ -144,7 +144,7 @@
 event_inherited();
 
 // Set the flags that are initially toggled upon the player object's creation.
-flags				= DENTT_FLAG_WORLD_COLLISION | ENTT_FLAG_OVERRIDE_DRAW | 
+flags			   |= DENTT_FLAG_WORLD_COLLISION | ENTT_FLAG_OVERRIDE_DRAW | 
 						ENTT_FLAG_VISIBLE | ENTT_FLAG_ACTIVE;
 
 // Set the player's acceleration and maximum movement speeds (Running allows the player to temporarily exceed
@@ -328,7 +328,7 @@ pause_player = function(){
 		return; // Don't pause the player again if they've been paused previously or a cutscene is active.
 	object_set_state(state_player_paused);
 	image_index		= animLoopStart;
-	flags		   &= ~(PLYR_FLAG_MOVING | PLYR_FLAG_SPRINTING);
+	flags		    = flags & ~(PLYR_FLAG_MOVING | PLYR_FLAG_SPRINTING);
 	animCurFrame	= 0.0;
 	moveSpeed		= 0.0;
 }
@@ -374,7 +374,7 @@ unequip_flashlight = function(){
 	if (equipment.light == INV_EMPTY_SLOT)
 		return; // No need to uneuqip since no flashlight is equipped; exit the function.
 	
-	flags		   &= ~PLYR_FLAG_FLASHLIGHT;
+	flags = flags & ~PLYR_FLAG_FLASHLIGHT;
 	lightSource.light_set_properties(PLYR_AMBLIGHT_RADIUS, PLYR_AMBLIGHT_COLOR, PLYR_AMBLIGHT_STRENGTH);
 	
 	with(equipment){
@@ -443,7 +443,7 @@ end_step_event = function(_delta){
 			flags |= PLYR_FLAG_UP_POISON_DAMAGE;
 			poisonDamagePercent *= 2.0;
 		} else{
-			flags &= ~PLYR_FLAG_UP_POISON_DAMAGE;
+			flags = flags & ~PLYR_FLAG_UP_POISON_DAMAGE;
 		}
 	}
 }
@@ -486,7 +486,7 @@ state_default = function(_delta){
 	if (moveDirectionX != 0.0 || moveDirectionY != 0.0){ // Handling acceleration
 		if (!PLYR_IS_MOVING){
 			flags		   |= PLYR_FLAG_MOVING;
-			animCurFrame	= 1; // Ensures the player's animation starts on their first step frame immediately.
+			animCurFrame	= 1.0; // Ensures the player's animation starts on their first step frame immediately.
 		}
 		moveSpeed	   += accel * _delta;
 		direction		= point_direction(0.0, 0.0, moveDirectionX, moveDirectionY);
@@ -509,7 +509,7 @@ state_default = function(_delta){
 	} else if (moveSpeed > 0.0){ // Handling deceleration
 		moveSpeed		   -= accel * _delta;
 		if (moveSpeed <= 0.0){
-			flags		   &= ~(PLYR_FLAG_MOVING | PLYR_FLAG_SPRINTING);
+			flags		    = flags & ~(PLYR_FLAG_MOVING | PLYR_FLAG_SPRINTING);
 			image_index		= animLoopStart;
 			accel			= PLYR_ACCEL_NORMAL;
 			maxMoveSpeed	= PLYR_SPEED_NORMAL;
@@ -522,7 +522,7 @@ state_default = function(_delta){
 	if (PINPUT_FLASHLIGHT_PRESSED && equipment.light != INV_EMPTY_SLOT){
 		// Turning off the flashlight; returning the player's ambient light to its default parameters.
 		if (PLYR_IS_FLASHLIGHT_ON){
-			flags &= ~PLYR_FLAG_FLASHLIGHT;
+			flags  = flags & ~PLYR_FLAG_FLASHLIGHT;
 			lightX = PLYR_AMBLIGHT_XOFFSET;
 			lightY = PLYR_AMBLIGHT_YOFFSET;
 			lightSource.light_set_properties(PLYR_AMBLIGHT_RADIUS, PLYR_AMBLIGHT_COLOR, PLYR_AMBLIGHT_STRENGTH);
@@ -552,9 +552,9 @@ state_default = function(_delta){
 		with(interactableID){ // Check to see if the distance of the point if within the interaction radius.
 			if (point_distance(_interactX, _interactY, interactX, interactY) <= interactRadius){
 				flags |= INTR_FLAG_INTERACT;
-				break;
+				continue;
 			}
-			flags &= ~INTR_FLAG_INTERACT; // Always clear flag when an interaction can't occur.
+			flags = flags & ~INTR_FLAG_INTERACT; // Always clear flag when an interaction can't occur.
 		}
 	}
 	
@@ -565,7 +565,7 @@ state_default = function(_delta){
 		with(interactableID){
 			if (INTR_CAN_PLAYER_INTERACT){
 				on_player_interact(_delta);
-				flags	   &= ~INTR_FLAG_INTERACT;
+				flags	    = flags & ~INTR_FLAG_INTERACT;
 				_isMoving	= false;
 			}
 		}
@@ -616,7 +616,7 @@ state_default = function(_delta){
 		// Triple the time it takes before stamina begins to regen if the player is completely exhausted.
 		if (curStamina == 0) { timers[PLYR_STAMINA_REGEN_TIMER] *= PLYR_STAMINA_EXHAUST_FACTOR; }
 
-		flags		   &= ~PLYR_FLAG_SPRINTING;
+		flags		    = flags & ~PLYR_FLAG_SPRINTING;
 		accel			= PLYR_ACCEL_NORMAL;
 		maxMoveSpeed	= PLYR_SPEED_NORMAL;
 	}
@@ -624,8 +624,6 @@ state_default = function(_delta){
 	// Process the movement animation as normal if no collision occurred for the frame.
 	process_movement_animation(_delta);
 }
-object_set_state(state_default);
-curState = nextState; // Instantly applies the state specified above.
 
 /// @description
 ///	A very simple state that the player is placed in whenever they need to have their funcitonality paused
