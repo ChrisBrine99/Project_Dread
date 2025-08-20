@@ -47,7 +47,8 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 		// "gameSettings.ini" file is loaded if it exists).
 		var _inputs = global.settings.inputs;
 		
-		set_keyboard_control_icon(ICONUI_GAME_RIGHT,	_inputs[STNG_INPUT_GAME_RIGHT]);	// Getting icon info for in-game keyboard bindings.
+		// Getting icon info for all in-game keyboard bindings.
+		set_keyboard_control_icon(ICONUI_GAME_RIGHT,	_inputs[STNG_INPUT_GAME_RIGHT]);	
 		set_keyboard_control_icon(ICONUI_GAME_LEFT,		_inputs[STNG_INPUT_GAME_LEFT]);
 		set_keyboard_control_icon(ICONUI_GAME_UP,		_inputs[STNG_INPUT_GAME_UP]);
 		set_keyboard_control_icon(ICONUI_GAME_DOWN,		_inputs[STNG_INPUT_GAME_DOWN]);

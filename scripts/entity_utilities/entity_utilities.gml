@@ -36,10 +36,10 @@ function entity_draw_event(_delta){
 		return;
 	}
 	
-	flags		   &= ~ENTT_FLAG_ANIMATION_END;
+	flags			= flags & ~ENTT_FLAG_ANIMATION_END;
 	image_index	   += animSpeed * _delta;
 	if ((animSpeed > 0.0 && image_index >= animLength) || (animSpeed < 0.0 && image_index <= 0.0)){
-		flags	   |= ENTT_FLAG_ANIMATION_END;
+		flags	    = flags | ENTT_FLAG_ANIMATION_END;
 		image_index = animLoopStart;
 	}
 	draw_sprite_ext(sprite_index, floor(image_index), x, y, 

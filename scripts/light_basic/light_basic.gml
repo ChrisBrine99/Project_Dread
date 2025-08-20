@@ -39,7 +39,7 @@ function str_light_basic(_index) : str_base(_index) constructor {
 		if (LGHT_HAS_LIMITED_LIFE){
 			lifetime -= _delta;
 			if (lifetime <= 0.0){ // Prevent rendering and flag the light for destruction.
-				flags |= LGHT_FLAG_DESTROYED;
+				flags = flags | LGHT_FLAG_DESTROYED;
 				return;
 			}
 		}

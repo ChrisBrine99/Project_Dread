@@ -143,7 +143,8 @@ function str_textbox(_index) : str_base(_index) constructor {
 	totalColors		= 0;
 	charColorIndex	= 0;
 	
-	// 
+	// Acts as both the positional offset and the timer that resets that interval back to zero when it hits
+	// the limit value of two; allowing the arrow to bob up and down by one pixel as a simple aniamtion.
 	advArrowOffset	= 0.0;
 
 	/// @description 
@@ -175,7 +176,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 		// When toggled, this flag allows the surface to be completely wiped of any contents as required.
 		// This will leave the surface completely empty so new content can populate it.
 		if (TBOX_SHOULD_CLEAR_SURFACE){
-			flags &= ~TBOX_FLAG_CLEAR_SURFACE;
+			flags = flags & ~TBOX_FLAG_CLEAR_SURFACE;
 			surface_set_target(textSurface);
 			draw_clear_alpha(COLOR_BLACK, 0.0);
 			surface_reset_target();
@@ -303,17 +304,17 @@ function str_textbox(_index) : str_base(_index) constructor {
 	/// still stored in the standard "prevInputFlags" variable.
 	/// 
 	process_textbox_input = function(){
-		prevInputFlags	= flags & (TBOX_INFLAG_ADVANCE | TBOX_INFLAG_TEXT_LOG);
-		flags		   &= ~(TBOX_INFLAG_ADVANCE | TBOX_INFLAG_TEXT_LOG);
+		prevInputFlags	= flags &  (TBOX_INFLAG_ADVANCE | TBOX_INFLAG_TEXT_LOG);
+		flags		    = flags & ~(TBOX_INFLAG_ADVANCE | TBOX_INFLAG_TEXT_LOG);
 		
 		if (GAME_IS_GAMEPAD_ACTIVE){
-			flags |= (MENU_PAD_TBOX_ADVANCE		); // Offset based on position of the bit within the variable.
-			flags |= (MENU_PAD_TBOX_LOG		<< 1);
+			flags = flags | (MENU_PAD_TBOX_ADVANCE		); // Offset based on position of the bit within the variable.
+			flags = flags | (MENU_PAD_TBOX_LOG		<< 1);
 			return;
 		}
 		
-		flags |= (MENU_KEY_TBOX_ADVANCE		); // Offset based on position of the bit within the variable.
-		flags |= (MENU_KEY_TBOX_LOG		<< 1);
+		flags = flags | (MENU_KEY_TBOX_ADVANCE		); // Offset based on position of the bit within the variable.
+		flags = flags | (MENU_KEY_TBOX_LOG		<< 1);
 	}
 	
 	/// @description 
@@ -327,7 +328,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 		var _size = ds_list_size(textData);
 		if (TBOX_IS_ACTIVE || _size == 0 || _size <= _startingIndex)
 			return;
-		global.flags |= GAME_FLAG_TEXTBOX_OPEN;
+		global.flags = global.flags | GAME_FLAG_TEXTBOX_OPEN;
 		
 		// Attempt to pause the player object. If a cutscene is currently occurring, this code does nothing
 		// to the player object and whatever their state may currently be because of said cutscene.
@@ -335,9 +336,9 @@ function str_textbox(_index) : str_base(_index) constructor {
 		
 		// Set the default flags that are toggled upon activation of the textbox. Then, if required, the flag
 		// will be set to true that all data will be cleared on deactivation of the textbox.
-		flags |= TBOX_FLAG_ACTIVE; // Surface clearing flag is set within "set_textbox_index".
+		flags = flags | TBOX_FLAG_ACTIVE; // Surface clearing flag is set within "set_textbox_index".
 		if (_clearDataOnDeactivation)
-			flags |= TBOX_FLAG_WIPE_DATA;
+			flags = flags | TBOX_FLAG_WIPE_DATA;
 		
 		// Finally, start the opening animation, assign the textbox's index to what was passed into this first
 		// function's argument parameter, and set the y position of the textbox to what is needed for the 
@@ -353,11 +354,11 @@ function str_textbox(_index) : str_base(_index) constructor {
 	///	
 	deactivate_textbox = function(){
 		object_set_state(STATE_NONE);
-		flags		   &= ~TBOX_FLAG_ACTIVE;
-		global.flags   &= ~GAME_FLAG_TEXTBOX_OPEN;
+		flags		    = flags & ~TBOX_FLAG_ACTIVE;
+		global.flags    = global.flags & ~GAME_FLAG_TEXTBOX_OPEN;
 		if (!TBOX_CAN_WIPE_DATA) // Prevent deleting any text information if the flag isn't toggled.
 			return;
-		flags &= ~TBOX_FLAG_WIPE_DATA;
+		flags = flags & ~TBOX_FLAG_WIPE_DATA;
 		
 		// Loop through and clear out the structs from within the textData data structures. All now undefined
 		// references will also be cleared and the structure is set back to a size of 0.
@@ -391,7 +392,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 			object_set_state(state_close_animation);
 		
 		process_text_to_show(_index); // Format and parse the text before anything below is executed.
-		flags		   |= TBOX_FLAG_CLEAR_SURFACE;
+		flags		    = flags | TBOX_FLAG_CLEAR_SURFACE;
 		textLength		= string_length(_textData.content) + 1;
 		textIndex		= _index;
 		nextIndex		= _textData.nextIndex;
@@ -407,8 +408,8 @@ function str_textbox(_index) : str_base(_index) constructor {
 		// Clear or set the flag that is responsible for allowing a textbox to display graphics related to an
 		// actor's name alongside that name itself depending on what "actorName" is set to by the call to the
 		// get_actor_name.
-		if (actorName != "") { flags &= ~TBOX_FLAG_SHOW_NAME; }
-		else				 { flags |=  TBOX_FLAG_SHOW_NAME; }
+		if (actorName != "") { flags = flags & ~TBOX_FLAG_SHOW_NAME; }
+		else				 { flags = flags |  TBOX_FLAG_SHOW_NAME; }
 	}
 	
 	/// @description 
@@ -475,7 +476,8 @@ function str_textbox(_index) : str_base(_index) constructor {
 	/// @param {Real}		index		Position within the string to check for a punctuation character.
 	check_for_punctuation = function(_curText, _index){
 		// Ignore this function is the first character in the text is a space or newline character.
-		if (_index == 0 || _index > textLength) { return false; }
+		if (_index == 0 || _index > textLength) 
+			return false;
 		
 		// Get the previous character and see if it is considered punctuation.
 		var _char = string_char_at(_curText, _index);

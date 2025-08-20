@@ -163,7 +163,7 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	destroy_event = function(){
 		// If no menu created this one (Or it shouldn't have responsibility over this flag's state) it means 
 		// that the global flag saying there is a menu open currently should be cleared.
-		if (prevMenu == noone) { global.flags &= ~GAME_FLAG_MENU_OPEN; }
+		if (prevMenu == noone) { global.flags = global.flags & ~GAME_FLAG_MENU_OPEN; }
 		
 		// Loop through and delete all menu options structs before deleting their management list from memory.
 		var _length = ds_list_size(options);
@@ -173,7 +173,7 @@ function str_base_menu(_index) : str_base(_index) constructor {
 		
 		// Finally, clear the flags that are responsible for allowing the menu to have its current state code
 		// executed and render itself to the game's GUI layer.
-		flags &= ~(MENU_FLAG_VISIBLE | MENU_FLAG_ACTIVE);
+		flags = flags & ~(MENU_FLAG_VISIBLE | MENU_FLAG_ACTIVE);
 	}
 	
 	/// @description 
@@ -206,9 +206,9 @@ function str_base_menu(_index) : str_base(_index) constructor {
 			
 		x		= _x;
 		y		= _y;
-		flags  |= (_isActive << 30)	// Will be either 0x00000000 or 0x40000000
-			   | (_isVisible << 29)	// Will be either 0x00000000 or 0x20000000
-			   | MENU_FLAG_PARAMS_INITIALIZED;
+		flags   = flags | (_isActive << 30)		// Will be either 0x00000000 or 0x40000000
+						| (_isVisible << 29)	// Will be either 0x00000000 or 0x20000000
+						| MENU_FLAG_PARAMS_INITIALIZED;
 		
 		// Apply base parameters based on respective argument values.
 		width			= max(1, _width);
@@ -235,8 +235,8 @@ function str_base_menu(_index) : str_base(_index) constructor {
 		if (MENU_ARE_OPTIONS_INITIALIZED)
 			return; // Don't reinitialize option parameters.
 		
-		flags |= (_areSelectable << 25) // Will be either 0x00000000 or 0x02000000
-			   | MENU_FLAG_OPTIONS_INITIALIZED;
+		flags = flags | (_areSelectable << 25) // Will be either 0x00000000 or 0x02000000
+					  | MENU_FLAG_OPTIONS_INITIALIZED;
 		
 		// Apply base parameters based on respective argument values.
 		optionX			= _x;
@@ -370,32 +370,32 @@ function str_base_menu(_index) : str_base(_index) constructor {
 				padStickInputRV = gamepad_axis_value(_gamepad, gp_axisrv);
 			}
 			
-			inputFlags |= (MENU_PAD_RIGHT				 ); // Offset based on position of the bit within the variable.
-			inputFlags |= (MENU_PAD_LEFT			<<  1);
-			inputFlags |= (MENU_PAD_UP				<<  2);
-			inputFlags |= (MENU_PAD_DOWN			<<  3);
-			inputFlags |= (MENU_PAD_SELECT			<<  4);
-			inputFlags |= (MENU_PAD_RETURN			<<  6);
+			inputFlags = inputFlags | (MENU_PAD_RIGHT				 ); // Offset based on position of the bit within the variable.
+			inputFlags = inputFlags | (MENU_PAD_LEFT			<<  1);
+			inputFlags = inputFlags | (MENU_PAD_UP				<<  2);
+			inputFlags = inputFlags | (MENU_PAD_DOWN			<<  3);
+			inputFlags = inputFlags | (MENU_PAD_SELECT			<<  4);
+			inputFlags = inputFlags | (MENU_PAD_RETURN			<<  6);
 			
 			// Only check for auxiliary select/return inputs so long as their variables responsible for storing
 			// those gamepad bindings are set to something other than their default value, respectively.
-			if (padAuxSelect != 0) { inputFlags |= (gamepad_button_check(global.gamepadID, padAuxSelect) <<  5); }
-			if (padAuxReturn != 0) { inputFlags |= (gamepad_button_check(global.gamepadID, padAuxReturn) <<  7); }
+			if (padAuxSelect != 0) { inputFlags = inputFlags | (gamepad_button_check(global.gamepadID, padAuxSelect) <<  5); }
+			if (padAuxReturn != 0) { inputFlags = inputFlags | (gamepad_button_check(global.gamepadID, padAuxReturn) <<  7); }
 			
 			return;
 		}
 		
-		inputFlags |= (MENU_KEY_RIGHT				 ); // Offset based on position of the bit within the variable.
-		inputFlags |= (MENU_KEY_LEFT			<<  1);
-		inputFlags |= (MENU_KEY_UP				<<  2);
-		inputFlags |= (MENU_KEY_DOWN			<<  3);
-		inputFlags |= (MENU_KEY_SELECT			<<  4);
-		inputFlags |= (MENU_KEY_RETURN			<<  6);
+		inputFlags = inputFlags | (MENU_KEY_RIGHT				 ); // Offset based on position of the bit within the variable.
+		inputFlags = inputFlags | (MENU_KEY_LEFT			<<  1);
+		inputFlags = inputFlags | (MENU_KEY_UP				<<  2);
+		inputFlags = inputFlags | (MENU_KEY_DOWN			<<  3);
+		inputFlags = inputFlags | (MENU_KEY_SELECT			<<  4);
+		inputFlags = inputFlags | (MENU_KEY_RETURN			<<  6);
 		
 		// Only check for auxiliary select/return inputs so long as their variables responsible for storing
 		// those keyboard bindings are set to something other than their default value, respectively.
-		if (keyAuxSelect != vk_nokey) { inputFlags |= (keyboard_check(keyAuxSelect) <<  5); }
-		if (keyAuxReturn != vk_nokey) { inputFlags |= (keyboard_check(keyAuxReturn) <<  7); }
+		if (keyAuxSelect != vk_nokey) { inputFlags = inputFlags | (keyboard_check(keyAuxSelect) <<  5); }
+		if (keyAuxReturn != vk_nokey) { inputFlags = inputFlags | (keyboard_check(keyAuxReturn) <<  7); }
 	}
 	
 	/// @description 
@@ -419,7 +419,7 @@ function str_base_menu(_index) : str_base(_index) constructor {
 		if (_noDirectionsHeld || (_noDirectionsHeld && GAME_IS_GAMEPAD_ACTIVE && 
 				padStickInputLH == 0.0 && padStickInputLV == 0.0 && 
 					padStickInputRH == 0.0 && padStickInputRV == 0.0)){
-			flags			&= ~MENU_FLAG_CURSOR_AUTOSCROLL;
+			flags			 = flags & ~MENU_FLAG_CURSOR_AUTOSCROLL;
 			cursorShiftTimer = 0.0;
 			return;
 		}
@@ -435,7 +435,7 @@ function str_base_menu(_index) : str_base(_index) constructor {
 		// flag is currently set within the menu or not. If so, the interval time is slightly longer than
 		// all subsequent cursor position updates.
 		if (!MENU_IS_CURSOR_AUTOSCROLLING){
-			flags			|= MENU_FLAG_CURSOR_AUTOSCROLL;
+			flags			 = flags | MENU_FLAG_CURSOR_AUTOSCROLL;
 			cursorShiftTimer = MENU_FIRST_AUTOSCROLL_TIME;
 		} else{
 			cursorShiftTimer = MENU_AUTOSCROLL_TIME;

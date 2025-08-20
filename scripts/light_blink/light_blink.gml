@@ -40,8 +40,8 @@ function str_light_blink(_index) : str_light_basic(_index) constructor {
 			
 			// Toggle the flag bit to enable/disable the rendering of the light, but not the logic that is 
 			// also in this draw event that handles the blinking timer.
-			if (LGHT_IS_POWERED_ON) { flags &= ~LGHT_FLAG_POWER_STATE; }
-			else					{ flags |=  LGHT_FLAG_POWER_STATE; }
+			if (LGHT_IS_POWERED_ON) { flags = flags & ~LGHT_FLAG_POWER_STATE; }
+			else					{ flags = flags |  LGHT_FLAG_POWER_STATE; }
 		}
 		
 		// Only call the base function if the light is set to active.

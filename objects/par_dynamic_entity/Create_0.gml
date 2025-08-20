@@ -141,8 +141,8 @@ update_hitpoints = function(_amount){
 	curHitpoints = clamp(curHitpoints + _amount, 0, maxHitpoints);
 	if (curHitpoints == 0){ // Deactivate and destroy the Entity.
 		object_set_state(0);
-		flags &= ~ENTT_FLAG_ACTIVE;
-		flags |=  ENTT_FLAG_DESTROYED;
+		flags = flags & ~ENTT_FLAG_ACTIVE;
+		flags = flags |  ENTT_FLAG_DESTROYED;
 	}
 }
 

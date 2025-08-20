@@ -137,7 +137,7 @@ function str_camera(_index) : str_base(_index) constructor {
 		// Check if the followed object still exists. If not, clear the value so the camera won't crash the
 		// game by attempting to follow something that isn't there anymore.
 		if (followedObject != noone && !instance_exists(followedObject)){
-			flags		   &= ~CAM_FLAG_FOLLOWING_OBJECT;
+			flags		    = flags & ~CAM_FLAG_FOLLOWING_OBJECT;
 			followedObject	= noone;
 		}
 	}
@@ -172,7 +172,7 @@ function str_camera(_index) : str_base(_index) constructor {
 			// Toggle the flag that allows the standard camera movement to start executing if the object being
 			// moved towards was in fact the object the camera has been assigned to follow.
 			if (_object == followedObject)
-				flags |= CAM_FLAG_FOLLOWING_OBJECT;
+				flags = flags | CAM_FLAG_FOLLOWING_OBJECT;
 		}
 	}
 	

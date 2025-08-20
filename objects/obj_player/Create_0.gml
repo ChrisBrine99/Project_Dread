@@ -144,7 +144,7 @@
 event_inherited();
 
 // Set the flags that are initially toggled upon the player object's creation.
-flags			   |= DENTT_FLAG_WORLD_COLLISION | ENTT_FLAG_OVERRIDE_DRAW | 
+flags			    = DENTT_FLAG_WORLD_COLLISION | ENTT_FLAG_OVERRIDE_DRAW | 
 						ENTT_FLAG_VISIBLE | ENTT_FLAG_ACTIVE;
 
 // Set the player's acceleration and maximum movement speeds (Running allows the player to temporarily exceed
@@ -243,7 +243,7 @@ process_player_input = function(){
 		padStickInputLH = gamepad_axis_value(_gamepad, gp_axislh);
 		padStickInputLV = gamepad_axis_value(_gamepad, gp_axislv);
 		if (padStickInputLH != 0.0 || padStickInputLV != 0.0)
-			inputFlags |= PINPUT_FLAG_GP_LEFT_STICK;
+			inputFlags = inputFlags | PINPUT_FLAG_GP_LEFT_STICK;
 		
 		// Getting input from the secondary analog stick if the controller has one and the primary stick isn't
 		// being currently utilized by the player.
@@ -251,38 +251,43 @@ process_player_input = function(){
 			padStickInputRH	= gamepad_axis_value(_gamepad, gp_axisrh);
 			padStickInputRV = gamepad_axis_value(_gamepad, gp_axisrv);
 			if (!PINPUT_USING_LEFT_STICK && (padStickInputRH != 0.0 || padStickInputRV != 0.0))
-				inputFlags |= PINPUT_FLAG_GP_RIGHT_STICK;
+				inputFlags = inputFlags | PINPUT_FLAG_GP_RIGHT_STICK;
 		}
 		
-		inputFlags |= (GAME_PAD_RIGHT				 ); // Offset based on position of the bit within the variable.
-		inputFlags |= (GAME_PAD_LEFT			<<  1);
-		inputFlags |= (GAME_PAD_UP				<<  2);
-		inputFlags |= (GAME_PAD_DOWN			<<  3);
-		inputFlags |= (GAME_PAD_INTERACT		<<  4);
-		inputFlags |= (GAME_PAD_SPRINT			<<  5);
-		inputFlags |= (GAME_PAD_READYWEAPON		<<  6);
-		inputFlags |= (GAME_PAD_FLASHLIGHT		<<  7);
-		inputFlags |= (GAME_PAD_USEWEAPON		<<  8);
-		inputFlags |= (GAME_PAD_ITEM_MENU		<< 28);
-		inputFlags |= (GAME_PAD_NOTE_MENU		<< 29);
-		inputFlags |= (GAME_PAD_MAP_MENU		<< 30);
-		inputFlags |= (GAME_PAD_PAUSE_MENU		<< 31);
+		// This looks like a lot but its a way of avoiding confusing YYC since it doesn't like the player's
+		// bitwise AND operations and I'd rather not risk something breaking because of other bitwise 
+		// operators.
+		inputFlags = inputFlags | (GAME_PAD_RIGHT				 ); // Offset based on position of the bit within the variable.
+		inputFlags = inputFlags | (GAME_PAD_LEFT			<<  1);
+		inputFlags = inputFlags | (GAME_PAD_UP				<<  2);
+		inputFlags = inputFlags | (GAME_PAD_DOWN			<<  3);
+		inputFlags = inputFlags | (GAME_PAD_INTERACT		<<  4);
+		inputFlags = inputFlags | (GAME_PAD_SPRINT			<<  5);
+		inputFlags = inputFlags | (GAME_PAD_READYWEAPON		<<  6);
+		inputFlags = inputFlags | (GAME_PAD_FLASHLIGHT		<<  7);
+		inputFlags = inputFlags | (GAME_PAD_USEWEAPON		<<  8);
+		inputFlags = inputFlags | (GAME_PAD_ITEM_MENU		<< 28);
+		inputFlags = inputFlags | (GAME_PAD_NOTE_MENU		<< 29);
+		inputFlags = inputFlags | (GAME_PAD_MAP_MENU		<< 30);
+		inputFlags = inputFlags | (GAME_PAD_PAUSE_MENU		<< 31);
 		return;
 	}
 	
-	inputFlags |= (GAME_KEY_RIGHT				 ); // Offset based on position of the bit within the variable.
-	inputFlags |= (GAME_KEY_LEFT			<<  1);
-	inputFlags |= (GAME_KEY_UP				<<  2);
-	inputFlags |= (GAME_KEY_DOWN			<<  3);
-	inputFlags |= (GAME_KEY_INTERACT		<<  4);
-	inputFlags |= (GAME_KEY_SPRINT			<<  5);
-	inputFlags |= (GAME_KEY_READYWEAPON		<<  6);
-	inputFlags |= (GAME_KEY_FLASHLIGHT		<<  7);
-	inputFlags |= (GAME_KEY_USEWEAPON		<<  8);
-	inputFlags |= (GAME_KEY_ITEM_MENU		<< 28);
-	inputFlags |= (GAME_KEY_NOTE_MENU		<< 29);
-	inputFlags |= (GAME_KEY_MAP_MENU		<< 30);
-	inputFlags |= (GAME_KEY_PAUSE_MENU		<< 31);
+	// This looks like a lot but its a way of avoiding confusing YYC since it doesn't like the player's
+	// bitwise AND operations and I'd rather not risk something breaking because of other bitwise operators.
+	inputFlags = inputFlags | (GAME_KEY_RIGHT				 ); // Offset based on position of the bit within the variable.
+	inputFlags = inputFlags | (GAME_KEY_LEFT			<<  1);
+	inputFlags = inputFlags | (GAME_KEY_UP				<<  2);
+	inputFlags = inputFlags | (GAME_KEY_DOWN			<<  3);
+	inputFlags = inputFlags | (GAME_KEY_INTERACT		<<  4);
+	inputFlags = inputFlags | (GAME_KEY_SPRINT			<<  5);
+	inputFlags = inputFlags | (GAME_KEY_READYWEAPON		<<  6);
+	inputFlags = inputFlags | (GAME_KEY_FLASHLIGHT		<<  7);
+	inputFlags = inputFlags | (GAME_KEY_USEWEAPON		<<  8);
+	inputFlags = inputFlags | (GAME_KEY_ITEM_MENU		<< 28);
+	inputFlags = inputFlags | (GAME_KEY_NOTE_MENU		<< 29);
+	inputFlags = inputFlags | (GAME_KEY_MAP_MENU		<< 30);
+	inputFlags = inputFlags | (GAME_KEY_PAUSE_MENU		<< 31);
 }
 
 /// @description
@@ -359,7 +364,7 @@ equip_flashlight = function(_itemSlot){
 	}
 	
 	// 
-	flags |= PLYR_FLAG_FLASHLIGHT;
+	flags = flags | PLYR_FLAG_FLASHLIGHT;
 	lightSource.light_set_properties(
 		_paramRef[EQUP_PARAM_LIGHT_RADIUS],
 		_paramRef[EQUP_PARAM_LIGHT_COLOR], 
@@ -440,7 +445,7 @@ end_step_event = function(_delta){
 		// There's no limit to how high this percentage can go; meaning it will become a fatal amount of damage
 		// (128% of the player's maximum hitpoints) inflicted even when at max hitpoints after 80 seconds.
 		if (PLYR_CAN_UP_POISON_DAMAGE){
-			flags |= PLYR_FLAG_UP_POISON_DAMAGE;
+			flags = flags |  PLYR_FLAG_UP_POISON_DAMAGE;
 			poisonDamagePercent *= 2.0;
 		} else{
 			flags = flags & ~PLYR_FLAG_UP_POISON_DAMAGE;
@@ -485,8 +490,8 @@ state_default = function(_delta){
 	// movement vector.
 	if (moveDirectionX != 0.0 || moveDirectionY != 0.0){ // Handling acceleration
 		if (!PLYR_IS_MOVING){
-			flags		   |= PLYR_FLAG_MOVING;
-			animCurFrame	= 1.0; // Ensures the player's animation starts on their first step frame immediately.
+			flags		 = flags | PLYR_FLAG_MOVING;
+			animCurFrame = 1.0; // Ensures the player's animation starts on their first step frame immediately.
 		}
 		moveSpeed	   += accel * _delta;
 		direction		= point_direction(0.0, 0.0, moveDirectionX, moveDirectionY);
@@ -527,7 +532,7 @@ state_default = function(_delta){
 			lightY = PLYR_AMBLIGHT_YOFFSET;
 			lightSource.light_set_properties(PLYR_AMBLIGHT_RADIUS, PLYR_AMBLIGHT_COLOR, PLYR_AMBLIGHT_STRENGTH);
 		} else{ // Turning on the flashlight; using the properties of the equipped flashlight.
-			flags |= PLYR_FLAG_FLASHLIGHT;
+			flags  = flags |  PLYR_FLAG_FLASHLIGHT;
 			var _light = lightSource;
 			with(equipment){ // Jump into the equipment struct so the light's parameters can be referenced.
 				_light.light_set_properties(
@@ -551,7 +556,7 @@ state_default = function(_delta){
 		interactableID			= instance_nearest(_interactX, _interactY, par_interactable);
 		with(interactableID){ // Check to see if the distance of the point if within the interaction radius.
 			if (point_distance(_interactX, _interactY, interactX, interactY) <= interactRadius){
-				flags |= INTR_FLAG_INTERACT;
+				flags = flags | INTR_FLAG_INTERACT;
 				continue;
 			}
 			flags = flags & ~INTR_FLAG_INTERACT; // Always clear flag when an interaction can't occur.
@@ -594,7 +599,7 @@ state_default = function(_delta){
 	// until they stop running. They can still run without stamina, but the speed is heavily reduced.
 	if (PINPUT_SPRINT_PRESSED && !PLYR_IS_SPRINTING){
 		timers[PLYR_STAMINA_LOSS_TIMER] = PLYR_STAMINA_LOSS_RATE;
-		flags |= PLYR_FLAG_SPRINTING;
+		flags = flags | PLYR_FLAG_SPRINTING;
 		
 		// Determine if the player should use their fast speed values (stamina > 0 and not crippled) or their 
 		// slow speed values (stamina == 0 or stamina > 0 and crippled).

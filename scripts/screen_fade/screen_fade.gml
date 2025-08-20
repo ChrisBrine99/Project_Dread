@@ -44,7 +44,7 @@ function str_screen_fade(_index) : str_base(_index) constructor {
 		if (FADE_IS_ACTIVE || GAME_IS_TRANSITION_ACTIVE)
 			return;
 		object_set_state(state_fade_in);
-		flags		   |= FADE_FLAG_ACTIVE;
+		flags		    = flags | FADE_FLAG_ACTIVE;
 		
 		// Apply the parameters to the screen fade.
 		fadeInSpeed		= _inSpeed;
@@ -52,13 +52,13 @@ function str_screen_fade(_index) : str_base(_index) constructor {
 		fadeColor		= _color;
 		
 		// Determine whether to clear the bit that allows for an automatic fade out or set it.
-		if (_manualFadeOut) { flags &= ~FADE_FLAG_ALLOW_FADE_OUT; }
-		else				{ flags |=  FADE_FLAG_ALLOW_FADE_OUT; }
+		if (_manualFadeOut) { flags = flags & ~FADE_FLAG_ALLOW_FADE_OUT; }
+		else				{ flags = flags | FADE_FLAG_ALLOW_FADE_OUT; }
 		
 		// Finally, let the game itself know a transition effect is occur so entities and objects can process
 		// themselves accordingly. On top of that, set the player to their transition effect state until this
 		// global flag is cleared once again.
-		global.flags   |= GAME_FLAG_TRANSITION_ACTIVE;
+		global.flags    = global.flags | GAME_FLAG_TRANSITION_ACTIVE;
 	}
 	
 	/// @description 
@@ -86,12 +86,12 @@ function str_screen_fade(_index) : str_base(_index) constructor {
 		alpha -= fadeOutSpeed * _delta;
 		if (alpha <= 0.0){ // Screen has faded out; reset back to game's pre-screen fade state.
 			object_set_state(0);
-			flags		   &= ~FADE_FLAG_ACTIVE;
+			flags		    = flags & ~FADE_FLAG_ACTIVE;
 			alpha			= 0.0;
 			
 			// Let the game know a transition effect is no longer occuring so entities and objects can go back
 			// to their previous states/logic if they were affected by transitions.
-			global.flags   &= ~GAME_FLAG_TRANSITION_ACTIVE;
+			global.flags    = global.flags & ~GAME_FLAG_TRANSITION_ACTIVE;
 		}
 	}
 }

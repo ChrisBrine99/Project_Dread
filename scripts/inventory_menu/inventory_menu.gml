@@ -46,7 +46,7 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		var _visibleWidth	= 1;
 		var _visibleHeight	= 1;
 		initialize_params(_x, _y, _isActive, _isVisible, _menuWidth, _visibleWidth, _visibleHeight);
-		flags |= MENUINV_FLAG_CAN_CLOSE; // Initially enable the flag to allow this menu to close.
+		flags = flags | MENUINV_FLAG_CAN_CLOSE; // Initially enable the flag to allow this menu to close.
 		
 		// Initialize the option parameters for the menu.
 		var _optionX		= 5;
@@ -121,7 +121,7 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		
 		if (menuRef[_index] != noone){
 			with(menuRef[_index]) // Simply activate the menu in question if it has already been created.
-				flags |= MENU_FLAG_ACTIVE | MENU_FLAG_VISIBLE;
+				flags = flags | MENU_FLAG_ACTIVE | MENU_FLAG_VISIBLE;
 			return;
 		}
 		
@@ -143,7 +143,7 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		// menu, so it knows it is not the root menu.
 		menuRef[_index]	= _menuInstance;
 		with(_menuInstance){
-			flags	   |= MENU_FLAG_ACTIVE | MENU_FLAG_VISIBLE;
+			flags	    = flags | MENU_FLAG_ACTIVE | MENU_FLAG_VISIBLE;
 			prevMenu	= other.selfRef;
 		}
 	}
@@ -159,15 +159,15 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		inputFlags		= 0;
 		
 		if (GAME_IS_GAMEPAD_ACTIVE){
-			inputFlags |= (MENU_PAD_INV_RIGHT			 ); // Offset based on position of the bit within the variable.
-			inputFlags |= (MENU_PAD_INV_LEFT		<<  1);
-			inputFlags |= (MENU_PAD_RETURN			<<  6);
+			inputFlags = inputFlags | (MENU_PAD_INV_RIGHT			 ); // Offset based on position of the bit within the variable.
+			inputFlags = inputFlags | (MENU_PAD_INV_LEFT		<<  1);
+			inputFlags = inputFlags | (MENU_PAD_RETURN			<<  6);
 			return;
 		}
 		
-		inputFlags |= (MENU_KEY_INV_RIGHT			 ); // Offset based on position of the bit within the variable.
-		inputFlags |= (MENU_KEY_INV_LEFT		<<  1);
-		inputFlags |= (MENU_KEY_RETURN			<<  6);
+		inputFlags = inputFlags | (MENU_KEY_INV_RIGHT			 ); // Offset based on position of the bit within the variable.
+		inputFlags = inputFlags | (MENU_KEY_INV_LEFT		<<  1);
+		inputFlags = inputFlags | (MENU_KEY_RETURN			<<  6);
 	}
 	
 	/// @description 
@@ -198,7 +198,7 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		// Deactivate the previous inventory page/menu and the initialize the current one (If it hasn't already
 		// been initialized during this lifetime of the inventory) before activating it.
 		with(menuRef[_prevOption])
-			flags &= ~(MENU_FLAG_ACTIVE | MENU_FLAG_VISIBLE);
+			flags = flags & ~(MENU_FLAG_ACTIVE | MENU_FLAG_VISIBLE);
 		initialize_submenu(curOption);
 	}
 }

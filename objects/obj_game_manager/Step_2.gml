@@ -66,7 +66,7 @@ if (global.gamepadID == -1)
 // Returning control back to the keyboard if a gamepad was previously the active input method but a key on the
 // keyboard was pressed by the user during the current frame.
 if (GAME_IS_GAMEPAD_ACTIVE && keyboard_check(vk_anykey)){
-	global.flags &= ~GAME_FLAG_GAMEPAD_ACTIVE;
+	global.flags = global.flags & ~GAME_FLAG_GAMEPAD_ACTIVE;
 	return;
 }
 
@@ -75,7 +75,7 @@ if (GAME_IS_GAMEPAD_ACTIVE && keyboard_check(vk_anykey)){
 var _gamepad = global.gamepadID;
 for (var i = gp_face1; i <= gp_padr; i++){
 	if (gamepad_button_check_pressed(_gamepad, i)){
-		global.flags |= GAME_FLAG_GAMEPAD_ACTIVE;
+		global.flags = global.flags | GAME_FLAG_GAMEPAD_ACTIVE;
 		return;
 	}
 }
@@ -83,11 +83,11 @@ for (var i = gp_face1; i <= gp_padr; i++){
 // Check the primary stick to see if any input is detected from it. If so, move input detection over to the
 // connected gamepad.
 if (gamepad_axis_value(_gamepad, gp_axislh) != 0.0 || gamepad_axis_value(_gamepad, gp_axislv) != 0.0){
-	global.flags |= GAME_FLAG_GAMEPAD_ACTIVE;
+	global.flags = global.flags | GAME_FLAG_GAMEPAD_ACTIVE;
 	return;
 }
 
 // Finally, the secondary stick is checked (If one exists) for input. If input is found, control is moved over 
 // to the connected gamepad.
 if (gamepad_axis_count(_gamepad) > 1 && (gamepad_axis_value(_gamepad, gp_axislh) != 0.0 || gamepad_axis_value(_gamepad, gp_axislv) != 0.0))
-	global.flags |= GAME_FLAG_GAMEPAD_ACTIVE;
+	global.flags = global.flags | GAME_FLAG_GAMEPAD_ACTIVE;

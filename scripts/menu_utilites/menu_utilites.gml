@@ -16,7 +16,7 @@ function instance_create_menu_struct(_structFunc){
 	
 	// Set the flag that is responsible for letting the other objects in the game know that a menu is currently
 	// open so they can relinquish control until this flag is cleared.
-	global.flags |= GAME_FLAG_MENU_OPEN;
+	global.flags = global.flags | GAME_FLAG_MENU_OPEN;
 	
 	// Finally, add the menu instance to a global management list that will handle updating and rendering all
 	// existing menus to the screen in the order of their creation (Oldest drawn first; newest drawn last).

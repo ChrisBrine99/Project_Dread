@@ -24,7 +24,7 @@ with(SCREEN_FADE) { _fadeAlpha = alpha; }
 // Check when to end the room transition process. This can only happen if the current room matches the target.
 // Otherwise, the game will ignore this branch even if the screen fade's alpha level is zero.
 if (_fadeAlpha == 0.0 && room == targetRoom){
-	global.flags   &= ~GAME_FLAG_ROOM_WARP;
+	global.flags    = global.flags & ~GAME_FLAG_ROOM_WARP;
 	targetRoom		= undefined;
 	return;
 }
@@ -56,5 +56,5 @@ if (_fadeAlpha == 1.0 && room != targetRoom){
 	
 	// Finally, signal to the screen fade effect that it can begin fading back out which will then end the warp
 	// event and bring the game back into the control of the player's actions.
-	with(SCREEN_FADE) { flags |= FADE_FLAG_ALLOW_FADE_OUT; }
+	with(SCREEN_FADE) { flags = flags | FADE_FLAG_ALLOW_FADE_OUT; }
 }
