@@ -300,8 +300,8 @@ uLightTexture			= shader_get_sampler_index(shd_lighting,	"lightTex");
 // onto the game's image (Note that UI elements don't have these effect applied onto them).
 uScanlineFactor			= shader_get_uniform(shd_retro_effects,		"scanlineFactor");
 uQuantizeLevel			= shader_get_uniform(shd_retro_effects,		"quantizeLevel");
-uWindowScale			= shader_get_uniform(shd_retro_effects,		"windowScale");
 uDitherMatrix			= shader_get_uniform(shd_retro_effects,		"ditherMatrix");
+uViewportSize			= shader_get_uniform(shd_retro_effects,		"viewportSize");
 uQuantizationActive		= shader_get_uniform(shd_retro_effects,		"quantizationActive");
 uDitheringActive		= shader_get_uniform(shd_retro_effects,		"ditheringActive");
 uScanlinesActive		= shader_get_uniform(shd_retro_effects,		"scanlinesActive");

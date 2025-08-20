@@ -1,6 +1,9 @@
 #region Globals Related to General Data Management
 
-// 
+// Two data structures that will store references to a given item's data which is stored in a struct (The
+// global.itemData ds_map will be responsible for cleaning up those structs when they need to be deleted).
+// The first is a map of these references to allow grabbing it by name/key, and the second is a number-based
+// system to get the reference by item ID value.
 global.itemData			= -1;
 global.itemIDs			= -1;
 
