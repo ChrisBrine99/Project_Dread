@@ -1,9 +1,12 @@
 #region Macros for Inventory Menu Struct
 
-// A flag bit that has unique functionality in the inventory menu. When set, the inventory is allowed to close
-// when the player presses the "return" input.
+//
 #macro	MENUINV_FLAG_CAN_CLOSE			0x00000001
-#macro	MENUINV_CAN_CLOSE				((flags & MENUINV_FLAG_CAN_CLOSE) != 0)
+#macro	MENUINV_FLAG_OPENED				0x00000002
+
+// 
+#macro	MENUINV_CAN_CLOSE				((flags & MENUINV_FLAG_CAN_CLOSE)	!= 0)
+#macro	MENUINV_IS_OPENED				((flags & MENUINV_FLAG_OPENED)		!= 0)
 
 // Index values for the positions of the submenu references within the inventory's "menuRef" array. The final
 // value is the sum of the number of submenus which is also the length of the array the references reside in.
@@ -11,6 +14,10 @@
 #macro	MENUINV_INDEX_NOTE_MENU			1
 #macro	MENUINV_INDEX_MAP_MENU			2
 #macro	MENUINV_TOTAL_SUBMENUS			3
+
+// 
+#macro	MENUINV_OANIM_ALPHA_SPEED		0.075
+#macro	MENUINV_CANIM_ALPHA_SPEED		0.075
 
 #endregion Macros for Inventory Menu Struct
 
@@ -33,27 +40,15 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	///	
 	create_event = function(){
 		// Get a reference to this menu so it can be passed into the submenus that it manages.
-		selfRef				= instance_find_struct(structID);
-		alpha				= 1.0;
-		object_set_state(state_default);
+		selfRef	= instance_find_struct(structID);
+		flags	= flags | MENUINV_FLAG_CAN_CLOSE; // Initially enable the flag to allow this menu to close.
+		object_set_state(state_open_animation);
 		
-		// Initialize the base parameters for the menu.
-		var _x				= 0;
-		var _y				= 0;
-		var _isActive		= true;
-		var _isVisible		= true;
-		var _menuWidth		= 3;	// Three "elements" AKA Items, Notes, and Maps
-		var _visibleWidth	= 1;
-		var _visibleHeight	= 1;
-		initialize_params(_x, _y, _isActive, _isVisible, _menuWidth, _visibleWidth, _visibleHeight);
-		flags = flags | MENUINV_FLAG_CAN_CLOSE; // Initially enable the flag to allow this menu to close.
-		
-		// Initialize the option parameters for the menu.
-		var _optionX		= 5;
-		var _optionY		= 1;
-		var _optionSpacingX	= 0; // No spacing needed since only one option is visible at a time.
-		var _optionSpacingY	= 0;
-		initialize_option_params(_optionX, _optionY, _optionSpacingX, _optionSpacingY);
+		// Initialize the menu's base parameters as well as its option parameters. Since this menu works as
+		// more of a manager of other menus, these options won't have logic for selection and the menu will
+		// only show the current option (AKA menu) that is visible for the player to interact with.
+		initialize_params(0, 0, true, true, 3, 1, 1);
+		initialize_option_params(5, 2, 0, 0);
 		
 		// Add "options" for the menu that are simply the names for each page of the inventory. Those pages
 		// themselves are unique menu instances that manage their own data and input independent of this one.
@@ -80,13 +75,9 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		// lifetime of the inventory menu.
 		var _length = array_length(menuRef);
 		for (var i = 0; i < _length; i++){
-			if (menuRef[i] != noone){
-				show_debug_message("Submenu {0} ({1}, ID: {2}) has been destroyed.", i, menuRef[i].structIndex, menuRef[i].structID);
+			if (menuRef[i] != noone)
 				instance_destroy_menu_struct(menuRef[i]);
-			}
 		}
-		
-		show_debug_message("Inventory Menu has been Destroyed.");
 	}
 	
 	/// @description 
@@ -103,9 +94,11 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		draw_text_shadow(_xPos + optionX, _yPos + optionY, options[| curOption].oName, 
 			COLOR_WHITE, alpha, COLOR_BLACK, alpha * 0.75);
 			
-		// Ensure the current submenu's alpha always matches the main menu's alpha level.
+		// Ensure the current submenu's alpha always matches the main menu's alpha level, so they don't each
+		// need their own opening/closing animations that would just match the inventory's.
 		var _alpha = alpha;
-		with(menuRef[curOption]) { alpha = _alpha; }
+		with(menuRef[curOption])
+			alpha = _alpha;
 	}
 	
 	/// @description 
@@ -118,10 +111,13 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	initialize_submenu = function(_index){
 		if (_index < 0 || _index >= array_length(menuRef))
 			return; // Invalid index; don't create a menu.
-		
+
+		var _isOpened = MENUINV_IS_OPENED;
 		if (menuRef[_index] != noone){
-			with(menuRef[_index]) // Simply activate the menu in question if it has already been created.
+			with(menuRef[_index]){ // Simply activate the menu in question if it has already been created.
+				if (_isOpened) { object_set_state(state_default); }
 				flags = flags | MENU_FLAG_ACTIVE | MENU_FLAG_VISIBLE;
+			}
 			return;
 		}
 		
@@ -136,13 +132,15 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		// this function will return the value "noone" which will then cause the value to be grabbed from the
 		// menu's sInstance reference value.
 		var _menuInstance = instance_create_menu_struct(_menu);
-		if (_menuInstance == noone) { _menuInstance = ds_map_find_value(global.sInstances, _menu); }
+		if (_menuInstance == noone)
+			_menuInstance = ds_map_find_value(global.sInstances, _menu);
 		
 		// Store the reference to the inventory's page and then set the flags that activate the menu as the
 		// current page. A reference to this main management menu is also passed in as the page's previous
 		// menu, so it knows it is not the root menu.
 		menuRef[_index]	= _menuInstance;
 		with(_menuInstance){
+			if (_isOpened) { object_set_state(state_default); }
 			flags	    = flags | MENU_FLAG_ACTIVE | MENU_FLAG_VISIBLE;
 			prevMenu	= other.selfRef;
 		}
@@ -183,7 +181,7 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		// of the inventory is still possible despite being unable to close it if required.
 		process_player_input();
 		if (MINPUT_IS_RETURN_RELEASED && MENUINV_CAN_CLOSE){ // Close the menu if possible.
-			instance_destroy_struct(MENU_INVENTORY);
+			object_set_state(state_close_animation);
 			return;
 		}
 		
@@ -201,6 +199,32 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 			flags = flags & ~(MENU_FLAG_ACTIVE | MENU_FLAG_VISIBLE);
 		initialize_submenu(curOption);
 	}
+	
+	/// @description 
+	///	
+	///	
+	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
+	state_open_animation = function(_delta){
+		alpha += MENUINV_OANIM_ALPHA_SPEED * _delta;
+		if (alpha >= 1.0){
+			flags = flags | MENUINV_FLAG_OPENED;
+			alpha = 1.0;
+			object_set_state(state_default);
+			
+			with(menuRef[curOption])
+				object_set_state(state_default);
+			return;
+		}
+	}
+	
+	/// @description 
+	///	
+	///	
+	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
+	state_close_animation = function(_delta){
+		alpha -= MENUINV_CANIM_ALPHA_SPEED * _delta;
+		if (alpha <= 0.0) { instance_destroy_menu_struct(selfRef); }
+	}
 }
 
 #endregion Inventory Menu Struct Definition
@@ -214,14 +238,13 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 ///	@param {Real}	index	Determines which of the three pages of the inventory to open up first.
 function menu_inventory_open(_index){
 	var _ref = instance_create_menu_struct(str_inventory_menu);
-	if (_ref == noone) // THe inventory already exists; don't attempt to create another instance.
+	if (_ref == noone) // The inventory already exists; don't attempt to create another instance.
 		return;
 	with(_ref){
 		_index = clamp(_index, MENUINV_INDEX_ITEM_MENU, MENUINV_INDEX_MAP_MENU);
 		initialize_submenu(_index);
 		curOption = _index;
 	}
-	show_debug_message("Inventory Menu has been initialized.");
 }
 
 #endregion Inventory Menu Global Function Definitions
