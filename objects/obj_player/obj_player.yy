@@ -9,8 +9,8 @@
   "name":"obj_player",
   "overriddenProperties":[],
   "parent":{
-    "name":"Dynamic",
-    "path":"folders/Objects/Entity/Dynamic.yy",
+    "name":"Player",
+    "path":"folders/Objects/Entity/Dynamic/Player.yy",
   },
   "parentObjectId":{
     "name":"par_dynamic_entity",

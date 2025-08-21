@@ -35,6 +35,8 @@ ds_map_add(global.sInstances, str_screen_fade,			new str_screen_fade(str_screen_
 // created).
 with(CONTROL_UI_MANAGER) { create_event(); }
 with(CAMERA)			 { create_event(); }
+with(TEXTBOX)			 { create_event(); }
+with(PLAYER)			 { object_set_state(state_default); } // For testing //
 
 // Once everything has been initialized, the first official room for the game is loaded, and the game is 
 // unpaused to allow various game elements to start updating.

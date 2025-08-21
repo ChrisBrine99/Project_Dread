@@ -1,1 +1,0 @@
-//with(PLAYER) { object_set_state(state_default); }

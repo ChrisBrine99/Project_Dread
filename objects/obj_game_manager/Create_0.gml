@@ -42,11 +42,11 @@
 
 // Macros for referencing the instance IDs for all compile-time singletons.
 #macro	GAME_MANAGER					global.sInstances[? obj_game_manager]
+#macro	PLAYER							global.sInstances[? obj_player]
 #macro	CONTROL_UI_MANAGER				global.sInstances[? str_control_ui_manager]
 #macro	CAMERA							global.sInstances[? str_camera]
 #macro	TEXTBOX							global.sInstances[? str_textbox]
 #macro	SCREEN_FADE						global.sInstances[? str_screen_fade]
-#macro	PLAYER							global.sInstances[? obj_player]
 
 // Macros for referencing the instance IDs of all runtime singletons. These will return "noone" if no instance
 // exists for these special singleton types.

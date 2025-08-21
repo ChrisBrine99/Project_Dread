@@ -11,8 +11,8 @@
 
 // Macros that condense the checks required for specific states that the textbox must be in for it to process
 // certain aspects of the data it is displaying the user, if it is allowed to do that currently to begin with.
-#macro	TBOX_WAS_ADVANCE_PRESSED		((flags & TBOX_INFLAG_ADVANCE)		!= 0) && ((prevInputFlags & TBOX_INFLAG_ADVANCE)	== 0)
-#macro	TBOX_WAS_TEXT_LOG_PRESSED		((flags & TBOX_INFLAG_TEXT_LOG)		!= 0) && ((prevInputFlags & TBOX_INFLAG_TEXT_LOG)	== 0)
+#macro	TBOX_WAS_ADVANCE_PRESSED		((flags & TBOX_INFLAG_ADVANCE)		!= 0 && (prevInputFlags & TBOX_INFLAG_ADVANCE)	== 0)
+#macro	TBOX_WAS_TEXT_LOG_PRESSED		((flags & TBOX_INFLAG_TEXT_LOG)		!= 0 && (prevInputFlags & TBOX_INFLAG_TEXT_LOG)	== 0)
 #macro	TBOX_IS_ACTIVE					((flags & TBOX_FLAG_ACTIVE)			!= 0)
 #macro	TBOX_CAN_WIPE_DATA				((flags & TBOX_FLAG_WIPE_DATA)		!= 0)
 #macro	TBOX_SHOULD_CLEAR_SURFACE		((flags & TBOX_FLAG_CLEAR_SURFACE)	!= 0)
@@ -85,6 +85,9 @@
 #macro	TBOX_ANIM_MOVE_SPEED			0.2
 #macro	TBOX_ANIM_ALPHA_SPEED			0.075
 
+//	
+#macro	TEXTBOX_ICONUI_GROUP			"tbox_icons"
+
 #endregion Macros for Textbox Struct
 
 #region Textbox Struct Definition
@@ -146,6 +149,23 @@ function str_textbox(_index) : str_base(_index) constructor {
 	// Acts as both the positional offset and the timer that resets that interval back to zero when it hits
 	// the limit value of two; allowing the arrow to bob up and down by one pixel as a simple aniamtion.
 	advArrowOffset	= 0.0;
+
+	// 
+	controlGroupRef	= -1;
+
+	/// @description 
+	///	
+	///	
+	create_event = function(){
+		var _controlGroupRef = -1;
+		with(CONTROL_UI_MANAGER){
+			_controlGroupRef = create_control_group(TEXTBOX_ICONUI_GROUP, 100, 100, 3, ICONUI_DRAW_RIGHT);
+			add_control_group_icon(_controlGroupRef, ICONUI_TBOX_ADVANCE, "Next");
+			add_control_group_icon(_controlGroupRef, ICONUI_TBOX_LOG, "Log");
+			calculate_control_group_offsets(_controlGroupRef);
+		}
+		controlGroupRef = _controlGroupRef;
+	}
 
 	/// @description 
 	///	The textbox struct's destroy event. It will clean up anything that isn't automatically cleaned up by
@@ -295,6 +315,11 @@ function str_textbox(_index) : str_base(_index) constructor {
 		// Simply draw the currently rendered text onto the screen with this single draw call.
 		draw_surface_ext(textSurface, _xPos + TBOX_TEXT_X_OFFSET, _yPos + TBOX_TEXT_Y_OFFSET, 
 			1.0, 1.0, 0.0, COLOR_TRUE_WHITE, alpha);
+			
+		// 
+		var _controlGroupRef	= controlGroupRef;
+		var _alpha				= alpha;
+		with(CONTROL_UI_MANAGER) { draw_control_group(_controlGroupRef, _alpha); }
 	}
 	
 	/// @description 

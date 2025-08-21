@@ -9,7 +9,7 @@
 // Macros for the keys that allow access to the control icon information for the input they represent within
 // the game. Both keyboard and gamepad information is stored together so there is no need to create seperate
 // macros for both.
-#macro	ICONUI_GAME_RIGHT				"g_right"
+#macro	ICONUI_GAME_RIGHT				"g_right"		// In-Game Input Icon Keys
 #macro	ICONUI_GAME_LEFT				"g_left"
 #macro	ICONUI_GAME_UP					"g_up"
 #macro	ICONUI_GAME_DOWN				"g_down"
@@ -18,11 +18,31 @@
 #macro	ICONUI_READYWEAPON				"readyWeapon"
 #macro	ICONUI_FLASHLIGHT				"flashlight"
 #macro	ICONUI_USEWEAPON				"useWeapon"
+#macro	ICONUI_ITEM_MENU				"item_menu"		// Menu Open/Close Icon Keys
+#macro	ICONUI_NOTE_MENU				"note_menu"
+#macro	ICONUI_MAP_MENU					"map_menu"
+#macro	ICONUI_PAUSE_MENU				"pause_menu"
+#macro	ICONUI_MENU_RIGHT				"m_right"		// General Menu Input Icon Keys
+#macro	ICONUI_MENU_LEFT				"m_left"
+#macro	ICONUI_MENU_UP					"m_up"
+#macro	ICONUI_MENU_DOWN				"m_down"
+#macro	ICONUI_SELECT					"select"
+#macro	ICONUI_RETURN					"return"
+#macro	ICONUI_TBOX_ADVANCE				"tbox_adv"		// Menu-Specific Input Icon Keys
+#macro	ICONUI_TBOX_LOG					"tbox_log"
+#macro	ICONUI_INV_RIGHT				"inv_right"
+#macro	ICONUI_INV_LEFT					"inv_left"
 
 // Two values that represent the information stored for a keyboard/gamepad binding's icon; the sprite resource
 // is uses and the subimage/frame to use out of the entire sprite, respectively.
 #macro	ICONUI_ICON_SPRITE				0
 #macro	ICONUI_ICON_SUBIMAGE			1
+
+// 
+#macro	ICONUI_DRAW_LEFT				10
+#macro	ICONUI_DRAW_RIGHT				11
+#macro	ICONUI_DRAW_UP					12
+#macro	ICONUI_DRAW_DOWN				13
 
 #endregion Control UI Manager Macro Definitions
 
@@ -35,6 +55,10 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	// Stores all the currently loaded input binding icon data. This data is stored into structs that contain
 	// both the current keyboard and gamepad icons; the latter not loading until a gamepad is connected.
 	controlIcons	= ds_map_create();
+	
+	// Stores the current icons being drawn to the screen. They are all anchored to a position set alongside
+	// the data, and will be offset based on the "direction" of the anchor.
+	controlGroup	= ds_map_create();
 	
 	/// @description 
 	///	
@@ -57,6 +81,19 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 		set_keyboard_control_icon(ICONUI_READYWEAPON,	_inputs[STNG_INPUT_READYWEAPON]);
 		set_keyboard_control_icon(ICONUI_FLASHLIGHT,	_inputs[STNG_INPUT_FLASHLIGHT]);
 		set_keyboard_control_icon(ICONUI_USEWEAPON,		_inputs[STNG_INPUT_USEWEAPON]);
+		
+		// Getting icon info for inputs that are tied to opening/closing a given menu.
+		set_keyboard_control_icon(ICONUI_ITEM_MENU,		_inputs[STNG_INPUT_ITEM_MENU]);
+		
+		// Getting icon info for all generic menu-based keyboard bindings.
+		set_keyboard_control_icon(ICONUI_MENU_RIGHT,	_inputs[STNG_INPUT_MENU_RIGHT]);
+		set_keyboard_control_icon(ICONUI_MENU_LEFT,		_inputs[STNG_INPUT_MENU_LEFT]);
+		set_keyboard_control_icon(ICONUI_MENU_UP,		_inputs[STNG_INPUT_MENU_UP]);
+		set_keyboard_control_icon(ICONUI_MENU_DOWN,		_inputs[STNG_INPUT_MENU_DOWN]);
+		
+		// Getting icon info the textbox-specific keyboard bindings.
+		set_keyboard_control_icon(ICONUI_TBOX_ADVANCE,	_inputs[STNG_INPUT_TBOX_ADVANCE]);
+		set_keyboard_control_icon(ICONUI_TBOX_LOG,		_inputs[STNG_INPUT_TBOX_LOG]);
 	}
 	
 	/// @description 
@@ -70,6 +107,20 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 			_key = ds_map_find_next(controlIcons, _key);
 		}
 		ds_map_destroy(controlIcons);
+		
+		var _groupRef, _length;
+		_key = ds_map_find_first(controlGroups);
+		while(!is_undefined(_key)){
+			_groupRef = controlGroups[? _key];
+			with(_groupRef){
+				_length = ds_list_size(iconsToDraw);
+				for (var i = 0; i < _length; i++)
+					delete iconsToDraw[| i];
+				ds_list_destroy(iconsToDraw);
+			}
+			delete _groupRef;
+		}
+		ds_map_destroy(controlGroups);
 	}
 	
 	/// @description 
@@ -247,6 +298,179 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	get_gamepad_icon = function(_padBinding){
 		if (_padBinding == ICONUI_BINDING_NONE)
 			return ICONUI_NO_ICON;
+	}
+	
+	/// @description 
+	///	Creates a control group if possible. If one already exists for the key provided, the reference to
+	/// said group is simply returned. Otherwise, a new struct is created that contains information about
+	/// the icons within the group, the direction to display the information relative to the "anchor point",
+	/// and a padding to determine distance between elements along the displayed direction.
+	///	
+	/// @param {Any}	key			Value that will be used to reference this control group as needed.
+	///	@param {Real}	x			Origin of the group's anchor point along the GUI's x axis.
+	/// @param {Real}	y			Origin of the group's anchor point along the GUI's y axis.
+	/// @parma {Real}	padding		Number of pixels between each icon/descriptor in the control group.
+	/// @param {Real}	direction	Determines how the icons and their optional descriptor text are laid out when drawn to the screen.
+	create_control_group = function(_key, _x, _y, _padding, _direction){
+		var _data = ds_map_find_value(controlGroup, _key);
+		if (!is_undefined(_data))
+			return _data; // A group already exists for the key provided; return its data.
+			
+		var _controlGroup = {
+			xPos			: _x,
+			yPos			: _y,
+			padding			: _padding,
+			drawDirection	: _direction,
+			iconsToDraw		: ds_list_create(),
+		};
+		
+		ds_map_add(controlGroup, _key, _controlGroup);
+		return _controlGroup;
+	}
+	
+	/// @description 
+	///	Adds an icon to a control group. This is a group of icon data and optional descriptor text that are
+	/// all drawn relative to the same point on the GUI layer; offset based on the "direction" of the anchor
+	/// and the contents of the group.
+	///	
+	///	@param {Struct._structRef}	controlGroupRef		Reference to the control group the icon will be added to.
+	/// @param {Any}				iconDataKey			Value to find the icon's data from within the "controlIcons" data structure.
+	/// @param {String}				descriptor			(Optional) Text to be shown alongside the control icon to help explain what the input does.
+	add_control_group_icon = function(_controlGroupRef, _iconDataKey, _descriptor = ""){
+		var _controlIcon	= ds_map_find_value(controlIcons, _iconDataKey);
+		if (is_undefined(_controlIcon))
+			return; // The icon data to add to the group couldn't be found; don't add it.
+			
+		with(_controlGroupRef){
+			var _index = ds_list_find_index(iconsToDraw, _controlIcon);
+			if (_index != -1)
+				return; // Don't add the same icon data reference to the list.
+				
+			ds_list_add(iconsToDraw, {
+				iconX		: 0,
+				iconY		: 0,
+				iconRef		: _controlIcon,
+				descriptorX	: 0,
+				descriptorY	: 0,
+				descriptor	: _descriptor,
+			});
+		}
+	}
+	
+	/// @description 
+	///	Calcualtes the position on the GUI layer for all control icons/descriptors found in the control
+	/// group determined by the function's single parameter. The way these positions are calculated differ
+	/// slightly depending on the direction of drawing the content of the group relative to its anchor point.
+	///	
+	///	@param {Struct._structRef}	controlGroupRef		Reference to the control group that will have its positioning data calculated.
+	calculate_control_group_offsets = function(_controlGroupRef){
+		// Jump into the control group struct to set the data required for calculation into local variables.
+		// This could all be done in the scope of the group in question by the code is easier to parse when
+		// it is split like this.
+		var _xOffset		= 0;
+		var _yOffset		= 0;
+		var _padding		= 0;
+		var _iconsToDraw	= 0;
+		var _drawDirection	= ICONUI_DRAW_RIGHT; // Default is always draw to the right of the anchor.
+		with(_controlGroupRef){
+			_xOffset		= xPos;
+			_yOffset		= yPos;
+			_padding		= padding;
+			_iconsToDraw	= iconsToDraw;
+			_drawDirection	= drawDirection;
+		}
+
+		// Begin looping through each iron that will be drawn in this group; determining the position to
+		// display each elements information based on the positions of all previous elements alongside the
+		// original offset determined by the anchor point.
+		draw_set_font(fnt_small);
+		var _sprIndex	= -1;
+		var _sprWidth	= 0;
+		var _sprHeight	= 0;
+		var _strWidth	= 0;
+		var _width		= 0;
+		var _length		= ds_list_size(_iconsToDraw);
+		for (var i = 0; i < _length; i++){
+			with(_iconsToDraw[| i]){
+				_sprIndex	= iconRef.keyIcon[ICONUI_ICON_SPRITE];
+				_sprWidth	= sprite_get_width(_sprIndex);
+				_sprHeight	= sprite_get_height(_sprIndex);
+				_strWidth	= string_width(descriptor);
+				
+				// Apply the general offsets to the icon and descriptor position values. The descriptor's y
+				// offset will always be two pixels lower on the screen than the icon since that looks best.
+				iconX		= _xOffset;
+				iconY		= _yOffset;
+				descriptorX	= _xOffset;
+				descriptorY	= _yOffset + 2;
+				
+				// Determine if some special offsets need to be applied which only occur when drawing to the
+				// left relative to the anchor point. In that case, the icon has to be offset by both itself
+				// and the descriptor's width; along with the two-pixel padding between the elements.
+				if (_drawDirection == ICONUI_DRAW_LEFT){
+					iconX	    -= _strWidth + _sprWidth + 2;
+					descriptorX	-= _strWidth;
+				} else{ // Apply offset as normal since values are right to left.
+					descriptorX += _sprWidth + 2;
+				}
+				
+				// Shift upward by the height of the icon to account for the origin of the sprite/descriptor
+				// being aligned to their topmost pixels.
+				if (_drawDirection == ICONUI_DRAW_UP){
+					iconY		-= _sprHeight;
+					descriptorY -= _sprHeight;
+				}
+				
+				// Finally, calculate the width of the element plus the two-pixel gap between the icon and
+				// its descriptor text. If no descriptor exists, the two-pixel padding is removed to allow
+				// one element's descriptor be used for multiple inputs if required.
+				_width	= _sprWidth + _strWidth + 2;
+				if (descriptor == "") { _width -= 2; }
+			}
+			
+			// Determine how to update the current x/y offset values by checking the direction that the
+			// elements will be drawn relative to the anchor point. Then, move onto the next element.
+			switch(_drawDirection){
+				default: // Display leftward by default.
+				case ICONUI_DRAW_LEFT:	// Displays each icon/descriptor from left to right.
+					_xOffset -= _width + _padding;
+					continue;
+				case ICONUI_DRAW_RIGHT: // Displays each icon/descriptor from right to left.
+					_xOffset += _width + _padding;
+					continue;
+				case ICONUI_DRAW_UP:	// Displays each icon/descriptor from bottom up.
+					_yOffset -= _sprHeight + _padding;
+					continue;
+				case ICONUI_DRAW_DOWN:	// Displays each icon/descriptor from top down.
+					_yOffset += _sprHeight + _padding;
+					continue;
+			}
+		}
+	}
+	
+	/// @description 
+	///	Draws a control group to the screen at the desired opacity value. No position calculations occur
+	/// here; it simply displays all control icon/descriptors at wherever they were calculated to be.
+	///	
+	///	@param {Struct._structRef}	controlGroupRef		Referece to the control group that will be drawn.
+	/// @param {Real}				alpha				Current opacity level to render the control group at.
+	draw_control_group = function(_controlGroupRef, _alpha){
+		with(_controlGroupRef){
+			var _iconData	= 0;
+			var _length		= ds_list_size(iconsToDraw);
+			for (var i = 0; i < _length; i++){
+				with(iconsToDraw[| i]){
+					// Get a reference to the two-value array in the icon reference's data that determine
+					// the sprite index and its subimage to use for the icon, respectively.
+					_iconData = iconRef.keyIcon;
+					draw_sprite_ext(_iconData[ICONUI_ICON_SPRITE], _iconData[ICONUI_ICON_SUBIMAGE], 
+						iconX, iconY, 1.0, 1.0, 0.0, COLOR_TRUE_WHITE, _alpha);
+						
+					// After the icon is drawn, the descriptor is drawn at its determined position.
+					draw_text_shadow(descriptorX, descriptorY, descriptor, COLOR_TRUE_WHITE, _alpha);
+				}
+			}
+		}
 	}
 }
 	

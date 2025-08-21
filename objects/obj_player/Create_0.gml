@@ -154,7 +154,8 @@ maxMoveSpeed		= PLYR_SPEED_NORMAL;
 
 // Create a very dim ambient light that will illuminate the player's face when in complete darkness.
 entity_add_basic_light(PLYR_AMBLIGHT_XOFFSET, PLYR_AMBLIGHT_YOFFSET, 
-	PLYR_AMBLIGHT_RADIUS, PLYR_AMBLIGHT_COLOR, PLYR_AMBLIGHT_STRENGTH, 0.0, STR_FLAG_PERSISTENT | LGHT_FLAG_ACTIVE);
+	PLYR_AMBLIGHT_RADIUS, PLYR_AMBLIGHT_COLOR, PLYR_AMBLIGHT_STRENGTH, 0.0, 
+		STR_FLAG_PERSISTENT | LGHT_FLAG_ACTIVE);
 
 // Set the starting sprite for the player.
 entity_set_sprite(spr_player_unarmed);
@@ -338,12 +339,55 @@ pause_player = function(){
 	moveSpeed		= 0.0;
 }
 
+/// @description 
+///	A function that can be called whenever a given state the player can find themselves in can allow them to
+/// toggle their equipped flashlight on or off. If they don't activate the input, this function does nothing.
+///	
+handle_light_toggle_input = function(){
+	if (!PINPUT_FLASHLIGHT_PRESSED || equipment.light == INV_EMPTY_SLOT)
+		return; // No input detected or a light isn't euqipped; don't process anything else in the function.
+	
+	// Turning off the flashlight; returning the player's ambient light to its default parameters.
+	if (PLYR_IS_FLASHLIGHT_ON){
+		flags  = flags & ~PLYR_FLAG_FLASHLIGHT;
+		lightX = PLYR_AMBLIGHT_XOFFSET;
+		lightY = PLYR_AMBLIGHT_YOFFSET;
+		lightSource.light_set_properties(PLYR_AMBLIGHT_RADIUS, PLYR_AMBLIGHT_COLOR, PLYR_AMBLIGHT_STRENGTH);
+	} else{ // Turning on the flashlight; using the properties of the equipped flashlight.
+		flags  = flags |  PLYR_FLAG_FLASHLIGHT;
+		var _light = lightSource;
+		with(equipment){ // Jump into the equipment struct so the light's parameters can be applied.
+			_light.light_set_properties(
+				lightParamRef[EQUP_PARAM_LIGHT_RADIUS], 
+				lightParamRef[EQUP_PARAM_LIGHT_COLOR],
+				lightParamRef[EQUP_PARAM_LIGHT_STRENGTH]
+			);
+		}
+	}
+}
+
+/// @description 
+///	A function that can be called in a given player state to allow them to open their inventory or the pause
+/// menu depending on the menu input they released on the current frame. These inputs work on a priority;
+/// pausing is first; then the inventory's item section; notes; and maps.
+///	
+handle_menu_open_inputs = function(){
+	if (PINPUT_OPEN_ITEMS_RELEASED){ // Opens the inventory to the collected item section.
+		menu_inventory_open(MENUINV_INDEX_ITEM_MENU);
+	} else if (PINPUT_OPEN_NOTES_RELEASED){ // Open the inventory to its collected notes section.
+		menu_inventory_open(MENUINV_INDEX_NOTE_MENU); 
+	} else if (PINPUT_OPEN_MAPS_RELEASED){ // Open the inventory to its map section.
+		menu_inventory_open(MENUINV_INDEX_MAP_MENU); 
+	}
+}
+
 #endregion Utility Function Definitions
 
 #region Equipment Function Definitions
 
 /// @description 
-///	
+///	Equips the item in the provided slot into the player's light source equipment slot. If the item isn't of
+/// equip type "light" the function will not have it occupy said slot, and the function will do nothing.
 ///	
 ///	@param {Real}	itemSLot		Slot in the item inventory where the flashlight being equipped is located.
 equip_flashlight = function(_itemSlot){
@@ -355,7 +399,10 @@ equip_flashlight = function(_itemSlot){
 	if (is_undefined(_itemStructRef) || _itemStructRef.equipType != ITEM_EQUIP_TYPE_FLASHLIGHT)
 		return; // The item with the given ID doesn't exist or the equipment isn't a flashlight; exit early.
 	
-	// 
+	// Attach the slot index to the light source equipment slot so the player knows the slot in the item
+	// inventory to reference when powering the light on and off while it is equipped. The array of values
+	// that determine the characteristics of the light in the game world is also copied into a local value
+	// so it can be referenced to set the light's size, color, and strength.
 	var _paramRef = 0;
 	with(equipment){
 		light			= _itemSlot;
@@ -363,7 +410,9 @@ equip_flashlight = function(_itemSlot){
 		_paramRef		= lightParamRef;
 	}
 	
-	// 
+	// Enable the light source as soon as it is equipped by setting the flag within the player's data that
+	// signifies the light's state, and apply the parameters of the player's ambient light to be that of
+	// the equipped light's parameters.
 	flags = flags | PLYR_FLAG_FLASHLIGHT;
 	lightSource.light_set_properties(
 		_paramRef[EQUP_PARAM_LIGHT_RADIUS],
@@ -373,15 +422,20 @@ equip_flashlight = function(_itemSlot){
 }
 
 /// @description 
-///	
+///	Unequips the light source that was previously assigned to the player's light source equipment slot. If
+/// this function is called while no light is equipped, it will exit early and perform no logic.
 ///	
 unequip_flashlight = function(){
 	if (equipment.light == INV_EMPTY_SLOT)
 		return; // No need to uneuqip since no flashlight is equipped; exit the function.
 	
+	// Clear the flag that signifies the flashlight is currently on, and restore the player's default
+	// ambient light source characteristics.
 	flags = flags & ~PLYR_FLAG_FLASHLIGHT;
 	lightSource.light_set_properties(PLYR_AMBLIGHT_RADIUS, PLYR_AMBLIGHT_COLOR, PLYR_AMBLIGHT_STRENGTH);
 	
+	// Reset the light value so it is no longer a valid slot in the inventory and reset the reference value
+	// that points towards its parameters for  whenever the light is active..
 	with(equipment){
 		light			= INV_EMPTY_SLOT;
 		lightParamRef	= ID_INVALID;
@@ -523,27 +577,6 @@ state_default = function(_delta){
 		}
 	}
 	
-	// Handling the input for toggling the flashlight on and off (If one happens to be equipped).
-	if (PINPUT_FLASHLIGHT_PRESSED && equipment.light != INV_EMPTY_SLOT){
-		// Turning off the flashlight; returning the player's ambient light to its default parameters.
-		if (PLYR_IS_FLASHLIGHT_ON){
-			flags  = flags & ~PLYR_FLAG_FLASHLIGHT;
-			lightX = PLYR_AMBLIGHT_XOFFSET;
-			lightY = PLYR_AMBLIGHT_YOFFSET;
-			lightSource.light_set_properties(PLYR_AMBLIGHT_RADIUS, PLYR_AMBLIGHT_COLOR, PLYR_AMBLIGHT_STRENGTH);
-		} else{ // Turning on the flashlight; using the properties of the equipped flashlight.
-			flags  = flags |  PLYR_FLAG_FLASHLIGHT;
-			var _light = lightSource;
-			with(equipment){ // Jump into the equipment struct so the light's parameters can be referenced.
-				_light.light_set_properties(
-					lightParamRef[EQUP_PARAM_LIGHT_RADIUS], 
-					lightParamRef[EQUP_PARAM_LIGHT_COLOR],
-					lightParamRef[EQUP_PARAM_LIGHT_STRENGTH]
-				);
-			}
-		}
-	}
-	
 	// Updating what the player is currently able to interact with, which only occurs if the player is moving
 	// around or they haven't checked the current room to see what the nearest interactable is. Then, the
 	// interactable checks to see if the player's point of interaction is within the item's valid interaction
@@ -584,13 +617,11 @@ state_default = function(_delta){
 		}
 	}
 	
-	// Check to see if the player has opening their inventory and figure out which page should be opened first.
-	// Note that these inputs are only acknowledged if there isn't a menu or textbox currently opened, and a
-	// curscene isn't currently occurring.
-	if (PINPUT_OPEN_ITEMS_RELEASED)			{ menu_inventory_open(MENUINV_INDEX_ITEM_MENU); }
-	else if (PINPUT_OPEN_NOTES_RELEASED)	{ menu_inventory_open(MENUINV_INDEX_NOTE_MENU); }
-	else if (PINPUT_OPEN_MAPS_RELEASED)		{ menu_inventory_open(MENUINV_INDEX_MAP_MENU); }
-	
+	// In this state, the player should be able to toggle the light source they currently have equipped on
+	// or off as they see fit, and also open their inventory or the pause menu should they choose to do so.
+	handle_light_toggle_input();
+	handle_menu_open_inputs();
+
 	// Don't bother with collision, sprinting or animation if the player isn't current considered moving.
 	if (!_isMoving)
 		return;

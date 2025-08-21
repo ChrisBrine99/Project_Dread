@@ -31,7 +31,5 @@ draw_text_shadow(90, 5,
 	COLOR_DARK_RED
 );
 
-with(PLAYER) { draw_text_shadow(200,100,string(inputFlags)); }
-
 draw_set_halign(fa_left);
 draw_text_shadow(5, 5, string("-- Frame Data --\ncurFPS\nDelta\n-- Global Flags --\ninGame\ninMenu\ninCutscene\nisPaused\nroomWarp\ntransitionActive\ntextboxOpen\ngamepadActive"), COLOR_WHITE);
