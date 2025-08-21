@@ -191,7 +191,7 @@
 
 #endregion General Macros
 
-#region Text Rendering Functions
+#region Drawing Functions
 
 /// @description 
 ///	A expanded version of the built-in draw_text function that will apply a drop shadow to any text rendered.
@@ -246,7 +246,30 @@ function draw_text_with_shadow_ext(_x, _y, _text, _color1 = c_white, _color2 = c
 	draw_text_color(_x, _y, _text, _color1, _color2, _color3, _color4, _alpha);
 }
 
-#endregion Text Rendering Functions
+/// @description 
+///	An extension of the standard draw_circle/draw_ellipse functions that allows the alpha channel to be set
+/// as well as two colors that can create a gradient across the final output. Arguments are also made to be
+/// more intuitive compared to draw_ellipse and draw_ellipse_color with their confusing x1, y1, x2, and y2
+///	values for the parameters that determine how the resulting ellipse will appear.
+///	
+///	@param {Real}			x			Centerpoint of the circle/ellipse on the horizontal axis.
+/// @param {Real}			y			Centerpoint of the circle/ellipse on the vertical axis.
+///	@param {Real}			xRadius		Radius of the circle/ellipse when parallel to the x axis.
+/// @param {Real}			yRadius		Radius of the circle/ellipse when parallel to the y axis.
+/// @param {Constant.Color}	innerColor	Color at the centerpoint of the circle/ellipse.
+/// @param {Constant.Color}	outerColor	Color at the circumference of the circle/ellipse.
+/// @param {Real}			alpha		Overall opacity of the circle/ellipse.
+function draw_circle_ext(_x, _y, _xRadius, _yRadius, _innerColor, _outerColor, _alpha){
+	draw_set_alpha(_alpha);
+	draw_ellipse_color(
+		_x - _xRadius, _y - _yRadius,
+		_x + _xRadius, _y + _yRadius,
+		_innerColor, _outerColor,
+		false
+	);
+}
+
+#endregion Drawing Functions
 
 #region String Manipulation Functions
 

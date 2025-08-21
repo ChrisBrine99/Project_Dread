@@ -285,6 +285,49 @@ global.settings			= {
 	triggerThreshold	: 0.5,
 };
 
+// Struct containing information and functionality regarding the color fade shader effect.
+global.colorFadeShader = {
+	// Stores the color being used for the shader's effect in both hexidecimal and individual RGB format. This
+	// allows the hex value to check if a color update should occur to prevent constantly having to convert a
+	// color if that color is already being used with the shader.
+	curColorHex			: COLOR_BLACK,
+	curColorRGB			: [0.0, 0.0, 0.0],
+	
+	// Get and store the uniform for shader so the color utilized can be adjusted as required.
+	uFadeColor			: shader_get_uniform(shd_color_fade,		"fadeColor"),
+	
+	/// @description 
+	///	Call this to activate the shader and set its uniform vector to match the color the effect will use.
+	/// If the effect is already active when this function is called, it will simply exit early. Note that 
+	/// calling "shader_reset" at some point after calling this function is REQUIRED!!!
+	///	
+	/// @param {Real}	color	Determines the color that this shader effect will utilize.
+	activate_shader		: function(_color){
+		if (shader_current() == shd_color_fade)
+			return;
+		shader_set(shd_color_fade);
+		shader_set_uniform_f_array(uFadeColor, curColorRGB);
+	},
+	
+	/// @description 
+	///	Sets the color that will be used for the shader's effect.
+	///	
+	/// @param {Real}	color	Determines the color that this shader effect will utilize.
+	set_effect_color	: function(_color){
+		if (curColorHex == _color)
+			return; // Don't set a color if it matches the one that is currently in use.
+		
+		// Copy the hex code for the color, and then split that color into its indiviual RGB components that
+		// range between 0.0 and 1.0 so the shader can properly utilize each value.
+		curColorHex	= _color;
+		curColorRGB = [
+			color_get_red(_color)	/ 255.0,
+			color_get_green(_color) / 255.0,
+			color_get_blue(_color)	/ 255.0
+		];
+	},
+};
+
 // Stores the device ID for the gamepad that is currently connected to the game so its input can be polled.
 global.gamepadID		= -1;
 

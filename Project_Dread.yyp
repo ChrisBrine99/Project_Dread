@@ -99,6 +99,7 @@
     {"id":{"name":"screen_fade","path":"scripts/screen_fade/screen_fade.yy",},},
     {"id":{"name":"struct_utilities","path":"scripts/struct_utilities/struct_utilities.yy",},},
     {"id":{"name":"textbox","path":"scripts/textbox/textbox.yy",},},
+    {"id":{"name":"shd_color_fade","path":"shaders/shd_color_fade/shd_color_fade.yy",},},
     {"id":{"name":"shd_lighting","path":"shaders/shd_lighting/shd_lighting.yy",},},
     {"id":{"name":"shd_retro_effects","path":"shaders/shd_retro_effects/shd_retro_effects.yy",},},
     {"id":{"name":"spr_apartment_ceiling","path":"sprites/spr_apartment_ceiling/spr_apartment_ceiling.yy",},},

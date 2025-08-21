@@ -80,12 +80,13 @@
 // Determines the position on the GUI the textbox will rest at after its opening transition has completed.
 #macro	TBOX_Y_TARGET					display_get_gui_height() - 64.0
 
-// Determines the speed of the the elements involved in the textbox's open and closing animations. The first
-// value is only utilized during opening, and the second is utilized by both.
-#macro	TBOX_ANIM_MOVE_SPEED			0.2
-#macro	TBOX_ANIM_ALPHA_SPEED			0.075
+// Macros for the characteristics of the opening and closing animations; denoted as such by containing either
+// "OANIM" for opening, and "CANIM" for closing, respectively
+#macro	TBOX_OANIM_MOVE_SPEED			0.2
+#macro	TBOX_OANIM_ALPHA_SPEED			0.05
+#macro	TBOX_CANIM_ALPHA_SPEED			0.08
 
-//	
+// The macro for the unique key used to store the control icon group for the textox input information.
 #macro	TEXTBOX_ICONUI_GROUP			"tbox_icons"
 
 #endregion Macros for Textbox Struct
@@ -150,7 +151,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 	// the limit value of two; allowing the arrow to bob up and down by one pixel as a simple aniamtion.
 	advArrowOffset	= 0.0;
 
-	// 
+	// Stores a reference to the control icon group that displays input information for the textbox.
 	controlGroupRef	= -1;
 
 	/// @description 
@@ -334,11 +335,27 @@ function str_textbox(_index) : str_base(_index) constructor {
 		// Simply draw the currently rendered text onto the screen with this single draw call.
 		draw_surface_ext(textSurface, _xPos + TBOX_TEXT_X_OFFSET, _yPos + TBOX_TEXT_Y_OFFSET, 
 			1.0, 1.0, 0.0, COLOR_TRUE_WHITE, alpha);
-			
-		// 
-		var _controlGroupRef	= controlGroupRef;
-		var _alpha				= alpha;
-		with(CONTROL_UI_MANAGER) { draw_control_group(_controlGroupRef, _alpha); }
+		
+		// Draw a black background with a nice alpha gradient applied to it. This will be found behind the 
+		// control information for the textbox, but in front of all elements; causing the textbox to slide in
+		// from behind this element during its opening animation.
+		var _alpha		= alpha;
+		var _guiWidth	= display_get_gui_width();
+		var _guiHeight	= display_get_gui_height();
+		with(global.colorFadeShader){
+			activate_shader(COLOR_BLACK);
+			draw_circle_ext(_guiWidth / 2, _guiHeight, 300.0, 30.0, COLOR_WHITE, COLOR_BLACK, _alpha);
+			shader_reset();
+		}
+		
+		// After rendering the textbox and all its required elements, the control icon group for the textbox 
+		// will be drawn at their calculated positions. The color of the text (Both it and the drop shadow)
+		// are set to match the default color for text within the textbox.
+		var _controlGroupRef = controlGroupRef;
+		with(CONTROL_UI_MANAGER){
+			draw_control_group(_controlGroupRef, _alpha, COLOR_WHITE, COLOR_DARK_GRAY, 
+				_alpha * TBOX_TEXT_SHADOW_ALPHA); 
+		}
 	}
 	
 	/// @description 
@@ -605,7 +622,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 		
 		// Fades the entire textbox into full visiblity.
 		if (alpha < 1.0){
-			alpha += TBOX_ANIM_ALPHA_SPEED * _delta;
+			alpha += TBOX_OANIM_ALPHA_SPEED * _delta;
 			if (alpha > 1.0)
 				alpha = 1.0;
 		}
@@ -613,7 +630,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 		// Move the y position from where it is initially set below the visible portion of the screen to the
 		// desired position set by this opening animation.
 		if (y != TBOX_Y_TARGET){
-			y += (TBOX_Y_TARGET - y) * TBOX_ANIM_MOVE_SPEED * _delta;
+			y += (TBOX_Y_TARGET - y) * TBOX_OANIM_MOVE_SPEED * _delta;
 			if (point_distance(0, y, 0, TBOX_Y_TARGET) <= max(1.0, _delta))
 				y = TBOX_Y_TARGET;
 		}
@@ -640,7 +657,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 		}
 		
 		// Fades the textbox until it is no longer visible on the screen.
-		alpha -= TBOX_ANIM_MOVE_SPEED * _delta;
+		alpha -= TBOX_CANIM_ALPHA_SPEED * _delta;
 		if (alpha <= 0.0) // Prevent the value from going negative.
 			alpha = 0.0;
 	}

@@ -113,9 +113,9 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 		ds_map_destroy(controlIcons);
 		
 		var _groupRef, _length;
-		_key = ds_map_find_first(controlGroups);
+		_key = ds_map_find_first(controlGroup);
 		while(!is_undefined(_key)){
-			_groupRef = controlGroups[? _key];
+			_groupRef = controlGroup[? _key];
 			with(_groupRef){
 				_length = ds_list_size(iconsToDraw);
 				for (var i = 0; i < _length; i++)
@@ -123,8 +123,9 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 				ds_list_destroy(iconsToDraw);
 			}
 			delete _groupRef;
+			_key = ds_map_find_next(controlGroup, _key);
 		}
-		ds_map_destroy(controlGroups);
+		ds_map_destroy(controlGroup);
 	}
 	
 	/// @description 
@@ -388,18 +389,22 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 		// display each elements information based on the positions of all previous elements alongside the
 		// original offset determined by the anchor point.
 		draw_set_font(fnt_small);
-		var _sprIndex	= -1;
-		var _sprWidth	= 0;
-		var _sprHeight	= 0;
-		var _strWidth	= 0;
-		var _width		= 0;
-		var _length		= ds_list_size(_iconsToDraw);
+		var _gamepadActive	= GAME_IS_GAMEPAD_ACTIVE;
+		var _sprIndex		= -1;
+		var _sprWidth		= 0;
+		var _sprHeight		= 0;
+		var _strWidth		= 0;
+		var _width			= 0;
+		var _length			= ds_list_size(_iconsToDraw);
 		for (var i = 0; i < _length; i++){
 			with(_iconsToDraw[| i]){
-				_sprIndex	= iconRef.keyIcon[ICONUI_ICON_SPRITE];
-				_sprWidth	= sprite_get_width(_sprIndex);
-				_sprHeight	= sprite_get_height(_sprIndex);
-				_strWidth	= string_width(descriptor);
+				// Determine which sprite to use based on the currently active input method. Then, this 
+				// sprite is used to fill in the _sprWidth and _sprHeight variables, respectively.
+				if (_gamepadActive) { _sprIndex = iconRef.padIcon; }
+				else				{ _sprIndex = iconRef.keyIcon; }
+				_sprWidth	= is_array(_sprIndex) ? sprite_get_width(_sprIndex[ICONUI_ICON_SPRITE])  : 0;
+				_sprHeight	= is_array(_sprIndex) ? sprite_get_height(_sprIndex[ICONUI_ICON_SPRITE]) : 0;
+				_strWidth	= string_width(descriptor);	// Also calculate the width of the descriptor text.
 				
 				// Apply the general offsets to the icon and descriptor position values. The descriptor's y
 				// offset will always be two pixels lower on the screen than the icon since that looks best.
@@ -457,21 +462,33 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	/// here; it simply displays all control icon/descriptors at wherever they were calculated to be.
 	///	
 	///	@param {Struct._structRef}	controlGroupRef		Referece to the control group that will be drawn.
-	/// @param {Real}				alpha				Current opacity level to render the control group at.
-	draw_control_group = function(_controlGroupRef, _alpha){
+	/// @param {Real}				alpha				Overall opacity of the icon and descriptor text.
+	///	@param {Real}				textColor			(Optional) Determines the color of each icon's descriptor text.
+	/// @param {Real}				shadowColor			(Optional) Determines the color of the drop shadow behind all descriptor text.
+	/// @param {Real}				shadowAlpha			(Optional) Overall opacity of the drop shadow on drawn text.
+	draw_control_group = function(_controlGroupRef, _alpha, _textColor = COLOR_WHITE, _shadowColor = COLOR_BLACK, _shadowAlpha = 1.0){
 		with(_controlGroupRef){
-			var _iconData	= 0;
-			var _length		= ds_list_size(iconsToDraw);
+			var _gamepadActive	= GAME_IS_GAMEPAD_ACTIVE;
+			var _iconData		= ICONUI_NO_ICON;
+			var _length			= ds_list_size(iconsToDraw);
 			for (var i = 0; i < _length; i++){
 				with(iconsToDraw[| i]){
+					// Determine if the gamepad or keyboard icon should be utilized, and grab the relevant
+					// data for the currently active input method.
+					if (_gamepadActive) { _iconData = iconRef.padIcon; }
+					else				{ _iconData = iconRef.keyIcon; }
+					
 					// Get a reference to the two-value array in the icon reference's data that determine
-					// the sprite index and its subimage to use for the icon, respectively.
-					_iconData = iconRef.keyIcon;
-					draw_sprite_ext(_iconData[ICONUI_ICON_SPRITE], _iconData[ICONUI_ICON_SUBIMAGE], 
-						iconX, iconY, 1.0, 1.0, 0.0, COLOR_TRUE_WHITE, _alpha);
+					// the sprite index and its subimage to use for the icon, respectively. If no valid data
+					// is provided, the iocn rendering is skipped.
+					if (_iconData != ICONUI_NO_ICON){
+						draw_sprite_ext(_iconData[ICONUI_ICON_SPRITE], _iconData[ICONUI_ICON_SUBIMAGE], 
+							iconX, iconY, 1.0, 1.0, 0.0, COLOR_TRUE_WHITE, _alpha);
+					}
 						
-					// After the icon is drawn, the descriptor is drawn at its determined position.
-					draw_text_shadow(descriptorX, descriptorY, descriptor, COLOR_TRUE_WHITE, _alpha);
+					// After the icon is drawn (Or is skipped over since no valid data was present), the 
+					// descriptor is drawn at its determined position.
+					draw_text_shadow(descriptorX, descriptorY, descriptor, _textColor, _alpha, _shadowColor, _shadowAlpha);
 				}
 			}
 		}

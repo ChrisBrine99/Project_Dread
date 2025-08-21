@@ -221,7 +221,7 @@ function item_inventory_add(_item, _amount, _durability){
 	if (!is_array(global.curItems))
 		return _amount;
 	
-	// Make sure the item id points to a valid item. Otherwise, don't even attempt to add it to the inventory.
+	// Make sure the item ID points to a valid item. Otherwise, don't even attempt to add it to the inventory.
 	var _itemData = global.itemData[? _item];
 	if (is_undefined(_itemData))
 		return _amount;
@@ -404,11 +404,7 @@ function item_inventory_slot_get_data(_slot){
 	var _slotContents = global.curItems[_slot];
 	if (_slotContents == INV_EMPTY_SLOT) // The inventory slot is empty; return -1 to signify such.
 		return INV_EMPTY_SLOT;
-	
-	var _itemData = ds_map_find_value(global.itemData, _slotContents.itemID);
-	if (is_undefined(_itemData)) // No item data exists for the id value in the slot; return default value.
-		return INV_EMPTY_SLOT;
-	return _itemData;
+	return array_get(global.itemIDs, _slotContents.itemID);
 }
 
 /// @description
