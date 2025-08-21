@@ -41,4 +41,4 @@ with(PLAYER)			 { object_set_state(state_default); } // For testing //
 // Once everything has been initialized, the first official room for the game is loaded, and the game is 
 // unpaused to allow various game elements to start updating.
 room_goto(rm_test_01);
-global.flags &= ~GAME_FLAG_PAUSED;
+global.flags = global.flags & ~GAME_FLAG_PAUSED;

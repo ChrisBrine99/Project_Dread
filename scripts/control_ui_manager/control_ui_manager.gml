@@ -38,7 +38,9 @@
 #macro	ICONUI_ICON_SPRITE				0
 #macro	ICONUI_ICON_SUBIMAGE			1
 
-// 
+// Values that determine the direction to draw the control group's element in. By "direction", it simply means
+// how the are offset relative to the anchor point of the group, and then offset further by each element after
+// that until the whole group is drawn.
 #macro	ICONUI_DRAW_LEFT				10
 #macro	ICONUI_DRAW_RIGHT				11
 #macro	ICONUI_DRAW_UP					12
@@ -61,7 +63,9 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	controlGroup	= ds_map_create();
 	
 	/// @description 
-	///	
+	///	The control ui manager struct's create event. When called, it will initialize the keyboard control
+	/// icon information since it doesn't change throughout the runtime of the game. Gamepad icons are not
+	/// initialized since those are determined based on the controller that was connected by the user.
 	///	
 	create_event = function(){
 		if (room != rm_init)

@@ -40,7 +40,7 @@
 // They represent the width, height, and opacity/alpha value of said background, respectively.
 #macro	TBOX_BG_X_OFFSET				0
 #macro	TBOX_BG_Y_OFFSET				8
-#macro	TBOX_BG_WIDTH					VIEWPORT_WIDTH - 20
+#macro	TBOX_BG_WIDTH					TBOX_SURFACE_WIDTH + 20
 #macro	TBOX_BG_HEIGHT					42
 
 // The pixel offsets from the current x/y position of the textbox that the text contents will be rendered at.
@@ -75,10 +75,10 @@
 #macro	TBOX_PUNCT_EXCLAIM_DELAY		0.075
 
 // Determines the position on the GUI the textbox will begin the opening animation at.
-#macro	TBOX_Y_START					VIEWPORT_HEIGHT + 30
+#macro	TBOX_Y_START					display_get_gui_width() + 30
 
 // Determines the position on the GUI the textbox will rest at after its opening transition has completed.
-#macro	TBOX_Y_TARGET					VIEWPORT_HEIGHT - 60.0
+#macro	TBOX_Y_TARGET					display_get_gui_height() - 64.0
 
 // Determines the speed of the the elements involved in the textbox's open and closing animations. The first
 // value is only utilized during opening, and the second is utilized by both.
@@ -98,8 +98,8 @@ function str_textbox(_index) : str_base(_index) constructor {
 	
 	// The current position of the textbox on the game's GUI layer. Determines where everything is drawn as
 	// this coordinate will determine the top-left position of the entire textbox when drawn to the screen.
-	x				= floor((VIEWPORT_WIDTH - TBOX_SURFACE_WIDTH - 20) / 2);
-	y				= TBOX_Y_START;
+	x				= 0;
+	y				= 0;
 	
 	// Determines the overall transparency level for every graphics element of the textbox.
 	alpha			= 0.0;
@@ -154,12 +154,31 @@ function str_textbox(_index) : str_base(_index) constructor {
 	controlGroupRef	= -1;
 
 	/// @description 
-	///	
+	///	The textbox struct's create event. It will simply initialize the control icon group that will be drawn
+	/// whenever the textbox is actively being rendered onto the screen.
 	///	
 	create_event = function(){
+		if (room != rm_init)
+			return; // Prevents a call to this function from executing outside of the game's initialization.
+		
+		// 
+		var _viewWidth	= display_get_gui_width();
+		var _viewHeight	= display_get_gui_height();
+
+		// Determine the starting position of the textbox. The x position will remain constant, but the y value
+		// will change during the opening animation; going from the position set below to the value found in
+		// the constant "TBOX_Y_TARGET".
+		x = floor((_viewWidth - TBOX_BG_WIDTH) / 2) - 20; // Offset by 20 to account for the space between the background and the GUI's size.  
+		y = _viewHeight + 30; // The same value as "TBOX_Y_START" but utilizing the fact the height was stored locally previously.
+		
+		// 
+		_viewWidth  -= 5;
+		_viewHeight	-= 12;
+		
+		// 
 		var _controlGroupRef = -1;
 		with(CONTROL_UI_MANAGER){
-			_controlGroupRef = create_control_group(TEXTBOX_ICONUI_GROUP, 100, 100, 3, ICONUI_DRAW_RIGHT);
+			_controlGroupRef = create_control_group(TEXTBOX_ICONUI_GROUP, _viewWidth, _viewHeight, 3, ICONUI_DRAW_LEFT);
 			add_control_group_icon(_controlGroupRef, ICONUI_TBOX_ADVANCE, "Next");
 			add_control_group_icon(_controlGroupRef, ICONUI_TBOX_LOG, "Log");
 			calculate_control_group_offsets(_controlGroupRef);

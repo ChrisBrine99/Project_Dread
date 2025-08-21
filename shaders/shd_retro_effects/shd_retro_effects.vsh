@@ -1,15 +1,15 @@
-attribute vec3 in_Position;                  // (x,y,z)
-attribute vec4 in_Colour;                    // (r,g,b,a)
-attribute vec2 in_TextureCoord;              // (u,v)
+attribute vec2	in_Position;
+attribute vec3	in_Color;
+attribute vec2	in_Texcoord;
 
-varying vec2 v_vPosition;
-varying vec2 v_vTexcoord;
-varying vec3 v_vColour;
+varying vec2	vPosition;
+varying vec3	vColor;
+varying vec2	vTexcoord;
 
-void main(void) {
-    vec4 object_space_pos = vec4( in_Position.x, in_Position.y, in_Position.z, 1.0);
-    gl_Position = gm_Matrices[MATRIX_WORLD_VIEW_PROJECTION] * object_space_pos;
-    v_vPosition	= in_Position.xy;
-    v_vColour	= in_Colour.rgb;
-    v_vTexcoord = in_TextureCoord;
+void main(void){
+    vec4 _oPos	= vec4( in_Position.x, in_Position.y, 0.0, 1.0);
+    gl_Position = gm_Matrices[MATRIX_WORLD_VIEW_PROJECTION] * _oPos;
+    vPosition	= in_Position;
+    vColor		= in_Color;
+    vTexcoord	= in_Texcoord;
 }

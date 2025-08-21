@@ -48,6 +48,9 @@ function str_camera(_index) : str_base(_index) constructor {
 	/// object to start following (The player object is the default).
 	///	
 	create_event = function(){
+		if (room != rm_init)
+			return; // Prevents a call to this function from executing outside of the game's initialization.
+			
 		camera_set_viewport(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
 		camera_set_followed_object(PLAYER, true);
 	}
