@@ -9,6 +9,7 @@
 #macro	PLYR_FLAG_POISONED				0x00000010
 #macro	PLYR_FLAG_FLASHLIGHT			0x00000020
 #macro	PLYR_FLAG_UP_POISON_DAMAGE		0x00000040
+#macro	PLYR_FLAG_PLAY_STEP_SOUND		0x00000080
 
 // Checks for the state of all flag bits that are exclusive to the player.
 #macro	PLYR_IS_MOVING					((flags & PLYR_FLAG_MOVING)				!= 0)
@@ -18,6 +19,7 @@
 #macro	PLYR_IS_POISONED				((flags & PLYR_FLAG_POISONED)			!= 0)
 #macro	PLYR_IS_FLASHLIGHT_ON			((flags & PLYR_FLAG_FLASHLIGHT)			!= 0)
 #macro	PLYR_CAN_UP_POISON_DAMAGE		((flags & PLYR_FLAG_UP_POISON_DAMAGE)	!= 0)
+#macro	PLYR_CAN_PLAY_STEP_SOUND		((flags & PLYR_FLAG_PLAY_STEP_SOUND)	!= 0)
 
 #endregion Player-Specific Flag Macros
 
@@ -136,6 +138,10 @@
 #macro	PLYR_AMBLIGHT_COLOR				COLOR_DARK_GRAY
 #macro	PLYR_AMBLIGHT_STRENGTH			0.25
 
+// Macros that determine which frames in the player's walking/running animation will trigger a step sound.
+#macro	PLYR_FIRST_STEP_INDEX			1
+#macro	PLYR_SECOND_STEP_INDEX			3
+
 #endregion Misc. Macros
 
 #region Variable Inheritance and Initialization
@@ -224,6 +230,12 @@ equipment = {
 
 // Stores the instance ID for the nearest interactable object to the player's current position.
 interactableID		= noone;
+
+// Variables used for the player's footstep sound effect system. The first value stores the ID for the layer
+// in the room that stores the floor material tiles, and the second stores the ID of the footstep sound that
+// was most recently played back.
+floorMaterials		= -1;
+prevStepSoundID		= -1;
 
 #endregion Variable Inheritance and Initialization
 
@@ -326,6 +338,51 @@ process_movement_animation = function(_delta){
 }
 
 /// @description 
+/// Handles playback of the footstep sounds that play depending on the current floor material they are walking
+/// on. No sound playback will occur if there isn't a layer in the room named "Tiles_Floor_Materials".
+///	
+process_footstep_sound = function(){
+	if (floorMaterials == -1)
+		return; // Don't try to play footstep sounds if the area doesn't have a valid layer for floor types.
+	
+	// Make sure the correct animation frame is being shown before any sound is played. If the frame isn't one
+	// of the two valid values, the function exits early and no step sound playback occurs for the game frame.
+	var _animCurFrame = floor(animCurFrame);
+	if (_animCurFrame != PLYR_FIRST_STEP_INDEX && _animCurFrame != PLYR_SECOND_STEP_INDEX){
+		flags = flags | PLYR_FLAG_PLAY_STEP_SOUND; // Flag is only ever set when beginning movement or during off frames.
+		return;
+	}
+	
+	// If the current frame of animation is one of the two valid values (Both can occur for any number of game
+	// frames relative to what else is happening in the room), make sure the flag allowing a step sound to play
+	// is set. Otherwise, exit the function early. If not, proceed and immediately clear said flag.
+	if (!PLYR_CAN_PLAY_STEP_SOUND)
+		return;
+	flags = flags & ~PLYR_FLAG_PLAY_STEP_SOUND;
+	
+	// Calculate which tile the player is currently walking on, and set the sound to playback relative to the
+	// tile index value that is returned by the tilemap_get function.
+	var _snd	= -1;
+	var _cellX	= floor(x / 16.0);
+	var _cellY	= floor(y / 16.0);
+	switch(tilemap_get(floorMaterials, _cellX, _cellY)){
+		default:
+		case TILE_INDEX_FLOOR_TILE:		_snd = snd_player_step_tile;		break;
+		case TILE_INDEX_FLOOR_WATER:	_snd = snd_player_step_water;		break;
+		case TILE_INDEX_FLOOR_WOOD:		_snd = snd_player_step_wood;		break;
+		case TILE_INDEX_FLOOR_GRASS:	_snd = snd_player_step_grass;		break;
+	}
+	
+	// Set the sound's unaltered volume, and very slightly increase it if the player is currently running.
+	// Then, play the sound effect using the special function that automatically adjusts volume and pitch
+	// within a random range on a per-playback basis.
+	var _volume = 0.4;
+	if (PLYR_IS_SPRINTING)
+		_volume += 0.05;
+	prevStepSoundID = sound_effect_play_ext(_snd, _volume, 1.0, 0, false, false, 0.1, 0.08);
+}
+
+/// @description 
 /// A function that can be called whenever the player needs to be paused while other entities and objects are 
 /// still allowed to remain active (Ex. Interacting with objects or opening a menu that isn't the pause menu).
 /// 
@@ -389,7 +446,7 @@ handle_menu_open_inputs = function(){
 ///	Equips the item in the provided slot into the player's light source equipment slot. If the item isn't of
 /// equip type "light" the function will not have it occupy said slot, and the function will do nothing.
 ///	
-///	@param {Real}	itemSLot		Slot in the item inventory where the flashlight being equipped is located.
+///	@param {Real}	itemSlot		Slot in the item inventory where the flashlight being equipped is located.
 equip_flashlight = function(_itemSlot){
 	if (_itemSlot < 0 || _itemSlot >= array_length(global.curItems) || global.curItems[_itemSlot] == INV_EMPTY_SLOT)
 		return; // Exit early if the slot value is out of bounds or the slot provided is actually empty.
@@ -544,7 +601,7 @@ state_default = function(_delta){
 	// movement vector.
 	if (moveDirectionX != 0.0 || moveDirectionY != 0.0){ // Handling acceleration
 		if (!PLYR_IS_MOVING){
-			flags		 = flags | PLYR_FLAG_MOVING;
+			flags		 = flags | PLYR_FLAG_MOVING | PLYR_FLAG_PLAY_STEP_SOUND;
 			animCurFrame = 1.0; // Ensures the player's animation starts on their first step frame immediately.
 		}
 		moveSpeed	   += accel * _delta;
@@ -657,8 +714,9 @@ state_default = function(_delta){
 		maxMoveSpeed	= PLYR_SPEED_NORMAL;
 	}
 
-	// Process the movement animation as normal if no collision occurred for the frame.
+	// 
 	process_movement_animation(_delta);
+	process_footstep_sound();
 }
 
 /// @description

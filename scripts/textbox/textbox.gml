@@ -87,7 +87,25 @@
 #macro	TBOX_CANIM_ALPHA_SPEED			0.08
 
 // The macro for the unique key used to store the control icon group for the textox input information.
-#macro	TEXTBOX_ICONUI_GROUP			"tbox_icons"
+#macro	TBOX_ICONUI_CONTROL_GROUP		"tbox_icons"
+
+// Determines where the control group's anchor point is placed relative to the bottom-right of the GUI (These 
+// values are subtracted against the GUI's width and height).
+#macro	TBOX_CONTROL_GROUP_XOFFSET	    5
+#macro	TBOX_CONTROL_GROUP_YOFFSET	    12
+
+// Determines the value that the arrow's current offset needs to be exceed for it to be reset to zero (Or 
+// near-zero if the value happens to not be exactly the same as this threshold value).
+#macro	TBOX_ARROW_OFFSET_THRESHOLD		2.0
+
+// Parameters for the textbox's character typing animation. They determine how often it is played, how loud
+// it is, how pitch-shifted it is relative to its default pitch, and the random variance that is applied to
+// the volume/gain and pitch of the current playback of the sound.
+#macro	TBOX_SND_TYPE_PLAY_INTERVAL		3.8
+#macro	TBOX_SND_TYPE_GAIN				0.05
+#macro	TBOX_SND_TYPE_PITCH				1.0
+#macro	TBOX_SND_TYPE_GAIN_RANGE		0.1
+#macro	TBOX_SND_TYPE_PITCH_RANGE		0.04
 
 #endregion Macros for Textbox Struct
 
@@ -95,64 +113,68 @@
 
 /// @param {Function}	index	The value of "str_textbox" as determined by GameMaker during runtime.
 function str_textbox(_index) : str_base(_index) constructor {
-	flags			= STR_FLAG_PERSISTENT;
+	flags				= STR_FLAG_PERSISTENT;
 	
 	// The current position of the textbox on the game's GUI layer. Determines where everything is drawn as
 	// this coordinate will determine the top-left position of the entire textbox when drawn to the screen.
-	x				= 0;
-	y				= 0;
+	x					= 0;
+	y					= 0;
 	
 	// Determines the overall transparency level for every graphics element of the textbox.
-	alpha			= 0.0;
+	alpha				= 0.0;
 	
 	// State variables that function exactly like how they do when an entity utilizes them; processing a single
 	// function that represents the current state of the object; allowing them to move to other states as required
 	// during that initial state's output.
-	curState		= 0;
-	nextState		= 0;
-	lastState		= 0;
+	curState			= 0;
+	nextState			= 0;
+	lastState			= 0;
 	
 	// The surface that the current textbox's text will be drawn to, and the buffer that will store a copy of
 	// that data in memory in case the surface gets flushed from the GPU.
-	textSurface		= -1;
-	surfBuffer		= buffer_create(TBOX_SURFACE_WIDTH * TBOX_SURFACE_HEIGHT * 4, buffer_fixed, 4);
+	textSurface			= -1;
+	surfBuffer			= buffer_create(TBOX_SURFACE_WIDTH * TBOX_SURFACE_HEIGHT * 4, buffer_fixed, 4);
 	
 	// Variable relating to the text content data structure. They store the list itself, the current index
 	// and next index as determined by the current index's data, and the length of the string found within the
 	// current index's data.
-	textData		= ds_list_create();
-	textIndex		= 0;
-	nextIndex		= 0;
-	textLength		= 0;
+	textData			= ds_list_create();
+	textIndex			= 0;
+	nextIndex			= 0;
+	textLength			= 0;
 
 	// Stores the string that represents the name of the actor that is speaking in the current textbox. Can
 	// only be shown if the flag bit within the flags variable is set as well.
-	actorName		= "";
+	actorName			= "";
 	
 	// Stores the toggled and not toggled input flags from the previous frame so the input can be checked to
 	// see if it was pressed or not by the player.
-	prevInputFlags	= 0;
+	prevInputFlags		= 0;
 	
 	// Variables relating to which character(s) will be drawn and where they will be drawn on the textbox's
 	// text surface when performing the "typing" animation.
-	curChar			= 1;
-	nextChar		= 1;
-	charX			= 0;
-	charY			= 0;
-	nextCharDelay	= TBOX_PUNCT_NONE;
+	curChar				= 1;
+	nextChar			= 1;
+	charX				= 0;
+	charY				= 0;
+	nextCharDelay		= TBOX_PUNCT_NONE;
+	
+	// Counts down until the value goes below zero. When that happens, the counter is reset and the sound is
+	// played alongside the textbox's typing animation.
+	sndCharTypeTimer	= 0.0;
 	
 	// Variables that allow the textbox to reference the current color data for the text that is being typed
 	// onto the textbox; allowing each individual character to be a unique color compared to the default white.
-	colorDataRef	= -1;
-	totalColors		= 0;
-	charColorIndex	= 0;
+	colorDataRef		= -1;
+	totalColors			= 0;
+	charColorIndex		= 0;
 	
 	// Acts as both the positional offset and the timer that resets that interval back to zero when it hits
 	// the limit value of two; allowing the arrow to bob up and down by one pixel as a simple aniamtion.
-	advArrowOffset	= 0.0;
+	advArrowOffset		= 0.0;
 
 	// Stores a reference to the control icon group that displays input information for the textbox.
-	controlGroupRef	= -1;
+	controlGroupRef		= -1;
 
 	/// @description 
 	///	The textbox struct's create event. It will simply initialize the control icon group that will be drawn
@@ -162,24 +184,28 @@ function str_textbox(_index) : str_base(_index) constructor {
 		if (room != rm_init)
 			return; // Prevents a call to this function from executing outside of the game's initialization.
 		
-		// 
+		// Grab the dimensions of the game's GUI layer as it will be used multiple times throughout the 
+		// create event of the textbox.
 		var _viewWidth	= display_get_gui_width();
 		var _viewHeight	= display_get_gui_height();
 
-		// Determine the starting position of the textbox. The x position will remain constant, but the y value
-		// will change during the opening animation; going from the position set below to the value found in
-		// the constant "TBOX_Y_TARGET".
+		// Determine the starting position of the textbox. The x position will remain constant, but the y 
+		// value will change during the opening animation; going from the position set below to the value 
+		// found in the constant "TBOX_Y_TARGET".
 		x = floor((_viewWidth - TBOX_BG_WIDTH) / 2) - 20; // Offset by 20 to account for the space between the background and the GUI's size.  
 		y = _viewHeight + 30; // The same value as "TBOX_Y_START" but utilizing the fact the height was stored locally previously.
 		
-		// 
-		_viewWidth  -= 5;
-		_viewHeight	-= 12;
+		// Since the original values are no longer needed, they are offset for the position of the anchor
+		// point that the textbox's control information will be place on the GUI.
+		_viewWidth  -= TBOX_CONTROL_GROUP_XOFFSET;
+		_viewHeight	-= TBOX_CONTROL_GROUP_YOFFSET;
 		
-		// 
+		// Finally, setup the control group that will be utilized by the Textbox and calculate the positions
+		// of the icons and their descriptors so they're displayed at the proper offset. Then, set the
+		// textbox's reference to its control group so it can be referenced for drawing the group when needed.
 		var _controlGroupRef = -1;
 		with(CONTROL_UI_MANAGER){
-			_controlGroupRef = create_control_group(TEXTBOX_ICONUI_GROUP, _viewWidth, _viewHeight, 3, ICONUI_DRAW_LEFT);
+			_controlGroupRef = create_control_group(TBOX_ICONUI_CONTROL_GROUP, _viewWidth, _viewHeight, 3, ICONUI_DRAW_LEFT);
 			add_control_group_icon(_controlGroupRef, ICONUI_TBOX_ADVANCE, "Next");
 			add_control_group_icon(_controlGroupRef, ICONUI_TBOX_LOG, "Log");
 			calculate_control_group_offsets(_controlGroupRef);
@@ -328,8 +354,8 @@ function str_textbox(_index) : str_base(_index) constructor {
 			// Increment the value until it reaches 2.0 or higher, and then reduce it by two to bring it back
 			// to zero; allowing the arrow to bob up and down rhythmically on screen.
 			advArrowOffset += TBOX_ARROW_MOVE_SPEED * _delta;
-			if (advArrowOffset > 2.0)
-				advArrowOffset -= 2.0;
+			if (advArrowOffset > TBOX_ARROW_OFFSET_THRESHOLD)
+				advArrowOffset -= TBOX_ARROW_OFFSET_THRESHOLD;
 		}
 		
 		// Simply draw the currently rendered text onto the screen with this single draw call.
@@ -460,6 +486,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 		actorName		= get_actor_name(_newActorIndex);
 		curChar			= 1;	// Reset these to their defaults so the typing animation can play again.
 		nextChar		= 1;
+		sndScrollTimer	= 0.0;
 		charX			= TBOX_SURFACE_X_PADDING;
 		charY			= TBOX_SURFACE_Y_PADDING;
 		colorDataRef	= _textData.colorData;	// Overwrite the previous ds_list reference with either -1 or the new textbox's color list.
@@ -595,11 +622,22 @@ function str_textbox(_index) : str_base(_index) constructor {
 			return;
 		}
 		
-		// Increment the value of nextChar by the current delta multiplied against the speed of the text as
-		// defined within the current struct being referenced within the textData data structure. Pressing
-		// the advance key before this value has reached the desired text length will skip this process and
-		// display all text on the screen instantly.
-		nextChar += nextCharDelay * _delta;
+		// Calculate the "amount" of change during the previous frame and this one. This will then be used 
+		// to increment the character typing sound's timer and the character typing animation "timer" that 
+		// goes alongside said sound.
+		var _amount = nextCharDelay * _delta;
+		sndCharTypeTimer -= _amount;
+		if (sndCharTypeTimer <= 0.0){ // Play the sound and reset its playback timer.
+			sndCharTypeTimer += TBOX_SND_TYPE_PLAY_INTERVAL;
+			sound_effect_play_ext(snd_textbox_type, TBOX_SND_TYPE_GAIN, 1.0, 0, true, false,
+				TBOX_SND_TYPE_GAIN_RANGE, TBOX_SND_TYPE_PITCH_RANGE);
+		}
+		
+		// Increment the textbox's typing animation timer by the amount calculated above. If that value exceeds
+		// the number of characters in the string being displayed by the textbox (Or the advance input was hit
+		// before the typing animation completes), the animation is completed and characters will no longer
+		// by added to the textbox.
+		nextChar += _amount;
 		if (TBOX_WAS_ADVANCE_PRESSED || nextChar > textLength){
 			nextChar		= textLength;
 			nextCharDelay	= TBOX_PUNCT_NONE;

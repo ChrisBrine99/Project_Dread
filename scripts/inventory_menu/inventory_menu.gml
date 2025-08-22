@@ -1,10 +1,11 @@
 #region Macros for Inventory Menu Struct
 
-//
+// Macros for flag bits that are unique to the inventory menu.
 #macro	MENUINV_FLAG_CAN_CLOSE			0x00000001
 #macro	MENUINV_FLAG_OPENED				0x00000002
 
-// 
+// Macros for checking the current state of the flag bits for the inventory menu. They are used by the active
+// submenu to check if they can or cannot perform certain actions to the inventory.
 #macro	MENUINV_CAN_CLOSE				((flags & MENUINV_FLAG_CAN_CLOSE)	!= 0)
 #macro	MENUINV_IS_OPENED				((flags & MENUINV_FLAG_OPENED)		!= 0)
 
@@ -15,7 +16,8 @@
 #macro	MENUINV_INDEX_MAP_MENU			2
 #macro	MENUINV_TOTAL_SUBMENUS			3
 
-// 
+// Determines the speed that the inventory menu's current opacity will increase or decrease depending on if 
+// the menu is opening or closing, respectively.
 #macro	MENUINV_OANIM_ALPHA_SPEED		0.075
 #macro	MENUINV_CANIM_ALPHA_SPEED		0.075
 
@@ -159,13 +161,11 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		if (GAME_IS_GAMEPAD_ACTIVE){
 			inputFlags = inputFlags | (MENU_PAD_INV_RIGHT			 ); // Offset based on position of the bit within the variable.
 			inputFlags = inputFlags | (MENU_PAD_INV_LEFT		<<  1);
-			inputFlags = inputFlags | (MENU_PAD_RETURN			<<  6);
 			return;
 		}
 		
 		inputFlags = inputFlags | (MENU_KEY_INV_RIGHT			 ); // Offset based on position of the bit within the variable.
 		inputFlags = inputFlags | (MENU_KEY_INV_LEFT		<<  1);
-		inputFlags = inputFlags | (MENU_KEY_RETURN			<<  6);
 	}
 	
 	/// @description 
@@ -176,13 +176,25 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_default = function(_delta){
-		// Get the player's input state for the frame, and then check if they have closed the menu. Note that
-		// the menu will not close if the menu isn't allowed to close itself currently. Switch to another page
-		// of the inventory is still possible despite being unable to close it if required.
+		// Grab the inputs for the current frame, but using the inventory's unique version of this function.
 		process_player_input();
-		if (MINPUT_IS_RETURN_RELEASED && MENUINV_CAN_CLOSE){ // Close the menu if possible.
-			object_set_state(state_close_animation);
-			return;
+		
+		// Only process this chunk of code if the inventory is currently allowed to close on detection of the
+		// return key being pressed. Since the inventory only tracks two inputs for shifting between sections,
+		// the current section's return key input detection is used.
+		if (MENUINV_CAN_CLOSE){
+			var _closeMenu = false;
+			with(menuRef[curOption]){ // Check for the return key being released.
+				if (MINPUT_IS_RETURN_RELEASED)
+					_closeMenu = true;
+			}
+			
+			// Only if _closeMenu is set to true will the inventory begin its closing animation, and that
+			// value is only set to true if the current section's return input was released for this frame.
+			if (_closeMenu){
+				object_set_state(state_close_animation);
+				return;
+			}
 		}
 		
 		// Store the current option index before calling the function to possibly update the cursor's position.
@@ -201,7 +213,9 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	}
 	
 	/// @description 
-	///	
+	///	The inventory's opening animation which is set as its initial state when opened. Once the conditions
+	/// of the animation are met, the inventory will shift to its default state and the currently visible
+	/// submenu will do so as well to allow their input and logic functionalities to be processed.
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_open_animation = function(_delta){
@@ -218,7 +232,8 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	}
 	
 	/// @description 
-	///	
+	///	The inventory's closing animation which is set as its state whenever the inventory is set to close so
+	/// gameplay can return to normal once the conditions for the animation are met.
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_close_animation = function(_delta){

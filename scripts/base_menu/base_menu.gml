@@ -198,8 +198,8 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	///	@param {Real}	width			Sets a defined width for the menu (Minimum value of one). The height will be dynamically set as options are added/removed.
 	/// @param {Real}	visibleWidth	Determines how many columns of options will be visible at any given time (Minimum value of one).
 	/// @param {Real}	visibleHeight	Determines how many rows of options will be visible at any given time (Minimum value of one).
-	/// @param {Real}	visAreaShiftX	How close to the horizontal edge of visible options the cursor must be to shift the visible region in that direction if possible.
-	/// @param {Real}	visAreaShiftY	How close to the vertical edge of visible options the cursor must be to shift the visible region in that direction if possible.
+	/// @param {Real}	visAreaShiftX	(Optional) How close to the horizontal edge of visible options the cursor must be to shift the visible region in that direction if possible.
+	/// @param {Real}	visAreaShiftY	(Optional) How close to the vertical edge of visible options the cursor must be to shift the visible region in that direction if possible.
 	initialize_params = function(_x, _y, _isActive, _isVisible, _width, _visibleWidth, _visibleHeight, _visAreaShiftX = 0, _visAreaShiftY = 0){
 		if (MENU_ARE_PARAMS_INITIALIZED)
 			return; // Don't reinitialize menu parameters.

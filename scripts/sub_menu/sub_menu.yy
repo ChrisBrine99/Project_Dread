@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"sub_menu",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"sub_menu",
+  "parent":{
+    "name":"Menus",
+    "path":"folders/Scripts/Structs/UI/Menus.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

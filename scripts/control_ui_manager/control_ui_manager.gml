@@ -105,6 +105,8 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	/// cleaned up by GameMaker when this struct is destroyed/out of scope.
 	///	
 	destroy_event = function(){
+		// Loop through and delete all control icons structs that exist at the end of the control ui manager's
+		// lifetime. Then, the map amanging them is also destroyed.
 		var _key = ds_map_find_first(controlIcons);
 		while(!is_undefined(_key)){
 			delete controlIcons[? _key];
@@ -112,6 +114,9 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 		}
 		ds_map_destroy(controlIcons);
 		
+		// Cleaning up any control groups that still happen to exist when the control ui manager struct is
+		// destroyed. It deletes the structs contained within each group and the lists containing structs
+		// within as well, and then deletes the root struct and destroys the map managing them all.
 		var _groupRef, _length;
 		_key = ds_map_find_first(controlGroup);
 		while(!is_undefined(_key)){

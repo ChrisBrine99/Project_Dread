@@ -4,6 +4,7 @@
 
 // Macros that determine what type a given struct is when they aren't a compile-time or runtime singleton.
 #macro	STRUCT_TYPE_LIGHT_SOURCE	   -30000
+#macro	STRUCT_TYPE_GENERIC			   -40000
 
 // A list that manages the current struct instances that exist at any given point during runtime, and the unique
 // value to provide to a newly created struct instance which will always increment by one from a successful
@@ -28,6 +29,7 @@ ds_map_add(global.structType, str_inventory_menu,		STRUCT_TYPE_RT_SINGLETON);
 ds_map_add(global.structType, str_item_menu,			STRUCT_TYPE_RT_SINGLETON);
 ds_map_add(global.structType, str_note_menu,			STRUCT_TYPE_RT_SINGLETON);
 ds_map_add(global.structType, str_map_menu,				STRUCT_TYPE_RT_SINGLETON);
+ds_map_add(global.structType, str_sub_menu,				STRUCT_TYPE_GENERIC);
 ds_map_add(global.structType, str_light_basic,			STRUCT_TYPE_LIGHT_SOURCE);
 ds_map_add(global.structType, str_light_flicker,		STRUCT_TYPE_LIGHT_SOURCE);
 ds_map_add(global.structType, str_light_blink,			STRUCT_TYPE_LIGHT_SOURCE);

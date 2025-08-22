@@ -189,6 +189,13 @@
 #macro	HEX_CODE_PREFIX					"0x"
 #macro	COLOR_CODE_LENGTH				8		// Number of characters including the "0x" prefix
 
+// Macros that explain what each tile index in the floor materials tileset refers to within the player's step
+// sound effect logic, so it will know the proper sound to play relative to the material they are moving on.
+#macro	TILE_INDEX_FLOOR_TILE			1
+#macro	TILE_INDEX_FLOOR_WATER			2
+#macro	TILE_INDEX_FLOOR_WOOD			3
+#macro	TILE_INDEX_FLOOR_GRASS			4
+
 #endregion General Macros
 
 #region Drawing Functions
@@ -270,6 +277,60 @@ function draw_circle_ext(_x, _y, _xRadius, _yRadius, _innerColor, _outerColor, _
 }
 
 #endregion Drawing Functions
+
+#region Audio Playback Functions
+
+/// @description 
+///	An extension of GameMaker's audio playback function that applies the game's current master volume and 
+/// sound effect volume to determine how loud the playback will be relative to the optionally set volume value.
+///	Also allows previous instances of the sound to be stopped prior to playing said sound asset if required.
+///	
+///	@param {Asset.GMSound}	sound			Index of the audio asset that will be played.
+/// @param {Real}			volume			(Optional) Determines the volume of the sound BEFORE adjustments are made by the game's volume setting values.
+/// @param {Real}			pitch			(Optional) Pitch of the sound effect relative to its default pitch (This is equivalent to a pitch of 1.0).
+/// @param {Real}			priority		(Optional) Sets the channel priority for the sound (Default is 0).
+/// @param {Bool}			stopPrevious	(Optional) When true, previous instances of the sound's
+/// @param {Bool}			loops			(Optional) When true, the sound will loop indefinitely.
+/// @param {Real}			offset			(Optional) The offset (in seconds) to start sound playback from.
+function sound_effect_play(_sound, _volume = 1.0, _pitch = 1.0, _priority = 0, _stopPrevious = false, _loops = false, _offset = 0.0){
+	if (_stopPrevious && audio_is_playing(_sound))
+		audio_stop_sound(_sound); // Stop previous playbacks of the sound if the flag is toggled.
+		
+	with(global.settings) // Adjust the volume of the sound absed on the current master and sound effect volume values.
+		_volume *= audio[STNG_AUDIO_MASTER] * audio[STNG_AUDIO_SOUNDS];
+	
+	// Finally, play the desired sound effect and return its ID.
+	return audio_play_sound(_sound, _priority, _loops, _volume, _offset, _pitch);
+}
+
+/// @description 
+///	A further extension of GameMaker's audio playback function that applies the game's current master 
+/// volume and sound effect volume values the player currently has them set to (They range from 0.0 to 1.0)
+/// while also allowing each playback of said sound to have randomly chosen adjustments to its playback
+/// volume and pitch.
+///	
+///	@param {Asset.GMSound}	sound			Index of the audio asset that will be played.
+/// @param {Real}			volume			(Optional) Volume for the sound effect without any changes done by volume settings/gain variance.
+/// @param {Real}			pitch			(Optional) Pitch of the sound effect before the random variance is applied to it.
+/// @param {Real}			priority		(Optional) Sets the channel priority for the sound (Default is 0).
+/// @param {Bool}			stopPrevious	(Optional) When true, previous instances of the sound's playback will be stopped.
+/// @param {Bool}			loops			(Optional) When true, the sound will loop indefinitely.
+/// @param {Real}			gainVariance	(Optional) Random amount to adjust the sound's volume; ranging from the base volume plus or minus this value.
+/// @param {Real}			pitchVariance	(Optional) Random amount to shift the sound's pitch; ranging from the base pitch plus or minus this value.
+/// @param {Real}			offset			(Optional) The offset (in seconds) to start sound playback from.
+function sound_effect_play_ext(_sound, _volume = 1.0, _pitch = 1.0, _priority = 0, _stopPrevious = false, _loops = false, _gainVariance = 0.1, _pitchVariance = 0.05, _offset = 0.0){
+	return sound_effect_play(
+		_sound,
+		_volume * (1.0 + random_range(-_gainVariance,	_gainVariance)),
+		_pitch	* (1.0 + random_range(-_pitchVariance,	_pitchVariance)),
+		_priority, 
+		_stopPrevious,
+		_loops,
+		_offset
+	);
+}
+
+#endregion
 
 #region String Manipulation Functions
 
