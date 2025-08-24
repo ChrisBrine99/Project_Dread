@@ -241,8 +241,8 @@ function str_base_menu(_index) : str_base(_index) constructor {
 		// Apply base parameters based on respective argument values.
 		optionX			= _x;
 		optionY			= _y;
-		optionSpacingX	= _xSpacing;
-		optionSpacingY	= _ySpacing;
+		optionSpacingX	= max(0, _xSpacing);	// Prevent negative spacing values as that would reverse the cursor controls.
+		optionSpacingY	= max(0, _ySpacing);
 		optionAlignX	= _xAlign;
 		optionAlignY	= _yAlign;
 	}
@@ -274,7 +274,7 @@ function str_base_menu(_index) : str_base(_index) constructor {
 		// Update the height of the menu to match the dimensions relative to the set width. If the menu still
 		// hasn't reached the desired width, the height will always be set to a value of one.
 		var _size = ds_list_size(options);
-		height = _size > width ? ceil((_size + 1) / width) : 1;
+		height = _size >= width ? ceil((_size + 1) / width) : 1;
 		
 		// Places new option at the end of the menu if the _index parameter is an invalid number. Otherwise, it
 		// will insert the option at the specified position. The position of the option is also returned to be
@@ -465,8 +465,9 @@ function str_base_menu(_index) : str_base(_index) constructor {
 				curOption = !curOption;
 				// Make sure the highlighted option is still visible if only one of the two options happens to
 				// be visible within this two-option menu if the visible region is set to a size of 1x1.
-				if (width == 1 && visibleAreaH == 1)	{ visibleAreaY = curOption; }
-				else									{ visibleAreaX = curOption; }
+				if (width == 1 && visibleAreaH == 1)		{ visibleAreaY = curOption; }
+				else if (height	== 1 && visibleAreaW == 1)	{ visibleAreaX = curOption; }
+				
 			}
 			return;
 		}
@@ -558,14 +559,15 @@ function str_base_menu(_index) : str_base(_index) constructor {
 		
 		// Loop through the visible region of option structs. Each has their color determined on-the-fly
 		// relative to their state and how the cursor and menu itself are currently interacting with them.
-		var _menuSize	= ds_list_size(options);
-		var _curOption	= curOption;
-		var _selOption	= selOption;
-		var _oIndex		= 0;
-		var _xx			= _xPos + optionX;
-		var _yy			= _yPos + optionY;
-		var _color		= COLOR_WHITE;
-		var _alpha		= alpha;
+		var _menuSize		= ds_list_size(options);
+		var _curOption		= curOption;
+		var _selOption		= selOption;
+		var _auxSelOption	= auxSelOption;
+		var _oIndex			= 0;
+		var _xx				= _xPos + optionX;
+		var _yy				= _yPos + optionY;
+		var _color			= COLOR_WHITE;
+		var _alpha			= alpha;
 		for (var curY = visibleAreaY; curY < visibleAreaY + visibleAreaH; curY++){
 			for (var curX = visibleAreaX; curX < visibleAreaX + visibleAreaW; curX++){
 				_oIndex = (curY * width) + curX; // Convert to a one-dimensional index.
@@ -581,10 +583,11 @@ function str_base_menu(_index) : str_base(_index) constructor {
 				// of the option is checked to see if it is inactive, selected, highlighted, or simply visible.
 				// Each of these will cause it to show up as a different color compared to the rest.
 				with(options[| _oIndex]){
-					if (!isActive)					{ _color = COLOR_DARK_GRAY; }
-					else if (_selOption == _oIndex) { _color = COLOR_LIGHT_GREEN; }
-					else if (_curOption == _oIndex)	{ _color = COLOR_LIGHT_YELLOW; }
-					else							{ _color = COLOR_WHITE; }
+					if (!isActive)						{ _color = COLOR_DARK_GRAY; }
+					else if (_auxSelOption == _oIndex)	{ _color = COLOR_RED; }
+					else if (_selOption == _oIndex)		{ _color = COLOR_LIGHT_GREEN; }
+					else if (_curOption == _oIndex)		{ _color = COLOR_LIGHT_ORANGE; }
+					else								{ _color = COLOR_WHITE; }
 					
 					draw_text_shadow(_xx, _yy, oName, _color, _alpha, 
 						_textShadowColor, _textShadowAlpha * _alpha);

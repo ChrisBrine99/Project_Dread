@@ -3,11 +3,13 @@
 // Macros for flag bits that are unique to the inventory menu.
 #macro	MENUINV_FLAG_CAN_CLOSE			0x00000001
 #macro	MENUINV_FLAG_OPENED				0x00000002
+#macro	MENUINV_FLAG_CAN_CHANGE_PAGE	0x00000004
 
 // Macros for checking the current state of the flag bits for the inventory menu. They are used by the active
 // submenu to check if they can or cannot perform certain actions to the inventory.
-#macro	MENUINV_CAN_CLOSE				((flags & MENUINV_FLAG_CAN_CLOSE)	!= 0)
-#macro	MENUINV_IS_OPENED				((flags & MENUINV_FLAG_OPENED)		!= 0)
+#macro	MENUINV_CAN_CLOSE				((flags & MENUINV_FLAG_CAN_CLOSE)		!= 0)
+#macro	MENUINV_IS_OPENED				((flags & MENUINV_FLAG_OPENED)			!= 0)
+#macro	MENUINV_CAN_CHANGE_PAGE			((flags & MENUINV_FLAG_CAN_CHANGE_PAGE) != 0)
 
 // Index values for the positions of the submenu references within the inventory's "menuRef" array. The final
 // value is the sum of the number of submenus which is also the length of the array the references reside in.
@@ -197,6 +199,11 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 			}
 		}
 		
+		// Don't allow the inventory menu to switch pages (The "pages" in question are the item, note, and map
+		// sections, respectively) if its flag to allow so is currently cleared.
+		if (!MENUINV_CAN_CHANGE_PAGE)
+			return;
+		
 		// Store the current option index before calling the function to possibly update the cursor's position.
 		// If the value happens to change, the check below will pass and the currently active submenu will be
 		// updated accordingly.
@@ -221,7 +228,7 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	state_open_animation = function(_delta){
 		alpha += MENUINV_OANIM_ALPHA_SPEED * _delta;
 		if (alpha >= 1.0){
-			flags = flags | MENUINV_FLAG_OPENED;
+			flags = flags | MENUINV_FLAG_OPENED | MENUINV_FLAG_CAN_CHANGE_PAGE;
 			alpha = 1.0;
 			object_set_state(state_default);
 			

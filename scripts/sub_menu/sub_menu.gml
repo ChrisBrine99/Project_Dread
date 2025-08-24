@@ -4,6 +4,9 @@
 #macro	MENUSUB_FLAG_CLOSING			0x00000001
 #macro	MENUSUB_IS_CLOSING				((flags & MENUSUB_FLAG_CLOSING) != 0)
 
+// 
+#macro	MENUSUB_OPTION_SPACING_Y		10
+
 #endregion Sub Menu Macro Definitions
 
 #region Sub Menu Struct Definition
@@ -22,14 +25,33 @@ function str_sub_menu(_index) : str_base_menu(_index) constructor{
 	}
 	
 	/// @description 
+	///	Replaces the current options contained within this menu with an entirely new set. The dimensions of
+	/// the menu can also be updated as required for the new set of options.
 	///	
-	///	
-	///	@param {Array<String>}	options	
-	replace_options = function(_options){
+	///	@param {Array<String>}	options			The list of strings that will replace existing options or create new options as required.
+	/// @param {Real}			width			Determines how many options will exist on a given row within the menu (Height is calculated as options are added/removed).
+	/// @param {Real}			visibleWidth	Number of option columns visible to the player at any given time.
+	/// @param {Real}			visibleHeight	Number of option rows visible to the player at any given time.
+	replace_options = function(_options, _width, _visibleWidth, _visibleHeight){
 		if (!MENU_ARE_OPTIONS_INITIALIZED || !is_array(_options))
-			return;
+			return; // Don't allow this function to be called if the menu's options weren't initialized or the argument is malformed.
 		
-		// 
+		// Reset the menu such that it is highlighting the top-left option since the previous values are being
+		// replaced. Otherwise, these values could end up outside the new valid range of options.
+		curOption		= 0;
+		selOption		= -1;
+		visibleAreaX	= 0;
+		visibleAreaY	= 0;
+		
+		// Update the width, and visible region size to match the new argument parameters for this function.
+		width			= max(1, _width);
+		visibleAreaW	= max(1, _visibleWidth);
+		visibleAreaH	= max(1, _visibleHeight);
+		
+		
+		// Loop through the existing option structs; replacing each one's previous oName value with the value
+		// found at the same index inside the _options array. Once the previous number of options is passed,
+		// new option structs will be created to store additional values.
 		var _prevLength = ds_list_size(options);
 		var _length		= array_length(_options);
 		for (var i = 0; i < _length; i++){
@@ -41,36 +63,41 @@ function str_sub_menu(_index) : str_base_menu(_index) constructor{
 			with(options[| i]) { oName = _options[i]; }
 		}
 		
-		// 
-		while(_prevLength > _length){
-			_prevLength--;
-			delete options[| _prevLength];
-			ds_list_delete(options, _prevLength);
-		}
+		// If the new set of options happens to be less than the previous size, the extra options will be
+		// removed from the menu until the amount matches the length of the _options array.
+		while(_prevLength >= _length)
+			remove_option(_prevLength--);
 	}
 	
 	/// @description 
-	///	
+	///	The sub menu's single state, which simply allows the cursor to be moved around the menu based on its
+	/// set dimensions. The visible region of the menu is also updated during cursor movement as required.
+	///	Pressing the selection or return inputs will exit this state and put this sub menu in a waiting state 
+	/// so the menu that manages this state can react accordingly.
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_default = function(_delta){
+		// At the start of the state, the player's input is checked and captured to be used throughout the
+		// rest of this state.
 		process_player_input();
 		
-		// 
+		// The sub menu detects the select input was released, so it should invoke its "option selected" state
+		// by copying the value of curOption into selOption. The sub menu's state is zeroed out after this.
 		if (MINPUT_IS_SELECT_RELEASED){
 			selOption = curOption;
 			object_set_state(0);
 			return;
 		}
 		
-		// 
+		// The sub menu detects the return input was released, so it should signal that the sub menu needs to
+		// be closed; be it through an animation or having it instantly disappeared depending on context.
 		if (MINPUT_IS_RETURN_RELEASED){
-			flags = flags & ~(MENU_FLAG_ACTIVE | MENU_FLAG_VISIBLE);
-			flags = flags |   MENUSUB_FLAG_CLOSING;
+			flags = flags | MENUSUB_FLAG_CLOSING;
 			object_set_state(0);
 		}
 		
-		// 
+		// No selection or return logic was processed, so another check is made to seeing if a cursor move
+		// needs to occur relative to the four inputs it utilizes, and if auto-scrolling is active or not.
 		update_cursor_position(_delta);
 	}
 }
@@ -95,7 +122,7 @@ function create_sub_menu(_parentMenu, _x, _y, _options, _width = 1, _visibleWidt
 	var _submenuRef = instance_create_menu_struct(str_sub_menu);
 	with(_submenuRef){
 		initialize_params(_x, _y, false, false, _width, _visibleWidth, _visibleHeight);
-		initialize_option_params(0, 0, 0, 10); // Default menu orientation is vertical.
+		initialize_option_params(0, 0, 0, MENUSUB_OPTION_SPACING_Y); // Default menu orientation is vertical.
 		prevMenu = _parentMenu;
 		
 		// Don't copy over anything from the _options argument if an array wasn't provided. The reference to
