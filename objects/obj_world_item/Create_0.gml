@@ -1,10 +1,15 @@
 #region Macro Initializations
 
-// 
+// Values for the bits within this object's flags variable that are used by it and any children that may
+// inherit from it.
 #macro	WRLDITM_FLAG_DYNAMIC			0x00000001
+
+// Checks against bits used by this object within its flags variable to determine if they are currently 
+// cleared (0) or set (1).
 #macro	WRLDITM_IS_DYNAMIC				((flags & WRLDITM_FLAG_DYNAMIC) != 0)
 
-// 
+// The two message types that can be displayed when interacting with this object. One simply displayed the
+// name of the item and the other includes the amount of said item that was picked up.
 #macro	ITMPCKUP_MESSAGE_STANDARD		"Picked up @0x00F8F8{" + _itemID + "}."
 #macro	ITMPCKUP_MESSAGE_SHOW_AMOUNT	"Picked up @0x00F8F8{" + _itemID + "} (@0x3050F8{" + string(_quantity) + "})."
 
