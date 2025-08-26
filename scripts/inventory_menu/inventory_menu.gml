@@ -38,9 +38,10 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	selfRef	= noone;
 	
 	/// @description 
-	///	Called when the inventory menu is first created through "instance_create_menu_struct". It handles
-	/// initializing the various parameters required for the menu to function properly, and also pauses the
-	/// player's functionality so they don't move while the menu is open.
+	///	The inventory menu struct's create event. Required menu parameters are initialized, the required 
+	/// options for the inventory which are made up of menus that represent each option as a "section" instead 
+	/// of a standard menu option. Finally, control groups are made for each section since they will all have
+	/// different input requirements aside from standard menu input functionality.
 	///	
 	create_event = function(){
 		// Get a reference to this menu so it can be passed into the submenus that it manages.
@@ -95,6 +96,7 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		draw_sprite_ext(spr_rectangle, 0, _xPos, _yPos, display_get_gui_width(), display_get_gui_height(), 
 			0.0, COLOR_BLACK, alpha * 0.5);
 		
+		draw_set_font(fnt_medium);
 		draw_text_shadow(_xPos + optionX, _yPos + optionY, options[| curOption].oName, 
 			COLOR_WHITE, alpha, COLOR_BLACK, alpha * 0.75);
 			

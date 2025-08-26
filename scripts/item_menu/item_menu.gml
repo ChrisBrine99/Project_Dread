@@ -1,17 +1,47 @@
 #region Macros for Item Menu Struct
 
-// 
+// Macros for the bits within the item menu that are utilized for various non-state functionality. Each are
+// unique to this menu.
 #macro	MENUITM_FLAG_MOVING_ITEM		0x00000001
-#macro	MENUITM_IS_MOVING_ITEM			((flags & MENUITM_FLAG_MOVING_ITEM) != 0)
+#macro	MENUITM_FLAG_OPTIONS_OPEN		0x00000002
 
-// 
-#macro	MENUITM_OPTION_INFO_X			(_xPos + optionX - 10)
-#macro	MENUITM_OPTION_INFO_Y			(_yPos + optionY + (visibleAreaH * optionSpacingY) + 20) 
+// Macros for checking the state of the flags unique to the item menu.
+#macro	MENUITM_IS_MOVING_ITEM			((flags & MENUITM_FLAG_MOVING_ITEM)		!= 0)
+#macro	MENUITM_ARE_OPTIONS_OPEN		((flags & MENUITM_FLAG_OPTIONS_OPEN)	!= 0)
 
-//
+// Two calculations for the item menu's cursor arrow and an item's current quantity if that value is visible.
+#macro	MENUINV_CURSOR_X_OFFSET		   -2
+#macro	MENUITM_ITEM_QUANTITY_X_OFFSET	115
+
+// Calculations for the position of the an item's info text when it is currently being highlighted by the
+// player. Since they use "_xPos" and "_yPos" they must be used IN THE DRAW GUI EVENT ONLY!!!
+#macro	MENUITM_OPTION_INFO_X			(_xPos + optionX)
+#macro	MENUITM_OPTION_INFO_Y			(_yPos + optionY + (MENUITM_VISIBLE_HEIGHT * optionSpacingY) + 10) 
+
+// Values for some constant characteristics about how the item inventory will be shown to the player. These
+// are specifically for the maximum number of item slots visible to the player at once, the color of the text's
+// drop shadow effect, and the opacity for that drop shadow.
+#macro	MENUITM_VISIBLE_HEIGHT			10
+#macro	MENUITM_TEXT_SHADOW_COLOR		COLOR_DARK_GRAY
+#macro	MENUITM_TEXT_SHADOW_ALPHA		0.75
+
+// Determines how fast the menu's cursor will move back and forth along the x axis.
+#macro	MENUITM_CURSOR_ANIM_SPEED		0.07
+
+// The two variations on how displayed item quantities within the inventory can be formatted. The first is the
+// default method for anything with a stack limit greater than one, and the second is the amount of ammunition
+// left in the weapon's current magazine (Melee weapons aside from the chainsaw are excluded since they don't 
+// have to use ammo).
+#macro	MENUINM_QUANTITY_STANDARD		"x{0}"
+#macro	MENUINM_QUANTITY_WEAPON			"[{0}]"
+
+// The default string that will be used for an empty item slot when displayed on the UI for the player. The
+// empty slot's info text will also use this default string.
 #macro	MENUITM_DEFAULT_STRING			"---"
 
-// 
+// A group of all the possible options an item can have access to whenever a given item is selected by the
+// player within the item inventory. These strings are then used to determine what should be done upon
+// selection within the item's options sub menu.
 #macro	MENUITM_OPTION_USE				"Use"
 #macro	MENUITM_OPTION_EQUIP			"Equip"
 #macro	MENUITM_OPTION_UNEQUIP			"Unequip"
@@ -21,19 +51,59 @@
 
 #endregion Macros for Item Menu Struct
 
+#region Macros for Item Options Sub Menu
+
+// Stores the offset position of a selected item's option sub menu along the x axis so it appears to the right 
+// of said item relative to its vertical position on the visible portion of the menu.
+#macro	SUBMENU_ITM_OFFSET_X			50
+
+// The dimensions of the surface that the selected item's option menu will be rendered onto, so it can have a
+// sliding animation that doesn't render outside of the dimensions of the menu after animations have completed.
+#macro	SUBMENU_ITM_SURFACE_WIDTH		40
+#macro	SUBMENU_ITM_SURFACE_HEIGHT		40
+
+// Determines the two x positions the item's option menu text will shift between during the opening and closing
+// animations for this sub menu; allowing it to slide on and off of the surface it will be drawn onto.
+#macro	SUBMENU_ITM_ANIM_X1				50.0
+#macro	SUBMENU_ITM_ANIM_X2				0.0
+
+// Determines how fast the selected item's option menu will fade into and out of visibility during its opening
+// and closing animations. It also works as the value used to lerp the menu's options between the two x
+// positions stated above.
+#macro	SUBMENU_ITM_OANIM_ALPHA_SPEED	0.1
+#macro	SUBMENU_ITM_CANIM_ALPHA_SPEED	0.1
+
+#endregion Macros for Item Options Sub Menu
+
 #region Item Menu Struct Definition
 
 /// @param {Function}	index	The value of "str_item_menu" as determined by GameMaker during runtime.
 function str_item_menu(_index) : str_base_menu(_index) constructor {
-	// 
-	invItemRefs		= array_create(array_length(global.curItems), INV_EMPTY_SLOT);
+	// An array that stores references to item structs for items currently contained within the item inventory 
+	// so they can be quickly accessed instead of iterating through the item data map or ID list whenever they
+	// are required for various processes handled by the item menu.
+	invItemRefs			= array_create(array_length(global.curItems), INV_EMPTY_SLOT);
 	
-	// 
-	itemOptionsMenu	= noone;
-	selfRef			= noone;
+	// Two variables that store references to menus. The first will hold the sub menu instance that is
+	// responsible for displaying and processing logic for the list of options available to the player for 
+	// the item they selected, and the second is simply a reference to this struct during runtime so it can
+	// be passed to that sub menu and stored in its prevMenu variable.
+	itemOptionsMenu		= noone;
+	selfRef				= noone;
+	
+	// Variables specific to the item options menu and how it is rendered within the item menu iteself. They
+	// are the surface that the sub menu is drawn onto (Its default rendering method is disabled to allow 
+	// this), and the position of the sub menu relative to the overall menu's position.
+	itemOptionsSurf		= -1;
+	itemOptionsMenuX	= 0;
+	itemOptionsMenuY	= 0;
+	
+	// A value used to allow the menu's cursor to move back and forth by one pixel along the x axis.
+	cursorAnimTimer		= 0.0;
 	
 	/// @description 
-	///	
+	///	The item menus struct's create event. It initializes required parameters; sets up the auxillary return
+	/// input bindings, and loads the contents of the item inventory in as menu options + descriptions.
 	///	
 	create_event = function(){
 		// Get a referfence to this struct so its submenu can reference it in its "prevMenu" variable.
@@ -45,9 +115,10 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		keyAuxReturn	= _inputs[STNG_INPUT_ITEM_MENU];
 		padAuxReturn	= _inputs[STNG_INPUT_ITEM_MENU + 1];
 		
-		// 
+		// Set up the item menu to it has the same number of options as there are slots available in the
+		// player's item inventory. Using that number, the base and option parameters are both initialized.
 		var _invSize	= array_length(invItemRefs);
-		initialize_params(x, y, true, true, 1, 1, min(_invSize, 12), 0, 0);
+		initialize_params(x, y, true, true, 1, 1, min(_invSize, MENUITM_VISIBLE_HEIGHT), 0, 0);
 		initialize_option_params(display_get_gui_width() - 120, 20, 50, 10, fa_left, fa_top, true);
 		
 		// Looping through the player's items so they can be added as options to this menu. From here, the
@@ -76,16 +147,19 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		}
 	}
 	
-	/// 
+	/// Store the pointer to the base menu's destroy event so it can be called within the item menu's version
+	/// of the event alongside the other logic it needs when cleaning itself up.
 	__destroy_event = destroy_event;
 	/// @description 
-	///	
+	///	Called whenever the item menu is closed by the player. It handles cleaning up memory that was allocated 
+	/// from the str_base_menu struct while also destroying the sub menu it manages if it exists during this
+	/// lifetime of the item menu struct.
 	///
 	destroy_event = function(){
 		__destroy_event();
 		
-		if (itemOptionsMenu != noone)
-			instance_destroy_menu_struct(itemOptionsMenu);
+		if (itemOptionsMenu != noone)		 { instance_destroy_menu_struct(itemOptionsMenu); }
+		if (surface_exists(itemOptionsSurf)) { surface_free(itemOptionsSurf); }
 	}
 	
 	/// @description
@@ -96,13 +170,86 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	///	@param {Real}	xPos	The menu's current x position, rounded down.
 	/// @param {Real}	yPos	The menu's current y position, rounded down.
 	draw_gui_event = function(_xPos, _yPos){
-		draw_visible_options(_xPos, _yPos, COLOR_DARK_GRAY, 0.75);
+		// Display the currently visible region of this menu with the default function provided by the 
+		// inherited base menu struct.
+		draw_visible_options(fnt_small, _xPos, _yPos, MENUITM_TEXT_SHADOW_COLOR, MENUITM_TEXT_SHADOW_ALPHA);
+		
+		// After the visible menu options have been draw, a cursor and the current quantities will be drawns
+		// to the right of each item name as required.
+		draw_set_halign(fa_right);
+		var _shadowAlpha = alpha * MENUITM_TEXT_SHADOW_ALPHA;
+		var _isWeapon	 = false;
+		var _item		 = INV_EMPTY_SLOT;
+		var _quantity	 = 0;
+		var _sQuantity	 = "";
+		var _curX		 = _xPos + optionX;
+		var _curY		 = _yPos + optionY;
+		for (var i = visibleAreaY; i < visibleAreaY + visibleAreaH; i++){
+			// Draw an arrow at the cursor's current position within the visible menu region.
+			if (i == curOption){
+				draw_text_shadow(_curX + floor(cursorAnimTimer) + MENUINV_CURSOR_X_OFFSET, _curY, ">", 
+					COLOR_WHITE, alpha, MENUITM_TEXT_SHADOW_COLOR, _shadowAlpha);
+			}
+			
+			// Get the value currently stored in the player's item inventory array to see if the slot is empty
+			// or not. If it isn't empty, its quantity and item type will determine how the quantity will be
+			// drawn and if it will even be drawn to begin with.
+			_item = global.curItems[i];
+			if (_item != INV_EMPTY_SLOT){
+				_quantity = _item.quantity;
+				with(invItemRefs[i]){
+					// So long as the item is a weapon that uses ammo (All ranged weapons + the chainsaw), the
+					// quantity is formatted as [{quantity}]. Otherwise, it will be shown as x{quantity} so
+					// long as the max stack is high than one.
+					if (typeID == ITEM_TYPE_WEAPON && WEAPON_IS_MELEE){ 
+						_sQuantity = string(MENUINM_QUANTITY_WEAPON, _quantity); 
+					} else if (stackLimit > 1 && !_isWeapon){ 
+						_sQuantity = string(MENUINM_QUANTITY_STANDARD, _quantity); 
+					}
+				}
+				
+				// Display the quantity as it was formatted above
+				draw_text_shadow(_curX + MENUITM_ITEM_QUANTITY_X_OFFSET, _curY, _sQuantity, 
+					COLOR_WHITE, alpha, MENUITM_TEXT_SHADOW_COLOR, _shadowAlpha);
+			}
+			
+			// Shift the y position down for the next potential item quantity to draw at.
+			_curY += optionSpacingY;
+		}
+		draw_set_halign(fa_left);
 		
 		// 
 		if (curOption >= 0 && curOption < ds_list_size(options)){
 			var _curOption = options[| curOption];
-			draw_text_shadow(MENUITM_OPTION_INFO_X, MENUITM_OPTION_INFO_Y, _curOption.oInfo);
+			draw_text_shadow(MENUITM_OPTION_INFO_X, MENUITM_OPTION_INFO_Y, _curOption.oInfo, 
+				COLOR_WHITE, alpha, MENUITM_TEXT_SHADOW_COLOR, _shadowAlpha);
 		}
+		
+		// Don't bother with any of the surface rendering/swapping logic below if the sub menu containing the
+		// selected item's options isn't currently opened for the player to select from.
+		if (!MENUITM_ARE_OPTIONS_OPEN)
+			return;
+		
+		// Make sure the surface for the selected item's option menu if it doesn't exist due to a GPU flush.
+		if (!surface_exists(itemOptionsSurf))
+			itemOptionsSurf = surface_create(SUBMENU_ITM_SURFACE_WIDTH, SUBMENU_ITM_SURFACE_HEIGHT);
+			
+		// Switch to rendering onto the surface for the selected item's option menu. Clear the surface to
+		// the color (0, 0, 0, 0) so the previous frame's rendering doesn't show up again creating a smear.
+		// Then, jump into scope of the menu in question and draw its options to the screen.
+		surface_set_target(itemOptionsSurf);
+		draw_clear_alpha(COLOR_BLACK, 0.0);
+		with(itemOptionsMenu){
+			// Only display the options if they will be visible on the surface to begin with (As they slide
+			// to the left during the opening animation and to the right in the closing animation).
+			if (optionX < SUBMENU_ITM_SURFACE_WIDTH)
+				draw_gui_event(_xPos, _yPos);
+		}
+		surface_reset_target();
+		
+		// Finally, draw the current capture of the selected item's option menu onto the screen.
+		draw_set_alpha(alpha);
+		draw_surface(itemOptionsSurf, itemOptionsMenuX, itemOptionsMenuY);
 	}
 	
 	/// @description 
@@ -214,42 +361,93 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			// through or not. If the menu was created, this bool is set to true and some code below is skipped.
 			var _menuCreated = false;
 			if (itemOptionsMenu == noone){
-				var _menuX			= optionX - 45;
-				var _menuY			= optionY + ((curOption - visibleAreaY) * optionSpacingY);
-				var _visibleHeight	= array_length(_options);
-				itemOptionsMenu		= create_sub_menu(selfRef, _menuX, _menuY, _options, 1, 1, _visibleHeight);
-				_menuCreated		= true;
+				itemOptionsMenu	= create_sub_menu(selfRef, 0, 0, _options, 1, 1, array_length(_options));
+				_menuCreated	= true;
 			}
 				
-			// Jump into scope of the item inventory's sub menu so it can be activated.
+			// Jump into scope of the item inventory's sub menu so it can be activated along with replacing
+			// the previous options if the menu already existed previous (This occurs when two or more items
+			// have been selected by the user during the lifetime of this menu).
 			with(itemOptionsMenu){
-				object_set_state(state_default);
-				flags = flags | MENU_FLAG_ACTIVE | MENU_FLAG_VISIBLE;
+				flags = flags | MENU_FLAG_ACTIVE;
 				
-				// If the menu wasn't previously created since it already existed prior to creating this new
-				// item option sub menu, the options from the previous time the sub menu was required will be
-				// replaced with the new options as determined in the switch/case statement above.
 				if (!_menuCreated){
 					replace_options(_options, 1, 1, array_length(_options));
 					flags = flags & ~MENUSUB_FLAG_CLOSING; // Also flip this bit so the menu doesn't instantly close.
 				}
 			}
 			
-			// Finally, switch this menu to wait for the sub menu to have one of its options selected so that
-			// option's functionality can be processed within this menu as it contains all the data regarding
-			// the items and such.
-			object_set_state(state_navigating_item_options);
-			
-			// FOR TESTING
-			itemOptionsMenu.alpha = 1.0;
+			// Finally, swap over the opening state for the item options menu. On top of that, set the flag
+			// that lets this menu know that sub menu is open, and position it to show up beside the selected
+			// item's name. The cursor animation offset/timer is also reset to zero.
+			object_set_state(state_open_item_options);
+			flags			 = flags | MENUITM_FLAG_OPTIONS_OPEN;
+			itemOptionsMenuX = optionX - SUBMENU_ITM_OFFSET_X;
+			itemOptionsMenuY = optionY + ((curOption - visibleAreaY) * optionSpacingY);
+			cursorAnimTimer	 = 0.0;
 			return;
 		}
+		
+		// Update the cursor's animation timer (This is also used to display the animation's current offset)
+		// so it shifts back and forth at a regular interval.
+		cursorAnimTimer += MENUITM_CURSOR_ANIM_SPEED * _delta;
+		if (cursorAnimTimer >= 2.0)
+			cursorAnimTimer -= 2.0;
 		
 		// After checking for the relevant non-cursor movements have been checked, the cursor will check if its
 		// position should be updated based on its "auto-shift" timer is that is active, or if a direction was
 		// pressed in all other instances.
 		update_cursor_position(_delta);
 	}
+	
+	/// @description 
+	///	
+	///	
+	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
+	state_open_item_options = function(_delta){
+		// 
+		var _isOpened = false;
+		with(itemOptionsMenu){
+			optionX  = lerp(SUBMENU_ITM_ANIM_X1, SUBMENU_ITM_ANIM_X2, alpha); 
+			alpha	+= SUBMENU_ITM_OANIM_ALPHA_SPEED * _delta;
+			if (alpha >= 1.0){
+				object_set_state(state_default);
+				alpha		= 1.0;
+				optionX		= 0.0;
+				_isOpened	= true;
+			}
+		}
+		
+		// 
+		if (_isOpened) { object_set_state(state_navigating_item_options); }
+	}
+	
+	/// @description 
+	///	
+	///	
+	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
+	state_close_item_options = function(_delta){
+		// 
+		var _isClosed = false;
+		with(itemOptionsMenu){
+			optionX  = lerp(SUBMENU_ITM_ANIM_X1, SUBMENU_ITM_ANIM_X2, alpha); 
+			alpha -= SUBMENU_ITM_CANIM_ALPHA_SPEED * _delta;
+			if (alpha <= 0.0){
+				flags		= flags & ~(MENU_FLAG_ACTIVE | MENU_FLAG_CURSOR_AUTOSCROLL);
+				alpha		= 0.0;
+				optionX		= 50.0;
+				_isClosed	= true;
+			}
+		}
+		
+		// 
+		if (_isClosed){
+			if (auxSelOption == -1) { reset_to_default_state(); }
+			else					{ object_set_state(state_default); }
+			flags = flags & ~MENUITM_FLAG_OPTIONS_OPEN;
+		}
+	}
+	
 	
 	/// @description 
 	///	The state the item menu is set to whenever its sub menu has been activated. It processes what should
@@ -272,10 +470,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		// generic menu that doesn't handle its own selected option(s) automatically.
 		if (_selOption != -1){
 			var _oName		= "";
-			with(itemOptionsMenu){
-				_oName		= options[| selOption].oName;
-				flags	    = flags & ~(MENU_FLAG_ACTIVE | MENU_FLAG_VISIBLE);
-			}
+			with(itemOptionsMenu){ _oName = options[| selOption].oName; }
 			
 			// Determine what should be done based on the name of the option that was selected by the player.
 			switch(_oName){
@@ -294,29 +489,24 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 					auxSelOption = selOption;
 					break;
 				case MENUITM_OPTION_DROP:		// Removes slot from the inventory; creates a world item on the floor representing the slot's contents.
-					item_inventory_remove_slot(selOption, global.curItems[selOption].quantity);
+					item_inventory_slot_create_item(PLAYER.x - 8, PLAYER.y - 8, selOption);
 					invItemRefs[selOption] = INV_EMPTY_SLOT;
 					with(options[| selOption]){ // Set the option struct to its default values.
 						oName = MENUITM_DEFAULT_STRING;
 						oInfo = MENUITM_DEFAULT_STRING;
 					}
-					reset_to_default_state();
-					return;
+					break;
 			}
 			
-			// In the case of selecting the "Move", "Combine" or "Drop" options, the menu will return to the
-			// default state since they either require more information ("Move" and "Combine" require two 
-			// selected options in order to function) or have already completed their task ("Drop" only). 
-			object_set_state(state_default);
-			selOption = -1; // Also reset selOption to -1.
-			return;
+			// 
+			_isClosing = true;
 		}
 		
 		// The sub menu is closing, so the item inventory should return to its default state. The sub menu is
 		// also deactivated since it isn't required during said state.
 		if (_isClosing){
-			reset_to_default_state();
-			with(itemOptionsMenu) { flags = flags & ~(MENU_FLAG_ACTIVE | MENU_FLAG_VISIBLE); }
+			object_set_state(state_close_item_options);
+			with(itemOptionsMenu) { object_set_state(0); }
 		}
 	}
 	
@@ -326,7 +516,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_use_item = function(_delta){
 		show_debug_message("The item in slot {0} was used.", selOption);
-		reset_to_default_state();
+		object_set_state(state_close_item_options);
 	}
 	
 	/// @description 
@@ -335,7 +525,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_equip_item = function(_delta){
 		show_debug_message("The item in slot {0} was equipped.", selOption);
-		reset_to_default_state();
+		object_set_state(state_close_item_options);
 	}
 	
 	/// @description 
@@ -344,7 +534,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_unequip_item = function(_delta){
 		show_debug_message("The item in slot {0} was unequipped.", selOption);
-		reset_to_default_state();
+		object_set_state(state_close_item_options);
 	}
 	
 	/// @description 

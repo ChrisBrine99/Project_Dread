@@ -548,12 +548,13 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	/// version will only render the text elements of each option and ignore any potential icons that could
 	/// also exist. To draw both text and icons, draw_visible_options_ext must be used.
 	/// 
-	/// @param {Real}	xPos				The x position to offset the visible options by relative to their own x positions.
-	/// @param {Real}	yPos				The y position to offset the visible options by relative to their own y positions.
-	///	@param {Real}	textShadowColor		Determines the color of the drop shadow produced by a visible menu option.
-	/// @param {Real}	textShadowAlpha		Determines opacity for the option's text.
-	draw_visible_options = function(_xPos, _yPos, _textShadowColor, _textShadowAlpha){
-		draw_set_font(fnt_small);
+	/// @param {Asset.GMFont}	font				Four resource to use when displaying the option's name.
+	/// @param {Real}			xPos				The x position to offset the visible options by relative to their own x positions.
+	/// @param {Real}			yPos				The y position to offset the visible options by relative to their own y positions.
+	///	@param {Real}			textShadowColor		Determines the color of the drop shadow produced by a visible menu option.
+	/// @param {Real}			textShadowAlpha		Determines opacity for the option's text.
+	draw_visible_options = function(_font, _xPos, _yPos, _textShadowColor, _textShadowAlpha){
+		draw_set_font(_font);
 		draw_set_halign(optionAlignX);
 		draw_set_valign(optionAlignY);
 		
@@ -612,8 +613,8 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	/// @description 
 	///	
 	///	
-	draw_visible_options_ext = function(){
-		draw_set_font(fnt_small);
+	draw_visible_options_ext = function(_font){
+		draw_set_font(_font);
 		draw_set_halign(optionAlignX);
 		draw_set_valign(optionAlignY);
 		

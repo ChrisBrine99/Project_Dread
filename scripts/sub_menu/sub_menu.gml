@@ -1,10 +1,13 @@
 #region Sub Menu Macro Definitions
 
-// 
+// Macros that equal the value of bits that are utilized within the sub menu for various purposes.
 #macro	MENUSUB_FLAG_CLOSING			0x00000001
+
+// Macros that condense the code required to checks against the flag bits that are utilized by this struct.
 #macro	MENUSUB_IS_CLOSING				((flags & MENUSUB_FLAG_CLOSING) != 0)
 
-// 
+// Since sub menu instances default to a vertical orientation with a width of one option per row, this value
+// is used to determine the spacing needed for said default orientation.
 #macro	MENUSUB_OPTION_SPACING_Y		10
 
 #endregion Sub Menu Macro Definitions
@@ -13,6 +16,9 @@
 
 /// @param {Function}	index	The value of "str_sub_menu" as determined by GameMaker during runtime.
 function str_sub_menu(_index) : str_base_menu(_index) constructor{
+	// Determines which font will be used to display the sub menu's option names.
+	font = fnt_small;
+	
 	/// @description
 	///	Called during every frame that the menu exists for. It will be responsible for rendering its contents
 	/// to the game's GUI layer. Note that its position refers to the top-left of the menu itself, and its
@@ -21,7 +27,7 @@ function str_sub_menu(_index) : str_base_menu(_index) constructor{
 	///	@param {Real}	xPos	The menu's current x position, rounded down.
 	/// @param {Real}	yPos	The menu's current y position, rounded down.
 	draw_gui_event = function(_xPos, _yPos){
-		draw_visible_options(_xPos, _yPos, COLOR_DARK_GRAY, 0.75);
+		draw_visible_options(font, _xPos, _yPos, COLOR_DARK_GRAY, 0.75);
 	}
 	
 	/// @description 
@@ -118,12 +124,14 @@ function str_sub_menu(_index) : str_base_menu(_index) constructor{
 /// @param {Real}				width			(Optional) Determines the width of the menu; default value is one.
 /// @param {Real}				visibleWidth	(Optional) Number of columns that are visible to the user at any given time; default value is one.
 /// @param {Real}				visibleHeight	(Optional) Number of rows that are visible to the user at any given time; default value is three.
-function create_sub_menu(_parentMenu, _x, _y, _options, _width = 1, _visibleWidth = 1, _visibleHeight = 3){
+/// @param {Asset.GMFont}		font			(Optional) Font resource to use when displaying the menu's visible options.
+function create_sub_menu(_parentMenu, _x, _y, _options, _width = 1, _visibleWidth = 1, _visibleHeight = 3, _font = fnt_small){
 	var _submenuRef = instance_create_menu_struct(str_sub_menu);
 	with(_submenuRef){
 		initialize_params(_x, _y, false, false, _width, _visibleWidth, _visibleHeight);
 		initialize_option_params(0, 0, 0, MENUSUB_OPTION_SPACING_Y); // Default menu orientation is vertical.
-		prevMenu = _parentMenu;
+		prevMenu	= _parentMenu;
+		font		= _font;
 		
 		// Don't copy over anything from the _options argument if an array wasn't provided. The reference to
 		// the sub menu that was just created is simply returned instead.

@@ -339,13 +339,14 @@ function item_inventory_remove(_itemID, _amount){
 
 /// @description 
 ///	Removes some amount of an item from a specified slot within the inventory. Should an empty slot be used
-/// as the parameter of this function nothing will happen. Otherwise, as much of the quantity as possible is
-/// removed from the slot to satisfy what amount was requested to be removed. Any remainder is returned if
-/// the slot has a smaller quantity than what was to be removed.
+/// as the parameter of this function nothing will happen. If the amount is left to the default value of -1,
+/// whatever quantity within the slot is removed from it, and then that quantity is returned by the function.
+/// Otherwise, the remainder if _amount exceeded the quantity is returned, or a zero is returned to signify
+/// _amount was successfully removed from the slot's quantity.
 ///	
 ///	@param {Real}	slot		The slot that will have quantity removed from it.
-/// @param {Real}	amount		How many of the item within the slot will be removed.
-function item_inventory_remove_slot(_slot, _amount){
+/// @param {Real}	amount		(Optional) How many of the item within the slot will be removed.
+function item_inventory_remove_slot(_slot, _amount = -1){
 	// Don't try removing anything to an uninitialized inventory, or an out of bounds index.
 	if (!is_array(global.curItems) || _slot < 0 || _slot >= array_length(global.curItems))
 		return _amount;
@@ -355,14 +356,18 @@ function item_inventory_remove_slot(_slot, _amount){
 	if (!is_struct(_item))
 		return _amount;
 	
-	// Remove _amount from the current quantity. If there is less in the slot than what should be removed, the
-	// remainder will be returned. Otherwise, the amount if removed and the item remains in the slot if the
-	// quantity is above zero, or it is removed should the quantity be zero.
-	var _quantity = _item.quantity;
-	if (_quantity <= _amount){
+	// Determine how the slot will have its quantity removed from the inventory reltive to the value found
+	// within the _amount parameter. A value of -1 signifies the full quantity is always removed. Otherwise,
+	// the amount is removed up to the quantity within the current slot should _amount exceed it.
+	var _removeAll  = (_amount == -1);
+	var _quantity	= _item.quantity;
+	if (_quantity <= _amount || _removeAll){
 		array_set(global.curItems, _slot, INV_EMPTY_SLOT);
 		delete _item;
-		return (_amount - _quantity);
+		
+		// If the slot's full quantity was removed due to _removeAll being true, said quanitty is returned in
+		// case it wasn't a known value prior to the slot's data being removed.
+		return _removeAll ? _quantity : (_amount - _quantity);
 	}
 	_item.quantity -= _amount;
 	return 0;
@@ -384,6 +389,40 @@ function item_inventory_slot_swap(_first, _second){
 	var _temp					= global.curItems[_first];
 	global.curItems[_first]		= global.curItems[_second];
 	global.curItems[_second]	= _temp;
+}
+
+/// @description 
+///	A special function for removing an item from an inventory slot that will create said item as an instance
+/// of obj_world_item at a given position within the current room. This item is then added to a list of
+/// dynamically created items and will remain persistent at where it was dropped until it is picked up again.
+///	
+/// @param {Real}	x		Position along the room's x axis that the world item object is created at.
+/// @param {Real}	y		Position along the room's y axis that the world item object is created at.
+///	@param {Real}	slot	The slot that will be converted into a world item.
+function item_inventory_slot_create_item(_x, _y, _slot){
+	if (_slot < 0 || _slot > array_length(global.curItems))
+		return; // Don't attempt to remove an item from invalid slot index.
+	
+	// Grab the properties for the item within the slot, as they will be used to construct the instance of
+	// obj_world_item down below. Then, completely remove this item from its slot in the item inventory.
+	var _name		= "";
+	var _quantity	= 0;
+	var _durability = 0;
+	with(global.curItems[_slot]){
+		_name		= itemName;
+		_quantity	= quantity;
+		_durability	= durability;
+	}
+	item_inventory_remove_slot(_slot);
+	
+	// Use the properties grabbed above alongside the provided position parameters to create the object and
+	// add its data into the world item data structure as a dynamic item. It is flagged as dynamic as well.
+	var _worldItem = instance_create_object(_x, _y, obj_world_item);
+	with(_worldItem){
+		set_item_params(global.nextDynamicKey, _name, _quantity, _durability);
+		flags = flags | WRLDITM_FLAG_DYNAMIC;
+	}
+	dynamic_item_initialize(_x, _y, _name, _quantity, _durability);
 }
 
 #endregion Functions for Manipulating the Item Inventory's Contents

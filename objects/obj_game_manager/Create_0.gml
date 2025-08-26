@@ -397,4 +397,4 @@ add_instance_to_warp = function(_id, _targetX, _targetY){
 // These calls and variables are for testing purposes
 load_item_data("items.dat");
 item_inventory_initialize(GAME_FLAG_CMBTDIFF_STANDARD);
-show_debug_overlay(true);
+//show_debug_overlay(true);

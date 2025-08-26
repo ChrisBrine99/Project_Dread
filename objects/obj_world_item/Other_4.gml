@@ -17,7 +17,7 @@ if (_data == ID_INVALID){ // No value exists, check if the value exists in the "
 	
 	// Create the item's world data if it hasn't been collected yet. Then, exit since all the values match
 	// between the object and its "world" data.
-	world_item_initialize(worldItemID, room, itemID, itemQuantity, itemDurability);
+	world_item_initialize(worldItemID, itemID, itemQuantity, itemDurability);
 	return;
 }
 

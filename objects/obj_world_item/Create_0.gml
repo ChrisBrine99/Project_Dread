@@ -1,5 +1,10 @@
 #region Macro Initializations
 
+// 
+#macro	WRLDITM_FLAG_DYNAMIC			0x00000001
+#macro	WRLDITM_IS_DYNAMIC				((flags & WRLDITM_FLAG_DYNAMIC) != 0)
+
+// 
 #macro	ITMPCKUP_MESSAGE_STANDARD		"Picked up @0x00F8F8{" + _itemID + "}."
 #macro	ITMPCKUP_MESSAGE_SHOW_AMOUNT	"Picked up @0x00F8F8{" + _itemID + "} (@0x3050F8{" + string(_quantity) + "})."
 
@@ -90,7 +95,7 @@ on_player_interact = function(_delta){
 	
 	// Finally, remove the item's world data information and destroy this object. When the room is loaded
 	// again, the item will be destroyed to reflect that the item is now considered collected.
-	world_item_remove(worldItemID);
+	world_item_remove(worldItemID, WRLDITM_IS_DYNAMIC);
 	instance_destroy(id);
 }
 

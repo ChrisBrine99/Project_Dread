@@ -8,8 +8,15 @@ global.itemData			= -1;
 global.itemIDs			= -1;
 
 // A map struct that will contain information about items in the game world. It will contain items that have
-// been placed manually and also any items that were dropped from the item inventory by the player.
+// been placed manually within GameMaker's room editor. Any dynamic items (Those that were collected previously 
+// and then removed by the player from their item iventory) are stored in a seperate map structure.
 global.worldItems		= ds_map_create();
+
+// Two important values for how dynamic items will be created within the game. The list stores the keys for
+// each dynamic item that is found within global.worldItems, and the number is increment for every dynamic item
+// created by the player. The list is used to check on room start for any items that need to be created.
+global.dynamicItemKeys	= ds_list_create();
+global.nextDynamicKey	= 1000000;
 
 // A list containing the keys for items that have been collected by the player. This prevents the item from
 // being collected multiple times since the game's rooms/areas aren't flagged as persistent.
@@ -536,17 +543,43 @@ function equipment_get_type_index(_typeString){
 /// items), the item's ID, the amount of the item that can be collected, and its durability.
 ///	
 /// @param {Any}			key			The value tied to this world item's information.
-/// @param {Asset.GMRoom}	room		Where the item is found within the game.
 ///	@param {String}			itemID		ID value that can be used to reference the item's characteristics from the item data.
 /// @param {Real}			quantity	The current amount of the item found within this world item.
 /// @param {Real}			durability	The condition of the item (This value is only used on higher difficulties).
-function world_item_initialize(_key, _room, _itemID, _quantity, _durability){
+function world_item_initialize(_key, _itemID, _quantity, _durability){
 	var _value = ds_map_find_value(global.worldItems, _key);
 	if (!is_undefined(_value)) // The item already exists; don't try to initialize it again.
 		return;
 		
 	ds_map_add(global.worldItems, _key, {
-		roomIndex	: _room,
+		itemID		: _itemID,
+		quantity	: _quantity,
+		durability	: _durability
+	});
+}
+
+/// @description 
+/// Initializes a special type of world item element within the world item data structure. These are items that
+/// were collected previously and have been removed by the player from their item inventory. They don't need
+/// to be tracked within the global list of collected items, and contain additional information about the
+/// position of the item instance and the room it was created within so they can be created again if the room
+/// unloads and then reloads without the player collecting the item.
+///	
+/// @param {Real}			x			X position to create the item at within the room.
+/// @param {Real}			y			Y position to create the item at within the room.
+///	@param {String}			itemID		ID value that can be used to reference the item's characteristics from the item data.
+/// @param {Real}			quantity	The current amount of the item found within this world item.
+/// @param {Real}			durability	The condition of the item (This value is only used on higher difficulties).
+function dynamic_item_initialize(_x, _y, _itemID, _quantity, _durability){
+	var _value = ds_map_find_value(global.worldItems, global.nextDynamicKey);
+	if (!is_undefined(_value)) // The item already exists; don't try to initialize it again.
+		return;
+		
+	ds_list_add(global.dynamicItemKeys, global.nextDynamicKey);
+	ds_map_add(global.worldItems, global.nextDynamicKey++, {
+		xPos		: _x,
+		yPos		: _y,
+		roomIndex	: room,
 		itemID		: _itemID,
 		quantity	: _quantity,
 		durability	: _durability
@@ -558,11 +591,10 @@ function world_item_initialize(_key, _room, _itemID, _quantity, _durability){
 /// invalid key was passed as the "key" parameter the function will exit before processing anything.
 ///	
 /// @param {Any}			key			The value tied to this world item's information.
-/// @param {Asset.GMRoom}	room		Where the item is found within the game.
 ///	@param {String}			itemID		ID value that can be used to reference the item's characteristics from the item data.
 /// @param {Real}			quantity	The current amount of the item found within this world item.
 /// @param {Real}			durability	The condition of the item (This value is only used on higher difficulties).
-function world_item_update(_key, _room, _itemID, _quantity, _durability){
+function world_item_update(_key, _itemID, _quantity, _durability){
 	var _value = ds_map_find_value(global.worldItems, _key);
 	if (is_undefined(_value)) // An item with this key doesn't exist; exit early.
 		return;
@@ -593,14 +625,16 @@ function world_item_get(_key){
 /// items. This means that the item object that used this data will no longer exist within the game, as it will 
 /// destory itself during its room start event.
 ///	
-///	@param {Any}	key		The value tied to the to-be-deleted world item information.
-function world_item_remove(_key){
+///	@param {Any}	key			The value tied to the to-be-deleted world item information.
+/// @param {Real}	isDynamic	If true, the item's key will not be added the collected item list as that isn't needed.
+function world_item_remove(_key, _isDynamic){
 	var _value = ds_map_find_value(global.worldItems, _key);
 	if (is_undefined(_value)) // Item with the desired key doesn't exist; don't delete anything.
 		return;
 		
 	ds_map_delete(global.worldItems, _key);
-	ds_list_add(global.collectedItems, _key);
+	if (!_isDynamic) // Only add the key to the collected items list if the item wasn't consdiered dynamic.
+		ds_list_add(global.collectedItems, _key);
 	delete _value; // Signals to GM's garbage collector to come and collect.
 }
 
