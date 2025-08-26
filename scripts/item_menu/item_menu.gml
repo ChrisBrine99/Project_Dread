@@ -182,6 +182,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		var _item		 = INV_EMPTY_SLOT;
 		var _quantity	 = 0;
 		var _sQuantity	 = "";
+		var _sColor		 = COLOR_WHITE;
 		var _curX		 = _xPos + optionX;
 		var _curY		 = _yPos + optionY;
 		for (var i = visibleAreaY; i < visibleAreaY + visibleAreaH; i++){
@@ -201,16 +202,25 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 					// So long as the item is a weapon that uses ammo (All ranged weapons + the chainsaw), the
 					// quantity is formatted as [{quantity}]. Otherwise, it will be shown as x{quantity} so
 					// long as the max stack is high than one.
-					if (typeID == ITEM_TYPE_WEAPON && WEAPON_IS_MELEE){ 
-						_sQuantity = string(MENUINM_QUANTITY_WEAPON, _quantity); 
-					} else if (stackLimit > 1 && !_isWeapon){ 
-						_sQuantity = string(MENUINM_QUANTITY_STANDARD, _quantity); 
+					if (typeID == ITEM_TYPE_WEAPON && !WEAPON_IS_MELEE){
+						_sQuantity = string(MENUINM_QUANTITY_WEAPON, _quantity);
+					} else if (stackLimit > 1 && !_isWeapon){
+						_sQuantity = string(MENUINM_QUANTITY_STANDARD, _quantity);
+					} else{ // Clear the string to signify the quantity doesn't need to be shown for the item.
+						_sQuantity = "";
 					}
+					
+					// After the string is formatted, the color for the text will be determined. The default
+					// is white, but a quantity of 0 (Weapons that use ammunition are the only items this
+					// applies to) will turn the quantity text red, and a full stack in a slot will be green.
+					if (_quantity == stackLimit)	{ _sColor = COLOR_LIGHT_GREEN; }
+					else if (_quantity == 0)		{ _sColor = COLOR_RED; }
+					else							{ _sColor = COLOR_WHITE; }
 				}
 				
-				// Display the quantity as it was formatted above
+				// Display the quantity as it was formatted above.
 				draw_text_shadow(_curX + MENUITM_ITEM_QUANTITY_X_OFFSET, _curY, _sQuantity, 
-					COLOR_WHITE, alpha, MENUITM_TEXT_SHADOW_COLOR, _shadowAlpha);
+					_sColor, alpha, MENUITM_TEXT_SHADOW_COLOR, _shadowAlpha);
 			}
 			
 			// Shift the y position down for the next potential item quantity to draw at.

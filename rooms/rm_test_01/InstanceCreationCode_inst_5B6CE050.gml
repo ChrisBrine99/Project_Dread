@@ -1,1 +1,2 @@
-set_item_params("test_item_02", ITEM_HANDGUN, 1, 0);
+set_item_params("test_item_02", ITEM_HANDGUN, 
+	global.itemData[? ITEM_HANDGUN].stackLimit, 15);

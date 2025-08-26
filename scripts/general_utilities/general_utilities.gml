@@ -189,6 +189,10 @@
 #macro	HEX_CODE_PREFIX					"0x"
 #macro	COLOR_CODE_LENGTH				8		// Number of characters including the "0x" prefix
 
+// Macros for the dimensions of the tile graphics used by the game.
+#macro	TILE_WIDTH						16
+#macro	TILE_HEIGHT						16
+
 // Macros that explain what each tile index in the floor materials tileset refers to within the player's step
 // sound effect logic, so it will know the proper sound to play relative to the material they are moving on.
 #macro	TILE_INDEX_FLOOR_TILE			1
