@@ -11,7 +11,7 @@
 
 // Two calculations for the item menu's cursor arrow and an item's current quantity if that value is visible.
 #macro	MENUINV_CURSOR_X_OFFSET		   -2
-#macro	MENUITM_ITEM_QUANTITY_X_OFFSET	115
+#macro	MENUITM_ITEM_QUANTITY_X_OFFSET	110
 
 // Calculations for the position of the an item's info text when it is currently being highlighted by the
 // player. Since they use "_xPos" and "_yPos" they must be used IN THE DRAW GUI EVENT ONLY!!!
@@ -27,6 +27,10 @@
 
 // Determines how fast the menu's cursor will move back and forth along the x axis.
 #macro	MENUITM_CURSOR_ANIM_SPEED		0.07
+
+// Determines where the "E" icon for signifying the item in a given slot is equipped to the player will be
+// placed relative to the item's name's x position on the currently visible portion of the menu.
+#macro	MENUITM_EQUIP_ICON_X_OFFSET		(MENUITM_ITEM_QUANTITY_X_OFFSET - maxQuantityWidth - 8)
 
 // The two variations on how displayed item quantities within the inventory can be formatted. The first is the
 // default method for anything with a stack limit greater than one, and the second is the amount of ammunition
@@ -84,6 +88,9 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	// are required for various processes handled by the item menu.
 	invItemRefs			= array_create(array_length(global.curItems), INV_EMPTY_SLOT);
 	
+	// 
+	equippedSlots		= ds_list_create();
+	
 	// Two variables that store references to menus. The first will hold the sub menu instance that is
 	// responsible for displaying and processing logic for the list of options available to the player for 
 	// the item they selected, and the second is simply a reference to this struct during runtime so it can
@@ -100,6 +107,11 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	
 	// A value used to allow the menu's cursor to move back and forth by one pixel along the x axis.
 	cursorAnimTimer		= 0.0;
+	
+	// Calculate the maximum width for the largest string that can display an item's quantity. This value is
+	// then used to offset the "E" icon that is placed next to items that are currently equipped.
+	draw_set_font(fnt_small);
+	maxQuantityWidth	= string_width("[000]");
 	
 	/// @description 
 	///	The item menus struct's create event. It initializes required parameters; sets up the auxillary return
@@ -145,6 +157,18 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			add_option(_itemName, _itemInfo);
 			invItemRefs[i] = global.itemIDs[_itemID];
 		}
+		
+		// The item inventory doesn't know where each equipped item resides on the player when it is first
+		// created, so a quick check to see if there are valid slot values within each equip slot is done and
+		// if they are valid they are added to the euqippedSlots list.
+		var _equippedSlots = equippedSlots;
+		with(PLAYER.equipment){
+			if (weapon		 != INV_EMPTY_SLOT)	{ ds_list_add(_equippedSlots, weapon); }
+			if (armor		 != INV_EMPTY_SLOT)	{ ds_list_add(_equippedSlots, armor); }
+			if (light		 != INV_EMPTY_SLOT)	{ ds_list_add(_equippedSlots, light); }
+			if (firstAmulet  != INV_EMPTY_SLOT)	{ ds_list_add(_equippedSlots, firstAmulet); }
+			if (secondAmulet != INV_EMPTY_SLOT) { ds_list_add(_equippedSlots, secondAmulet); }
+		}
 	}
 	
 	/// Store the pointer to the base menu's destroy event so it can be called within the item menu's version
@@ -160,6 +184,9 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		
 		if (itemOptionsMenu != noone)		 { instance_destroy_menu_struct(itemOptionsMenu); }
 		if (surface_exists(itemOptionsSurf)) { surface_free(itemOptionsSurf); }
+		
+		ds_list_clear(equippedSlots);
+		ds_list_destroy(equippedSlots);
 	}
 	
 	/// @description
@@ -177,6 +204,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		// After the visible menu options have been draw, a cursor and the current quantities will be drawns
 		// to the right of each item name as required.
 		draw_set_halign(fa_right);
+		var _index		 = -1;
 		var _shadowAlpha = alpha * MENUITM_TEXT_SHADOW_ALPHA;
 		var _isWeapon	 = false;
 		var _item		 = INV_EMPTY_SLOT;
@@ -197,7 +225,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			// drawn and if it will even be drawn to begin with.
 			_item = global.curItems[i];
 			if (_item != INV_EMPTY_SLOT){
-				_quantity = _item.quantity;
+				_quantity = min(999, _item.quantity); // Limit to showing 999 at most.
 				with(invItemRefs[i]){
 					// So long as the item is a weapon that uses ammo (All ranged weapons + the chainsaw), the
 					// quantity is formatted as [{quantity}]. Otherwise, it will be shown as x{quantity} so
@@ -221,6 +249,14 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 				// Display the quantity as it was formatted above.
 				draw_text_shadow(_curX + MENUITM_ITEM_QUANTITY_X_OFFSET, _curY, _sQuantity, 
 					_sColor, alpha, MENUITM_TEXT_SHADOW_COLOR, _shadowAlpha);
+			}
+			
+			// Display an "E" symbol next to each visible item that is currently equipped to one of the five
+			// slots they have available for equipment.
+			_index = ds_list_find_index(equippedSlots, i);
+			if (_index != -1){
+				draw_set_alpha(alpha);
+				draw_sprite(spr_iteminv_equip_icon, 0, _curX + MENUITM_EQUIP_ICON_X_OFFSET, _curY);
 			}
 			
 			// Shift the y position down for the next potential item quantity to draw at.
@@ -367,6 +403,10 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 					break;
 			}
 			
+			// 
+			if (_options[0] == MENUITM_OPTION_EQUIP && ds_list_find_index(equippedSlots, selOption) != -1)
+				_options[0] = MENUITM_OPTION_UNEQUIP;
+			
 			// Create a local variable that will store whether or not the sub menu struct was created this time
 			// through or not. If the menu was created, this bool is set to true and some code below is skipped.
 			var _menuCreated = false;
@@ -500,6 +540,15 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 					break;
 				case MENUITM_OPTION_DROP:		// Removes slot from the inventory; creates a world item on the floor representing the slot's contents.
 					item_inventory_slot_create_item(PLAYER.x - 8, PLAYER.y - 8, selOption);
+					
+					// Check if the item that was dropped was equipped to one of the player's five equipment
+					// slots. If so, state that normally handles unequipping an item will be immediately
+					// called, and then the remaining logic for removing an item is handled to avoid issue.
+					var _index = ds_list_find_index(equippedSlots, selOption);
+					if (_index != -1) { state_unequip_item(_delta); }
+					
+					// Remove the reference to the item as it is no longer within the item inventory. Then,
+					// remove the item's data from the menu option with the same slot index.
 					invItemRefs[selOption] = INV_EMPTY_SLOT;
 					with(options[| selOption]){ // Set the option struct to its default values.
 						oName = MENUITM_DEFAULT_STRING;
@@ -508,7 +557,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 					break;
 			}
 			
-			// 
+			// Manually set this boolean to true so the state knows to close the selected item's option menu.
 			_isClosing = true;
 		}
 		
@@ -534,7 +583,31 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_equip_item = function(_delta){
-		show_debug_message("The item in slot {0} was equipped.", selOption);
+		var _selOption		= selOption;
+		var _itemData		= invItemRefs[_selOption];
+		var _slotToCheck	= INV_EMPTY_SLOT;
+		var _wasEquipped	= false;
+		with(PLAYER){
+			// 
+			switch(_itemData.equipType){
+				case ITEM_EQUIP_TYPE_FLASHLIGHT:
+					_slotToCheck = equipment.light;
+					_wasEquipped = equip_flashlight(_selOption);
+					break;
+			}
+		}
+		
+		// If a successful "equipping" was executed, the function responsible for it will return true. In 
+		// that case, the slot the equipped item occupies needs to be tracked so the item inventory knows 
+		// to replace the "equip" option with "unequip" for the item in question.
+		if (_wasEquipped){
+			var _index = ds_list_find_index(equippedSlots, _slotToCheck);
+			if (_index != -1)	{ ds_list_set(equippedSlots, _index, _selOption); }
+			else				{ ds_list_add(equippedSlots, _selOption); }
+		}
+		
+		// Finally, switch to the state that will close the selected item's option menu/window so normal
+		// functionality can return to the item menu.
 		object_set_state(state_close_item_options);
 	}
 	
@@ -543,7 +616,19 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_unequip_item = function(_delta){
-		show_debug_message("The item in slot {0} was unequipped.", selOption);
+		var _selOption	 = selOption;
+		var _itemData	 = invItemRefs[_selOption];
+		with(PLAYER){
+			// 
+			switch(_itemData.equipType){
+				default:														break;
+				case ITEM_EQUIP_TYPE_FLASHLIGHT:	unequip_flashlight();		break;
+			}
+		}
+		
+		// 
+		var _index = ds_list_find_index(equippedSlots, _selOption);
+		if (_index != -1) { ds_list_delete(equippedSlots, _index); }
 		object_set_state(state_close_item_options);
 	}
 	
@@ -566,6 +651,22 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		if (auxSelOption != curOption){ // Only bother swapping data if two unique slots were chosen.
 			item_inventory_slot_swap(auxSelOption, curOption);
 			
+			// Check if any slots that contain equipped items need to be updated to match the fact that items
+			// were moved in the item inventory. If so, update them with the new values.
+			var _firstSlotIndex		= ds_list_find_index(equippedSlots, auxSelOption);
+			var _secondSlotIndex	= ds_list_find_index(equippedSlots, curOption);
+			if (_firstSlotIndex == -1 && _secondSlotIndex != -1)		{ equippedSlots[| _secondSlotIndex] = auxSelOption; }
+			else if (_firstSlotIndex != -1 && _secondSlotIndex == -1)	{ equippedSlots[| _firstSlotIndex] = curOption; }
+			
+			// Perform a check that will see if any of the current equipment slot values need to be updated to
+			// match the fact that an item (Or two) were moved from their previous slots. If so, they will
+			// be updated through this function call.
+			if (_firstSlotIndex != -1 || _secondSlotIndex != -1){
+				var _auxSelOption	= auxSelOption;
+				var _curOption		= curOption;
+				with(PLAYER) { update_equip_slot(_auxSelOption, _curOption); }
+			}
+				
 			// Update the references to item structs within the item inventory so the slots they occupy matches
 			// where they are now located after the slot swap occurs.
 			var _tempInvItemRef			= invItemRefs[auxSelOption];

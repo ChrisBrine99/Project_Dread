@@ -104,7 +104,7 @@
 #macro	TBOX_SND_TYPE_PLAY_INTERVAL		3.8
 #macro	TBOX_SND_TYPE_GAIN				0.05
 #macro	TBOX_SND_TYPE_PITCH				1.0
-#macro	TBOX_SND_TYPE_GAIN_RANGE		0.1
+#macro	TBOX_SND_TYPE_GAIN_RANGE		0.02
 #macro	TBOX_SND_TYPE_PITCH_RANGE		0.04
 
 #endregion Macros for Textbox Struct

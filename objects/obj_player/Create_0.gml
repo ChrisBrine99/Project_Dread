@@ -446,6 +446,38 @@ handle_menu_open_inputs = function(){
 
 #region Equipment Function Definitions
 
+/// @description
+///	Checks all five equipment slots to see if any contain the first parameter or second parameter's value. If
+/// they do, the slot where the first value is found will now store the second, and vice versa if the second
+/// value is contained in the given equipment slot.
+///	
+/// @param {Real}	firstSlot	The first slot value to check for; swapping for the second value instead.
+/// @param {Real}	secondSlot	The second slot value to check for; swapping for the first value instead.
+update_equip_slot = function(_firstSlot, _secondSlot){
+	with(equipment){
+		// Check if the equipped weapon was in either slot. If so, swap the first with the second or the 
+		// second with the first as required.
+		if (weapon == _firstSlot)				{ weapon = _secondSlot; }
+		else if (weapon == _secondSlot)			{ weapon = _firstSlot; }
+		
+		// Do the same as above, but for the equipped armor's slot (If any armor is even equipped).
+		if (armor == _firstSlot)				{ armor = _secondSlot; }
+		else if (armor == _secondSlot)			{ armor = _firstSlot; }
+		
+		// The same logic for the weapon and armor values is then done for the light's equipped slot.
+		if (light == _firstSlot)				{ light = _secondSlot; }
+		else if (light == _secondSlot)			{ light = _firstSlot; }
+		
+		// Apply that logic again for the first amulet slot.
+		if (firstAmulet == _firstSlot)			{ firstAmulet = _secondSlot; }
+		else if (firstAmulet == _secondSlot)	{ firstAmulet = _firstSlot; }
+		
+		// Finally, do the same for the 5th and finally equipment slot on the player.
+		if (secondAmulet == _firstSlot)			{ secondAmulet = _secondSlot; }
+		else if (secondAmulet == _secondSlot)	{ secondAmulet = _firstSlot; }
+	}
+}
+
 /// @description 
 ///	Equips the item in the provided slot into the player's light source equipment slot. If the item isn't of
 /// equip type "light" the function will not have it occupy said slot, and the function will do nothing.
@@ -453,12 +485,12 @@ handle_menu_open_inputs = function(){
 ///	@param {Real}	itemSlot		Slot in the item inventory where the flashlight being equipped is located.
 equip_flashlight = function(_itemSlot){
 	if (_itemSlot < 0 || _itemSlot >= array_length(global.curItems) || global.curItems[_itemSlot] == INV_EMPTY_SLOT)
-		return; // Exit early if the slot value is out of bounds or the slot provided is actually empty.
+		return false; // Exit early if the slot value is out of bounds or the slot provided is actually empty.
 	
 	var _itemID			= global.curItems[_itemSlot].itemID;
 	var _itemStructRef	= array_get(global.itemIDs, _itemID);
 	if (is_undefined(_itemStructRef) || _itemStructRef.equipType != ITEM_EQUIP_TYPE_FLASHLIGHT)
-		return; // The item with the given ID doesn't exist or the equipment isn't a flashlight; exit early.
+		return false; // The item with the given ID doesn't exist or the equipment isn't a flashlight; exit early.
 	
 	// Attach the slot index to the light source equipment slot so the player knows the slot in the item
 	// inventory to reference when powering the light on and off while it is equipped. The array of values
@@ -480,6 +512,9 @@ equip_flashlight = function(_itemSlot){
 		_paramRef[EQUP_PARAM_LIGHT_COLOR], 
 		_paramRef[EQUP_PARAM_LIGHT_STRENGTH]
 	);
+	
+	// Return true to signify a successful equipping of a flashlight.
+	return true;
 }
 
 /// @description 
@@ -496,7 +531,7 @@ unequip_flashlight = function(){
 	lightSource.light_set_properties(PLYR_AMBLIGHT_RADIUS, PLYR_AMBLIGHT_COLOR, PLYR_AMBLIGHT_STRENGTH);
 	
 	// Reset the light value so it is no longer a valid slot in the inventory and reset the reference value
-	// that points towards its parameters for  whenever the light is active..
+	// that points towards its parameters for whenever the light is active.
 	with(equipment){
 		light			= INV_EMPTY_SLOT;
 		lightParamRef	= ID_INVALID;
@@ -645,9 +680,9 @@ state_default = function(_delta){
 	// item.
 	var _isMoving = PLYR_IS_MOVING;
 	if (_isMoving || interactableID == noone){
-		var _interactX			= x + lengthdir_x(8, direction); // Calculate the interaction point based on facing direction.
-		var _interactY			= y + lengthdir_y(8, direction) - 8;
-		interactableID			= instance_nearest(_interactX, _interactY, par_interactable);
+		var _interactX	= x + lengthdir_x(8, direction); // Calculate the interaction point based on facing direction.
+		var _interactY	= y + lengthdir_y(8, direction) - 8;
+		interactableID	= instance_nearest(_interactX, _interactY, par_interactable);
 		with(interactableID){ // Check to see if the distance of the point if within the interaction radius.
 			if (point_distance(_interactX, _interactY, interactX, interactY) <= interactRadius){
 				flags = flags | INTR_FLAG_INTERACT;
@@ -739,4 +774,4 @@ state_player_paused = function(_delta){
 #endregion State Function Definitions
 
 item_inventory_add("Flashlight", 1, 0);
-equip_flashlight(0);
+item_inventory_add("Flashlight", 1, 0);

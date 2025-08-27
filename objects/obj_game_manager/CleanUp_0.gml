@@ -56,6 +56,10 @@ while(!is_undefined(_key)){
 ds_map_clear(global.worldItems);
 ds_map_destroy(global.worldItems);
 
+// 
+ds_list_clear(global.dynamicItemKeys);
+ds_list_destroy(global.dynamicItemKeys);
+
 // Clear and destroy the list that contains information about items that player has collected.
 ds_list_clear(global.collectedItems);
 ds_list_destroy(global.collectedItems);
