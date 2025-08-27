@@ -29,7 +29,7 @@ draw_text_shadow(90, 5,
 		GAME_IS_GAMEPAD_ACTIVE,
 		numDynamicDrawn + numStaticDrawn,
 		numDynamicDrawn,
-		numStaticDrawn
+		numStaticDrawn,
 	), 
 	COLOR_DARK_RED
 );

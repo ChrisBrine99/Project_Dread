@@ -264,9 +264,9 @@ global.settings			= {
 		
 		// --- Inputs for the Inventory Menu (Keyboard and Gamepad Interwoven) --- //
 		vk_c,			// Tabbing to the section left of the current one
-		gp_shoulderl,
+		gp_shoulderlb,
 		vk_v,			// Tabbing to the section right of the current one
-		gp_shoulderr,
+		gp_shoulderrb,
 		
 		// --- Inputs for Opening Menus During Gameplay (Keyboard and Gamepad Interwoven) --- //
 		vk_tab,			// Shortcut for item menu
@@ -294,7 +294,7 @@ global.colorFadeShader = {
 	curColorRGB			: [0.0, 0.0, 0.0],
 	
 	// Get and store the uniform for shader so the color utilized can be adjusted as required.
-	uFadeColor			: shader_get_uniform(shd_color_fade,		"fadeColor"),
+	uFadeColor			: shader_get_uniform(shd_color_fade, "fadeColor"),
 	
 	/// @description 
 	///	Call this to activate the shader and set its uniform vector to match the color the effect will use.

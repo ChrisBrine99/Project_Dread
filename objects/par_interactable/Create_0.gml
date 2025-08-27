@@ -82,7 +82,7 @@ draw_gui_event = function(){
 	
 	// If no icon exists for the input that is currently set, the message is simply drawn on the GUI at the
 	// center of the screen.
-	draw_text_shadow((_guiWidth - _messageWidth) >> 2, _guiHeight - 30, interactMessage, COLOR_WHITE);
+	draw_text_shadow((_guiWidth - _messageWidth) >> 1, _guiHeight - 30, interactMessage, COLOR_WHITE);
 }
 
 #endregion Function Initializations

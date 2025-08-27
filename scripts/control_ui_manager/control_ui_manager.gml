@@ -46,6 +46,11 @@
 #macro	ICONUI_DRAW_UP					12
 #macro	ICONUI_DRAW_DOWN				13
 
+// 
+#macro	ICONUI_TYPE_UNSET				0
+#macro	ICONUI_TYPE_KEYBOARD			1
+#macro	ICONUI_TYPE_GAMEPAD				2
+
 #endregion Control UI Manager Macro Definitions
 
 #region Control UI Manager Struct Definition
@@ -76,7 +81,7 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 		var _inputs = global.settings.inputs;
 		
 		// Getting icon info for all in-game keyboard bindings.
-		set_keyboard_control_icon(ICONUI_GAME_RIGHT,	_inputs[STNG_INPUT_GAME_RIGHT]);	
+		set_keyboard_control_icon(ICONUI_GAME_RIGHT,	_inputs[STNG_INPUT_GAME_RIGHT]);
 		set_keyboard_control_icon(ICONUI_GAME_LEFT,		_inputs[STNG_INPUT_GAME_LEFT]);
 		set_keyboard_control_icon(ICONUI_GAME_UP,		_inputs[STNG_INPUT_GAME_UP]);
 		set_keyboard_control_icon(ICONUI_GAME_DOWN,		_inputs[STNG_INPUT_GAME_DOWN]);
@@ -160,8 +165,8 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 		with(create_control_icon_struct(_key)){
 			if (padBinding == _padBinding) // Don't update if there is no need.
 				return;
-			keyBinding	= _padBinding;
-			keyIcon		= other.get_gamepad_icon(_padBinding);
+			padBinding	= _padBinding;
+			padIcon		= other.get_gamepad_icon(_padBinding);
 		}
 	}
 	
@@ -308,6 +313,13 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	get_gamepad_icon = function(_padBinding){
 		if (_padBinding == ICONUI_BINDING_NONE)
 			return ICONUI_NO_ICON;
+			
+		// 
+		var _imageIndex		= _padBinding - gp_face1;
+		var _spriteIndex	= spr_pad_xbox_icons;
+		// TODO -- Add check for controller type so the proper icons can be used.
+		
+		return [_spriteIndex, _imageIndex];
 	}
 	
 	/// @description 
@@ -332,6 +344,98 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 			padding			: _padding,
 			drawDirection	: _direction,
 			iconsToDraw		: ds_list_create(),
+			iconType		: ICONUI_TYPE_UNSET,
+			
+			/// @description 
+			///	Calcualtes the position on the GUI layer for all control icons/descriptors found in the 
+			///	control group determined by the function's single parameter. The way these positions are 
+			/// calculated differ slightly depending on the direction of drawing the content of the group 
+			/// relative to its anchor point.
+			///	
+			/// @param {Bool}	gamepadActive	Determines the type of icons being drawn by the group.
+			calculate_group_positions : function(_gamepadActive) {
+				var _startTime = get_timer();
+				
+				// Check whether or not the value is true. If so, the icon type is switched to gamepad. If not,
+				// the icon type is switch to keyboard. This allows updating position values on-the-fly as the
+				// input method changes.
+				if (_gamepadActive) { iconType = ICONUI_TYPE_GAMEPAD; }
+				else				{ iconType = ICONUI_TYPE_KEYBOARD; }
+				
+				// Create a whole mess of variables that will be used for each control icon in the group. They
+				// store important information to position and calculate the positions for each icon/descriptor
+				// pair; utilizing the offset from the last pair until the list is fully iterated.
+				draw_set_font(fnt_small);
+				var _xOffset		= xPos;
+				var _yOffset		= yPos;
+				var _drawDirection	= drawDirection;
+				var _sprIndex		= -1;
+				var _sprWidth		= 0;
+				var _sprHeight		= 0;
+				var _strWidth		= 0;
+				var _width			= 0;
+				var _length			= ds_list_size(iconsToDraw);
+				for (var i = 0; i < _length; i++){
+					with(iconsToDraw[| i]){
+						// Determine which sprite to use based on the currently active input method. Then, this 
+						// sprite is used to fill in the _sprWidth and _sprHeight variables, respectively.
+						if (_gamepadActive)	{ _sprIndex = iconRef.padIcon; }
+						else				{ _sprIndex = iconRef.keyIcon; }
+						_sprWidth	= _sprIndex == ICONUI_NO_ICON ? 0 : sprite_get_width(_sprIndex[ICONUI_ICON_SPRITE]);
+						_sprHeight	= _sprIndex == ICONUI_NO_ICON ? 0 : sprite_get_height(_sprIndex[ICONUI_ICON_SPRITE]);
+						_strWidth	= string_width(descriptor);	// Also calculate the width of the descriptor text.
+				
+						// Apply the general offsets to the icon and descriptor position values. The descriptor's y
+						// offset will always be two pixels lower on the screen than the icon since that looks best.
+						iconX		= _xOffset;
+						iconY		= _yOffset;
+						descriptorX	= _xOffset;
+						descriptorY	= _yOffset + 2;
+				
+						// Determine if some special offsets need to be applied which only occur when drawing to the
+						// left relative to the anchor point. In that case, the icon has to be offset by both itself
+						// and the descriptor's width; along with the two-pixel padding between the elements.
+						if (_drawDirection == ICONUI_DRAW_LEFT){
+							iconX	    -= _strWidth + _sprWidth + 2;
+							descriptorX	-= _strWidth;
+						} else{ // Apply offset as normal since values are right to left.
+							descriptorX += _sprWidth + 2;
+						}
+				
+						// Shift upward by the height of the icon to account for the origin of the sprite/descriptor
+						// being aligned to their topmost pixels.
+						if (_drawDirection == ICONUI_DRAW_UP){
+							iconY		-= _sprHeight;
+							descriptorY -= _sprHeight;
+						}
+				
+						// Finally, calculate the width of the element plus the two-pixel gap between the icon and
+						// its descriptor text. If no descriptor exists, the two-pixel padding is removed to allow
+						// one element's descriptor be used for multiple inputs if required.
+						_width	= _sprWidth + _strWidth + 2;
+						if (descriptor == "") { _width -= 2; }
+					}
+			
+					// Determine how to update the current x/y offset values by checking the direction that the
+					// elements will be drawn relative to the anchor point. Then, move onto the next element.
+					switch(drawDirection){
+						default: // Display leftward by default.
+						case ICONUI_DRAW_LEFT:	// Displays each icon/descriptor from left to right.
+							_xOffset -= _width + padding;
+							continue;
+						case ICONUI_DRAW_RIGHT: // Displays each icon/descriptor from right to left.
+							_xOffset += _width + padding;
+							continue;
+						case ICONUI_DRAW_UP:	// Displays each icon/descriptor from bottom up.
+							_yOffset -= _sprHeight + padding;
+							continue;
+						case ICONUI_DRAW_DOWN:	// Displays each icon/descriptor from top down.
+							_yOffset += _sprHeight + padding;
+							continue;
+					}
+				}
+				show_debug_message("Took {0} microseconds to update input icon positions.", get_timer() - _startTime);
+			}
 		};
 		
 		ds_map_add(controlGroup, _key, _controlGroup);
@@ -368,101 +472,6 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	///	Calcualtes the position on the GUI layer for all control icons/descriptors found in the control
-	/// group determined by the function's single parameter. The way these positions are calculated differ
-	/// slightly depending on the direction of drawing the content of the group relative to its anchor point.
-	///	
-	///	@param {Struct._structRef}	controlGroupRef		Reference to the control group that will have its positioning data calculated.
-	calculate_control_group_offsets = function(_controlGroupRef){
-		// Jump into the control group struct to set the data required for calculation into local variables.
-		// This could all be done in the scope of the group in question by the code is easier to parse when
-		// it is split like this.
-		var _xOffset		= 0;
-		var _yOffset		= 0;
-		var _padding		= 0;
-		var _iconsToDraw	= 0;
-		var _drawDirection	= ICONUI_DRAW_RIGHT; // Default is always draw to the right of the anchor.
-		with(_controlGroupRef){
-			_xOffset		= xPos;
-			_yOffset		= yPos;
-			_padding		= padding;
-			_iconsToDraw	= iconsToDraw;
-			_drawDirection	= drawDirection;
-		}
-
-		// Begin looping through each iron that will be drawn in this group; determining the position to
-		// display each elements information based on the positions of all previous elements alongside the
-		// original offset determined by the anchor point.
-		draw_set_font(fnt_small);
-		var _gamepadActive	= GAME_IS_GAMEPAD_ACTIVE;
-		var _sprIndex		= -1;
-		var _sprWidth		= 0;
-		var _sprHeight		= 0;
-		var _strWidth		= 0;
-		var _width			= 0;
-		var _length			= ds_list_size(_iconsToDraw);
-		for (var i = 0; i < _length; i++){
-			with(_iconsToDraw[| i]){
-				// Determine which sprite to use based on the currently active input method. Then, this 
-				// sprite is used to fill in the _sprWidth and _sprHeight variables, respectively.
-				if (_gamepadActive) { _sprIndex = iconRef.padIcon; }
-				else				{ _sprIndex = iconRef.keyIcon; }
-				_sprWidth	= is_array(_sprIndex) ? sprite_get_width(_sprIndex[ICONUI_ICON_SPRITE])  : 0;
-				_sprHeight	= is_array(_sprIndex) ? sprite_get_height(_sprIndex[ICONUI_ICON_SPRITE]) : 0;
-				_strWidth	= string_width(descriptor);	// Also calculate the width of the descriptor text.
-				
-				// Apply the general offsets to the icon and descriptor position values. The descriptor's y
-				// offset will always be two pixels lower on the screen than the icon since that looks best.
-				iconX		= _xOffset;
-				iconY		= _yOffset;
-				descriptorX	= _xOffset;
-				descriptorY	= _yOffset + 2;
-				
-				// Determine if some special offsets need to be applied which only occur when drawing to the
-				// left relative to the anchor point. In that case, the icon has to be offset by both itself
-				// and the descriptor's width; along with the two-pixel padding between the elements.
-				if (_drawDirection == ICONUI_DRAW_LEFT){
-					iconX	    -= _strWidth + _sprWidth + 2;
-					descriptorX	-= _strWidth;
-				} else{ // Apply offset as normal since values are right to left.
-					descriptorX += _sprWidth + 2;
-				}
-				
-				// Shift upward by the height of the icon to account for the origin of the sprite/descriptor
-				// being aligned to their topmost pixels.
-				if (_drawDirection == ICONUI_DRAW_UP){
-					iconY		-= _sprHeight;
-					descriptorY -= _sprHeight;
-				}
-				
-				// Finally, calculate the width of the element plus the two-pixel gap between the icon and
-				// its descriptor text. If no descriptor exists, the two-pixel padding is removed to allow
-				// one element's descriptor be used for multiple inputs if required.
-				_width	= _sprWidth + _strWidth + 2;
-				if (descriptor == "") { _width -= 2; }
-			}
-			
-			// Determine how to update the current x/y offset values by checking the direction that the
-			// elements will be drawn relative to the anchor point. Then, move onto the next element.
-			switch(_drawDirection){
-				default: // Display leftward by default.
-				case ICONUI_DRAW_LEFT:	// Displays each icon/descriptor from left to right.
-					_xOffset -= _width + _padding;
-					continue;
-				case ICONUI_DRAW_RIGHT: // Displays each icon/descriptor from right to left.
-					_xOffset += _width + _padding;
-					continue;
-				case ICONUI_DRAW_UP:	// Displays each icon/descriptor from bottom up.
-					_yOffset -= _sprHeight + _padding;
-					continue;
-				case ICONUI_DRAW_DOWN:	// Displays each icon/descriptor from top down.
-					_yOffset += _sprHeight + _padding;
-					continue;
-			}
-		}
-	}
-	
-	/// @description 
 	///	Draws a control group to the screen at the desired opacity value. No position calculations occur
 	/// here; it simply displays all control icon/descriptors at wherever they were calculated to be.
 	///	
@@ -473,9 +482,17 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	/// @param {Real}				shadowAlpha			(Optional) Overall opacity of the drop shadow on drawn text.
 	draw_control_group = function(_controlGroupRef, _alpha, _textColor = COLOR_WHITE, _shadowColor = COLOR_BLACK, _shadowAlpha = 1.0){
 		with(_controlGroupRef){
-			var _gamepadActive	= GAME_IS_GAMEPAD_ACTIVE;
-			var _iconData		= ICONUI_NO_ICON;
-			var _length			= ds_list_size(iconsToDraw);
+			// First, check to see if the current icon type matches the currently active input method. If it
+			// doesn't (Or it hasn't even been set yet), the positions for each icon/descriptor pair will be
+			// updated once before rendering and then will remain that way until the input method changes.
+			var _gamepadActive = GAME_IS_GAMEPAD_ACTIVE;
+			if ((_gamepadActive && iconType != ICONUI_TYPE_GAMEPAD) || (!_gamepadActive && iconType != ICONUI_TYPE_KEYBOARD))
+				calculate_group_positions(_gamepadActive);
+			
+			// Loop through each icon that will be drawn for the current control group.
+			var _iconType	= iconType;
+			var _iconData	= ICONUI_NO_ICON;
+			var _length		= ds_list_size(iconsToDraw);
 			for (var i = 0; i < _length; i++){
 				with(iconsToDraw[| i]){
 					// Determine if the gamepad or keyboard icon should be utilized, and grab the relevant

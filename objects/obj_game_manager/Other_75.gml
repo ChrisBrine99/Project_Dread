@@ -10,9 +10,42 @@ switch(async_load[? "event_type"]){
 		if (!gamepad_is_supported()) 
 			return;
 		
-		with(global.settings){ // Apply the proper stick deadzone and trigger threshold settings.
+		// Set the gamepad's desired deadzones along its joystick(s) and the threshold for activation of the
+		// its analog triggers. Then, store the reference to the input array so control icon info can be set 
+		// for the newly connected gamepad.
+		var _inputs = 0;
+		with(global.settings){
 			gamepad_set_axis_deadzone(_gamepadID, stickDeadzone);
 			gamepad_set_button_threshold(_gamepadID, triggerThreshold);
+			_inputs = inputs;
+		}
+		
+		// Jump into scope of the control icon ui manager struct so all of the gamepad's matching input sprites
+		// can be used whenever input information is shown to the player while the gamepad is active.
+		with(CONTROL_UI_MANAGER){
+			// Getting icon info for all in-game gamepad bindings.
+			set_gamepad_control_icon(ICONUI_GAME_RIGHT,		_inputs[STNG_INPUT_GAME_RIGHT	+ 1]);
+			set_gamepad_control_icon(ICONUI_GAME_LEFT,		_inputs[STNG_INPUT_GAME_LEFT	+ 1]);
+			set_gamepad_control_icon(ICONUI_GAME_UP,		_inputs[STNG_INPUT_GAME_UP		+ 1]);
+			set_gamepad_control_icon(ICONUI_GAME_DOWN,		_inputs[STNG_INPUT_GAME_DOWN	+ 1]);
+			set_gamepad_control_icon(ICONUI_SPRINT,			_inputs[STNG_INPUT_SPRINT		+ 1]);
+			set_gamepad_control_icon(ICONUI_INTERACT,		_inputs[STNG_INPUT_INTERACT		+ 1]);
+			set_gamepad_control_icon(ICONUI_READYWEAPON,	_inputs[STNG_INPUT_READYWEAPON	+ 1]);
+			set_gamepad_control_icon(ICONUI_FLASHLIGHT,		_inputs[STNG_INPUT_FLASHLIGHT	+ 1]);
+			set_gamepad_control_icon(ICONUI_USEWEAPON,		_inputs[STNG_INPUT_USEWEAPON	+ 1]);
+			
+			// Getting icon info for inputs that are tied to opening/closing a given menu.
+			set_gamepad_control_icon(ICONUI_ITEM_MENU,		_inputs[STNG_INPUT_ITEM_MENU	+ 1]);
+			
+			// Getting icon info for all generic menu-based gamepad bindings.
+			set_gamepad_control_icon(ICONUI_MENU_RIGHT,		_inputs[STNG_INPUT_MENU_RIGHT	+ 1]);
+			set_gamepad_control_icon(ICONUI_MENU_LEFT,		_inputs[STNG_INPUT_MENU_LEFT	+ 1]);
+			set_gamepad_control_icon(ICONUI_MENU_UP,		_inputs[STNG_INPUT_MENU_UP		+ 1]);
+			set_gamepad_control_icon(ICONUI_MENU_DOWN,		_inputs[STNG_INPUT_MENU_DOWN	+ 1]);
+			
+			// Getting icon info the textbox-specific gamepad bindings.
+			set_gamepad_control_icon(ICONUI_TBOX_ADVANCE,	_inputs[STNG_INPUT_TBOX_ADVANCE	+ 1]);
+			set_gamepad_control_icon(ICONUI_TBOX_LOG,		_inputs[STNG_INPUT_TBOX_LOG		+ 1]);
 		}
 		
 		// Store the gamepad's ID so input can be parsed with it later, but don't set it to active here.

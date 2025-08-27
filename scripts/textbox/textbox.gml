@@ -208,7 +208,6 @@ function str_textbox(_index) : str_base(_index) constructor {
 			_controlGroupRef = create_control_group(TBOX_ICONUI_CONTROL_GROUP, _viewWidth, _viewHeight, 3, ICONUI_DRAW_LEFT);
 			add_control_group_icon(_controlGroupRef, ICONUI_TBOX_ADVANCE, "Next");
 			add_control_group_icon(_controlGroupRef, ICONUI_TBOX_LOG, "Log");
-			calculate_control_group_offsets(_controlGroupRef);
 		}
 		controlGroupRef = _controlGroupRef;
 	}
