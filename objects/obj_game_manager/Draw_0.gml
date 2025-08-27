@@ -4,9 +4,6 @@ var _delta	= global.deltaTime;
 var _length = ds_grid_height(global.sortOrder);
 for (var i = 0; i < _length; i++){
 	with(global.sortOrder[# 0, i]){
-		if (!ENTT_IS_VISIBLE)
-			continue; // Entity's that aren't currently visible will have their drawn event/function skipped.
-		
 		// Use the standard drawn event if the Entity doesn't override it OR they do but haven't been assigned
 		// a proper function to use as the override.
 		if (!ENTT_OVERRIDES_DRAW_EVENT || drawFunction == 0){
