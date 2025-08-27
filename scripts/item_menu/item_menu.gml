@@ -88,7 +88,8 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	// are required for various processes handled by the item menu.
 	invItemRefs			= array_create(array_length(global.curItems), INV_EMPTY_SLOT);
 	
-	// 
+	// Stores the slots that have equipped items currently occupying them. This allows the item inventory to
+	// know what is equipped or not without having to constantly reference the player's "equipment" struct.
 	equippedSlots		= ds_list_create();
 	
 	// Two variables that store references to menus. The first will hold the sub menu instance that is
@@ -180,11 +181,14 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	/// lifetime of the item menu struct.
 	///
 	destroy_event = function(){
-		__destroy_event();
+		__destroy_event(); // Call parent destroy event to manage everything that was inherited.
 		
+		// Should either the surface for the selected item's option menu or that menu struct exist when the
+		// item inventory is being destroyed they will be tidied up here.
 		if (itemOptionsMenu != noone)		 { instance_destroy_menu_struct(itemOptionsMenu); }
 		if (surface_exists(itemOptionsSurf)) { surface_free(itemOptionsSurf); }
 		
+		// Remove the ds_list that kept track of the slots where player's currently equipped items were contained.
 		ds_list_clear(equippedSlots);
 		ds_list_destroy(equippedSlots);
 	}
@@ -264,7 +268,8 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		}
 		draw_set_halign(fa_left);
 		
-		// 
+		// Draw the highlighted/selected item's description below the current visible region of options in 
+		// the item inventory. For now, it simply displays it with no animations or fancy flairs.
 		if (curOption >= 0 && curOption < ds_list_size(options)){
 			var _curOption = options[| curOption];
 			draw_text_shadow(MENUITM_OPTION_INFO_X, MENUITM_OPTION_INFO_Y, _curOption.oInfo, 
