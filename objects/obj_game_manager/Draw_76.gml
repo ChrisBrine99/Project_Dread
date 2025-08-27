@@ -17,52 +17,36 @@ with(CAMERA){
 	_viewH = _viewY + viewportHeight;
 }
 
-// Loop through all dynamic and all static entities to see if they are going to be rendered or not. The code
-// for the dynamic entity with loop is duplicated for the static entity with loop since it's faster than
-// putting it into a function that is called twice.
+// Loop through all dynamic entities and add them to the rendering ds_grid (global.sortOrder) if they should
+// be drawn onto the screen.
 var _index = 0;
 with(par_dynamic_entity){
-	// If the entity isn't active to begin with; they won't be rendered regardless of their position in the
-	// room relative to the viewport, so the loop immediately moves onto the next entity.
-	if (!ENTT_IS_ACTIVE)
-		continue;
-	
-	// Check if the entity's current position and sprite are out of the bounds of the screen. If so, they will
-	// be flagged as invisible, and be ignored in the render loop.
-	if (x < _viewX + sprite_width || x > _viewW - sprite_width || 
-			y < _viewY + sprite_height || y > _viewH - sprite_height){
-		flags = flags & ~ENTT_FLAG_VISIBLE;
-		continue;
+	// Ensure the entity is currently considered visible (Also means they're considered active) while also 
+	// being visible on the screen before adding them to the grid that is responsible for sorting them from 
+	// top to bottom and rendering them.
+	if (ENTT_IS_VISIBLE && x >= _viewX - sprite_width && x <= _viewW + sprite_width && 
+			y >= _viewY - sprite_height && y <= _viewH + sprite_height){
+		global.sortOrder[# 0, _index] = id;
+		global.sortOrder[# 1, _index] = y;
+		_index++;
 	}
-	flags = flags | ENTT_FLAG_VISIBLE;
-	
-	// Store the ID of the current entity in the first column as well as its y position into the grid's second 
-	// column. Then, _index is incremented so the next row will be used for the next entity.
-	global.sortOrder[# 0, _index] = id;
-	global.sortOrder[# 1, _index] = y;
-	_index++;
 }
+numDynamicDrawn = _index;
+
+// After all active and visible dynamic entities have been added to the rendering ds_grid, all static entities
+// will be looped through to check if they're active and on-screen.
 with(par_static_entity){
-	// If the entity isn't active to begin with; they won't be rendered regardless of their position in the
-	// room relative to the viewport, so the loop immediately moves onto the next entity.
-	if (!ENTT_IS_ACTIVE)
-		continue;
-	
-	// Check if the entity's current position and sprite are out of the bounds of the screen. If so, they will
-	// be flagged as invisible, and be ignored in the render loop.
-	if (x < _viewX - sprite_width || x > _viewW + sprite_width || 
-			y < _viewY - sprite_height || y > _viewH + sprite_height){
-		flags = flags & ~ENTT_FLAG_VISIBLE;
-		continue;
+	// Ensure the entity is currently considered visible (Also means they're considered active) while also 
+	// being visible on the screen before adding them to the grid that is responsible for sorting them from 
+	// top to bottom and rendering them.
+	if (ENTT_IS_VISIBLE && x >= _viewX - sprite_width && x <= _viewW + sprite_width && 
+			y >= _viewY - sprite_height && y <= _viewH + sprite_height){
+		global.sortOrder[# 0, _index] = id;
+		global.sortOrder[# 1, _index] = y;
+		_index++;
 	}
-	flags = flags | ENTT_FLAG_VISIBLE;
-	
-	// Store the ID of the current entity in the first column as well as its y position into the grid's second 
-	// column. Then, _index is incremented so the next row will be used for the next entity.
-	global.sortOrder[# 0, _index] = id;
-	global.sortOrder[# 1, _index] = y;
-	_index++;
 }
+numStaticDrawn = _index - numDynamicDrawn;
 
 // Finally, check if the number of entities to be rendered is less than the total count of them in the current
 // room. If so, resize to match the number of rendered entities and then sort from lowest to highest y value.

@@ -8,7 +8,7 @@ if (!GAME_IS_ROOM_WARP_OCCURRING){ // All entities should pause during a room tr
 	with(par_dynamic_entity){
 		if (curState == 0 || !ENTT_IS_ACTIVE)
 			continue;
-		curState(_delta);
+		script_execute(curState, _delta);
 	}
 }
 
@@ -20,7 +20,7 @@ for (var i = 0; i < _length; i++){
 	with(global.menus[| i]){
 		if (curState == 0 || !MENU_IS_ACTIVE)
 			continue;
-		curState(_delta);
+		script_execute(curState, _delta);
 	}
 }
 
@@ -29,7 +29,7 @@ for (var i = 0; i < _length; i++){
 with(TEXTBOX){
 	if (curState == 0 || !TBOX_IS_ACTIVE)
 		break;
-	curState(_delta);
+	script_execute(curState, _delta);
 }
 
 // Much like entities and the textbox, the screen fade will execute its step event through a state function.
@@ -37,7 +37,7 @@ with(TEXTBOX){
 with(SCREEN_FADE){
 	if (curState == 0 || !FADE_IS_ACTIVE)
 		break;
-	curState(_delta);
+	script_execute(curState, _delta);
 }
 
 // Update the camera after all dynamic entities have been updated to ensure that it has accurate position
