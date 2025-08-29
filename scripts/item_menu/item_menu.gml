@@ -462,16 +462,19 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	}
 	
 	/// @description 
-	///	
+	///	Handles the opening animation for the selected item's option window. Once the animation has finished,
+	/// the submenu will begin to check for input and then process whichever option is selected.
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_open_item_options = function(_delta){
-		// 
+		// Jump into the submenu's scope and update the parameters involved in the animation. Once all values
+		// have reached their targets, flip the flag _isOpened to true to signify the animation is done and
+		// the item menu's state should change.
 		var _isOpened = false;
 		with(itemOptionsMenu){
 			optionX  = lerp(SUBMENU_ITM_ANIM_X1, SUBMENU_ITM_ANIM_X2, alpha); 
 			alpha	+= SUBMENU_ITM_OANIM_ALPHA_SPEED * _delta;
-			if (alpha >= 1.0){
+			if (alpha >= 1.0){ // Animation has completed; set values to their targets.
 				object_set_state(state_default);
 				alpha		= 1.0;
 				optionX		= 0.0;
@@ -479,21 +482,25 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			}
 		}
 		
-		// 
+		// Once the opening animation is finished, set the state of this menu to handle submenu logic.
 		if (_isOpened) { object_set_state(state_navigating_item_options); }
 	}
 	
 	/// @description 
-	///	
+	///	Handles the closing animation for the selected item's option window. Once the animation has finished,
+	/// standard input functionality returns to the item inventory menu itself as it resets to its default
+	/// state once again.
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_close_item_options = function(_delta){
-		// 
+		// Jump into the select item's option menu submenu to update the parameters that are used in the
+		// closing animation. Once the conditions of the animation are met, the local _isClosed flag is
+		// set to true to signify the item menu can reset itself.
 		var _isClosed = false;
 		with(itemOptionsMenu){
 			optionX  = lerp(SUBMENU_ITM_ANIM_X1, SUBMENU_ITM_ANIM_X2, alpha); 
 			alpha -= SUBMENU_ITM_CANIM_ALPHA_SPEED * _delta;
-			if (alpha <= 0.0){
+			if (alpha <= 0.0){ // Animation has completed; reset flags and set values to their targets.
 				flags		= flags & ~(MENU_FLAG_ACTIVE | MENU_FLAG_CURSOR_AUTOSCROLL);
 				alpha		= 0.0;
 				optionX		= 50.0;
@@ -501,11 +508,13 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			}
 		}
 		
-		// 
+		// When flagged to close, the menu calls its reset function if there isn't an auxillary option
+		// selected by the item menu. Otherwise, it simply just updates its state so further functionality
+		// can occur with that auxillary item.
 		if (_isClosed){
 			if (auxSelOption == -1) { reset_to_default_state(); }
 			else					{ object_set_state(state_default); }
-			flags = flags & ~MENUITM_FLAG_OPTIONS_OPEN;
+			flags = flags & ~MENUITM_FLAG_OPTIONS_OPEN; // CLear flag since this submenu is now closed.
 		}
 	}
 	
@@ -599,31 +608,30 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	state_equip_item = function(_delta){
 		var _selOption		= selOption;
 		var _itemData		= invItemRefs[_selOption];
+		var _itemStructRef	= global.itemIDs[_itemData.itemID];
 		var _slotToCheck	= INV_EMPTY_SLOT;
-		var _wasEquipped	= false;
 		with(PLAYER){
 			// Determine what equipment slot to check for in the "equippedSlots" list and function to call
 			// based on what "equipment type" the item is a part of.
 			switch(_itemData.equipType){	
 				case ITEM_EQUIP_TYPE_FLASHLIGHT:	// Equipping a light source to the player.
 					_slotToCheck = equipment.light;
-					_wasEquipped = equip_flashlight(_selOption);
+					equip_flashlight(_itemStructRef, _selOption);
 					break;
 				case ITEM_EQUIP_TYPE_MAINWEAPON:	// Equipping a ranged/melee weapon to the player.
 					_slotToCheck = equipment.weapon;
-					_wasEquipped = equip_main_weapon(_selOption);
+					equip_main_weapon(_itemStructRef, _selOption);
 					break;
 			}
 		}
 		
-		// If a successful "equipping" was executed, the function responsible for it will return true. In 
-		// that case, the slot the equipped item occupies needs to be tracked so the item inventory knows 
-		// to replace the "equip" option with "unequip" for the item in question.
-		if (_wasEquipped){
-			var _index = ds_list_find_index(equippedSlots, _slotToCheck);
-			if (_index != -1)	{ ds_list_set(equippedSlots, _index, _selOption); }
-			else				{ ds_list_add(equippedSlots, _selOption); }
-		}
+		// After equipping the item, check if it already exists within the "equippedSlots" array that handles
+		// displaying an "E" symbol next to all equipped items. If it does, update the value to match the
+		// new slot value. Otherwise, no previous item of that same type was equipped so a new element is
+		// added to the list.
+		var _index = ds_list_find_index(equippedSlots, _slotToCheck);
+		if (_index != -1)	{ ds_list_set(equippedSlots, _index, _selOption); }
+		else				{ ds_list_add(equippedSlots, _selOption); }
 		
 		// Finally, switch to the state that will close the selected item's option menu/window so normal
 		// functionality can return to the item menu.

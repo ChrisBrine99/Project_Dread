@@ -218,45 +218,29 @@ timers				= array_create(PLYR_TOTAL_TIMERS, 0.0);
 // value will double itself again.
 poisonDamagePercent	= PLYR_POISON_BASE_DAMAGE;
 
-// A local struct that stores all the item IDs for the various pieces of equipment that the player can have on
-// throughout the game. The first four are used in all playthroughs, and the remaining two "amulet" slots are 
-// exclusive to new game+ modes.
+// 
 equipment = {
+	// --- Variables Related to Equipped Weapon --- //
 	weapon				: INV_EMPTY_SLOT,
-	weaponFlags			: 0,
-	weaponStats			: { // Stores a copy of the equipped weapon's stats.
-		damage			: 0,
-		range			: 0,
-		accuracy		: 0,
-		attackSpeed		: 0,
-		reloadSpeed		: 0,
-		bulletCount		: 0,
-	},
+	weaponStatRef		: undefined,
 	
-	ammoArrayRef		: ID_INVALID,
+	// --- Variables Related to Equipped Weapon's Ammunition --- //
+	curAmmoIndex		: 0,
+	curAmmoStatRef		: undefined,
 	ammoCount			: array_create(1, ID_INVALID),
-	curAmmoIndex		: ID_INVALID,
-	curAmmoFlags		: 0,
-	curAmmoStats		: { // Stores a copy of the current ammunition's stat effects.
-		damage			: 0,
-		range			: 0,
-		accuracy		: 0,
-		attackSpeed		: 0,
-		bulletCount		: 0,
-	},
 	
+	// --- Variables Related to Equipped Subweapon --- //
 	subWeapon			: INV_EMPTY_SLOT,
-	subWeaponStats		: { // Stores a copy of the equipped subweapon's stats.
-		damage			: 0,
-		range			: 0,
-		accuracy		: 0,
-		attackSpeed		: 0,
-		flags			: 0,
-	},
+	subWeaponStatRef	: undefined,
 	
+	// --- Variables Related to Equipped Armor --- //
 	armor				: INV_EMPTY_SLOT,
+	
+	// --- Variables Related to Equipped Light Source --- //
 	light				: INV_EMPTY_SLOT,
-	lightParamRef		: ID_INVALID,
+	lightParamRef		: undefined,
+	
+	// --- Variables for the Two Amulet Slots --- //
 	firstAmulet			: INV_EMPTY_SLOT,
 	secondAmulet		: INV_EMPTY_SLOT,
 };
@@ -472,22 +456,34 @@ handle_menu_open_inputs = function(){
 }
 
 /// @description 
+///	Checks to see is an update needs to be done to one of the equipped weapon's current ammo counts. If the
+/// ammo isn't a part of the equipped weapon's valid ammo types (Or the weapon doesn't use any ammo) the
+/// function will exit prematurely.
 ///	
-///	
-///	@param {Real}	itemID		
-/// @param (Real)	quantity	
+///	@param {Real}	itemID		The unique numerical identifier for the ammo to check for.
+/// @param (Real)	quantity	How much of said ammo was added to the item inventory.
 update_current_ammo_counts = function(_itemID, _quantity){
 	with(equipment){
-		// 
-		if (curAmmoIndex == ID_INVALID)
+		// If no weapon is equipped there is no need to check for ammunition counts; exit the function.
+		if (weapon == INV_EMPTY_SLOT)
 			return;
 		
-		// 
-		var _length = array_length(ammoArrayRef);
+		// A weapon is equipped, but we don't know if it uses ammunition. A check is performed against the
+		// 0th index of the wepaon's ammunition types array (This should always have at least one element).
+		// If the value of this element is invalid (-1), the weapon doesn't use ammo and the count check
+		// is completely skipped.
+		var _ammoTypes = weaponStatRef.ammoTypes;
+		if (_ammoTypes[0] == ID_INVALID)
+			return;
+		
+		// Loop through all possible ammunition types for the equipped weapon and check if their item ID
+		// matches the ID of the ammo being added to/removed from the item inventory. If a match is found,
+		// add the _quantity parameter to the current count and exit the function.
+		var _length	= array_length(_ammoTypes);
 		for (var i = 0; i < _length; i++){
-			if (ammoArrayRef[i] == _itemID){
+			if (_ammoTypes[i] == _itemID){
 				ammoCount[i] += _quantity;
-				show_debug_message("Ammo ID: {0}, Amount: {1}", ammoArrayRef[i], ammoCount[i]);
+				show_debug_message("Ammo ID: {0}, Amount: {1}", _ammoTypes[i], ammoCount[i]);
 				return;
 			}
 		}
@@ -535,122 +531,53 @@ update_equip_slot = function(_firstSlot, _secondSlot){
 }
 
 /// @description 
-///	Equips the item in the provided slot into the player's main weapon equipment slot. If the item isn't of
-/// equip type "main weapon" the function will not have it occupy said slot, and the function will do nothing.
+/// Equips a main weapon onto the player, which is any of the firearms/melee weapons found within the game.
 ///	
-///	@param {Real}	itemSlot		Slot in the item inventory where the main weapon being equipped is located.
-equip_main_weapon = function(_itemSlot){
-	if (_itemSlot < 0 || _itemSlot >= array_length(global.curItems) || global.curItems[_itemSlot] == INV_EMPTY_SLOT)
-		return false; // Exit early if the slot value is out of bounds or the slot provided is actually empty.
-	
-	var _itemID			= global.curItems[_itemSlot].itemID;
-	var _itemStructRef	= array_get(global.itemIDs, _itemID);
-	if (is_undefined(_itemStructRef) || _itemStructRef.equipType != ITEM_EQUIP_TYPE_MAINWEAPON)
-		return false; // The item with the given ID doesn't exist or the equipment isn't a flashlight; exit early.
-
-	// Initialize local values that will be used to copy over values from the item's global data and the 
-	// weapon's local stat data. This helps avoid a ton of jumps to copy values from this struct and into 
-	// the weapon's stats struct.
-	var _damage		 = 0;
-	var _range		 = 0;
-	var _accuracy	 = 0;
-	var _attackSpeed = 0;
-	var _reloadSpeed = 0;
-	var _bulletCount = 0;
-	var _flags		 = 0;
-	var _ammoTypes	 = ID_INVALID;
-	with(_itemStructRef){
-		_damage		 = damage;
-		_range		 = range;
-		_accuracy	 = accuracy;
-		_attackSpeed = attackSpeed;
-		_reloadSpeed = reloadSpeed;
-		_bulletCount = bulletCount;
-		_flags		 = flags;
-		_ammoTypes	 = ammoTypes;
-	}
-
-	// Jump into the equipment struct and apply the relevant variables with values that will be utilized by
-	// the main weapon that is being equipped.
+/// @param {Struct._structRef}	itemStructRef	Reference to the struct in the global item data that represents the weapon.
+///	@param {Real}				itemSlot		Slot in the item inventory where the main weapon being equipped is located.
+equip_main_weapon = function(_itemStructRef, _itemSlot){
 	with(equipment){
-		// Copy the slot index that the weapon occupies into the weapon variable. Then, jump into the struct
-		// that stores the weapon's stats locally and copy said stats over from the local variables set above.
-		weapon = _itemSlot;
-		with(weaponStats){
-			damage		 = _damage;
-			range		 = _range;
-			accuracy	 = _accuracy;
-			attackSpeed	 = _attackSpeed;
-			reloadSpeed	 = _reloadSpeed;
-			bulletCount	 = _bulletCount;
-		}
-		weaponFlags		 = _flags;
-		
-		// 
-		var _ammoIndex	 = global.curItems[_itemSlot].ammoIndex;
-		ammoArrayRef	 = _ammoTypes;
-		curAmmoIndex	 = _ammoIndex;
-		if (ammoArrayRef == ID_INVALID || _ammoIndex == ID_INVALID)
-			return true;
-		
-		// 
-		var _size		 = array_length(ammoArrayRef);
-		var _ammoID		 = ammoArrayRef[curAmmoIndex];
+		// First, copy the slot index where the weapon is found in the item inventory. Then, store the
+		// reference to that weapon's data so it can be accessed later as required and grab the current ammo
+		// type within said weapon.
+		weapon			= _itemSlot;
+		weaponStatRef	= _itemStructRef;
+		curAmmoIndex	= global.curItems[_itemSlot].ammoIndex;
+		// show_debug_message("Current Weapon: {0}", weaponStatRef);
+
+		// Using the current ammunition found within the gun, get the ID for the item it is tied to and check
+		// if that value isn't (-1). If it is, the weapon doesn't use ammo and the function exits early.
+		var _ammoTypes	= _itemStructRef.ammoTypes;
+		var _ammoID		= _ammoTypes[curAmmoIndex];
 		if (_ammoID == ID_INVALID)
-			return true;
+			return;
+			
+		// Grab a reference to the current ammunition's data so it can be referenced later as required.
+		curAmmoStatRef	= array_get(global.itemIDs, _ammoID);
+		// show_debug_message("Current Ammo: {0}", curAmmoStatRef);
 		
-		// 
-		array_resize(ammoCount, _size);
-		for (var i = 0; i < _size; i++){
-			ammoCount[i] = item_inventory_count(ammoArrayRef[i]);
-			show_debug_message("Ammo ID: {0}, Amount: {1}", ammoArrayRef[i], ammoCount[i]);
+		// Loop through all possible ammo type of the equipped weapon, storing the current sum of each into
+		// an array that is updated as the equipped weapon's possible ammo types are added/removed from the
+		// item inventory.
+		var _ammoNum = array_length(_ammoTypes);
+		array_resize(ammoCount, _ammoNum);
+		for (var i = 0; i < _ammoNum; i++){
+			ammoCount[i] = item_inventory_count(_ammoTypes[i]);
+			// show_debug_message("Ammo ID: {0}, Amount: {1}", _ammoTypes[i], ammoCount[i]);
 		}
-		
-		// 
-		with(array_get(global.itemIDs, _ammoID)){
-			_damage		 = damage;
-			_range		 = range;
-			_accuracy	 = accuracy;
-			_attackSpeed = attackSpeed;
-			_bulletCount = bulletCount;
-			_flags		 = flags;
-		}
-		
-		// Finally, take the data that from copied from the ammo's global data into the local struct storing
-		// the stats for the currently set ammunition.
-		with(curAmmoStats){
-			damage		 = _damage;
-			range		 = _range;
-			accuracy	 = _accuracy;
-			attackSpeed	 = _attackSpeed;
-			bulletCount	 = _bulletCount;
-		}
-		curAmmoFlags	 = _flags;
 	}
-	
-	// Return true to signify a successful equipping of a main weapon.
-	return true;
 }
 
 /// @description 
-///	Unequips the weapon that was previously assigned to the player's main weapon equipment slot and 
-/// removes the reference to the array that held all the valid ammo types the weapon could utilize.
+///	Unequips the weapon that was previously assigned to the player's main weapon equipment slot while also
+/// removing the references to the weapon's data struct as well as the current utilized ammo's data struct.
 ///	
 unequip_main_weapon = function(){
 	with(equipment){
-		global.curItems[weapon].ammoIndex = curAmmoIndex; // Update item's ammo index to match in case it changed.
 		weapon			= INV_EMPTY_SLOT;
-		ammoArrayRef	= ID_INVALID;
-		
-		// Finally, clear the values found in the current ammunition's stats so that aren't accidentally
-		// applied to a weapon that doesn't use that ammo or doesn't use ammo at all.
-		with(curAmmoStats){
-			damage		 = 0;
-			range		 = 0;
-			accuracy	 = 0;
-			attackSpeed	 = 0;
-			bulletCount	 = 0;
-		}
+		weaponStatRef	= undefined;
+		curAmmoIndex	= 0;
+		curAmmoStatRef	= undefined;
 	}
 }
 
@@ -658,20 +585,12 @@ unequip_main_weapon = function(){
 ///	Equips the item in the provided slot into the player's light source equipment slot. If the item isn't of
 /// equip type "light" the function will not have it occupy said slot, and the function will do nothing.
 ///	
-///	@param {Real}	itemSlot		Slot in the item inventory where the light being equipped is located.
-equip_flashlight = function(_itemSlot){
-	if (_itemSlot < 0 || _itemSlot >= array_length(global.curItems) || global.curItems[_itemSlot] == INV_EMPTY_SLOT)
-		return false; // Exit early if the slot value is out of bounds or the slot provided is actually empty.
-	
-	var _itemID			= global.curItems[_itemSlot].itemID;
-	var _itemStructRef	= array_get(global.itemIDs, _itemID);
-	if (is_undefined(_itemStructRef) || _itemStructRef.equipType != ITEM_EQUIP_TYPE_FLASHLIGHT)
-		return false; // The item with the given ID doesn't exist or the equipment isn't a flashlight; exit early.
-	
-	// Attach the slot index to the light source equipment slot so the player knows the slot in the item
-	// inventory to reference when powering the light on and off while it is equipped. The array of values
-	// that determine the characteristics of the light in the game world is also copied into a local value
-	// so it can be referenced to set the light's size, color, and strength.
+///	@param {Struct._structRef}	itemStructRef	Reference to the struct that represents the weapon.
+///	@param {Real}				itemSlot		Slot in the item inventory where the light being equipped is located.
+equip_flashlight = function(_itemStructRef, _itemSlot){
+	// Create a local variable for easily referencing the properties of the equipped light while updating
+	// the player's ambient light to said properties. Copy the slot index and a reference to those light
+	// properties within the equipment struct so they can be referenced when toggling the light on/off.
 	var _paramRef = 0;
 	with(equipment){
 		light			= _itemSlot;
@@ -688,19 +607,12 @@ equip_flashlight = function(_itemSlot){
 		_paramRef[EQUP_PARAM_LIGHT_COLOR], 
 		_paramRef[EQUP_PARAM_LIGHT_STRENGTH]
 	);
-	
-	// Return true to signify a successful equipping of a flashlight.
-	return true;
 }
 
 /// @description 
-///	Unequips the light source that was previously assigned to the player's light source equipment slot. If
-/// this function is called while no light is equipped, it will exit early and perform no logic.
+///	Unequips the light source that was previously assigned to the player's light source equipment slot.
 ///	
 unequip_flashlight = function(){
-	if (equipment.light == INV_EMPTY_SLOT)
-		return; // No need to uneuqip since no flashlight is equipped; exit the function.
-	
 	// Clear the flag that signifies the flashlight is currently on, and restore the player's default
 	// ambient light source characteristics.
 	flags = flags & ~PLYR_FLAG_FLASHLIGHT;

@@ -644,10 +644,11 @@ function str_textbox(_index) : str_base(_index) constructor {
 	///	
 	///	@param {Real}	delta 
 	state_open_animation = function(_delta){
-		// Give the player control over the textbox by shifting into its default state function. This state is
-		// also responsible for "typing" the characters onto the textbox until they're all shown.
-		if (alpha == 1.0 && y == TBOX_Y_TARGET){
+		// Give the player control over the textbox by shifting into its default state function. This state 
+		// is also responsible for "typing" the characters onto the textbox until they're all shown.
+		if (alpha == 1.0 && y <= TBOX_Y_TARGET){
 			object_set_state(state_default);
+			y = TBOX_Y_TARGET;
 			return;
 		}
 		
@@ -659,10 +660,11 @@ function str_textbox(_index) : str_base(_index) constructor {
 		}
 		
 		// Move the y position from where it is initially set below the visible portion of the screen to the
-		// desired position set by this opening animation.
+		// desired position set by this opening animation. Snap it to the target position is the distance
+		// between the current value and target is small enough.
 		if (y != TBOX_Y_TARGET){
 			y += (TBOX_Y_TARGET - y) * TBOX_OANIM_MOVE_SPEED * _delta;
-			if (point_distance(0, y, 0, TBOX_Y_TARGET) <= max(1.0, _delta))
+			if (point_distance(0, y, 0, TBOX_Y_TARGET) <= ceil(_delta))
 				y = TBOX_Y_TARGET;
 		}
 	}
