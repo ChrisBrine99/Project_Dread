@@ -302,10 +302,11 @@ function item_inventory_add(_item, _amount, _durability = 0, _ammoIndex = 0){
 }
 
 /// @description 
-///	Removes some variable amount of an item from the inventory. It will search through the entire array to find
-/// the slots containing an item with the matching id/index and remove as much as it can from each slot until
-/// the _amount value hits zero. A non-zero value is returned to signify there weren't enough items to match
-/// the amount that was requested to be removed.
+///	Removes some variable amount of an item from the inventory. It will search through the entire array to 
+/// find the slots containing an item with the matching id and remove as much as it can. The remaining amount
+/// is returned by the function if there weren't enough of it in the item inventory. Otherwise, a zero is
+/// returned for a successful removal, and the full amount is returned in the case of an error or full item
+/// inventory.
 ///	
 ///	@param {Real}	itemID		Number representing the item within the game's data.
 /// @param {Real}	amount		How many of said item will be removed from the inventory.
@@ -330,8 +331,8 @@ function item_inventory_remove(_itemID, _amount){
 		// loop will continue its execution.
 		_slotQuantity = _invItem.quantity;
 		if (_slotQuantity <= _amount){
+			_amountRemoved = _slotQuantity;
 			array_set(global.curItems, i, INV_EMPTY_SLOT);
-			_amountRemoved += _amount;
 			delete _invItem;
 			continue;
 		}
@@ -343,38 +344,40 @@ function item_inventory_remove(_itemID, _amount){
 		break;
 	}
 	
-	// 
+	// Jump into scope of the player object to see if the item that was removed from their item inventory is
+	// of type ammunition. If so, the player will check and update any ammo currently stored ammo counts that
+	// match the ID of this item.
 	with(PLAYER){
 		if (global.itemIDs[_itemID].typeID == ITEM_TYPE_AMMO)
 			update_current_ammo_counts(_itemID, -_amountRemoved);
 	}
 	
-	// Return the amount that couldn't be successfully removed from the inventory due to the amount within the
-	// inventory currently not meeting the requirement set by this funciton's initial _amount parameter.
-	return _amount - _amountRemoved;
+	// Return the amount that was successfully removed from the inventory relative to the amount that was 
+	// placed within the _amount parameter.
+	return (_amount - _amountRemoved);
 }
 
 /// @description 
-///	
+///	Removes an entire slot's contents from the item inventory; regardless of the quantity of items currently
+/// occupying that slot.
 /// 
-///	@param {Real}	slot		The slot that will have quantity removed from it.
+///	@param {Real}	slot		Index for the slot that will be removed from the item inventory.
 function item_inventory_remove_slot(_slot){
 	// Don't try removing anything to an uninitialized inventory, or an out of bounds index.
 	if (!is_array(global.curItems) || _slot < 0 || _slot >= array_length(global.curItems))
-		return 0;
+		return;
 	
 	// Also don't try removing the contents of the slot in question doesn't have an item occupying it.
 	var _item = global.curItems[_slot];
 	if (!is_struct(_item))
-		return 0;
+		return;
 	
 	// Jump into scope of the player object to see if the item that was removed from their item inventory is
 	// of type ammunition. If so, the player will check and update any ammo currently stored ammo counts that
 	// match the ID of this item.
 	with(PLAYER){
-		var _itemID = _item.itemID;
-		if (global.itemIDs[_itemID].typeID == ITEM_TYPE_AMMO)
-			update_current_ammo_counts(_itemID, -_item.quantity);
+		if (global.itemIDs[_item.itemID].typeID == ITEM_TYPE_AMMO)
+			update_current_ammo_counts(_item.itemID, -_item.quantity);
 	}
 		
 	// Remove reference to the soon-to-be delete struct from the player's item inventory. Then, delete
