@@ -131,7 +131,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		// Set up the item menu to it has the same number of options as there are slots available in the
 		// player's item inventory. Using that number, the base and option parameters are both initialized.
 		var _invSize	= array_length(invItemRefs);
-		initialize_params(x, y, true, true, 1, 1, min(_invSize, MENUITM_VISIBLE_HEIGHT), 0, 0);
+		initialize_params(x, y, true, true, 1, 1, min(_invSize, MENUITM_VISIBLE_HEIGHT), 0, 2);
 		initialize_option_params(display_get_gui_width() - 120, 20, 50, 10, fa_left, fa_top, true);
 		
 		// Looping through the player's items so they can be added as options to this menu. From here, the

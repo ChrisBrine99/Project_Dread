@@ -30,7 +30,7 @@
 // Two macros that determine the size of the textbox's text surface along the x and y axis, respectively. The
 // actual textbox's dimensions will be larger than this since this surface is only one part of the textbox.
 #macro	TBOX_SURFACE_WIDTH				280
-#macro	TBOX_SURFACE_HEIGHT				28
+#macro	TBOX_SURFACE_HEIGHT				25
 
 // Determines the total number of lines a textbox can display wihtin a single box. Any text that exceeds this
 // amount after formatting will simply be discarded from what will be displayed.
@@ -46,11 +46,7 @@
 // The pixel offsets from the current x/y position of the textbox that the text contents will be rendered at.
 // The shadow for the text is offset one to the left and down to create a simple drop shadow effect on the text.
 #macro	TBOX_TEXT_X_OFFSET				10
-#macro	TBOX_TEXT_Y_OFFSET				15
-
-// Determines how many pixels away from the edges of the surface the text will be on the leftmost edge of it.
-#macro	TBOX_SURFACE_X_PADDING			1
-#macro	TBOX_SURFACE_Y_PADDING			2
+#macro	TBOX_TEXT_Y_OFFSET				16
 
 // Constants for the x and y position of the textbox's advance arrow indicator which appears when the current 
 // text to display has completely typed itself out onto the main textbox window.
@@ -78,7 +74,7 @@
 #macro	TBOX_Y_START					display_get_gui_width() + 30
 
 // Determines the position on the GUI the textbox will rest at after its opening transition has completed.
-#macro	TBOX_Y_TARGET					display_get_gui_height() - 64.0
+#macro	TBOX_Y_TARGET					display_get_gui_height() - 64
 
 // Macros for the characteristics of the opening and closing animations; denoted as such by containing either
 // "OANIM" for opening, and "CANIM" for closing, respectively
@@ -269,8 +265,9 @@ function str_textbox(_index) : str_base(_index) constructor {
 			// Grab a reference to the current textbox's contents and then begin adding characters to the text
 			// surface one at a time until the value of curChar matches that of _nextChar.
 			var _curText		= textData[| textIndex].content;
-			var _curChar		= "";
 			var _curCharIndex	= curChar;
+			var _charColorIndex	= charColorIndex;
+			var _curChar		= "";
 			var _colorData		= -1;
 			var _curColor		= COLOR_WHITE;
 			while(curChar < _nextCharIndex){
@@ -282,17 +279,14 @@ function str_textbox(_index) : str_base(_index) constructor {
 				// associated with it.
 				if (colorDataRef != -1 && charColorIndex < totalColors){
 					with(colorDataRef[| charColorIndex]){
-						// When the final character index is hit, the next element in the list (If one exists)
-						// will be utilized on the next iteration of this character rendering logic. Otherwise,
-						// the desired color is set if the current character's index is higher than whatever
-						// the starting index for the color data is.
-						if (_curCharIndex >= endIndex){
+						if (_curCharIndex >= endIndex){ // The final index is hit; reset to color white and move to the next potential color.
 							_curColor = COLOR_WHITE;
-							other.charColorIndex++; 
-						} else if (_curCharIndex >= startIndex){
+							_charColorIndex++; 
+						} else if (_curCharIndex >= startIndex){ // Apply the desired color for the region of text.
 							_curColor = colorCode;
 						}
 					}
+					charColorIndex = _charColorIndex;
 				}
 				curChar++; // Only increment after the color code index has been checked.
 				
@@ -310,7 +304,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 				// to create a new line of text on the surface instead of writing on top of the previous one.
 				// The loop exits early if valid punctuation was found before this character.
 				if (_curChar == CHAR_NEWLINE){
-					charX	= TBOX_SURFACE_X_PADDING;
+					charX	= 0;
 					charY  += string_height("M");
 					// Get the previous character to see if it is punctuation and exit the loop if so.
 					if (check_for_punctuation(_curText, _curCharIndex - 1))
@@ -322,7 +316,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 				// of the drawn character is added to properly offset the next character in the string.
 				draw_text_shadow(charX, charY, _curChar, 
 					_curColor, TBOX_TEXT_ALPHA, COLOR_DARK_GRAY, TBOX_TEXT_SHADOW_ALPHA);
-				charX    += string_width(_curChar);
+				charX += string_width(_curChar);
 			}
 			
 			// Finally, the surface target is reset to that of the application surface, and the current contents 
@@ -486,8 +480,8 @@ function str_textbox(_index) : str_base(_index) constructor {
 		curChar			= 1;	// Reset these to their defaults so the typing animation can play again.
 		nextChar		= 1;
 		sndScrollTimer	= 0.0;
-		charX			= TBOX_SURFACE_X_PADDING;
-		charY			= TBOX_SURFACE_Y_PADDING;
+		charX			= 0;
+		charY			= 0;
 		colorDataRef	= _textData.colorData;	// Overwrite the previous ds_list reference with either -1 or the new textbox's color list.
 		totalColors		= (colorDataRef == -1) ? 0 : ds_list_size(colorDataRef);
 		charColorIndex	= 0;
@@ -535,7 +529,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 		with(textData[| _index]){
 			var _parsedData = string_parse_color_data(content);
 			content			= string_split_lines(_parsedData.fullText, fnt_small, 
-								TBOX_SURFACE_WIDTH - (TBOX_SURFACE_X_PADDING * 2), TBOX_MAX_LINES_PER_BOX);
+								TBOX_SURFACE_WIDTH, TBOX_MAX_LINES_PER_BOX);
 			colorData		= _parsedData.colorData;
 			delete _parsedData;
 		}

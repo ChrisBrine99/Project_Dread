@@ -352,49 +352,45 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 			/// calculated differ slightly depending on the direction of drawing the content of the group 
 			/// relative to its anchor point.
 			///	
-			/// @param {Bool}	gamepadActive	Determines the type of icons being drawn by the group.
+			///	@param {Bool}	gamepadActive	If true, a gamepad is currently the active method of input.
 			calculate_group_positions : function(_gamepadActive) {
-				var _startTime = get_timer();
-				
-				// Check whether or not the value is true. If so, the icon type is switched to gamepad. If not,
-				// the icon type is switch to keyboard. This allows updating position values on-the-fly as the
-				// input method changes.
-				if (_gamepadActive) { iconType = ICONUI_TYPE_GAMEPAD; }
-				else				{ iconType = ICONUI_TYPE_KEYBOARD; }
+				// var _startTime = get_timer();
 				
 				// Create a whole mess of variables that will be used for each control icon in the group. They
 				// store important information to position and calculate the positions for each icon/descriptor
 				// pair; utilizing the offset from the last pair until the list is fully iterated.
 				draw_set_font(fnt_small);
-				var _xOffset		= xPos;
-				var _yOffset		= yPos;
-				var _drawDirection	= drawDirection;
 				var _sprIndex		= -1;
 				var _sprWidth		= 0;
 				var _sprHeight		= 0;
 				var _strWidth		= 0;
 				var _width			= 0;
+				var _xOffset		= xPos;
+				var _yOffset		= yPos;
+				var _drawDirection	= drawDirection;
 				var _length			= ds_list_size(iconsToDraw);
 				for (var i = 0; i < _length; i++){
 					with(iconsToDraw[| i]){
-						// Determine which sprite to use based on the currently active input method. Then, this 
-						// sprite is used to fill in the _sprWidth and _sprHeight variables, respectively.
+						// Determine which sprite to use based on the currently active input method. Then, 
+						// this sprite is used to fill in the _sprWidth and _sprHeight variables, respectively.
 						if (_gamepadActive)	{ _sprIndex = iconRef.padIcon; }
 						else				{ _sprIndex = iconRef.keyIcon; }
 						_sprWidth	= _sprIndex == ICONUI_NO_ICON ? 0 : sprite_get_width(_sprIndex[ICONUI_ICON_SPRITE]);
 						_sprHeight	= _sprIndex == ICONUI_NO_ICON ? 0 : sprite_get_height(_sprIndex[ICONUI_ICON_SPRITE]);
 						_strWidth	= string_width(descriptor);	// Also calculate the width of the descriptor text.
 				
-						// Apply the general offsets to the icon and descriptor position values. The descriptor's y
-						// offset will always be two pixels lower on the screen than the icon since that looks best.
+						// Apply the general offsets to the icon and descriptor position values. The 
+						// descriptor's y offset will always be two pixels lower on the screen than the icon 
+						// since that looks best.
 						iconX		= _xOffset;
 						iconY		= _yOffset;
 						descriptorX	= _xOffset;
 						descriptorY	= _yOffset + 2;
 				
-						// Determine if some special offsets need to be applied which only occur when drawing to the
-						// left relative to the anchor point. In that case, the icon has to be offset by both itself
-						// and the descriptor's width; along with the two-pixel padding between the elements.
+						// Determine if some special offsets need to be applied which only occur when drawing 
+						// to the left relative to the anchor point. In that case, the icon has to be offset 
+						// by both itself and the descriptor's width; along with the two-pixel padding between 
+						// the elements.
 						if (_drawDirection == ICONUI_DRAW_LEFT){
 							iconX	    -= _strWidth + _sprWidth + 2;
 							descriptorX	-= _strWidth;
@@ -402,22 +398,24 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 							descriptorX += _sprWidth + 2;
 						}
 				
-						// Shift upward by the height of the icon to account for the origin of the sprite/descriptor
-						// being aligned to their topmost pixels.
+						// Shift upward by the height of the icon to account for the origin of the sprite/
+						// descriptor being aligned to their topmost pixels.
 						if (_drawDirection == ICONUI_DRAW_UP){
 							iconY		-= _sprHeight;
 							descriptorY -= _sprHeight;
 						}
 				
-						// Finally, calculate the width of the element plus the two-pixel gap between the icon and
-						// its descriptor text. If no descriptor exists, the two-pixel padding is removed to allow
-						// one element's descriptor be used for multiple inputs if required.
+						// Finally, calculate the width of the element plus the two-pixel gap between the icon 
+						// and its descriptor text. If no descriptor exists, the two-pixel padding is removed 
+						// to allow one element's descriptor be used for multiple inputs if required.
 						_width	= _sprWidth + _strWidth + 2;
-						if (descriptor == "") { _width -= 2; }
+						if (descriptor == "")
+							_width -= 2;
 					}
 			
-					// Determine how to update the current x/y offset values by checking the direction that the
-					// elements will be drawn relative to the anchor point. Then, move onto the next element.
+					// Determine how to update the current x/y offset values by checking the direction that 
+					// the elements will be drawn relative to the anchor point. Then, move onto the next 
+					// element.
 					switch(drawDirection){
 						default: // Display leftward by default.
 						case ICONUI_DRAW_LEFT:	// Displays each icon/descriptor from left to right.
@@ -434,7 +432,7 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 							continue;
 					}
 				}
-				show_debug_message("Took {0} microseconds to update input icon positions.", get_timer() - _startTime);
+				// show_debug_message("Took {0} microseconds to update input icon positions.", get_timer() - _startTime);
 			}
 		};
 		
@@ -450,8 +448,9 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	///	@param {Struct._structRef}	controlGroupRef		Reference to the control group the icon will be added to.
 	/// @param {Any}				iconDataKey			Value to find the icon's data from within the "controlIcons" data structure.
 	/// @param {String}				descriptor			(Optional) Text to be shown alongside the control icon to help explain what the input does.
-	add_control_group_icon = function(_controlGroupRef, _iconDataKey, _descriptor = ""){
-		var _controlIcon	= ds_map_find_value(controlIcons, _iconDataKey);
+	/// @param {Real}				offset				(Optional) Determines where to position the icon in the control group.
+	add_control_group_icon = function(_controlGroupRef, _iconDataKey, _descriptor = "", _offset = -1){
+		var _controlIcon = ds_map_find_value(controlIcons, _iconDataKey);
 		if (is_undefined(_controlIcon))
 			return; // The icon data to add to the group couldn't be found; don't add it.
 			
@@ -459,15 +458,80 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 			var _index = ds_list_find_index(iconsToDraw, _controlIcon);
 			if (_index != -1)
 				return; // Don't add the same icon data reference to the list.
-				
-			ds_list_add(iconsToDraw, {
+			
+			// Create the struct that will contain the icon to be drawn and the descriptor that can exist
+			// alongside it and store it into the local variable _iconData.
+			var _iconData = {
 				iconX		: 0,
 				iconY		: 0,
 				iconRef		: _controlIcon,
 				descriptorX	: 0,
 				descriptorY	: 0,
 				descriptor	: _descriptor,
-			});
+			};
+			
+			// Determine whether the icon will be added to the end of the group or inserted somewhere in the
+			// middle. If it is the latter, a position calculation update is forced by "unsetting" iconType.
+			if (_offset != -1){
+				ds_list_insert(iconsToDraw, _offset, _iconData);
+				iconType = ICONUI_TYPE_UNSET;
+				return;
+			}
+			ds_list_add(iconsToDraw, _iconData);
+		}
+	}
+	
+	/// @description
+	///	Removes the icon/descriptor information at the index specified within the control group passed into
+	/// the controlGroupRef parameter.
+	///	
+	///	@param {Struct._structRef}	controlGroupRef		Reference to the control group the icon will be added to.
+	/// @param {Real}				index				The position of the data to remove from the group's icon/descriptor list.
+	remove_control_group_icon = function(_controlGroupRef, _index){
+		with(_controlGroupRef){
+			var _length	= ds_list_size(iconsToDraw);
+			if (_index < 0 || _index >= _length)
+				return; // Don't remove an invalid index from the list.
+			
+			// Get the reference to the struct at the required index of the control group's icon list. Then,
+			// remove from the reference from the list by deleting the index. Finally, delete the reference.
+			var _iconData = ds_list_find_value(iconsToDraw, _index);
+			ds_list_delete(iconsToDraw, _index);
+			delete _iconData;
+			
+			// If the icon/descriptor that was deleted wasn't at the end of the list, the positions of the
+			// other icons need to be updated to compensate for the removal.
+			if (_index < _length - 1)
+				iconType = ICONUI_TYPE_UNSET;
+		}
+	}
+	
+	/// @description 
+	///	Updates the descriptor for the icon/descriptor data found at the given index within the control group's 
+	///	currently existing data.
+	///	
+	///	@param {Struct._structRef}	controlGroupRef		Reference to the control group the icon will be added to.
+	/// @param {Real}				index				The position of the data to update within the group's icon/descriptor list.
+	/// @param {String}				descriptor			Text to replace the previous descriptor text with.
+	update_control_group_icon_descriptor = function(_controlGroupRef, _index, _descriptor){
+		with(_controlGroupRef){
+			// Get the struct at the _index position within the list. Then, jump into its scope and replace
+			// the descriptor; getting the dimensions of the string to see if the group's positions need to 
+			// be adjusted to compensate if the new descriptor's dimensions do not match.
+			var _iconData = ds_list_find_value(iconsToDraw, _index);
+			with(_iconData){
+				var _prevWidth		= string_width(descriptor);
+				var _prevHeight		= string_height(descriptor);
+				descriptor			= _descriptor;
+				
+				// Check the relevant dimension relative to the direction the group is drawn in to see if there
+				// is a difference in size. If there is, clear the iconType variable so positions are updated.
+				var _isHorizontal	= (drawDirection == ICONUI_DRAW_RIGHT	|| drawDirection == ICONUI_DRAW_LEFT);
+				var _isVertical		= (drawDirection == ICONUI_DRAW_UP		|| drawDirection == ICONUI_DRAW_DOWN);
+				if ((_isHorizontal && _prevWidth != string_width(_descriptor)) || 
+						(_isVertical && _prevHeight != string_height(_descriptor)))
+					iconType = ICONUI_TYPE_UNSET;
+			}
 		}
 	}
 	

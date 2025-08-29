@@ -259,7 +259,7 @@ global.settings			= {
 		// --- Inputs for the Textbox (Keyboard and Gamepad Interwoven) --- //
 		vk_z,			// Advance Textbox/Skip Typing Animation
 		gp_face1,
-		vk_space,		// Open Current Conversation Log
+		vk_x,			// Open Current Conversation Log
 		gp_face4,
 		
 		// --- Inputs for the Inventory Menu (Keyboard and Gamepad Interwoven) --- //
