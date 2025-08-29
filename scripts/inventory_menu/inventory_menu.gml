@@ -189,8 +189,10 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		if (MENUINV_CAN_CLOSE){
 			var _closeMenu = false;
 			with(menuRef[curOption]){ // Check for the return key being released.
-				if (MINPUT_IS_RETURN_RELEASED)
+				if (MINPUT_IS_RETURN_RELEASED){
+					object_set_state(0);
 					_closeMenu = true;
+				}
 			}
 			
 			// Only if _closeMenu is set to true will the inventory begin its closing animation, and that

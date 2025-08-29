@@ -146,7 +146,10 @@
   "sdfSpread":2,
   "size":8.0,
   "styleName":"Monospace",
-  "textureGroupId":null,
+  "textureGroupId":{
+    "name":"Default",
+    "path":"texturegroups/Default",
+  },
   "TTFName":"",
   "usesSDF":false,
 }

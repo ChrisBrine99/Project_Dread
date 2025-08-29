@@ -223,8 +223,37 @@ poisonDamagePercent	= PLYR_POISON_BASE_DAMAGE;
 // exclusive to new game+ modes.
 equipment = {
 	weapon				: INV_EMPTY_SLOT,
+	weaponFlags			: 0,
+	weaponStats			: { // Stores a copy of the equipped weapon's stats.
+		damage			: 0,
+		range			: 0,
+		accuracy		: 0,
+		attackSpeed		: 0,
+		reloadSpeed		: 0,
+		bulletCount		: 0,
+	},
+	
 	ammoArrayRef		: ID_INVALID,
-	curAmmoIndex		: INV_EMPTY_SLOT,
+	ammoCount			: array_create(1, ID_INVALID),
+	curAmmoIndex		: ID_INVALID,
+	curAmmoFlags		: 0,
+	curAmmoStats		: { // Stores a copy of the current ammunition's stat effects.
+		damage			: 0,
+		range			: 0,
+		accuracy		: 0,
+		attackSpeed		: 0,
+		bulletCount		: 0,
+	},
+	
+	subWeapon			: INV_EMPTY_SLOT,
+	subWeaponStats		: { // Stores a copy of the equipped subweapon's stats.
+		damage			: 0,
+		range			: 0,
+		accuracy		: 0,
+		attackSpeed		: 0,
+		flags			: 0,
+	},
+	
 	armor				: INV_EMPTY_SLOT,
 	light				: INV_EMPTY_SLOT,
 	lightParamRef		: ID_INVALID,
@@ -442,6 +471,29 @@ handle_menu_open_inputs = function(){
 	}
 }
 
+/// @description 
+///	
+///	
+///	@param {Real}	itemID		
+/// @param (Real)	quantity	
+update_current_ammo_counts = function(_itemID, _quantity){
+	with(equipment){
+		// 
+		if (curAmmoIndex == ID_INVALID)
+			return;
+		
+		// 
+		var _length = array_length(ammoArrayRef);
+		for (var i = 0; i < _length; i++){
+			if (ammoArrayRef[i] == _itemID){
+				ammoCount[i] += _quantity;
+				show_debug_message("Ammo ID: {0}, Amount: {1}", ammoArrayRef[i], ammoCount[i]);
+				return;
+			}
+		}
+	}
+}
+
 #endregion Utility Function Definitions
 
 #region Equipment Function Definitions
@@ -459,6 +511,10 @@ update_equip_slot = function(_firstSlot, _secondSlot){
 		// second with the first as required.
 		if (weapon == _firstSlot)				{ weapon = _secondSlot; }
 		else if (weapon == _secondSlot)			{ weapon = _firstSlot; }
+		
+		// Perform the same checks as above, but for the equipped sub weapon (If there is one equipped).
+		if (subWeapon == _firstSlot)			{ subWeapon = _secondSlot; }
+		else if (subWeapon == _secondSlot)		{ subWeapon = _secondSlot; }
 		
 		// Do the same as above, but for the equipped armor's slot (If any armor is even equipped).
 		if (armor == _firstSlot)				{ armor = _secondSlot; }
@@ -479,10 +535,130 @@ update_equip_slot = function(_firstSlot, _secondSlot){
 }
 
 /// @description 
+///	Equips the item in the provided slot into the player's main weapon equipment slot. If the item isn't of
+/// equip type "main weapon" the function will not have it occupy said slot, and the function will do nothing.
+///	
+///	@param {Real}	itemSlot		Slot in the item inventory where the main weapon being equipped is located.
+equip_main_weapon = function(_itemSlot){
+	if (_itemSlot < 0 || _itemSlot >= array_length(global.curItems) || global.curItems[_itemSlot] == INV_EMPTY_SLOT)
+		return false; // Exit early if the slot value is out of bounds or the slot provided is actually empty.
+	
+	var _itemID			= global.curItems[_itemSlot].itemID;
+	var _itemStructRef	= array_get(global.itemIDs, _itemID);
+	if (is_undefined(_itemStructRef) || _itemStructRef.equipType != ITEM_EQUIP_TYPE_MAINWEAPON)
+		return false; // The item with the given ID doesn't exist or the equipment isn't a flashlight; exit early.
+
+	// Initialize local values that will be used to copy over values from the item's global data and the 
+	// weapon's local stat data. This helps avoid a ton of jumps to copy values from this struct and into 
+	// the weapon's stats struct.
+	var _damage		 = 0;
+	var _range		 = 0;
+	var _accuracy	 = 0;
+	var _attackSpeed = 0;
+	var _reloadSpeed = 0;
+	var _bulletCount = 0;
+	var _flags		 = 0;
+	var _ammoTypes	 = ID_INVALID;
+	with(_itemStructRef){
+		_damage		 = damage;
+		_range		 = range;
+		_accuracy	 = accuracy;
+		_attackSpeed = attackSpeed;
+		_reloadSpeed = reloadSpeed;
+		_bulletCount = bulletCount;
+		_flags		 = flags;
+		_ammoTypes	 = ammoTypes;
+	}
+
+	// Jump into the equipment struct and apply the relevant variables with values that will be utilized by
+	// the main weapon that is being equipped.
+	with(equipment){
+		// Copy the slot index that the weapon occupies into the weapon variable. Then, jump into the struct
+		// that stores the weapon's stats locally and copy said stats over from the local variables set above.
+		weapon = _itemSlot;
+		with(weaponStats){
+			damage		 = _damage;
+			range		 = _range;
+			accuracy	 = _accuracy;
+			attackSpeed	 = _attackSpeed;
+			reloadSpeed	 = _reloadSpeed;
+			bulletCount	 = _bulletCount;
+		}
+		weaponFlags		 = _flags;
+		
+		// 
+		var _ammoIndex	 = global.curItems[_itemSlot].ammoIndex;
+		ammoArrayRef	 = _ammoTypes;
+		curAmmoIndex	 = _ammoIndex;
+		if (ammoArrayRef == ID_INVALID || _ammoIndex == ID_INVALID)
+			return true;
+		
+		// 
+		var _size		 = array_length(ammoArrayRef);
+		var _ammoID		 = ammoArrayRef[curAmmoIndex];
+		if (_ammoID == ID_INVALID)
+			return true;
+		
+		// 
+		array_resize(ammoCount, _size);
+		for (var i = 0; i < _size; i++){
+			ammoCount[i] = item_inventory_count(ammoArrayRef[i]);
+			show_debug_message("Ammo ID: {0}, Amount: {1}", ammoArrayRef[i], ammoCount[i]);
+		}
+		
+		// 
+		with(array_get(global.itemIDs, _ammoID)){
+			_damage		 = damage;
+			_range		 = range;
+			_accuracy	 = accuracy;
+			_attackSpeed = attackSpeed;
+			_bulletCount = bulletCount;
+			_flags		 = flags;
+		}
+		
+		// Finally, take the data that from copied from the ammo's global data into the local struct storing
+		// the stats for the currently set ammunition.
+		with(curAmmoStats){
+			damage		 = _damage;
+			range		 = _range;
+			accuracy	 = _accuracy;
+			attackSpeed	 = _attackSpeed;
+			bulletCount	 = _bulletCount;
+		}
+		curAmmoFlags	 = _flags;
+	}
+	
+	// Return true to signify a successful equipping of a main weapon.
+	return true;
+}
+
+/// @description 
+///	Unequips the weapon that was previously assigned to the player's main weapon equipment slot and 
+/// removes the reference to the array that held all the valid ammo types the weapon could utilize.
+///	
+unequip_main_weapon = function(){
+	with(equipment){
+		global.curItems[weapon].ammoIndex = curAmmoIndex; // Update item's ammo index to match in case it changed.
+		weapon			= INV_EMPTY_SLOT;
+		ammoArrayRef	= ID_INVALID;
+		
+		// Finally, clear the values found in the current ammunition's stats so that aren't accidentally
+		// applied to a weapon that doesn't use that ammo or doesn't use ammo at all.
+		with(curAmmoStats){
+			damage		 = 0;
+			range		 = 0;
+			accuracy	 = 0;
+			attackSpeed	 = 0;
+			bulletCount	 = 0;
+		}
+	}
+}
+
+/// @description 
 ///	Equips the item in the provided slot into the player's light source equipment slot. If the item isn't of
 /// equip type "light" the function will not have it occupy said slot, and the function will do nothing.
 ///	
-///	@param {Real}	itemSlot		Slot in the item inventory where the flashlight being equipped is located.
+///	@param {Real}	itemSlot		Slot in the item inventory where the light being equipped is located.
 equip_flashlight = function(_itemSlot){
 	if (_itemSlot < 0 || _itemSlot >= array_length(global.curItems) || global.curItems[_itemSlot] == INV_EMPTY_SLOT)
 		return false; // Exit early if the slot value is out of bounds or the slot provided is actually empty.

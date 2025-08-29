@@ -170,6 +170,11 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			if (firstAmulet  != INV_EMPTY_SLOT)	{ ds_list_add(_equippedSlots, firstAmulet); }
 			if (secondAmulet != INV_EMPTY_SLOT) { ds_list_add(_equippedSlots, secondAmulet); }
 		}
+		
+		// 
+		with(CONTROL_UI_MANAGER){
+			
+		}
 	}
 	
 	/// Store the pointer to the base menu's destroy event so it can be called within the item menu's version
@@ -408,7 +413,8 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 					break;
 			}
 			
-			// 
+			// An item that would normally have the "Equip" option as the first in the list of available options
+			// will have it changed to "Unequip" if the weapon happens to be equipped to the player.
 			if (_options[0] == MENUITM_OPTION_EQUIP && ds_list_find_index(equippedSlots, selOption) != -1)
 				_options[0] = MENUITM_OPTION_UNEQUIP;
 			
@@ -544,13 +550,15 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 					auxSelOption = selOption;
 					break;
 				case MENUITM_OPTION_DROP:		// Removes slot from the inventory; creates a world item on the floor representing the slot's contents.
-					item_inventory_slot_create_item(PLAYER.x - 8, PLAYER.y - 8, selOption);
-					
-					// Check if the item that was dropped was equipped to one of the player's five equipment
-					// slots. If so, state that normally handles unequipping an item will be immediately
-					// called, and then the remaining logic for removing an item is handled to avoid issue.
+					// Check if the item that was dropped was equipped to one of the player's equipment slots. 
+					// If so, state that normally handles unequipping an item will be immediately called, and 
+					// then the remaining logic for removing an item is handled to avoid issue.
 					var _index = ds_list_find_index(equippedSlots, selOption);
 					if (_index != -1) { state_unequip_item(_delta); }
+					
+					// After the item is unequipped, it will be removed from the inventory and have an instance 
+					// of obj_world_item containing the characteristics of what was in this slot.
+					item_inventory_slot_create_item(PLAYER.x - 8, PLAYER.y - 8, selOption);
 					
 					// Remove the reference to the item as it is no longer within the item inventory. Then,
 					// remove the item's data from the menu option with the same slot index.
@@ -584,7 +592,8 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	}
 	
 	/// @description 
-	///	
+	///	A single-frame state that attempts to equip the selected item to the player in one of their six slots
+	/// for various types of equipment. The item's option window begins its closing animation after this.
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_equip_item = function(_delta){
@@ -593,11 +602,16 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		var _slotToCheck	= INV_EMPTY_SLOT;
 		var _wasEquipped	= false;
 		with(PLAYER){
-			// 
-			switch(_itemData.equipType){
-				case ITEM_EQUIP_TYPE_FLASHLIGHT:
+			// Determine what equipment slot to check for in the "equippedSlots" list and function to call
+			// based on what "equipment type" the item is a part of.
+			switch(_itemData.equipType){	
+				case ITEM_EQUIP_TYPE_FLASHLIGHT:	// Equipping a light source to the player.
 					_slotToCheck = equipment.light;
 					_wasEquipped = equip_flashlight(_selOption);
+					break;
+				case ITEM_EQUIP_TYPE_MAINWEAPON:	// Equipping a ranged/melee weapon to the player.
+					_slotToCheck = equipment.weapon;
+					_wasEquipped = equip_main_weapon(_selOption);
 					break;
 			}
 		}
@@ -617,23 +631,30 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	}
 	
 	/// @description 
-	///	
+	///	A single-frame state that attempts to unequip the item in the slot stored in the "selOption" variable.
+	/// This will call the appropriate function for the type of item being unequipped, and then the item's
+	/// option menu window will begin its closing animation immediately after.
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_unequip_item = function(_delta){
 		var _selOption	 = selOption;
 		var _itemData	 = invItemRefs[_selOption];
 		with(PLAYER){
-			// 
+			// Determine which unequip function to call relative to the item's "equipment type".
 			switch(_itemData.equipType){
-				default:														break;
 				case ITEM_EQUIP_TYPE_FLASHLIGHT:	unequip_flashlight();		break;
+				case ITEM_EQUIP_TYPE_MAINWEAPON:	unequip_main_weapon();		break;
 			}
 		}
 		
-		// 
+		// If the item's slot is found in the list tracking equipped slots for the item inventory to display
+		// the "E" symbol next to equipped items, it will be removed from that list to stop the "E" symbol
+		// from displaying on that item inventory slot.
 		var _index = ds_list_find_index(equippedSlots, _selOption);
 		if (_index != -1) { ds_list_delete(equippedSlots, _index); }
+		
+		// Finally, switch to the state that will close the selected item's option menu/window so normal
+		// functionality can return to the item menu.
 		object_set_state(state_close_item_options);
 	}
 	
@@ -661,7 +682,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			var _firstSlotIndex		= ds_list_find_index(equippedSlots, auxSelOption);
 			var _secondSlotIndex	= ds_list_find_index(equippedSlots, curOption);
 			if (_firstSlotIndex == -1 && _secondSlotIndex != -1)		{ equippedSlots[| _secondSlotIndex] = auxSelOption; }
-			else if (_firstSlotIndex != -1 && _secondSlotIndex == -1)	{ equippedSlots[| _firstSlotIndex] = curOption; }
+			else if (_firstSlotIndex != -1 && _secondSlotIndex == -1)	{ equippedSlots[| _firstSlotIndex]	= curOption; }
 			
 			// Perform a check that will see if any of the current equipment slot values need to be updated to
 			// match the fact that an item (Or two) were moved from their previous slots. If so, they will

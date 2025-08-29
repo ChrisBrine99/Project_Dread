@@ -241,18 +241,18 @@ function load_item(_section, _itemKey, _itemIndex, _data){
 		case KEY_WEAPONS: // Parse through the data of a weapon item.
 			with(_itemStructRef){
 				typeID		= ITEM_TYPE_WEAPON;
-				stackLimit	=_data[? KEY_STACK];
+				stackLimit	= _data[? KEY_STACK];
 				
 				// Begin adding parameters that are unique to a weapon type item (Some are also the same as 
 				// what an ammo-type item will have defined for it, and durability is the same as what is also
 				// defined in an equipable-type item).
-				durability	=_data[? KEY_DURABILITY];		// Also found in equipable-type items.
-				damage		=_data[? KEY_DAMAGE];			// Also found in ammo-type items.
-				range		=_data[? KEY_RANGE];			//		"
-				accuracy	=_data[? KEY_ACCURACY];			//		"
-				attackSpeed	=_data[? KEY_ATTACK_SPEED];		//		"
-				reloadSpeed	=_data[? KEY_RELOAD_SPEED];
-				bulletCount	=_data[? KEY_BULLET_COUNT];		// Also found in ammo-type items.
+				durability	= _data[? KEY_DURABILITY];		// Also found in equipable-type items.
+				damage		= _data[? KEY_DAMAGE];			// Also found in ammo-type items.
+				range		= _data[? KEY_RANGE];			//		"
+				accuracy	= _data[? KEY_ACCURACY];		//		"
+				attackSpeed	= _data[? KEY_ATTACK_SPEED];	//		"
+				reloadSpeed	= _data[? KEY_RELOAD_SPEED];
+				bulletCount	= _data[? KEY_BULLET_COUNT];	// Also found in ammo-type items.
 				
 				// Set the flag bits utilized by weapon-type items based on the values parsed through the item
 				// data for the weapon in question; offseting them to match the bit's position in the variable.
@@ -542,19 +542,21 @@ function equipment_get_type_index(_typeString){
 /// an item: the room it exists in (This is useful for items that were dropped by the player form their current
 /// items), the item's ID, the amount of the item that can be collected, and its durability.
 ///	
-/// @param {Any}			key			The value tied to this world item's information.
-///	@param {String}			itemID		ID value that can be used to reference the item's characteristics from the item data.
-/// @param {Real}			quantity	The current amount of the item found within this world item.
-/// @param {Real}			durability	The condition of the item (This value is only used on higher difficulties).
-function world_item_initialize(_key, _itemID, _quantity, _durability){
+/// @param {Any}		key			The value tied to this world item's information.
+///	@param {String}		itemName	Value that can be used to reference the item's characteristics from the global item data.
+/// @param {Real}		quantity	The current amount of the item found within this world item.
+/// @param {Real}		durability	(Optional; Higher Difficulties Only) The item's current condition.
+///	@param {Real}		ammoIndex	(Optional; Weapon-Type Items Only) The ammunition found within the item relative to its list of valid ammo types.
+function world_item_initialize(_key, _itemName, _quantity, _durability, _ammoIndex){
 	var _value = ds_map_find_value(global.worldItems, _key);
 	if (!is_undefined(_value)) // The item already exists; don't try to initialize it again.
 		return;
 		
 	ds_map_add(global.worldItems, _key, {
-		itemID		: _itemID,
+		itemName	: _itemName,
 		quantity	: _quantity,
-		durability	: _durability
+		durability	: _durability,
+		ammoIndex	: _ammoIndex,
 	});
 }
 
@@ -565,12 +567,13 @@ function world_item_initialize(_key, _itemID, _quantity, _durability){
 /// position of the item instance and the room it was created within so they can be created again if the room
 /// unloads and then reloads without the player collecting the item.
 ///	
-/// @param {Real}			x			X position to create the item at within the room.
-/// @param {Real}			y			Y position to create the item at within the room.
-///	@param {String}			itemID		ID value that can be used to reference the item's characteristics from the item data.
-/// @param {Real}			quantity	The current amount of the item found within this world item.
-/// @param {Real}			durability	The condition of the item (This value is only used on higher difficulties).
-function dynamic_item_initialize(_x, _y, _itemID, _quantity, _durability){
+/// @param {Real}		x			X position to create the item at within the room.
+/// @param {Real}		y			Y position to create the item at within the room.
+///	@param {String}		itemName	Value that can be used to reference the item's characteristics from the global item data.
+/// @param {Real}		quantity	The current amount of the item found within this world item.
+/// @param {Real}		durability	(Optional; Higher Difficulties Only) The item's current condition.
+///	@param {Real}		ammoIndex	(Optional; Weapon-Type Items Only) The ammunition found within the item relative to its list of valid ammo types.
+function dynamic_item_initialize(_x, _y, _itemName, _quantity, _durability, _ammoIndex){
 	var _value = ds_map_find_value(global.worldItems, global.nextDynamicKey);
 	if (!is_undefined(_value)) // The item already exists; don't try to initialize it again.
 		return;
@@ -580,31 +583,11 @@ function dynamic_item_initialize(_x, _y, _itemID, _quantity, _durability){
 		xPos		: _x,
 		yPos		: _y,
 		roomIndex	: room,
-		itemID		: _itemID,
+		itemName	: _itemName,
 		quantity	: _quantity,
-		durability	: _durability
+		durability	: _durability,
+		ammoIndex	: _ammoIndex,
 	});
-}
-
-/// @description 
-///	A function that allows all elements within the desired world item struct to be updated at once. If an 
-/// invalid key was passed as the "key" parameter the function will exit before processing anything.
-///	
-/// @param {Any}			key			The value tied to this world item's information.
-///	@param {String}			itemID		ID value that can be used to reference the item's characteristics from the item data.
-/// @param {Real}			quantity	The current amount of the item found within this world item.
-/// @param {Real}			durability	The condition of the item (This value is only used on higher difficulties).
-function world_item_update(_key, _itemID, _quantity, _durability){
-	var _value = ds_map_find_value(global.worldItems, _key);
-	if (is_undefined(_value)) // An item with this key doesn't exist; exit early.
-		return;
-	
-	with(_value){ // Jump into world item struct's scope and update all values.
-		roomIndex	= _room;
-		itemID		= _itemID;
-		quantity	= _quantity;
-		durability	= _durability;
-	}
 }
 
 /// @description 

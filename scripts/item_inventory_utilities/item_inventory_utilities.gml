@@ -215,21 +215,31 @@ function item_inventory_initialize(_cmbDiffFlagBit){
 ///	
 ///	@param {String}	item		String representing the name/key of the item.
 ///	@param {Real}	amount		How many of said item will be added to the inventory.
-/// @param {Real}	durability	The item's current condition (This value is only used on higher difficulties).
-function item_inventory_add(_item, _amount, _durability){
+/// @param {Real}	durability	(Optional; Higher Difficulties Only) The item's current condition.
+///	@param {Real}	ammoIndex	(Optional; Weapon-Type Items Only) The ammunition found within the item relative to its list of valid ammo types.
+function item_inventory_add(_item, _amount, _durability = 0, _ammoIndex = 0){
 	// Don't try adding anything to an uninitialized inventory.
 	if (!is_array(global.curItems))
 		return _amount;
 	
 	// Make sure the item ID points to a valid item. Otherwise, don't even attempt to add it to the inventory.
-	var _itemData = global.itemData[? _item];
+	var _itemData	= global.itemData[? _item];
 	if (is_undefined(_itemData))
 		return _amount;
+	
+	// If said ID was valid, copy the stack limit and type ID for the item into local values for use below.
+	var _itemID		= ID_INVALID;
+	var _itemType	= ITEM_TYPE_INVALID;
+	var _stackLimit	= 0;
+	with(_itemData){ // Jump into scope of the item's data to copy into the local values created above.
+		_itemID		= itemID;
+		_itemType	= typeID;
+		_stackLimit	= stackLimit;
+	}
 	
 	// Being looping through the inventory from its first slot to its last slot; checking to see where the item
 	// in question can be placed within it. It can either be added to an existing slot containing the same item
 	// if there is room, or occupy the first empty slot that's found, or both is required.
-	var _maxPerSlot	= _itemData.stackLimit;
 	var _invItem	= -1;
 	var _length		= array_length(global.curItems);
 	for (var i = 0; i < _length; i++){
@@ -237,21 +247,21 @@ function item_inventory_add(_item, _amount, _durability){
 		if (is_struct(_invItem)){
 			// Immediately skip to the next slot in the inventory if the item is a weapon, piece of equipment,
 			// or has a stack limit of one since all cases mean the item cannot be stacked.
-			if (_itemData.stackLimit == 1 || _itemData.typeID == ITEM_TYPE_WEAPON || _itemData.typeID == ITEM_TYPE_EQUIPABLE)
+			if (_stackLimit == 1 || _itemType == ITEM_TYPE_WEAPON || _itemType == ITEM_TYPE_EQUIPABLE)
 				continue;
 			
 			with(_invItem){
 				// Either the item id doesn't match the current item in the slot OR the slot is already maxed
 				// out in capacity for the item in question. Move onto the next slot.
-				if (itemID != _item || quantity == _maxPerSlot)
+				if (itemID != _item || quantity == _stackLimit)
 					break;
 				
 				// The amount to be added exceeds what can be stored inside a single slot. So, the amount that
 				// can fit within the slot is added and the remainder from the total amount to add will move
 				// onto the next slot to find a vacant place to be added.
-				if (quantity + _amount > _maxPerSlot){
-					_amount -= (_maxPerSlot - quantity);
-					quantity = _maxPerSlot;
+				if (quantity + _amount > _stackLimit){
+					_amount -= (_stackLimit - quantity);
+					quantity = _stackLimit;
 					break;
 				}
 				
@@ -268,19 +278,18 @@ function item_inventory_add(_item, _amount, _durability){
 		// Create a new inventory item struct and set the inventory slot to its reference value.
 		_invItem = {
 			itemName	: _item,
-			itemID		: _itemData.itemID,
+			itemID		: _itemID,
 			quantity	: _amount,
-			durability	: _durability
+			durability	: _durability,
+			ammoIndex	: _ammoIndex,
 		};
 		global.curItems[i] = _invItem;
 		
-		// Check if the amount to be added can fit into this newly added inventory item. If it exceeds the max
-		// capacity per slot, the loop will continue. Otherwise, the value 0 is returned to signify every item
-		// was successfully added to the inventory.
+		// 
 		with(_invItem){
-			if (_amount > _maxPerSlot){
-				_amount -= _maxPerSlot;
-				quantity = _maxPerSlot;
+			if (_amount > _stackLimit){
+				_amount -= _stackLimit;
+				quantity = _stackLimit;
 				break;
 			}
 			return 0;
@@ -307,9 +316,10 @@ function item_inventory_remove(_itemID, _amount){
 	
 	// Loop through the inventory in search of any slots containing the required item. If any are found,
 	// remove as much as possible from its current quantity within the slot to satisfy the amount to remove.
-	var _invItem	= -1;
-	var _quantity	= 0;
-	var _length		= array_length(global.curItems);
+	var _invItem		= -1;
+	var _slotQuantity	= 0;
+	var _amountRemoved	= 0;
+	var _length			= array_length(global.curItems);
 	for (var i = 0; i < _length; i++){
 		_invItem = global.curItems[i];
 		if (!is_struct(_invItem) || _invItem.itemID != _itemID) // Ignore all empty inventory slots or items with non-matching IDs.
@@ -318,59 +328,59 @@ function item_inventory_remove(_itemID, _amount){
 		// Check to see if there is enough of the item within the slot to meet the required amount to remove.
 		// If the amount is equal to or exceeds the quantity, the item is removed from the inventory and the
 		// loop will continue its execution.
-		_quantity = _invItem.quantity;
-		if (_quantity <= _amount){
+		_slotQuantity = _invItem.quantity;
+		if (_slotQuantity <= _amount){
 			array_set(global.curItems, i, INV_EMPTY_SLOT);
-			_amount -= _quantity;
+			_amountRemoved += _amount;
 			delete _invItem;
 			continue;
 		}
 		
 		// There was enough in the current slot to satisfy the amount to be removed, so decrement the quantity
-		// by said amount and return 0 to signify the removal was a success.
-		_invItem.quantity -= _amount;
-		return 0;
+		// by said amount breaking out of the loop to return from the function.
+		_invItem.quantity  -= _amount;
+		_amountRemoved		= _amount;
+		break;
+	}
+	
+	// 
+	with(PLAYER){
+		if (global.itemIDs[_itemID].typeID == ITEM_TYPE_AMMO)
+			update_current_ammo_counts(_itemID, -_amountRemoved);
 	}
 	
 	// Return the amount that couldn't be successfully removed from the inventory due to the amount within the
 	// inventory currently not meeting the requirement set by this funciton's initial _amount parameter.
-	return _amount;
+	return _amount - _amountRemoved;
 }
 
 /// @description 
-///	Removes some amount of an item from a specified slot within the inventory. Should an empty slot be used
-/// as the parameter of this function nothing will happen. If the amount is left to the default value of -1,
-/// whatever quantity within the slot is removed from it, and then that quantity is returned by the function.
-/// Otherwise, the remainder if _amount exceeded the quantity is returned, or a zero is returned to signify
-/// _amount was successfully removed from the slot's quantity.
 ///	
+/// 
 ///	@param {Real}	slot		The slot that will have quantity removed from it.
-/// @param {Real}	amount		(Optional) How many of the item within the slot will be removed.
-function item_inventory_remove_slot(_slot, _amount = -1){
+function item_inventory_remove_slot(_slot){
 	// Don't try removing anything to an uninitialized inventory, or an out of bounds index.
 	if (!is_array(global.curItems) || _slot < 0 || _slot >= array_length(global.curItems))
-		return _amount;
+		return 0;
 	
-	// Also don't try removing anything if the slot in question doesn't have an item occupying it currently.
+	// Also don't try removing the contents of the slot in question doesn't have an item occupying it.
 	var _item = global.curItems[_slot];
 	if (!is_struct(_item))
-		return _amount;
+		return 0;
 	
-	// Determine how the slot will have its quantity removed from the inventory reltive to the value found
-	// within the _amount parameter. A value of -1 signifies the full quantity is always removed. Otherwise,
-	// the amount is removed up to the quantity within the current slot should _amount exceed it.
-	var _removeAll  = (_amount == -1);
-	var _quantity	= _item.quantity;
-	if (_quantity <= _amount || _removeAll){
-		array_set(global.curItems, _slot, INV_EMPTY_SLOT);
-		delete _item;
-		
-		// If the slot's full quantity was removed due to _removeAll being true, said quanitty is returned in
-		// case it wasn't a known value prior to the slot's data being removed.
-		return _removeAll ? _quantity : (_amount - _quantity);
+	// Jump into scope of the player object to see if the item that was removed from their item inventory is
+	// of type ammunition. If so, the player will check and update any ammo currently stored ammo counts that
+	// match the ID of this item.
+	with(PLAYER){
+		var _itemID = _item.itemID;
+		if (global.itemIDs[_itemID].typeID == ITEM_TYPE_AMMO)
+			update_current_ammo_counts(_itemID, -_item.quantity);
 	}
-	_item.quantity -= _amount;
-	return 0;
+		
+	// Remove reference to the soon-to-be delete struct from the player's item inventory. Then, delete
+	// that reference using the local value that was grabbed earlier in the function.
+	array_set(global.curItems, _slot, INV_EMPTY_SLOT);
+	delete _item;
 }
 
 /// @description
@@ -408,10 +418,12 @@ function item_inventory_slot_create_item(_x, _y, _slot){
 	var _name		= "";
 	var _quantity	= 0;
 	var _durability = 0;
+	var _ammoIndex	= 0;
 	with(global.curItems[_slot]){
 		_name		= itemName;
 		_quantity	= quantity;
 		_durability	= durability;
+		_ammoIndex	= ammoIndex;
 	}
 	item_inventory_remove_slot(_slot);
 	
@@ -419,10 +431,10 @@ function item_inventory_slot_create_item(_x, _y, _slot){
 	// add its data into the world item data structure as a dynamic item. It is flagged as dynamic as well.
 	var _worldItem = instance_create_object(_x, _y, obj_world_item);
 	with(_worldItem){
-		set_item_params(global.nextDynamicKey, _name, _quantity, _durability);
+		set_item_params(global.nextDynamicKey, _name, _quantity, _durability, _ammoIndex);
 		flags = flags | WRLDITM_FLAG_DYNAMIC;
 	}
-	dynamic_item_initialize(_x, _y, _name, _quantity, _durability);
+	dynamic_item_initialize(_x, _y, _name, _quantity, _durability, _ammoIndex);
 }
 
 #endregion Functions for Manipulating the Item Inventory's Contents

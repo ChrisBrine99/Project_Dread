@@ -5,13 +5,14 @@ with(CAMERA) { room_start_event(); }
 // Check for any dynamic items that may exist within the newly loaded room by looping through the keys stored
 // within the global.dynamicItemKeys list. If any items are found they are created here.
 var _key		= 0;
-var _item		= -1;
-var _roomIndex	= -1;
+var _item		= undefined;
+var _roomIndex	= ID_INVALID;
 var _x			= 0;
 var _y			= 0;
-var _itemID		= "";
+var _itemName	= "";
 var _quantity	= 0;
 var _durability	= 0;
+var _ammoIndex	= 0;
 var _worldItem	= noone;
 var _length		= ds_list_size(global.dynamicItemKeys);
 for (var i = 0; i < _length; i++){
@@ -32,9 +33,10 @@ for (var i = 0; i < _length; i++){
 		_x			= xPos;
 		_y			= yPos;
 		_roomIndex	= roomIndex;
-		_itemID		= itemID;
+		_itemName	= itemName;
 		_quantity	= quantity;
 		_durability	= durability;
+		_ammoIndex	= ammoIndex;
 	}
 	if (_roomIndex != room)
 		continue;
@@ -43,8 +45,8 @@ for (var i = 0; i < _length; i++){
 	// item as an object within the current room; storing its parameters like within the object's own room
 	// start event/creation code.
 	_worldItem = instance_create_object(_x, _y, obj_world_item);
-	with(_worldItem){ 
-		set_item_params(_key, _itemID, _quantity, _durability);
+	with(_worldItem){
+		set_item_params(_key, _itemName, _quantity, _durability, _ammoIndex);
 		flags = flags | WRLDITM_FLAG_DYNAMIC;
 	}
 }
