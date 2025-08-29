@@ -7,4 +7,4 @@
 }*/
 
 
-item_inventory_remove(global.itemData[? ITEM_HANDGUN_AMMO].itemID, irandom_range(3, 32));
+// item_inventory_remove(global.itemData[? ITEM_HANDGUN_AMMO].itemID, irandom_range(3, 32));

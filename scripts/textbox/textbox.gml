@@ -622,7 +622,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 		sndCharTypeTimer -= _amount;
 		if (sndCharTypeTimer <= 0.0){ // Play the sound and reset its playback timer.
 			sndCharTypeTimer += TBOX_SND_TYPE_PLAY_INTERVAL;
-			sound_effect_play_ext(snd_textbox_type, TBOX_SND_TYPE_GAIN, 1.0, 0, true, false,
+			sound_effect_play_ext(snd_textbox_type, STNG_AUDIO_MENU_SOUNDS, TBOX_SND_TYPE_GAIN, 1.0, 0, true, false,
 				TBOX_SND_TYPE_GAIN_RANGE, TBOX_SND_TYPE_PITCH_RANGE);
 		}
 		

@@ -10,6 +10,9 @@
 #macro	PLYR_FLAG_FLASHLIGHT			0x00000020
 #macro	PLYR_FLAG_UP_POISON_DAMAGE		0x00000040
 #macro	PLYR_FLAG_PLAY_STEP_SOUND		0x00000080
+#macro	PLYR_FLAG_SPRINT_TOGGLE			0x00400000
+#macro	PLYR_FLAG_AIM_TOGGLE			0x00800000
+// Bits 0x01000000 and above are used by inherited flags.
 
 // Checks for the state of all flag bits that are exclusive to the player.
 #macro	PLYR_IS_MOVING					((flags & PLYR_FLAG_MOVING)				!= 0)
@@ -20,6 +23,8 @@
 #macro	PLYR_IS_FLASHLIGHT_ON			((flags & PLYR_FLAG_FLASHLIGHT)			!= 0)
 #macro	PLYR_CAN_UP_POISON_DAMAGE		((flags & PLYR_FLAG_UP_POISON_DAMAGE)	!= 0)
 #macro	PLYR_CAN_PLAY_STEP_SOUND		((flags & PLYR_FLAG_PLAY_STEP_SOUND)	!= 0)
+#macro	PLYR_IS_SPRINT_TOGGLE			((flags & PLYR_FLAG_SPRINT_TOGGLE)		!= 0)
+#macro	PLYR_IS_AIM_TOGGLE				((flags & PLYR_FLAG_AIM_TOGGLE)			!= 0)
 
 #endregion Player-Specific Flag Macros
 
@@ -36,6 +41,7 @@
 #macro	PINPUT_FLAG_READY_WEAPON		0x00000040
 #macro	PINPUT_FLAG_FLASHLIGHT			0x00000080
 #macro	PINPUT_FLAG_USE_WEAPON			0x00000100
+#macro	PINPUT_FLAG_CHANGE_AMMO			0x00000200
 #macro	PINPUT_FLAG_GP_LEFT_STICK		0x04000000
 #macro	PINPUT_FLAG_GP_RIGHT_STICK		0x08000000
 #macro	PINPUT_FLAG_ITEM_MENU			0x10000000
@@ -53,19 +59,17 @@
 #macro	PINPUT_SPRINT_PRESSED			((inputFlags & PINPUT_FLAG_SPRINT)			!= 0 && (prevInputFlags & PINPUT_FLAG_SPRINT)		== 0)
 #macro	PINPUT_READY_WEAPON_PRESSED		((inputFlags & PINPUT_FLAG_READY_WEAPON)	!= 0 && (prevInputFlags & PINPUT_FLAG_READY_WEAPON)	== 0)
 #macro	PINPUT_FLASHLIGHT_PRESSED		((inputFlags & PINPUT_FLAG_FLASHLIGHT)		!= 0 && (prevInputFlags & PINPUT_FLAG_FLASHLIGHT)	== 0)
+#macro	PINPUT_USE_WEAPON_PRESSED		((inputFlags & PINPUT_FLAG_USE_WEAPON)		!= 0 && (prevInputFlags & PINPUT_FLAG_USE_WEAPON)	== 0)
+#macro	PINPUT_CHANGE_AMMO_PRESSED		((inputFlags & PINPUT_FLAG_CHANGE_AMMO)		!= 0 && (prevInputFlags & PINPUT_FLAG_CHANGE_AMMO)	== 0)
+#macro	PINPUT_USE_WEAPON_HELD			((inputFlags & PINPUT_FLAG_USE_WEAPON)		!= 0)
 #macro	PINPUT_SPRINT_RELEASED			((inputFlags & PINPUT_FLAG_SPRINT)			== 0 && (prevInputFlags & PINPUT_FLAG_SPRINT)		!= 0)
 #macro	PINPUT_READY_WEAPON_RELEASED	((inputFlags & PINPUT_FLAG_READY_WEAPON)	== 0 && (prevInputFlags & PINPUT_FLAG_READY_WEAPON)	!= 0)
 #macro	PINPUT_FLASHLIGHT_RELEASED		((inputFlags & PINPUT_FLAG_FLASHLIGHT)		== 0 && (prevInputFlags & PINPUT_FLAG_FLASHLIGHT)	!= 0)
-#macro	PINPUT_USE_WEAPON_HELD			((inputFlags & PINPUT_FLAG_USE_WEAPON)		!= 0)
 #macro	PINPUT_OPEN_ITEMS_RELEASED		((inputFlags & PINPUT_FLAG_ITEM_MENU)		== 0 && (prevInputFlags & PINPUT_FLAG_ITEM_MENU)	!= 0)
 #macro	PINPUT_OPEN_NOTES_RELEASED		((inputFlags & PINPUT_FLAG_NOTES_MENU)		== 0 && (prevInputFlags & PINPUT_FLAG_NOTES_MENU)	!= 0)
 #macro	PINPUT_OPEN_MAPS_RELEASED		((inputFlags & PINPUT_FLAG_MAP_MENU)		== 0 && (prevInputFlags & PINPUT_FLAG_MAP_MENU)		!= 0)
 #macro	PINPUT_OPEN_PAUSE_RELEASED		((inputFlags & PINPUT_FLAG_PAUSE_MENU)		== 0 && (prevInputFlags & PINPUT_FLAG_PAUSE_MENU)	!= 0)
 
-// Variants of the above pressed/released inputs for readying a weapon and sprinting that can be toggled to 
-// be hold inputs or not in the game's accessibility settings.
-#macro	PINPUT_READY_WEAPON_HELD		((inputFlags & PINPUT_FLAG_READY_WEAPON)	!= 0)
-#macro	PINPUT_SPRINT_HELD				((inputFlags & PINPUT_FLAG_SPRINT)			!= 0)
 
 // Two unique flags contained within the player's "inputFlags" variable. They will let the rest of the code
 // run by the player which of the two sticks are being used for movement during the current frame.
@@ -228,7 +232,7 @@ equipment = {
 	curAmmoIndex		: 0,
 	curAmmoStatRef		: undefined,
 	ammoCount			: array_create(1, ID_INVALID),
-	
+
 	// --- Variables Related to Equipped Subweapon --- //
 	subWeapon			: INV_EMPTY_SLOT,
 	subWeaponStatRef	: undefined,
@@ -396,7 +400,7 @@ process_footstep_sound = function(){
 	var _volume = 0.4;
 	if (PLYR_IS_SPRINTING)
 		_volume += 0.05;
-	prevStepSoundID = sound_effect_play_ext(_snd, _volume, 1.0, 0, false, false, 0.1, 0.08);
+	prevStepSoundID = sound_effect_play_ext(_snd, STNG_AUDIO_GAME_SOUNDS, _volume, 1.0, 0, false, false, 0.1, 0.08);
 }
 
 /// @description 
@@ -483,7 +487,7 @@ update_current_ammo_counts = function(_itemID, _quantity){
 		for (var i = 0; i < _length; i++){
 			if (_ammoTypes[i] == _itemID){
 				ammoCount[i] += _quantity;
-				show_debug_message("Ammo ID: {0}, Amount: {1}", _ammoTypes[i], ammoCount[i]);
+				// show_debug_message("Ammo ID: {0}, Amount: {1}", _ammoTypes[i], ammoCount[i]);
 				return;
 			}
 		}
@@ -715,6 +719,20 @@ drawFunction = method_get_index(custom_draw_default);
 #region State Function Definitions
 
 /// @description 
+///	
+///	
+/// @param {Real}	delta	The difference in time between the execution of this frame and the last.
+state_initialize = function(_delta){
+	if (STNG_IS_SPRINT_INPUT_TOGGLE) { flags = flags | PLYR_FLAG_SPRINT_TOGGLE; }
+	if (STNG_IS_AIM_INPUT_TOGGLE)	 { flags = flags | PLYR_FLAG_AIM_TOGGLE; }
+	
+	item_inventory_add("Flashlight", 1, 0);
+	item_inventory_add("Flashlight", 1, 0);
+	
+	object_set_state(state_default);
+}
+
+/// @description 
 /// The player's standard state. When in this state, they can move around the environment at either walking
 /// or running speed, shift facing direction relative to movement, interact with objects in the environment,
 /// and ready their weapon for use if one is equipped.
@@ -801,6 +819,20 @@ state_default = function(_delta){
 		}
 	}
 	
+	// 
+	if (PINPUT_READY_WEAPON_PRESSED && equipment.weapon != INV_EMPTY_SLOT){
+		object_set_state(state_player_weapon_ready);
+		flags		    = flags & ~(PLYR_FLAG_MOVING | PLYR_FLAG_SPRINTING);
+		accel			= PLYR_ACCEL_NORMAL;
+		maxMoveSpeed	= PLYR_SPEED_NORMAL;
+		moveSpeed		= 0.0;
+		
+		//  
+		if (PLYR_IS_AIM_TOGGLE)
+			prevInputFlags = inputFlags;
+		return;
+	}
+	
 	// In this state, the player should be able to toggle the light source they currently have equipped on
 	// or off as they see fit, and also open their inventory or the pause menu should they choose to do so.
 	handle_light_toggle_input();
@@ -816,6 +848,11 @@ state_default = function(_delta){
 		timers[PLYR_STAMINA_LOSS_TIMER] = PLYR_STAMINA_LOSS_RATE;
 		flags = flags | PLYR_FLAG_SPRINTING;
 		
+		// 
+		if (PLYR_IS_SPRINT_TOGGLE)
+			prevInputFlags = inputFlags;
+		
+		
 		// Determine if the player should use their fast speed values (stamina > 0 and not crippled) or their 
 		// slow speed values (stamina == 0 or stamina > 0 and crippled).
 		if (curStamina > 0 && !PLYR_IS_CRIPPLED){
@@ -829,21 +866,47 @@ state_default = function(_delta){
 	
 	// Update the position of the player and handle collision against the world. Then, depending on the value
 	// returned, reset the animation back to the player's idle stance or animate them as they move.
-	var _xMove = lengthdir_x(moveSpeed, direction);
-	var _yMove = lengthdir_y(moveSpeed, direction);
-	if ((update_position(_xMove, _yMove, _delta) || PINPUT_SPRINT_RELEASED) && PLYR_IS_SPRINTING){
+	var _xMove			= lengthdir_x(moveSpeed, direction);
+	var _yMove			= lengthdir_y(moveSpeed, direction);
+	var _sprintEndInput	= PLYR_IS_SPRINT_TOGGLE ? PINPUT_SPRINT_PRESSED : PINPUT_SPRINT_RELEASED;
+	if ((update_position(_xMove, _yMove, _delta) || _sprintEndInput) && PLYR_IS_SPRINTING){
 		timers[PLYR_STAMINA_REGEN_TIMER] = PLYR_STAMINA_REGEN_RATE * PLYR_STAMINA_PAUSE_FACTOR;
 		// Triple the time it takes before stamina begins to regen if the player is completely exhausted.
 		if (curStamina == 0) { timers[PLYR_STAMINA_REGEN_TIMER] *= PLYR_STAMINA_EXHAUST_FACTOR; }
-
+		
 		flags		    = flags & ~PLYR_FLAG_SPRINTING;
 		accel			= PLYR_ACCEL_NORMAL;
 		maxMoveSpeed	= PLYR_SPEED_NORMAL;
 	}
 
-	// 
+	// Finally, process the player's movement animation and handle their footstep sound logic which requires
+	// the movement animation being processed in order to do anything.
 	process_movement_animation(_delta);
 	process_footstep_sound();
+}
+
+/// @description
+///	
+///	
+///	@param {Real}	delta	The difference in time between the execution of this frame and the last.
+state_player_weapon_ready = function(_delta){
+	process_player_input();
+	determine_movement_vector();
+	
+	// 
+	if (moveDirectionX != 0.0 || moveDirectionY != 0.0){
+		direction	= point_direction(0.0, 0.0, moveDirectionX, moveDirectionY);
+		image_index	= PLYR_MOVE_ANIM_LENGTH * round(direction / PLYR_ANIM_DIRECTION_DELTA);
+	}
+	
+	// 
+	if (PLYR_IS_AIM_TOGGLE ? PINPUT_READY_WEAPON_PRESSED : PINPUT_READY_WEAPON_RELEASED){
+		object_set_state(state_default);
+		return;
+	}
+	
+	// 
+	
 }
 
 /// @description
@@ -860,6 +923,3 @@ state_player_paused = function(_delta){
 }
 
 #endregion State Function Definitions
-
-item_inventory_add("Flashlight", 1, 0);
-item_inventory_add("Flashlight", 1, 0);

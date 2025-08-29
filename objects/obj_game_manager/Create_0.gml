@@ -117,8 +117,9 @@
 #macro	STNG_FLAG_DITHERING				0x00000008
 #macro	STNG_FLAG_SCANLINES				0x00000010
 #macro	STNG_FLAG_MUSIC					0x00000020	// Audio flags
-#macro	STNG_FLAG_INPUT_TOGGLE			0x00000040	// Input flags	
-#macro	STNG_FLAG_VIBRATION				0x00000080	// Gamepad flags
+#macro	STNG_FLAG_SPRINT_TOGGLE			0x00000040	// Input flags
+#macro	STNG_FLAG_AIM_TOGGLE			0x00000080
+#macro	STNG_FLAG_VIBRATION				0x00000100	// Gamepad flags
 
 // Macros for checking if a given flag in the global.settings struct's "flags" variable is set or cleared.
 #macro	STNG_IS_VSYNC_ON				((global.settings.flags & STNG_FLAG_VSYNC)			!= 0)
@@ -127,16 +128,19 @@
 #macro	STNG_IS_DITHERING_ON			((global.settings.flags & STNG_FLAG_DITHERING)		!= 0)
 #macro	STNG_ARE_SCANLINES_ON			((global.settings.flags & STNG_FLAG_SCANLINES)		!= 0)
 #macro	STNG_IS_MUSIC_ON				((global.settings.flags & STNG_FLAG_MUSIC)			!= 0)
-#macro	STNG_ARE_INPUTS_TOGGLED			((global.settings.flags & STNG_FLAG_INPUT_TOGGLE)	!= 0)
+#macro	STNG_IS_AIM_INPUT_TOGGLE		((global.settings.flags & STNG_FLAG_AIM_TOGGLE)		!= 0)
+#macro	STNG_IS_SPRINT_INPUT_TOGGLE		((global.settings.flags & STNG_FLAG_SPRINT_TOGGLE)	!= 0)
 #macro	STNG_IS_VIBRATION_ACTIVE		((global.settings.flags & STNG_FLAG_VIBRATION)		!= 0)
 
 // Macros for the index values within the global.setting struct volume array. They each correspond to a group 
 // of sounds that can have their volume adjusted independently of the other values (As well as the main master
 // volume value at index 0).
 #macro	STNG_AUDIO_MASTER				0
-#macro	STNG_AUDIO_MUSIC				1
-#macro	STNG_AUDIO_SOUNDS				2
-#macro	TOTAL_VOLUME_OPTIONS			3
+#macro	STNG_AUDIO_GAME_SOUNDS			1
+#macro	STNG_AUDIO_MENU_SOUNDS			2
+#macro	STNG_AUDIO_MUSIC				3
+#macro	STNG_AUDIO_AMBIENCE				4
+#macro	TOTAL_VOLUME_OPTIONS			5
 
 // Macros for the index values within the global.settings struct input binding array. There are two values for
 // each input: the keyboard binding, and the gamepad binding. So, each macro is an even number and is incremented
@@ -203,7 +207,7 @@ global.sortOrder		= ds_grid_create(2, 0);
 global.settings			= {
 	// --- Holds Flags Used in All Settting Groups --- //
 	flags				: STNG_FLAG_QUANTIZATION | STNG_FLAG_DITHERING | STNG_FLAG_SCANLINES |
-							STNG_FLAG_MUSIC | STNG_FLAG_VIBRATION, // These flags are set by default.
+							STNG_FLAG_MUSIC | STNG_FLAG_VIBRATION | STNG_FLAG_AIM_TOGGLE | STNG_FLAG_SPRINT_TOGGLE, // These flags are set by default.
 	
 	// --- Video Settings --- //
 	windowScale			: 4,
@@ -212,8 +216,10 @@ global.settings			= {
 	audio				: [
 	
 		1.0,			// Master
-		0.9,			// Sound Effects
-		0.7				// Music
+		0.9,			// In-Game Sounds
+		0.8,			// Menu/UI Sounds
+		0.7,			// Music
+		0.7				// Ambience
 		
 	],
 	
@@ -275,9 +281,12 @@ global.settings			= {
 		gp_shoulderl,
 		vk_m,			// Shortcut for map menu
 		gp_shoulderr,
-		vk_escape,		// SHortcut for pause menu
+		vk_escape,		// Shortcut for pause menu
 		gp_start,
 		
+		// --- Other Inputs for Standard Gameplay (Keyboard and Gamepad Interwoven) --- //
+		vk_x,			// Switches currently used ammunition
+		gp_face2,
 	],
 	
 	// --- Other Gamepad Settings --- //
