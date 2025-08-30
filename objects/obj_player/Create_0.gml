@@ -10,6 +10,7 @@
 #macro	PLYR_FLAG_FLASHLIGHT			0x00000020
 #macro	PLYR_FLAG_UP_POISON_DAMAGE		0x00000040
 #macro	PLYR_FLAG_PLAY_STEP_SOUND		0x00000080
+#macro	PLYR_FLAG_RELOADING				0x00000100
 #macro	PLYR_FLAG_SPRINT_TOGGLE			0x00400000
 #macro	PLYR_FLAG_AIM_TOGGLE			0x00800000
 // Bits 0x01000000 and above are used by inherited flags.
@@ -23,6 +24,7 @@
 #macro	PLYR_IS_FLASHLIGHT_ON			((flags & PLYR_FLAG_FLASHLIGHT)			!= 0)
 #macro	PLYR_CAN_UP_POISON_DAMAGE		((flags & PLYR_FLAG_UP_POISON_DAMAGE)	!= 0)
 #macro	PLYR_CAN_PLAY_STEP_SOUND		((flags & PLYR_FLAG_PLAY_STEP_SOUND)	!= 0)
+#macro	PLYR_IS_RELOADING				((flags & PLYR_FLAG_RELOADING)			!= 0)
 #macro	PLYR_IS_SPRINT_TOGGLE			((flags & PLYR_FLAG_SPRINT_TOGGLE)		!= 0)
 #macro	PLYR_IS_AIM_TOGGLE				((flags & PLYR_FLAG_AIM_TOGGLE)			!= 0)
 
@@ -41,7 +43,8 @@
 #macro	PINPUT_FLAG_READY_WEAPON		0x00000040
 #macro	PINPUT_FLAG_FLASHLIGHT			0x00000080
 #macro	PINPUT_FLAG_USE_WEAPON			0x00000100
-#macro	PINPUT_FLAG_CHANGE_AMMO			0x00000200
+#macro	PINPUT_FLAG_RELOAD_WEAPON		0x00000200
+#macro	PINPUT_FLAG_CHANGE_AMMO			0x00000400
 #macro	PINPUT_FLAG_GP_LEFT_STICK		0x04000000
 #macro	PINPUT_FLAG_GP_RIGHT_STICK		0x08000000
 #macro	PINPUT_FLAG_ITEM_MENU			0x10000000
@@ -51,25 +54,27 @@
 
 // Checks to see if the above input flags have been set in such a way that they have been pressed, held, or
 // released as required by each individual input.
-#macro	PINPUT_MOVE_RIGHT_HELD			((inputFlags & PINPUT_FLAG_MOVE_RIGHT)		!= 0 && (inputFlags & PINPUT_FLAG_MOVE_LEFT)		== 0)
-#macro	PINPUT_MOVE_LEFT_HELD			((inputFlags & PINPUT_FLAG_MOVE_LEFT)		!= 0 && (inputFlags & PINPUT_FLAG_MOVE_RIGHT)		== 0)
-#macro	PINPUT_MOVE_UP_HELD				((inputFlags & PINPUT_FLAG_MOVE_UP)			!= 0 && (inputFlags & PINPUT_FLAG_MOVE_DOWN)		== 0)
-#macro	PINPUT_MOVE_DOWN_HELD			((inputFlags & PINPUT_FLAG_MOVE_DOWN)		!= 0 && (inputFlags & PINPUT_FLAG_MOVE_UP)			== 0)
-#macro	PINPUT_INTERACT_PRESSED			((inputFlags & PINPUT_FLAG_INTERACT)		!= 0 && (prevInputFlags & PINPUT_FLAG_INTERACT)		== 0)
-#macro	PINPUT_SPRINT_PRESSED			((inputFlags & PINPUT_FLAG_SPRINT)			!= 0 && (prevInputFlags & PINPUT_FLAG_SPRINT)		== 0)
-#macro	PINPUT_READY_WEAPON_PRESSED		((inputFlags & PINPUT_FLAG_READY_WEAPON)	!= 0 && (prevInputFlags & PINPUT_FLAG_READY_WEAPON)	== 0)
-#macro	PINPUT_FLASHLIGHT_PRESSED		((inputFlags & PINPUT_FLAG_FLASHLIGHT)		!= 0 && (prevInputFlags & PINPUT_FLAG_FLASHLIGHT)	== 0)
-#macro	PINPUT_USE_WEAPON_PRESSED		((inputFlags & PINPUT_FLAG_USE_WEAPON)		!= 0 && (prevInputFlags & PINPUT_FLAG_USE_WEAPON)	== 0)
-#macro	PINPUT_CHANGE_AMMO_PRESSED		((inputFlags & PINPUT_FLAG_CHANGE_AMMO)		!= 0 && (prevInputFlags & PINPUT_FLAG_CHANGE_AMMO)	== 0)
+#macro	PINPUT_MOVE_RIGHT_HELD			((inputFlags & PINPUT_FLAG_MOVE_RIGHT)		!= 0 && (inputFlags & PINPUT_FLAG_MOVE_LEFT)			== 0)
+#macro	PINPUT_MOVE_LEFT_HELD			((inputFlags & PINPUT_FLAG_MOVE_LEFT)		!= 0 && (inputFlags & PINPUT_FLAG_MOVE_RIGHT)			== 0)
+#macro	PINPUT_MOVE_UP_HELD				((inputFlags & PINPUT_FLAG_MOVE_UP)			!= 0 && (inputFlags & PINPUT_FLAG_MOVE_DOWN)			== 0)
+#macro	PINPUT_MOVE_DOWN_HELD			((inputFlags & PINPUT_FLAG_MOVE_DOWN)		!= 0 && (inputFlags & PINPUT_FLAG_MOVE_UP)				== 0)
+#macro	PINPUT_INTERACT_PRESSED			((inputFlags & PINPUT_FLAG_INTERACT)		!= 0 && (prevInputFlags & PINPUT_FLAG_INTERACT)			== 0)
+#macro	PINPUT_SPRINT_PRESSED			((inputFlags & PINPUT_FLAG_SPRINT)			!= 0 && (prevInputFlags & PINPUT_FLAG_SPRINT)			== 0)
+#macro	PINPUT_READY_WEAPON_PRESSED		((inputFlags & PINPUT_FLAG_READY_WEAPON)	!= 0 && (prevInputFlags & PINPUT_FLAG_READY_WEAPON)		== 0)
+#macro	PINPUT_FLASHLIGHT_PRESSED		((inputFlags & PINPUT_FLAG_FLASHLIGHT)		!= 0 && (prevInputFlags & PINPUT_FLAG_FLASHLIGHT)		== 0)
+#macro	PINPUT_USE_WEAPON_PRESSED		((inputFlags & PINPUT_FLAG_USE_WEAPON)		!= 0 && (prevInputFlags & PINPUT_FLAG_USE_WEAPON)		== 0)
+#macro	PINPUT_CHANGE_AMMO_PRESSED		((inputFlags & PINPUT_FLAG_CHANGE_AMMO)		!= 0 && (prevInputFlags & PINPUT_FLAG_CHANGE_AMMO)		== 0)
+#macro	PINPUT_RELOAD_WEAPON_PRESSED	((inputFlags & PINPUT_FLAG_RELOAD_WEAPON)	!= 0 && (prevInputFlags & PINPUT_FLAG_RELOAD_WEAPON)	== 0)
+#macro	PINPUT_READY_WEAPON_HELD		((inputFlags & PINPUT_FLAG_READY_WEAPON)	!= 0)
 #macro	PINPUT_USE_WEAPON_HELD			((inputFlags & PINPUT_FLAG_USE_WEAPON)		!= 0)
-#macro	PINPUT_SPRINT_RELEASED			((inputFlags & PINPUT_FLAG_SPRINT)			== 0 && (prevInputFlags & PINPUT_FLAG_SPRINT)		!= 0)
-#macro	PINPUT_READY_WEAPON_RELEASED	((inputFlags & PINPUT_FLAG_READY_WEAPON)	== 0 && (prevInputFlags & PINPUT_FLAG_READY_WEAPON)	!= 0)
-#macro	PINPUT_FLASHLIGHT_RELEASED		((inputFlags & PINPUT_FLAG_FLASHLIGHT)		== 0 && (prevInputFlags & PINPUT_FLAG_FLASHLIGHT)	!= 0)
-#macro	PINPUT_OPEN_ITEMS_RELEASED		((inputFlags & PINPUT_FLAG_ITEM_MENU)		== 0 && (prevInputFlags & PINPUT_FLAG_ITEM_MENU)	!= 0)
-#macro	PINPUT_OPEN_NOTES_RELEASED		((inputFlags & PINPUT_FLAG_NOTES_MENU)		== 0 && (prevInputFlags & PINPUT_FLAG_NOTES_MENU)	!= 0)
-#macro	PINPUT_OPEN_MAPS_RELEASED		((inputFlags & PINPUT_FLAG_MAP_MENU)		== 0 && (prevInputFlags & PINPUT_FLAG_MAP_MENU)		!= 0)
-#macro	PINPUT_OPEN_PAUSE_RELEASED		((inputFlags & PINPUT_FLAG_PAUSE_MENU)		== 0 && (prevInputFlags & PINPUT_FLAG_PAUSE_MENU)	!= 0)
-
+#macro	PINPUT_SPRINT_RELEASED			((inputFlags & PINPUT_FLAG_SPRINT)			== 0 && (prevInputFlags & PINPUT_FLAG_SPRINT)			!= 0)
+#macro	PINPUT_READY_WEAPON_RELEASED	((inputFlags & PINPUT_FLAG_READY_WEAPON)	== 0 && (prevInputFlags & PINPUT_FLAG_READY_WEAPON)		!= 0)
+#macro	PINPUT_FLASHLIGHT_RELEASED		((inputFlags & PINPUT_FLAG_FLASHLIGHT)		== 0 && (prevInputFlags & PINPUT_FLAG_FLASHLIGHT)		!= 0)
+#macro	PINPUT_OPEN_ITEMS_RELEASED		((inputFlags & PINPUT_FLAG_ITEM_MENU)		== 0 && (prevInputFlags & PINPUT_FLAG_ITEM_MENU)		!= 0)
+#macro	PINPUT_OPEN_NOTES_RELEASED		((inputFlags & PINPUT_FLAG_NOTES_MENU)		== 0 && (prevInputFlags & PINPUT_FLAG_NOTES_MENU)		!= 0)
+#macro	PINPUT_OPEN_MAPS_RELEASED		((inputFlags & PINPUT_FLAG_MAP_MENU)		== 0 && (prevInputFlags & PINPUT_FLAG_MAP_MENU)			!= 0)
+#macro	PINPUT_OPEN_PAUSE_RELEASED		((inputFlags & PINPUT_FLAG_PAUSE_MENU)		== 0 && (prevInputFlags & PINPUT_FLAG_PAUSE_MENU)		!= 0)
+	
 
 // Two unique flags contained within the player's "inputFlags" variable. They will let the rest of the code
 // run by the player which of the two sticks are being used for movement during the current frame.
@@ -110,7 +115,8 @@
 #macro	PLYR_STAMINA_REGEN_TIMER		1
 #macro	PLYR_BLEEDING_TIMER				2
 #macro	PLYR_POISON_TIMER				3
-#macro	PLYR_TOTAL_TIMERS				4
+#macro	PLYR_RELOAD_TIMER				4
+#macro	PLYR_TOTAL_TIMERS				5
 
 // Macros that determine the speed at which various interval-based actions will occur for the player.
 #macro	PLYR_STAMINA_LOSS_RATE			2.0
@@ -298,6 +304,8 @@ process_player_input = function(){
 		inputFlags = inputFlags | (GAME_PAD_READYWEAPON		<<  6);
 		inputFlags = inputFlags | (GAME_PAD_FLASHLIGHT		<<  7);
 		inputFlags = inputFlags | (GAME_PAD_USEWEAPON		<<  8);
+		inputFlags = inputFlags | (GAME_PAD_RELOADWEAPON	<<  9);
+		inputFlags = inputFlags | (GAME_PAD_CHANGE_AMMO		<< 10);
 		inputFlags = inputFlags | (GAME_PAD_ITEM_MENU		<< 28);
 		inputFlags = inputFlags | (GAME_PAD_NOTE_MENU		<< 29);
 		inputFlags = inputFlags | (GAME_PAD_MAP_MENU		<< 30);
@@ -316,6 +324,8 @@ process_player_input = function(){
 	inputFlags = inputFlags | (GAME_KEY_READYWEAPON		<<  6);
 	inputFlags = inputFlags | (GAME_KEY_FLASHLIGHT		<<  7);
 	inputFlags = inputFlags | (GAME_KEY_USEWEAPON		<<  8);
+	inputFlags = inputFlags | (GAME_KEY_RELOADWEAPON	<<  9);
+	inputFlags = inputFlags | (GAME_KEY_CHANGE_AMMO		<< 10);
 	inputFlags = inputFlags | (GAME_KEY_ITEM_MENU		<< 28);
 	inputFlags = inputFlags | (GAME_KEY_NOTE_MENU		<< 29);
 	inputFlags = inputFlags | (GAME_KEY_MAP_MENU		<< 30);
@@ -457,41 +467,6 @@ handle_menu_open_inputs = function(){
 	}
 }
 
-/// @description 
-///	Checks to see is an update needs to be done to one of the equipped weapon's current ammo counts. If the
-/// ammo isn't a part of the equipped weapon's valid ammo types (Or the weapon doesn't use any ammo) the
-/// function will exit prematurely.
-///	
-///	@param {Real}	itemID		The unique numerical identifier for the ammo to check for.
-/// @param (Real)	quantity	How much of said ammo was added to the item inventory.
-update_current_ammo_counts = function(_itemID, _quantity){
-	with(equipment){
-		// If no weapon is equipped there is no need to check for ammunition counts; exit the function.
-		if (weapon == INV_EMPTY_SLOT)
-			return;
-		
-		// A weapon is equipped, but we don't know if it uses ammunition. A check is performed against the
-		// 0th index of the wepaon's ammunition types array (This should always have at least one element).
-		// If the value of this element is invalid (-1), the weapon doesn't use ammo and the count check
-		// is completely skipped.
-		var _ammoTypes = weaponStatRef.ammoTypes;
-		if (_ammoTypes[0] == ID_INVALID)
-			return;
-		
-		// Loop through all possible ammunition types for the equipped weapon and check if their item ID
-		// matches the ID of the ammo being added to/removed from the item inventory. If a match is found,
-		// add the _quantity parameter to the current count and exit the function.
-		var _length	= array_length(_ammoTypes);
-		for (var i = 0; i < _length; i++){
-			if (_ammoTypes[i] == _itemID){
-				ammoCount[i] += _quantity;
-				// show_debug_message("Ammo ID: {0}, Amount: {1}", _ammoTypes[i], ammoCount[i]);
-				return;
-			}
-		}
-	}
-}
-
 #endregion Utility Function Definitions
 
 #region Equipment Function Definitions
@@ -576,6 +551,11 @@ equip_main_weapon = function(_itemStructRef, _itemSlot){
 ///	
 unequip_main_weapon = function(){
 	with(equipment){
+		// Before clearing all relevant values from the equipment struct's equipped weapon values, make
+		// sure the index for the ammo currently in the weapon is copied into the item's struct itself.
+		var _curAmmoIndex = curAmmoIndex;
+		with(global.curItems[weapon])
+			ammoIndex = _curAmmoIndex;
 		weapon			= INV_EMPTY_SLOT;
 		weaponStatRef	= undefined;
 		curAmmoIndex	= 0;
@@ -629,6 +609,157 @@ unequip_flashlight = function(){
 }
 
 #endregion Equipment Function Definitions
+
+#region Equipped Weapon Function Definitions
+
+/// @description
+///	
+///	
+reload_current_weapon = function(){
+	var _reloadSpeed	= 0;
+	with(equipment){
+		// Don't even bother processing anything if there is no amount remaining for the current ammo type
+		// being used by the equipped weapon.
+		if (ammoCount[curAmmoIndex] == 0)
+			return;
+		
+		// 
+		var _curAmmoIndex	= curAmmoIndex;
+		var _ammoItemID		= 0;
+		var _stackLimit		= 0;
+		with(weaponStatRef){
+			_ammoItemID		= ammoTypes[_curAmmoIndex];
+			_reloadSpeed	= reloadSpeed;
+			_stackLimit		= stackLimit;
+		}
+		
+		// 
+		if (_ammoItemID == ID_INVALID){
+			global.curItems[weapon].quantity = _stackLimit;
+			break;
+		}
+		
+		// 
+		with(global.curItems[weapon]){
+			var _availableSpace = _stackLimit - quantity;
+			var _remainder		= item_inventory_remove(_ammoItemID, _availableSpace);
+			quantity			= _stackLimit - _remainder;
+		}
+	}
+	
+	// 
+	if (_reloadSpeed > 0){
+		object_set_state(state_player_reloading);
+		timers[PLYR_RELOAD_TIMER] = _reloadSpeed * GAME_TARGET_FPS;
+	}
+}
+
+/// @description 
+///	Attempts to switch the ammunition being currently used by the equipped weapon with another. If the
+/// player doesn't have any amount of the other valid ammo types in the inventory no switch will occur.
+/// Otherwise, the previous ammo is placed back in the item inventory if possible, and the new ammo type
+/// is put into the equipped weapon by reloading it.
+///	
+swap_current_ammo_index = function(){
+	var _x = x;
+	var _y = y;
+	with(equipment){
+		// Keep looping until the same value is hit again for the current ammo index or the new value's
+		// count is a value other than zero; meaning a swap can occur.
+		var _prevAmmoIndex	= curAmmoIndex;
+		var _curAmmoIndex	= curAmmoIndex;
+		var _length			= array_length(ammoCount);
+		do{ 
+			curAmmoIndex++;
+			if (curAmmoIndex == _length)
+				curAmmoIndex = 0;
+		} until(ammoCount[curAmmoIndex] != 0 || _prevAmmoIndex == curAmmoIndex);
+		_curAmmoIndex	= curAmmoIndex;
+		
+		// The previous and current index values match. This means no ammunition switch could occur and the
+		// function will exit early instead of swapping ammo types.
+		if (_prevAmmoIndex == _curAmmoIndex)
+			return;
+		
+		// Get the name for the previous ammo in use so it can be added to the inventory while removing
+		// it from the quantity of the current weapon's magazine/clip.
+		var _prevAmmoName = ""; 
+		with(weaponStatRef) { 
+			var _prevAmmoItemID = ammoTypes[_prevAmmoIndex];
+			if (_prevAmmoItemID != ID_INVALID)
+				_prevAmmoName = global.itemIDs[_prevAmmoItemID].itemName;
+		}
+
+		// Jump into scope of the item inventory's struct representation of the equipped weapon to add the
+		// previous ammunition into the item inventory before reloading said weapon with the new ammo.
+		var _quantity	= 0;
+		var _remainder	= 0;
+		with(global.curItems[weapon]){
+			// Attempt to add the previous ammunition to the item inventory. Whatever doesn't get added is
+			// stored in the local _remainder value so it can be used to place what couldn't be put into
+			// the item storage into the world itself.
+			_quantity	= quantity;
+			_remainder	= item_inventory_add(_prevAmmoName, _quantity);
+			if (_remainder == 0){
+				quantity = 0;
+				break; // Break out of the loop after removing the ammo's full quantity from the weapon.
+			}
+			
+			// The item inventory couldn't hold all of the previous ammo's amount; create a dynamic item 
+			// with the remainder of what couldn't fit into the item inventory.
+			var _worldItem	= instance_create_object(_x, _y, obj_world_item);
+			with(_worldItem){ // Applies the parameters of the ammunition instead of the weapon itself.
+				set_item_params(global.nextDynamicKey, _prevAmmoName, _quantity, 0, 0);
+				flags = flags | WRLDITM_FLAG_DYNAMIC;
+			}
+			dynamic_item_initialize(_x, _y, _prevAmmoName, _remainder, 0, 0);
+		}
+		
+		// Finally, update the count of the previous ammunition to match what was successfully added to
+		// the player's item inventory. If _remainder is zero, the full quantity is added.
+		ammoCount[_prevAmmoIndex] += _quantity - _remainder;
+	}
+	
+	// Finally, reload the weapon with the new ammunition index that was found to have ammo to switch to.
+	reload_current_weapon();
+}
+
+/// @description 
+///	Checks to see is an update needs to be done to one of the equipped weapon's current ammo counts. If the
+/// ammo isn't a part of the equipped weapon's valid ammo types (Or the weapon doesn't use any ammo) the
+/// function will exit prematurely.
+///	
+///	@param {Real}	itemID		The unique numerical identifier for the ammo to check for.
+/// @param (Real)	quantity	How much of said ammo was added to the item inventory.
+update_current_ammo_counts = function(_itemID, _quantity){
+	with(equipment){
+		// If no weapon is equipped there is no need to check for ammunition counts; exit the function.
+		if (weapon == INV_EMPTY_SLOT)
+			return;
+		
+		// A weapon is equipped, but we don't know if it uses ammunition. A check is performed against the
+		// 0th index of the wepaon's ammunition types array (This should always have at least one element).
+		// If the value of this element is invalid (-1), the weapon doesn't use ammo and the count check
+		// is completely skipped.
+		var _ammoTypes = weaponStatRef.ammoTypes;
+		if (_ammoTypes[0] == ID_INVALID)
+			return;
+		
+		// Loop through all possible ammunition types for the equipped weapon and check if their item ID
+		// matches the ID of the ammo being added to/removed from the item inventory. If a match is found,
+		// add the _quantity parameter to the current count and exit the function.
+		var _length	= array_length(_ammoTypes);
+		for (var i = 0; i < _length; i++){
+			if (_ammoTypes[i] == _itemID){
+				ammoCount[i] += _quantity;
+				// show_debug_message("Ammo ID: {0}, Amount: {1}", _ammoTypes[i], ammoCount[i]);
+				return;
+			}
+		}
+	}
+}
+
+#endregion Equipped Weapon Function Definitions
 
 #region End Step Event Function Override Definition
 
@@ -829,6 +960,7 @@ state_default = function(_delta){
 	if (PINPUT_READY_WEAPON_PRESSED && equipment.weapon != INV_EMPTY_SLOT){
 		object_set_state(state_player_weapon_ready);
 		flags		    = flags & ~(PLYR_FLAG_MOVING | PLYR_FLAG_SPRINTING);
+		image_index		= animLoopStart;
 		accel			= PLYR_ACCEL_NORMAL;
 		maxMoveSpeed	= PLYR_SPEED_NORMAL;
 		moveSpeed		= 0.0;
@@ -902,13 +1034,34 @@ state_player_weapon_ready = function(_delta){
 	}
 	
 	// 
-	if (PLYR_IS_AIM_TOGGLE ? PINPUT_READY_WEAPON_PRESSED : PINPUT_READY_WEAPON_RELEASED){
+	if (PLYR_IS_AIM_TOGGLE ? PINPUT_READY_WEAPON_PRESSED : !PINPUT_READY_WEAPON_HELD){
 		object_set_state(state_default);
 		return;
 	}
 	
 	// 
+	if (PINPUT_CHANGE_AMMO_PRESSED){
+		swap_current_ammo_index();
+		return;
+	}
 	
+	// 
+	if (PINPUT_RELOAD_WEAPON_PRESSED){
+		reload_current_weapon();
+		return;
+	}
+}
+
+/// @description 
+///	
+///	
+///	@param {Real}	delta	The difference in time between the execution of this frame and the last.
+state_player_reloading = function(_delta){
+	// 
+	if (timers[PLYR_RELOAD_TIMER] == 0.0){
+		object_set_state(state_player_weapon_ready);
+		return;
+	}
 }
 
 /// @description

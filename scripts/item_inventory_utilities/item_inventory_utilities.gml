@@ -253,7 +253,7 @@ function item_inventory_add(_item, _amount, _durability = 0, _ammoIndex = 0){
 			with(_invItem){
 				// Either the item id doesn't match the current item in the slot OR the slot is already maxed
 				// out in capacity for the item in question. Move onto the next slot.
-				if (itemID != _item || quantity == _stackLimit)
+				if (itemID != _itemID || quantity == _stackLimit)
 					break;
 				
 				// The amount to be added exceeds what can be stored inside a single slot. So, the amount that

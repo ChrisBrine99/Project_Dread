@@ -67,6 +67,8 @@
 #macro	GAME_KEY_READYWEAPON			keyboard_check(global.settings.inputs[STNG_INPUT_READYWEAPON])
 #macro	GAME_KEY_FLASHLIGHT				keyboard_check(global.settings.inputs[STNG_INPUT_FLASHLIGHT])
 #macro	GAME_KEY_USEWEAPON				keyboard_check(global.settings.inputs[STNG_INPUT_USEWEAPON])
+#macro	GAME_KEY_RELOADWEAPON			keyboard_check(global.settings.inputs[STNG_INPUT_RELOADWEAPON])
+#macro	GAME_KEY_CHANGE_AMMO			keyboard_check(global.settings.inputs[STNG_INPUT_CHANGE_AMMO])
 #macro	MENU_KEY_RIGHT					keyboard_check(global.settings.inputs[STNG_INPUT_MENU_RIGHT])
 #macro	MENU_KEY_LEFT					keyboard_check(global.settings.inputs[STNG_INPUT_MENU_LEFT])
 #macro	MENU_KEY_UP						keyboard_check(global.settings.inputs[STNG_INPUT_MENU_UP])
@@ -93,6 +95,8 @@
 #macro	GAME_PAD_READYWEAPON			gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_READYWEAPON	+ 1])
 #macro	GAME_PAD_FLASHLIGHT				gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_FLASHLIGHT		+ 1])
 #macro	GAME_PAD_USEWEAPON				gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_USEWEAPON		+ 1])
+#macro	GAME_PAD_RELOADWEAPON			gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_RELOADWEAPON	+ 1])
+#macro	GAME_PAD_CHANGE_AMMO			gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_CHANGE_AMMO	+ 1])
 #macro	MENU_PAD_RIGHT					gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_MENU_RIGHT		+ 1])
 #macro	MENU_PAD_LEFT					gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_MENU_LEFT		+ 1])
 #macro	MENU_PAD_UP						gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_MENU_UP		+ 1])
@@ -153,23 +157,24 @@
 #macro	STNG_INPUT_SPRINT				10
 #macro	STNG_INPUT_READYWEAPON			12
 #macro	STNG_INPUT_USEWEAPON			14
-#macro	STNG_INPUT_CHANGE_AMMO			16
-#macro	STNG_INPUT_FLASHLIGHT			18
-#macro	STNG_INPUT_MENU_RIGHT			20
-#macro	STNG_INPUT_MENU_LEFT			22
-#macro	STNG_INPUT_MENU_UP				24
-#macro	STNG_INPUT_MENU_DOWN			26
-#macro	STNG_INPUT_SELECT				28
-#macro	STNG_INPUT_RETURN				30
-#macro	STNG_INPUT_FILE_DELETE			32
-#macro	STNG_INPUT_TBOX_ADVANCE			34
-#macro	STNG_INPUT_TBOX_LOG				36
-#macro	STNG_INPUT_INV_LEFT				38
-#macro	STNG_INPUT_INV_RIGHT			40
-#macro	STNG_INPUT_ITEM_MENU			42
-#macro	STNG_INPUT_NOTE_MENU			44
-#macro	STNG_INPUT_MAP_MENU				46
-#macro	STNG_INPUT_PAUSE_MENU			48
+#macro	STNG_INPUT_RELOADWEAPON			16
+#macro	STNG_INPUT_CHANGE_AMMO			18
+#macro	STNG_INPUT_FLASHLIGHT			20
+#macro	STNG_INPUT_MENU_RIGHT			22
+#macro	STNG_INPUT_MENU_LEFT			24
+#macro	STNG_INPUT_MENU_UP				26
+#macro	STNG_INPUT_MENU_DOWN			28
+#macro	STNG_INPUT_SELECT				30
+#macro	STNG_INPUT_RETURN				32
+#macro	STNG_INPUT_FILE_DELETE			34
+#macro	STNG_INPUT_TBOX_ADVANCE			36
+#macro	STNG_INPUT_TBOX_LOG				38
+#macro	STNG_INPUT_INV_LEFT				40
+#macro	STNG_INPUT_INV_RIGHT			42
+#macro	STNG_INPUT_ITEM_MENU			44
+#macro	STNG_INPUT_NOTE_MENU			46
+#macro	STNG_INPUT_MAP_MENU				48
+#macro	STNG_INPUT_PAUSE_MENU			50
 
 #endregion General Macro Initializations
 
@@ -244,6 +249,8 @@ global.settings			= {
 		gp_shoulderrb,
 		vk_z,			// Uses Equipped Weapon (Only When Readied)
 		gp_face1,
+		vk_r,			// Reloads Equipped Weapon (If Possible and Only When Readied)
+		gp_face3,
 		vk_x,			// Switches currently used ammunition
 		gp_face2,
 		vk_f,			// Toggle Flashlight (If Equipped)

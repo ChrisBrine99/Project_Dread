@@ -172,9 +172,9 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		}
 		
 		// 
-		with(CONTROL_UI_MANAGER){
+		// with(CONTROL_UI_MANAGER){
 			
-		}
+		// }
 	}
 	
 	/// Store the pointer to the base menu's destroy event so it can be called within the item menu's version

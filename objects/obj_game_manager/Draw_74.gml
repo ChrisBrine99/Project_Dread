@@ -15,6 +15,23 @@ if (!GAME_IS_PAUSED){
 draw_set_font(fnt_small);
 draw_set_halign(fa_right);
 
+with(PLAYER){
+	draw_text_shadow(315, 15, "--- Timers ---");
+	for (var i = 0; i < PLYR_TOTAL_TIMERS; i++)
+		draw_text_shadow(315, 25 + (i * 10), string("{0}: {1}", i, timers[i]));
+		
+	with(equipment){
+		if (weapon == INV_EMPTY_SLOT)
+			break;
+		
+		draw_text_shadow(315, 5, 
+			string("{0} (Count: {1})", 
+			global.itemIDs[weaponStatRef.ammoTypes[curAmmoIndex]].itemName,
+			ammoCount[curAmmoIndex])
+		);
+	}
+}
+
 draw_text_shadow(90, 5, 
 	string("\n{0}\n{1}\n\n{2}\n{3}\n{4}\n{5}\n{6}\n{7}\n{8}\n{9}\n\n{10}\n{11}\n{12}\n\n{13}", 
 		floor(fps_real), 

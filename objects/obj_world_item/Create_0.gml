@@ -49,7 +49,7 @@ itemAmmoIndex	= 0;
 ///	
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 on_player_interact = function(_delta){
-	var _amount = item_inventory_add(itemName, itemQuantity, itemDurability);
+	var _amount = item_inventory_add(itemName, itemQuantity, itemDurability, itemAmmoIndex);
 	
 	// The player's item inventory is completely full, so the textbox that is created will display flavor text
 	// of the character saying to themselves (In their head) that they have no room remaining.
