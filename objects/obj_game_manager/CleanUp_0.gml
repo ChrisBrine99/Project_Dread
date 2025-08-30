@@ -11,18 +11,23 @@ if (is_array(global.curItems)){
 	_length = array_length(global.curItems);
 	for (var i = 0; i < _length; i++){
 		if (is_struct(global.curItems[i]))
-			delete global.curItems[i]; global.curItems[i] = INV_EMPTY_SLOT;
+			delete global.curItems[i];
 	}
+	array_resize(global.curItems, 0);
 }
+
+// Since the item references are also stored in an array based on their given ID values, the array is resized
+// to zero so all those references are removed before they are cleaned up below.
+array_resize(global.itemIDs, 0);
 
 // Remove all item data from the game, and any data within a given item struct depending on its type. It will
 // also handle removing any internal containers within the main item struct itself (Ex. combo data is stored
 // within structs so they have to be removed as well as required).
-var _structRef = undefined;
-var _itemID	= ds_map_find_first(global.itemData);
-while(!is_undefined(_itemID)){
-	_structRef = global.itemData[? _itemID];
-	show_debug_message("Deleted item {0} (structRef: {1})", _itemID, _structRef);
+var _structRef	= undefined;
+var _itemName	= ds_map_find_first(global.itemData);
+while(!is_undefined(_itemName)){
+	_structRef = global.itemData[? _itemName];
+	show_debug_message("Deleted item {0} (structRef: {1})", _itemName, _structRef);
 	with(_structRef){
 		// Remove the containers for the input side of the item's combination data. This block of code is
 		// skipped over should there not be an array named validCombo within the current struct.
@@ -40,7 +45,9 @@ while(!is_undefined(_itemID)){
 				delete comboResult[i];
 		}
 	}
-	_itemID = ds_map_find_next(global.itemData, _itemID);
+	
+	global.itemData[? _itemName] = undefined; // Remove reference to the struct within the map.
+	_itemName					 = ds_map_find_next(global.itemData, _itemName);
 	delete _structRef;
 }
 ds_map_clear(global.itemData);
@@ -56,7 +63,7 @@ while(!is_undefined(_key)){
 ds_map_clear(global.worldItems);
 ds_map_destroy(global.worldItems);
 
-// 
+// Remove the list that stores references to each dynamically created instance of obj_world_item.
 ds_list_clear(global.dynamicItemKeys);
 ds_list_destroy(global.dynamicItemKeys);
 
@@ -78,7 +85,7 @@ ds_list_destroy(global.menus);
 // Remove all existing struct instances from memory by deleting their references stores within the global struct
 // management list. Then, that list itself is destroyed to clear it from memory as well.
 _length	= ds_list_size(global.structs);
-for (var i = 0; i < _length; i++) 
+for (var i = 0; i < _length; i++)
 	instance_destroy_struct(global.structs[| i]);
 ds_list_clear(global.structs);
 ds_list_destroy(global.structs);
@@ -90,6 +97,10 @@ with(TEXTBOX)				{ destroy_event(); }	delete TEXTBOX;
 with(CONTROL_UI_MANAGER)	{ destroy_event(); }	delete CONTROL_UI_MANAGER;
 													delete SCREEN_FADE;
 ds_map_destroy(global.sInstances);
+
+// Make sure the map that stores the type of struct is correctly cleared and deleted from memory as well.
+ds_map_clear(global.structType);
+ds_map_destroy(global.structType);
 
 // Clear the event flag buffer from memory.
 buffer_delete(global.eventFlags);

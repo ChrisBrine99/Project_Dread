@@ -152,23 +152,24 @@
 #macro	STNG_INPUT_INTERACT				8
 #macro	STNG_INPUT_SPRINT				10
 #macro	STNG_INPUT_READYWEAPON			12
-#macro	STNG_INPUT_FLASHLIGHT			14
-#macro	STNG_INPUT_USEWEAPON			16
-#macro	STNG_INPUT_MENU_RIGHT			18
-#macro	STNG_INPUT_MENU_LEFT			20
-#macro	STNG_INPUT_MENU_UP				22
-#macro	STNG_INPUT_MENU_DOWN			24
-#macro	STNG_INPUT_SELECT				26
-#macro	STNG_INPUT_RETURN				28
-#macro	STNG_INPUT_FILE_DELETE			30
-#macro	STNG_INPUT_TBOX_ADVANCE			32
-#macro	STNG_INPUT_TBOX_LOG				34
-#macro	STNG_INPUT_INV_LEFT				36
-#macro	STNG_INPUT_INV_RIGHT			38
-#macro	STNG_INPUT_ITEM_MENU			40
-#macro	STNG_INPUT_NOTE_MENU			42
-#macro	STNG_INPUT_MAP_MENU				44
-#macro	STNG_INPUT_PAUSE_MENU			46
+#macro	STNG_INPUT_USEWEAPON			14
+#macro	STNG_INPUT_CHANGE_AMMO			16
+#macro	STNG_INPUT_FLASHLIGHT			18
+#macro	STNG_INPUT_MENU_RIGHT			20
+#macro	STNG_INPUT_MENU_LEFT			22
+#macro	STNG_INPUT_MENU_UP				24
+#macro	STNG_INPUT_MENU_DOWN			26
+#macro	STNG_INPUT_SELECT				28
+#macro	STNG_INPUT_RETURN				30
+#macro	STNG_INPUT_FILE_DELETE			32
+#macro	STNG_INPUT_TBOX_ADVANCE			34
+#macro	STNG_INPUT_TBOX_LOG				36
+#macro	STNG_INPUT_INV_LEFT				38
+#macro	STNG_INPUT_INV_RIGHT			40
+#macro	STNG_INPUT_ITEM_MENU			42
+#macro	STNG_INPUT_NOTE_MENU			44
+#macro	STNG_INPUT_MAP_MENU				46
+#macro	STNG_INPUT_PAUSE_MENU			48
 
 #endregion General Macro Initializations
 
@@ -207,7 +208,7 @@ global.sortOrder		= ds_grid_create(2, 0);
 global.settings			= {
 	// --- Holds Flags Used in All Settting Groups --- //
 	flags				: STNG_FLAG_QUANTIZATION | STNG_FLAG_DITHERING | STNG_FLAG_SCANLINES |
-							STNG_FLAG_MUSIC | STNG_FLAG_VIBRATION | STNG_FLAG_AIM_TOGGLE | STNG_FLAG_SPRINT_TOGGLE, // These flags are set by default.
+							STNG_FLAG_MUSIC | STNG_FLAG_VIBRATION, // These flags are set by default.
 	
 	// --- Video Settings --- //
 	windowScale			: 4,
@@ -241,10 +242,12 @@ global.settings			= {
 		gp_shoulderlb,
 		vk_space,		// Ready Equipped Weapon
 		gp_shoulderrb,
-		vk_f,			// Toggle Flashlight (If Equipped)
-		gp_face4,
 		vk_z,			// Uses Equipped Weapon (Only When Readied)
 		gp_face1,
+		vk_x,			// Switches currently used ammunition
+		gp_face2,
+		vk_f,			// Toggle Flashlight (If Equipped)
+		gp_face4,
 		
 		// --- Inputs When Navigating Menus (Keyboard and Gamepad Interwoven) --- //
 		vk_right,		// Move Menu Cursor Right
@@ -283,10 +286,6 @@ global.settings			= {
 		gp_shoulderr,
 		vk_escape,		// Shortcut for pause menu
 		gp_start,
-		
-		// --- Other Inputs for Standard Gameplay (Keyboard and Gamepad Interwoven) --- //
-		vk_x,			// Switches currently used ammunition
-		gp_face2,
 	],
 	
 	// --- Other Gamepad Settings --- //

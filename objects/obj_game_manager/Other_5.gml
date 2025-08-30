@@ -8,14 +8,15 @@ for (var i = _length; i >= 0; i--){ // Has to loop backwards since elements will
 }
 
 // Loop through all structs still alive within the room; destroying them if they aren't persistent.
-_length = ds_list_size(global.structs) - 1;
+var _structRef	= undefined;
+_length			= ds_list_size(global.structs) - 1;
 for (var i = _length; i >= 0; i--){ // Has to loop backwards since elements will be removed throughout the loop.
-	if ((global.structs[| i].flags & STR_FLAG_PERSISTENT) != 0)
+	_structRef = global.structs[| i];
+	if ((_structRef.flags & STR_FLAG_PERSISTENT) != 0)
 		continue;
-
-	with(global.structs[| i])
-		destroy_event();
-	delete global.structs[| i];
 	
+	show_debug_message("Deleting struct {0}. (structRef: {1})", _structRef.structID, _structRef);
+	_structRef.destroy_event();
 	ds_list_delete(global.structs, i);
+	delete _structRef;
 }

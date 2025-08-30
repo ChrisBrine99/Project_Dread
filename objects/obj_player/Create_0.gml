@@ -222,7 +222,8 @@ timers				= array_create(PLYR_TOTAL_TIMERS, 0.0);
 // value will double itself again.
 poisonDamagePercent	= PLYR_POISON_BASE_DAMAGE;
 
-// 
+// Create a struct that stores and manages the currently equipped items on the player and the variables/data
+// each of them require to function efficiently. 
 equipment = {
 	// --- Variables Related to Equipped Weapon --- //
 	weapon				: INV_EMPTY_SLOT,
@@ -267,9 +268,6 @@ prevStepSoundID		= -1;
 /// frame. Also automatically swaps between gamepad and keyboard input polling as required.
 /// 
 process_player_input = function(){
-	prevInputFlags	= inputFlags;
-	inputFlags		= 0;
-	
 	if (GAME_IS_GAMEPAD_ACTIVE){
 		// Getting input from the main analog stick by reading its current horizontal and vertical position
 		// relative to its centerpoint and the deadzone applied by the game's input settings.
@@ -307,7 +305,7 @@ process_player_input = function(){
 		return;
 	}
 	
-	// This looks like a lot but its a way of avoiding confusing YYC since it doesn't like the player's
+	// This looks like a lot but its a way of avoiding confusing the YYC since it doesn't like the player's
 	// bitwise AND operations and I'd rather not risk something breaking because of other bitwise operators.
 	inputFlags = inputFlags | (GAME_KEY_RIGHT				 ); // Offset based on position of the bit within the variable.
 	inputFlags = inputFlags | (GAME_KEY_LEFT			<<  1);
@@ -644,6 +642,12 @@ ___end_step_event = end_step_event;
 end_step_event = function(_delta){
 	___end_step_event(_delta);
 	
+	// Always tranfer the current frame's input states into the variable that stores the state from the
+	// previous frame, and then set the main input state storing variable to zero regardless of if there
+	// is input polling occurring within the player's current state.
+	prevInputFlags	= inputFlags;
+	inputFlags		= 0;
+	
 	// Decrement all timers by the current delta time; preventing them from going below a value of zero.
 	for (var i = 0; i < PLYR_TOTAL_TIMERS; i++){
 		timers[i] -= _delta;
@@ -687,7 +691,7 @@ end_step_event = function(_delta){
 		// There's no limit to how high this percentage can go; meaning it will become a fatal amount of damage
 		// (128% of the player's maximum hitpoints) inflicted even when at max hitpoints after 80 seconds.
 		if (PLYR_CAN_UP_POISON_DAMAGE){
-			flags = flags |  PLYR_FLAG_UP_POISON_DAMAGE;
+			flags = flags | PLYR_FLAG_UP_POISON_DAMAGE;
 			poisonDamagePercent *= 2.0;
 		} else{
 			flags = flags & ~PLYR_FLAG_UP_POISON_DAMAGE;
@@ -719,7 +723,9 @@ drawFunction = method_get_index(custom_draw_default);
 #region State Function Definitions
 
 /// @description 
-///	
+///	An initialization state that will act as the "Create Event" for the player object since they're actually
+/// created at the very beginning of the game alongside other singleton objects/structs. It automatically
+/// shifts to the player's default state at the end of its first execution.
 ///	
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 state_initialize = function(_delta){
@@ -826,10 +832,6 @@ state_default = function(_delta){
 		accel			= PLYR_ACCEL_NORMAL;
 		maxMoveSpeed	= PLYR_SPEED_NORMAL;
 		moveSpeed		= 0.0;
-		
-		//  
-		if (PLYR_IS_AIM_TOGGLE)
-			prevInputFlags = inputFlags;
 		return;
 	}
 	

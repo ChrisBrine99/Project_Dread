@@ -16,7 +16,7 @@ lastState		= 0;
 
 // Stores a reference to a light source struct that will be placed at a given offset relative to the Entity's
 // current position. The offset on the x and y axes are stored in the two other values below.
-lightSource		= 0;
+lightSource		= undefined;
 lightX			= 0;
 lightY			= 0;
 

@@ -50,7 +50,7 @@ function instance_create_struct(_structFunc){
 	
 	// Check if the created instance is a runtime singleton. If so, store its reference into the global map
 	// for managing singletons; both runtime and compile-time.
-	if (!is_undefined(ds_map_find_value(global.structType, _structFunc)))
+	if (ds_map_find_value(global.structType, _structFunc) == STRUCT_TYPE_RT_SINGLETON)
 		ds_map_set(global.sInstances, _structFunc, _structRef);
 	
 	return _structRef; // Returns the reference to the struct for ease of access in the future if required.
@@ -67,6 +67,7 @@ function instance_destroy_struct(_structRef){
 	if (_index == -1 || struct_is_singleton(_structRef.structIndex, true))
 		return;
 	
+	show_debug_message("Delete struct {1} (StructRef: {0})", _structRef, _structRef.structID);
 	ds_list_delete(global.structs, _index);
 	_structRef.destroy_event();
 	delete _structRef;

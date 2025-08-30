@@ -16,7 +16,7 @@ draw_set_font(fnt_small);
 draw_set_halign(fa_right);
 
 draw_text_shadow(90, 5, 
-	string("\n{0}\n{1}\n\n{2}\n{3}\n{4}\n{5}\n{6}\n{7}\n{8}\n{9}\n\n{10}\n{11}\n{12}", 
+	string("\n{0}\n{1}\n\n{2}\n{3}\n{4}\n{5}\n{6}\n{7}\n{8}\n{9}\n\n{10}\n{11}\n{12}\n\n{13}", 
 		floor(fps_real), 
 		global.deltaTime, 
 		GAME_IS_IN_GAME,
@@ -30,6 +30,7 @@ draw_text_shadow(90, 5,
 		numDynamicDrawn + numStaticDrawn,
 		numDynamicDrawn,
 		numStaticDrawn,
+		ds_list_size(global.structs),
 	), 
 	COLOR_DARK_RED
 );
@@ -51,4 +52,6 @@ draw_text_shadow(5, 5,
 	-- Render Data --
 	drawnEntities
 	drawnDynamic
-	drawnStatic"), COLOR_WHITE);
+	drawnStatic
+	-- Struct Data --
+	curActiveStructs"), COLOR_WHITE);

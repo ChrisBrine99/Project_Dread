@@ -1,1 +1,0 @@
-if (lightSource != noone) { light_destroy(lightSource); }
