@@ -116,7 +116,8 @@
 #macro	PLYR_BLEEDING_TIMER				2
 #macro	PLYR_POISON_TIMER				3
 #macro	PLYR_RELOAD_TIMER				4
-#macro	PLYR_TOTAL_TIMERS				5
+#macro	PLYR_WEAPON_COOLDOWN_TIMER		5
+#macro	PLYR_TOTAL_TIMERS				6
 
 // Macros that determine the speed at which various interval-based actions will occur for the player.
 #macro	PLYR_STAMINA_LOSS_RATE			2.0
@@ -255,6 +256,12 @@ equipment = {
 	firstAmulet			: INV_EMPTY_SLOT,
 	secondAmulet		: INV_EMPTY_SLOT,
 };
+
+// Store copies of the reload and fire rate/attack speed for the currently equipped weapon outside of the 
+// equipment struct since having to jump into there to get the reference to the equipped weapon's item struct
+// reference so those two values can be grabbed each time they're needed.
+weaponReloadSpeed	= 0.0;
+weaponCooldownSpeed	= 0.0;
 
 // Stores the instance ID for the nearest interactable object to the player's current position.
 interactableID		= noone;
@@ -521,7 +528,7 @@ equip_main_weapon = function(_itemStructRef, _itemSlot){
 		weaponStatRef	= _itemStructRef;
 		curAmmoIndex	= global.curItems[_itemSlot].ammoIndex;
 		// show_debug_message("Current Weapon: {0}", weaponStatRef);
-
+		
 		// Using the current ammunition found within the gun, get the ID for the item it is tied to and check
 		// if that value isn't (-1). If it is, the weapon doesn't use ammo and the function exits early.
 		var _ammoTypes	= _itemStructRef.ammoTypes;
@@ -543,6 +550,16 @@ equip_main_weapon = function(_itemStructRef, _itemSlot){
 			// show_debug_message("Ammo ID: {0}, Amount: {1}", _ammoTypes[i], ammoCount[i]);
 		}
 	}
+	
+	// 
+	var _reloadSpeed = 0;
+	var _attackSpeed = 0;
+	with(_itemStructRef){
+		_reloadSpeed = reloadSpeed;
+		_attackSpeed = attackSpeed;
+	}
+	weaponReloadSpeed	= _reloadSpeed;
+	weaponCooldownSpeed	= _attackSpeed;
 }
 
 /// @description 
@@ -561,6 +578,10 @@ unequip_main_weapon = function(){
 		curAmmoIndex	= 0;
 		curAmmoStatRef	= undefined;
 	}
+	
+	// Finally, clear the two external speed values since they're no longer needed.
+	weaponReloadSpeed	= 0.0;
+	weaponCooldownSpeed	= 0.0;
 }
 
 /// @description 
@@ -616,12 +637,11 @@ unequip_flashlight = function(){
 ///	
 ///	
 reload_current_weapon = function(){
-	var _reloadSpeed	= 0;
 	with(equipment){
 		// Don't even bother processing anything if there is no amount remaining for the current ammo type
 		// being used by the equipped weapon.
 		if (ammoCount[curAmmoIndex] == 0)
-			return;
+			break;
 		
 		// 
 		var _curAmmoIndex	= curAmmoIndex;
@@ -629,7 +649,6 @@ reload_current_weapon = function(){
 		var _stackLimit		= 0;
 		with(weaponStatRef){
 			_ammoItemID		= ammoTypes[_curAmmoIndex];
-			_reloadSpeed	= reloadSpeed;
 			_stackLimit		= stackLimit;
 		}
 		
@@ -648,10 +667,7 @@ reload_current_weapon = function(){
 	}
 	
 	// 
-	if (_reloadSpeed > 0){
-		object_set_state(state_player_reloading);
-		timers[PLYR_RELOAD_TIMER] = _reloadSpeed * GAME_TARGET_FPS;
-	}
+	object_set_state(state_player_weapon_ready);
 }
 
 /// @description 
@@ -664,17 +680,22 @@ swap_current_ammo_index = function(){
 	var _x = x;
 	var _y = y;
 	with(equipment){
+		// If there is only one type of ammunition for the currently equipped weapon OR the type of ammo is
+		// an invalid ID (-1) it means an ammo swap should never occur, so the function will exit early.
+		var _length	= array_length(ammoCount);
+		if (_length == 1 || weaponStatRef.ammoTypes[0] == ID_INVALID)
+			return;
+		
 		// Keep looping until the same value is hit again for the current ammo index or the new value's
 		// count is a value other than zero; meaning a swap can occur.
 		var _prevAmmoIndex	= curAmmoIndex;
 		var _curAmmoIndex	= curAmmoIndex;
-		var _length			= array_length(ammoCount);
-		do{ 
+		do{
 			curAmmoIndex++;
 			if (curAmmoIndex == _length)
 				curAmmoIndex = 0;
 		} until(ammoCount[curAmmoIndex] != 0 || _prevAmmoIndex == curAmmoIndex);
-		_curAmmoIndex	= curAmmoIndex;
+		_curAmmoIndex = curAmmoIndex;
 		
 		// The previous and current index values match. This means no ammunition switch could occur and the
 		// function will exit early instead of swapping ammo types.
@@ -684,7 +705,7 @@ swap_current_ammo_index = function(){
 		// Get the name for the previous ammo in use so it can be added to the inventory while removing
 		// it from the quantity of the current weapon's magazine/clip.
 		var _prevAmmoName = ""; 
-		with(weaponStatRef) { 
+		with(weaponStatRef){
 			var _prevAmmoItemID = ammoTypes[_prevAmmoIndex];
 			if (_prevAmmoItemID != ID_INVALID)
 				_prevAmmoName = global.itemIDs[_prevAmmoItemID].itemName;
@@ -707,7 +728,7 @@ swap_current_ammo_index = function(){
 			
 			// The item inventory couldn't hold all of the previous ammo's amount; create a dynamic item 
 			// with the remainder of what couldn't fit into the item inventory.
-			var _worldItem	= instance_create_object(_x, _y, obj_world_item);
+			var _worldItem = instance_create_object(_x, _y, obj_world_item);
 			with(_worldItem){ // Applies the parameters of the ammunition instead of the weapon itself.
 				set_item_params(global.nextDynamicKey, _prevAmmoName, _quantity, 0, 0);
 				flags = flags | WRLDITM_FLAG_DYNAMIC;
@@ -720,8 +741,13 @@ swap_current_ammo_index = function(){
 		ammoCount[_prevAmmoIndex] += _quantity - _remainder;
 	}
 	
-	// Finally, reload the weapon with the new ammunition index that was found to have ammo to switch to.
-	reload_current_weapon();
+	// Check to see if the reload speed is above zero. If it is still zero the reload will not occur due to
+	// an unforseen error with weaponStatRef being an undefined value while something should be equipped. 
+	// If it is set, set the player to reload and set the reload timer to the weapon's reload speed.
+	if (_reloadSpeed > 0.0){
+		object_set_state(state_player_reloading);
+		timers[PLYR_RELOAD_TIMER] = weaponReloadSpeed;
+	}
 }
 
 /// @description 
@@ -956,7 +982,9 @@ state_default = function(_delta){
 		}
 	}
 	
-	// 
+	// The player has pressed the input for readying their equipped main weapon/sub weapon. If there isn't
+	// a equip currently equipped, the branch is not taken. Otherwise, the player is set to their aiming/
+	// weapon readied state and this state exits early as well.
 	if (PINPUT_READY_WEAPON_PRESSED && equipment.weapon != INV_EMPTY_SLOT){
 		object_set_state(state_player_weapon_ready);
 		flags		    = flags & ~(PLYR_FLAG_MOVING | PLYR_FLAG_SPRINTING);
@@ -982,7 +1010,8 @@ state_default = function(_delta){
 		timers[PLYR_STAMINA_LOSS_TIMER] = PLYR_STAMINA_LOSS_RATE;
 		flags = flags | PLYR_FLAG_SPRINTING;
 		
-		// 
+		// Fixes an issue where sprinting would be immediately cancelled if the input is set to a toggle
+		// instead of a hold by turning the player's press input into a hold for the current frame.
 		if (PLYR_IS_SPRINT_TOGGLE)
 			prevInputFlags = inputFlags;
 		
@@ -1020,46 +1049,65 @@ state_default = function(_delta){
 }
 
 /// @description
-///	
+///	The function that is running whenever the player is in their readied weapon state. It handles switching
+/// directions to choose where to aim, swapping ammunition and reloading (If applicable to the currently
+/// equipped weapon), and using the weapon by switch the player to their using weapon state to handle that
+/// process.
 ///	
 ///	@param {Real}	delta	The difference in time between the execution of this frame and the last.
 state_player_weapon_ready = function(_delta){
 	process_player_input();
 	determine_movement_vector();
 	
-	// 
+	// If the movement vector in either direction is not zero, the currently facing direction will be updated;
+	// allowing the player to aim in their desired direction but not move during this state.
 	if (moveDirectionX != 0.0 || moveDirectionY != 0.0){
 		direction	= point_direction(0.0, 0.0, moveDirectionX, moveDirectionY);
 		image_index	= PLYR_MOVE_ANIM_LENGTH * round(direction / PLYR_ANIM_DIRECTION_DELTA);
 	}
 	
-	// 
+	// Returning from this state will have the highest input priority (Aside from updating the current aiming 
+	// direction) and its input check is altered based on if it is set as a toggle or the default method of
+	// checking for a hold ending. If the relevant check returns true, the player returns to their default
+	// state once again.
 	if (PLYR_IS_AIM_TOGGLE ? PINPUT_READY_WEAPON_PRESSED : !PINPUT_READY_WEAPON_HELD){
 		object_set_state(state_default);
 		return;
 	}
 	
-	// 
+	// The player has pressed the input that changes the equipped weapon's current ammunition to another
+	// type (So long as another type exists), so the function for swapping ammo is called which handles the
+	// logic for switch ammo types if possible.
 	if (PINPUT_CHANGE_AMMO_PRESSED){
 		swap_current_ammo_index();
 		return;
 	}
 	
-	// 
-	if (PINPUT_RELOAD_WEAPON_PRESSED){
-		reload_current_weapon();
+	// Exit the function early so long as the player hasn't pressed the reload input, as this is the lowest
+	// priority processed input while in the readied weapon state.
+	if (!PINPUT_RELOAD_WEAPON_PRESSED)
 		return;
+	
+	// Check the current count for the ammo being used by the equipped weapon. If that value is zero, the
+	// reload input is rejected so no reload process can begin. Otherwise, begin the reload and set the timer.
+	with(equipment){
+		if (ammoCount[curAmmoIndex] == 0)
+			return;
 	}
+	object_set_state(state_player_reloading);
+	timers[PLYR_RELOAD_TIMER] = weaponReloadSpeed;
 }
 
 /// @description 
-///	
+///	A state the player finds themself in when they're reloading their equipped weapon (If that weapon needs
+/// to be reloaded). Once the timer for reloading has decremented to zero, the state ends and the reload
+/// function is called to handle what is required for that process.
 ///	
 ///	@param {Real}	delta	The difference in time between the execution of this frame and the last.
 state_player_reloading = function(_delta){
-	// 
 	if (timers[PLYR_RELOAD_TIMER] == 0.0){
 		object_set_state(state_player_weapon_ready);
+		reload_current_weapon();
 		return;
 	}
 }
