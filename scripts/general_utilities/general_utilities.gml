@@ -167,7 +167,10 @@
 #macro	GAME_TARGET_FPS					60.0
 
 // A catchall for some ID that is considered invalid (Ex. item IDs, data structure IDs, etc.).
-#macro	ID_INVALID					   -1
+#macro	ID_INVALID					   -16
+
+// Another catchall like above, but for references to objects/structs that are considered invalid.
+#macro	REF_INVALID					   -32
 
 // Macros for characters that are used throughout the games code for various purposes; from parsing data for 
 // items when they're loaded into the game, to punctuation pauses during the textbox's "typing" animation, and

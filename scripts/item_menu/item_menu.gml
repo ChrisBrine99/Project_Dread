@@ -53,6 +53,9 @@
 #macro	MENUITM_OPTION_MOVE				"Move"
 #macro	MENUITM_OPTION_DROP				"Drop"
 
+// The macro for the unique key used to store the control icon group for the item menu's input information.
+#macro	MENUITM_ICONUI_CONTROL_GROUP	"menuitm_icons"
+
 #endregion Macros for Item Menu Struct
 
 #region Macros for Item Options Sub Menu
@@ -98,6 +101,9 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	// be passed to that sub menu and stored in its prevMenu variable.
 	itemOptionsMenu		= noone;
 	selfRef				= noone;
+	
+	// Stores a reference to the control icon group that displays input information for the item menu.
+	controlGroupRef		= REF_INVALID;
 	
 	// Variables specific to the item options menu and how it is rendered within the item menu iteself. They
 	// are the surface that the sub menu is drawn onto (Its default rendering method is disabled to allow 
@@ -172,9 +178,16 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		}
 		
 		// 
-		// with(CONTROL_UI_MANAGER){
+		var _controlGroupRef = REF_INVALID;
+		with(CONTROL_UI_MANAGER){
+			_controlGroupRef = ds_map_find_value(controlGroup, MENUINV_ICONUI_CONTROL_GROUP);
+			if (!is_undefined(_controlGroupRef))
+				break;
 			
-		// }
+			// _controlGroupRef = create_control_group(MENUITM_ICONUI_CONTROL_GROUP);
+			//add_control_group_icon(
+		}
+		controlGroupRef = _controlGroupRef;
 	}
 	
 	/// Store the pointer to the base menu's destroy event so it can be called within the item menu's version

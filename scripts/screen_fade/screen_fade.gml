@@ -1,10 +1,12 @@
 #region Macros for Screen Fade Struct
 
-// 
+// Macros that represent flags that can be set or cleared to determine what the screen fade struct is able
+// to process at a given moment in time.
 #macro	FADE_FLAG_ACTIVE			0x00000001
 #macro	FADE_FLAG_ALLOW_FADE_OUT	0x00000002
 
-// 
+// Macros that contain the checks required to see if a flag is set or cleared within the "flags" variable
+// of str_screen_fade.
 #macro	FADE_IS_ACTIVE				((flags & FADE_FLAG_ACTIVE) != 0)
 #macro	FADE_CAN_FADE_OUT			((flags & FADE_FLAG_ALLOW_FADE_OUT) != 0)
 
@@ -16,17 +18,21 @@
 function str_screen_fade(_index) : str_base(_index) constructor {
 	flags			= STR_FLAG_PERSISTENT;
 	
-	// 
+	// Like entities and certain other objects, these values will store the current state (This matches the
+	// value of "nextState" if no change should occur), the next state which is a switch needs to occur, and
+	// the previous state that was executed before the current one.
 	curState		= 0;
 	nextState		= 0;
 	lastState		= 0;
 	
-	// 
+	// Determines the characteristics of the fade for the current iteration of the effect; the speed of fading
+	// the screen to the set color, and the speed of fading out from that set color.
 	fadeInSpeed		= 0.0;
 	fadeOutSpeed	= 0.0;
 	fadeColor		= COLOR_BLACK;
 	
-	// 
+	// Stores the current opacity of the screen fade. At 1.0, the screen will be completely filled with the
+	// currently set color for the fade.
 	alpha			= 0.0;
 	
 	/// @description 

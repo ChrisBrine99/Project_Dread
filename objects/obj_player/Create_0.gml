@@ -551,12 +551,14 @@ equip_main_weapon = function(_itemStructRef, _itemSlot){
 		}
 	}
 	
-	// 
+	// Grab the reload and attacking speeds out of the weapon's item data struct since they are utilized
+	// a lot while using the now-equipped weapon. These values also need to be converted from 1 unit = ~1
+	// real-world second to 60 units = ~1 real-world second before being copied over.
 	var _reloadSpeed = 0;
 	var _attackSpeed = 0;
 	with(_itemStructRef){
-		_reloadSpeed = reloadSpeed;
-		_attackSpeed = attackSpeed;
+		_reloadSpeed = reloadSpeed * GAME_TARGET_FPS;
+		_attackSpeed = attackSpeed * GAME_TARGET_FPS;
 	}
 	weaponReloadSpeed	= _reloadSpeed;
 	weaponCooldownSpeed	= _attackSpeed;
@@ -634,16 +636,14 @@ unequip_flashlight = function(){
 #region Equipped Weapon Function Definitions
 
 /// @description
-///	
+///	Reloads the equipped weapon by converting the currently utilized ammo into "quantity" for the equipped
+/// weapon in question.
 ///	
 reload_current_weapon = function(){
 	with(equipment){
-		// Don't even bother processing anything if there is no amount remaining for the current ammo type
-		// being used by the equipped weapon.
-		if (ammoCount[curAmmoIndex] == 0)
-			break;
-		
-		// 
+		// Jump into the struct referenced within the equipped weapon for its stats/variables; copying over
+		// the ID for the ammo being used and the stack limit for the equipped weapon which is the same as
+		// its magazine/clip size.
 		var _curAmmoIndex	= curAmmoIndex;
 		var _ammoItemID		= 0;
 		var _stackLimit		= 0;
@@ -652,22 +652,23 @@ reload_current_weapon = function(){
 			_stackLimit		= stackLimit;
 		}
 		
-		// 
+		// If that item ID is ID_INVALID (-1), the weapon doesn't actually use any ammunition and is assumed
+		// to be an infinite ammo weapon, so the quantity is set to the stack limit without any ammo used.
 		if (_ammoItemID == ID_INVALID){
 			global.curItems[weapon].quantity = _stackLimit;
 			break;
 		}
 		
-		// 
+		// Jump into the scope of the item inventory's item struct so that the available space can be found
+		// which is then used to remove that amount of ammo from the item inventory. Any remainder returned
+		// by that function is subtracted from the max amount the equipped weapon can hold instead of the
+		// full amount being added to that quantity value.
 		with(global.curItems[weapon]){
 			var _availableSpace = _stackLimit - quantity;
 			var _remainder		= item_inventory_remove(_ammoItemID, _availableSpace);
 			quantity			= _stackLimit - _remainder;
 		}
 	}
-	
-	// 
-	object_set_state(state_player_weapon_ready);
 }
 
 /// @description 
@@ -741,13 +742,9 @@ swap_current_ammo_index = function(){
 		ammoCount[_prevAmmoIndex] += _quantity - _remainder;
 	}
 	
-	// Check to see if the reload speed is above zero. If it is still zero the reload will not occur due to
-	// an unforseen error with weaponStatRef being an undefined value while something should be equipped. 
-	// If it is set, set the player to reload and set the reload timer to the weapon's reload speed.
-	if (_reloadSpeed > 0.0){
-		object_set_state(state_player_reloading);
-		timers[PLYR_RELOAD_TIMER] = weaponReloadSpeed;
-	}
+	// Set the player to reload and set the reload timer to the equipped weapon's reload speed.
+	object_set_state(state_player_reloading);
+	timers[PLYR_RELOAD_TIMER] = weaponReloadSpeed;
 }
 
 /// @description 

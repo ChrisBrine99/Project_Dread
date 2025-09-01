@@ -23,6 +23,15 @@
 #macro	MENUINV_OANIM_ALPHA_SPEED		0.075
 #macro	MENUINV_CANIM_ALPHA_SPEED		0.075
 
+// The macro for the unique key used to store the control icon group for the invenory's input information.
+#macro	MENUINV_ICONUI_CONTROL_GROUP	"menuinv_icons"
+
+// Macros for the characteristics of where the inventory's control group will be rendered onto the screen
+// relative to the bottom-right of the GUI and the spacing between each icon/descriptor pairs.
+#macro	MENUINV_CONTROL_GROUP_PADDING	2
+#macro	MENUINV_CONTROL_GROUP_XOFFSET	5
+#macro	MENUINV_CONTROL_GROUP_YOFFSET	12
+
 #endregion Macros for Inventory Menu Struct
 
 #region Inventory Menu Struct Definition
@@ -31,11 +40,14 @@
 function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	// Stores a reference to the three "submenus" that are managed by this main menu: the item menu, note
 	// menu, and the map menu, respectively.
-	menuRef = array_create(MENUINV_TOTAL_SUBMENUS, noone);
+	menuRef			= array_create(MENUINV_TOTAL_SUBMENUS, noone);
 	
 	// Holds a reference to the inventory menu itself which is then passed along to the submenus when they
 	// are created by the player shifting through its various pages.
-	selfRef	= noone;
+	selfRef			= noone;
+	
+	// Stores a reference to the control icon group that displays input information for the inventory menu.
+	controlGroupRef	= REF_INVALID;
 	
 	/// @description 
 	///	The inventory menu struct's create event. Required menu parameters are initialized, the required 
@@ -61,8 +73,28 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		add_option("Notes");
 		add_option("Map");
 		
-		// Finally, pause the player object's functionality as this menu takes over input while it exists.
+		// Pause the player object's functionality as this menu takes over input while it exists.
 		with(PLAYER) { pause_player(); }
+		
+		// 
+		var _controlGroupRef = REF_INVALID;
+		with(CONTROL_UI_MANAGER){
+			_controlGroupRef = ds_map_find_value(controlGroup, MENUINV_ICONUI_CONTROL_GROUP);
+			if (!is_undefined(_controlGroupRef))
+				break; // The control group already exists; exit before attempt to create and add elements again.
+			
+			// Create the control group at the desired position on the inventory menu, and store the reference
+			// it returns so the inventory can then store it for use when drawing the group. Then, add the
+			// desired elements to the group in question.
+			_controlGroupRef = create_control_group(MENUINV_ICONUI_CONTROL_GROUP, MENUINV_CONTROL_GROUP_XOFFSET, 
+				display_get_gui_height() - MENUINV_CONTROL_GROUP_YOFFSET, MENUINV_CONTROL_GROUP_PADDING, 
+					ICONUI_DRAW_RIGHT);
+			add_control_group_icon(_controlGroupRef, ICONUI_MENU_UP);
+			add_control_group_icon(_controlGroupRef, ICONUI_MENU_DOWN, "Move Cursor");
+			add_control_group_icon(_controlGroupRef, ICONUI_INV_LEFT);
+			add_control_group_icon(_controlGroupRef, ICONUI_INV_RIGHT, "Switch Page");
+		}
+		controlGroupRef = _controlGroupRef;
 	}
 	
 	/// Carry over the reference to the base struct's destroy event so it can be called through the inventory
@@ -105,6 +137,13 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		var _alpha = alpha;
 		with(menuRef[curOption])
 			alpha = _alpha;
+			
+		// 
+		var _controlGroupRef = controlGroupRef;
+		with(CONTROL_UI_MANAGER){
+			draw_control_group(_controlGroupRef, _alpha, COLOR_WHITE, COLOR_DARK_GRAY, 
+				_alpha * TBOX_TEXT_SHADOW_ALPHA); 
+		}
 	}
 	
 	/// @description 

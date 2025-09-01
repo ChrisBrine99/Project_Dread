@@ -170,7 +170,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 	advArrowOffset		= 0.0;
 
 	// Stores a reference to the control icon group that displays input information for the textbox.
-	controlGroupRef		= -1;
+	controlGroupRef		= REF_INVALID;
 
 	/// @description 
 	///	The textbox struct's create event. It will simply initialize the control icon group that will be drawn
@@ -199,7 +199,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 		// Finally, setup the control group that will be utilized by the Textbox and calculate the positions
 		// of the icons and their descriptors so they're displayed at the proper offset. Then, set the
 		// textbox's reference to its control group so it can be referenced for drawing the group when needed.
-		var _controlGroupRef = -1;
+		var _controlGroupRef = REF_INVALID;
 		with(CONTROL_UI_MANAGER){
 			_controlGroupRef = create_control_group(TBOX_ICONUI_CONTROL_GROUP, _viewWidth, _viewHeight, 3, ICONUI_DRAW_LEFT);
 			add_control_group_icon(_controlGroupRef, ICONUI_TBOX_ADVANCE, "Next");

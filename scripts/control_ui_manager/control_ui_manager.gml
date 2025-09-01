@@ -100,9 +100,13 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 		set_keyboard_control_icon(ICONUI_MENU_UP,		_inputs[STNG_INPUT_MENU_UP]);
 		set_keyboard_control_icon(ICONUI_MENU_DOWN,		_inputs[STNG_INPUT_MENU_DOWN]);
 		
-		// Getting icon info the textbox-specific keyboard bindings.
+		// Getting icon info for the textbox-specific keyboard bindings.
 		set_keyboard_control_icon(ICONUI_TBOX_ADVANCE,	_inputs[STNG_INPUT_TBOX_ADVANCE]);
 		set_keyboard_control_icon(ICONUI_TBOX_LOG,		_inputs[STNG_INPUT_TBOX_LOG]);
+		
+		// Getting icon info for the inventory menu-specific keyboard bindings.
+		set_keyboard_control_icon(ICONUI_INV_LEFT,		_inputs[STNG_INPUT_INV_LEFT]);
+		set_keyboard_control_icon(ICONUI_INV_RIGHT,		_inputs[STNG_INPUT_INV_RIGHT]);
 	}
 	
 	/// @description 
@@ -371,6 +375,9 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 				var _length			= ds_list_size(iconsToDraw);
 				for (var i = 0; i < _length; i++){
 					with(iconsToDraw[| i]){
+						// When inactive, the control icon/descriptor pair will be skipped over in the process.
+						if (!isActive)		{ continue; }
+						
 						// Determine which sprite to use based on the currently active input method. Then, 
 						// this sprite is used to fill in the _sprWidth and _sprHeight variables, respectively.
 						if (_gamepadActive)	{ _sprIndex = iconRef.padIcon; }
@@ -448,17 +455,14 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	///	@param {Struct._structRef}	controlGroupRef		Reference to the control group the icon will be added to.
 	/// @param {Any}				iconDataKey			Value to find the icon's data from within the "controlIcons" data structure.
 	/// @param {String}				descriptor			(Optional) Text to be shown alongside the control icon to help explain what the input does.
+	/// @param {Bool}				isActive			(Optional) When false, the icon/descriptor pair isn't drawn or positioned within the group.
 	/// @param {Real}				offset				(Optional) Determines where to position the icon in the control group.
-	add_control_group_icon = function(_controlGroupRef, _iconDataKey, _descriptor = "", _offset = -1){
+	add_control_group_icon = function(_controlGroupRef, _iconDataKey, _descriptor = "", _isActive = true, _offset = -1){
 		var _controlIcon = ds_map_find_value(controlIcons, _iconDataKey);
 		if (is_undefined(_controlIcon))
 			return; // The icon data to add to the group couldn't be found; don't add it.
 			
 		with(_controlGroupRef){
-			var _index = ds_list_find_index(iconsToDraw, _controlIcon);
-			if (_index != -1)
-				return; // Don't add the same icon data reference to the list.
-			
 			// Create the struct that will contain the icon to be drawn and the descriptor that can exist
 			// alongside it and store it into the local variable _iconData.
 			var _iconData = {
@@ -468,11 +472,12 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 				descriptorX	: 0,
 				descriptorY	: 0,
 				descriptor	: _descriptor,
+				isActive	: _isActive,
 			};
 			
 			// Determine whether the icon will be added to the end of the group or inserted somewhere in the
 			// middle. If it is the latter, a position calculation update is forced by "unsetting" iconType.
-			if (_offset != -1){
+			if (_offset != -1 && _isActive){
 				ds_list_insert(iconsToDraw, _offset, _iconData);
 				iconType = ICONUI_TYPE_UNSET;
 				return;
@@ -515,11 +520,12 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	/// @param {String}				descriptor			Text to replace the previous descriptor text with.
 	update_control_group_icon_descriptor = function(_controlGroupRef, _index, _descriptor){
 		with(_controlGroupRef){
-			// Get the struct at the _index position within the list. Then, jump into its scope and replace
-			// the descriptor; getting the dimensions of the string to see if the group's positions need to 
-			// be adjusted to compensate if the new descriptor's dimensions do not match.
-			var _iconData = ds_list_find_value(iconsToDraw, _index);
-			with(_iconData){
+			var _iconType = iconType;
+			
+			// Jump into the desired icon/descriptor struct scope and replace the descriptor; getting the 
+			// dimensions of the string to see if the group's positions need to be adjusted to compensate if 
+			// the new descriptor's dimensions do not match.
+			with(ds_list_find_value(iconsToDraw, _index)){
 				var _prevWidth		= string_width(descriptor);
 				var _prevHeight		= string_height(descriptor);
 				descriptor			= _descriptor;
@@ -530,8 +536,34 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 				var _isVertical		= (drawDirection == ICONUI_DRAW_UP		|| drawDirection == ICONUI_DRAW_DOWN);
 				if ((_isHorizontal && _prevWidth != string_width(_descriptor)) || 
 						(_isVertical && _prevHeight != string_height(_descriptor)))
-					iconType = ICONUI_TYPE_UNSET;
+					_iconType = ICONUI_TYPE_UNSET;
 			}
+			iconType = _iconType;
+		}
+	}
+	
+	/// @description 
+	///	Updates the current "active" state of a single control group's icon/descriptor data struct to the
+	/// provided value (Either true or false). It will automatically signal to the group that position
+	/// offsets of the group need to be updated depending on the state's previous value versus the new one.
+	///	
+	///	@param {Struct._structRef}	controlGroupRef		Reference to the control group that will be drawn.
+	/// @param {Real}				index				The position of the data to update within the group's icon/descriptor list.	
+	/// @param {Bool}				isActive			The state to set for the icon/descriptor pair in question.
+	update_control_group_icon_active_state = function(_controlGroupRef, _index, _isActive){
+		with(_controlGroupRef){
+			var _iconType = iconType;
+			
+			// Jump into scope of the desired icon/descriptor pair struct to update its current "isActive"
+			// value to what is supplied by the function's _isActive parameter. If they're different, set
+			// the icon type of the group such that is updates the positional offsets of all icons and
+			// descriptors in the group.
+			with(ds_list_find_value(iconsToDraw, _index)){
+				if (isActive != _isActive)
+					_iconType = ICONUI_TYPE_UNSET;
+				isActive = _isActive;
+			}
+			iconType = _iconType;
 		}
 	}
 	
@@ -539,7 +571,7 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	///	Draws a control group to the screen at the desired opacity value. No position calculations occur
 	/// here; it simply displays all control icon/descriptors at wherever they were calculated to be.
 	///	
-	///	@param {Struct._structRef}	controlGroupRef		Referece to the control group that will be drawn.
+	///	@param {Struct._structRef}	controlGroupRef		Reference to the control group that will be drawn.
 	/// @param {Real}				alpha				Overall opacity of the icon and descriptor text.
 	///	@param {Real}				textColor			(Optional) Determines the color of each icon's descriptor text.
 	/// @param {Real}				shadowColor			(Optional) Determines the color of the drop shadow behind all descriptor text.
@@ -559,6 +591,9 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 			var _length		= ds_list_size(iconsToDraw);
 			for (var i = 0; i < _length; i++){
 				with(iconsToDraw[| i]){
+					// Skip over elements that aren't currently set to active within the drawn control group.
+					if (!isActive)		{ continue; }
+					
 					// Determine if the gamepad or keyboard icon should be utilized, and grab the relevant
 					// data for the currently active input method.
 					if (_gamepadActive) { _iconData = iconRef.padIcon; }
