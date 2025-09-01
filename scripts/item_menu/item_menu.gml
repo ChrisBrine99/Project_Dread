@@ -53,9 +53,6 @@
 #macro	MENUITM_OPTION_MOVE				"Move"
 #macro	MENUITM_OPTION_DROP				"Drop"
 
-// The macro for the unique key used to store the control icon group for the item menu's input information.
-#macro	MENUITM_ICONUI_CONTROL_GROUP	"menuitm_icons"
-
 #endregion Macros for Item Menu Struct
 
 #region Macros for Item Options Sub Menu
@@ -180,12 +177,15 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		// 
 		var _controlGroupRef = REF_INVALID;
 		with(CONTROL_UI_MANAGER){
-			_controlGroupRef = ds_map_find_value(controlGroup, MENUINV_ICONUI_CONTROL_GROUP);
+			_controlGroupRef = ds_map_find_value(controlGroup, MENUINV_ICONUI_CTRL_GRP2);
 			if (!is_undefined(_controlGroupRef))
 				break;
 			
-			// _controlGroupRef = create_control_group(MENUITM_ICONUI_CONTROL_GROUP);
-			//add_control_group_icon(
+			// 
+			_controlGroupRef = create_control_group(MENUINV_ICONUI_CTRL_GRP2, MENUINV_CTRL_GRP2_XOFFSET, 
+				MENUINV_CTRL_GRP2_YOFFSET, MENUINV_CTRL_GRP2_PADDING, ICONUI_DRAW_LEFT);
+			add_control_group_icon(_controlGroupRef, ICONUI_SELECT, "Select");
+			add_control_group_icon(_controlGroupRef, ICONUI_RETURN, "Close");
 		}
 		controlGroupRef = _controlGroupRef;
 	}
@@ -294,6 +294,12 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 				COLOR_WHITE, alpha, MENUITM_TEXT_SHADOW_COLOR, _shadowAlpha);
 		}
 		
+		// 
+		var _alpha			 = alpha;
+		var _controlGroupRef = controlGroupRef;
+		with(CONTROL_UI_MANAGER)
+			draw_control_group(_controlGroupRef, _alpha, COLOR_WHITE, COLOR_DARK_GRAY, _alpha * 0.75); 
+		
 		// Don't bother with any of the surface rendering/swapping logic below if the sub menu containing the
 		// selected item's options isn't currently opened for the player to select from.
 		if (!MENUITM_ARE_OPTIONS_OPEN)
@@ -327,7 +333,14 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	/// state_default.
 	///	
 	reset_to_default_state = function(){
-		with(prevMenu) { flags = flags | MENUINV_FLAG_CAN_CLOSE | MENUINV_FLAG_CAN_CHANGE_PAGE; }
+		with(prevMenu){
+			flags = flags | MENUINV_FLAG_CAN_CLOSE | MENUINV_FLAG_CAN_CHANGE_PAGE;
+			var _controlGroupRef = controlGroupRef;
+			with(CONTROL_UI_MANAGER){ // Re-enable the "Change Page" inputs so they're displayed again.
+				update_control_group_icon_active_state(_controlGroupRef, MENUINV_CTRL_GRP_PAGE_LEFT,  true);
+				update_control_group_icon_active_state(_controlGroupRef, MENUINV_CTRL_GRP_PAGE_RIGHT, true);
+			}
+		}
 		object_set_state(state_default);
 		flags			= flags & ~MENUITM_FLAG_MOVING_ITEM;
 		auxSelOption	= -1;
@@ -375,7 +388,14 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			var _isMovingItem = MENUITM_IS_MOVING_ITEM;
 			if (!_isMovingItem && invItemRefs[curOption] == INV_EMPTY_SLOT)
 				return;
-			with(prevMenu) { flags = flags & ~(MENUINV_FLAG_CAN_CLOSE | MENUINV_FLAG_CAN_CHANGE_PAGE); }
+			with(prevMenu){ 
+				flags = flags & ~(MENUINV_FLAG_CAN_CLOSE | MENUINV_FLAG_CAN_CHANGE_PAGE);
+				var _controlGroupRef = controlGroupRef;
+				with(CONTROL_UI_MANAGER){ // Disable the page left/right input information since the menu can't change pages at the moment.
+					update_control_group_icon_active_state(_controlGroupRef, MENUINV_CTRL_GRP_PAGE_LEFT,  false);
+					update_control_group_icon_active_state(_controlGroupRef, MENUINV_CTRL_GRP_PAGE_RIGHT, false);
+				}
+			}
 			selOption = curOption;
 			
 			// Check if the inventory is moving an item. If so, this branch is taken and the inventory will

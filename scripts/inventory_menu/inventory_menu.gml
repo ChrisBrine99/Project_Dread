@@ -23,14 +23,30 @@
 #macro	MENUINV_OANIM_ALPHA_SPEED		0.075
 #macro	MENUINV_CANIM_ALPHA_SPEED		0.075
 
-// The macro for the unique key used to store the control icon group for the invenory's input information.
-#macro	MENUINV_ICONUI_CONTROL_GROUP	"menuinv_icons"
+// The macro for the unique key used to store the control icon group for the invenory's cursor movement/page
+// shifting input information.
+#macro	MENUINV_ICONUI_CTRL_GRP			"menuinv_move_icons"
 
 // Macros for the characteristics of where the inventory's control group will be rendered onto the screen
 // relative to the bottom-right of the GUI and the spacing between each icon/descriptor pairs.
-#macro	MENUINV_CONTROL_GROUP_PADDING	2
-#macro	MENUINV_CONTROL_GROUP_XOFFSET	5
-#macro	MENUINV_CONTROL_GROUP_YOFFSET	12
+#macro	MENUINV_CTRL_GRP_PADDING		2
+#macro	MENUINV_CTRL_GRP_XOFFSET		5
+#macro	MENUINV_CTRL_GRP_YOFFSET		display_get_gui_height() - 12
+
+// 
+#macro	MENUINV_CTRL_GRP_CURSOR_UP		0
+#macro	MENUINV_CTRL_GRP_CURSOR_DOWN	1
+#macro	MENUINV_CTRL_GRP_PAGE_LEFT		2
+#macro	MENUINV_CTRL_GRP_PAGE_RIGHT		3
+
+// The macro for the unique key used to store the control icon group for the inventory's selection/return/
+// close input information.
+#macro	MENUINV_ICONUI_CTRL_GRP2		"menuinv_selret_icons"
+
+//	
+#macro	MENUINV_CTRL_GRP2_PADDING		2
+#macro	MENUINV_CTRL_GRP2_XOFFSET		display_get_gui_width()	 - 5
+#macro	MENUINV_CTRL_GRP2_YOFFSET		display_get_gui_height() - 12
 
 #endregion Macros for Inventory Menu Struct
 
@@ -64,8 +80,8 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		// Initialize the menu's base parameters as well as its option parameters. Since this menu works as
 		// more of a manager of other menus, these options won't have logic for selection and the menu will
 		// only show the current option (AKA menu) that is visible for the player to interact with.
-		initialize_params(0, 0, true, true, 3, 1, 1);
-		initialize_option_params(5, 2, 0, 0);
+		initialize_params(0, 0, true, true, 3, 3, 1);
+		initialize_option_params((display_get_gui_width() >> 1) - 90, 2, 90, 0, fa_center, fa_top, false);
 		
 		// Add "options" for the menu that are simply the names for each page of the inventory. Those pages
 		// themselves are unique menu instances that manage their own data and input independent of this one.
@@ -76,23 +92,23 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		// Pause the player object's functionality as this menu takes over input while it exists.
 		with(PLAYER) { pause_player(); }
 		
-		// 
+		// Attempt to grab the control group that is utilized by the inventory menu. If it doesn't exist, the
+		// returned value is undefined and then the group is created and stored in the local value.
 		var _controlGroupRef = REF_INVALID;
 		with(CONTROL_UI_MANAGER){
-			_controlGroupRef = ds_map_find_value(controlGroup, MENUINV_ICONUI_CONTROL_GROUP);
+			_controlGroupRef = ds_map_find_value(controlGroup, MENUINV_ICONUI_CTRL_GRP);
 			if (!is_undefined(_controlGroupRef))
 				break; // The control group already exists; exit before attempt to create and add elements again.
 			
 			// Create the control group at the desired position on the inventory menu, and store the reference
 			// it returns so the inventory can then store it for use when drawing the group. Then, add the
 			// desired elements to the group in question.
-			_controlGroupRef = create_control_group(MENUINV_ICONUI_CONTROL_GROUP, MENUINV_CONTROL_GROUP_XOFFSET, 
-				display_get_gui_height() - MENUINV_CONTROL_GROUP_YOFFSET, MENUINV_CONTROL_GROUP_PADDING, 
-					ICONUI_DRAW_RIGHT);
+			_controlGroupRef = create_control_group(MENUINV_ICONUI_CTRL_GRP, MENUINV_CTRL_GRP_XOFFSET, 
+				MENUINV_CTRL_GRP_YOFFSET, MENUINV_CTRL_GRP_PADDING, ICONUI_DRAW_RIGHT);
 			add_control_group_icon(_controlGroupRef, ICONUI_MENU_UP);
-			add_control_group_icon(_controlGroupRef, ICONUI_MENU_DOWN, "Move Cursor");
+			add_control_group_icon(_controlGroupRef, ICONUI_MENU_DOWN, "Cursor");
 			add_control_group_icon(_controlGroupRef, ICONUI_INV_LEFT);
-			add_control_group_icon(_controlGroupRef, ICONUI_INV_RIGHT, "Switch Page");
+			add_control_group_icon(_controlGroupRef, ICONUI_INV_RIGHT, "Page");
 		}
 		controlGroupRef = _controlGroupRef;
 	}
@@ -128,9 +144,8 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		draw_sprite_ext(spr_rectangle, 0, _xPos, _yPos, display_get_gui_width(), display_get_gui_height(), 
 			0.0, COLOR_BLACK, alpha * 0.5);
 		
-		draw_set_font(fnt_medium);
-		draw_text_shadow(_xPos + optionX, _yPos + optionY, options[| curOption].oName, 
-			COLOR_WHITE, alpha, COLOR_BLACK, alpha * 0.75);
+		// 
+		draw_visible_options(fnt_medium, _xPos, _yPos, COLOR_DARK_GRAY, 0.75);
 			
 		// Ensure the current submenu's alpha always matches the main menu's alpha level, so they don't each
 		// need their own opening/closing animations that would just match the inventory's.
@@ -140,10 +155,8 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 			
 		// 
 		var _controlGroupRef = controlGroupRef;
-		with(CONTROL_UI_MANAGER){
-			draw_control_group(_controlGroupRef, _alpha, COLOR_WHITE, COLOR_DARK_GRAY, 
-				_alpha * TBOX_TEXT_SHADOW_ALPHA); 
-		}
+		with(CONTROL_UI_MANAGER)
+			draw_control_group(_controlGroupRef, _alpha, COLOR_WHITE, COLOR_DARK_GRAY, _alpha * 0.75); 
 	}
 	
 	/// @description 

@@ -83,12 +83,12 @@
 #macro	TBOX_CANIM_ALPHA_SPEED			0.08
 
 // The macro for the unique key used to store the control icon group for the textox input information.
-#macro	TBOX_ICONUI_CONTROL_GROUP		"tbox_icons"
+#macro	TBOX_ICONUI_CTRL_GRP			"tbox_icons"
 
 // Determines where the control group's anchor point is placed relative to the bottom-right of the GUI (These 
 // values are subtracted against the GUI's width and height).
-#macro	TBOX_CONTROL_GROUP_XOFFSET	    5
-#macro	TBOX_CONTROL_GROUP_YOFFSET	    12
+#macro	TBOX_CTRL_GRP_XOFFSET			5
+#macro	TBOX_CTRL_GRP_YOFFSET			12
 
 // Determines the value that the arrow's current offset needs to be exceed for it to be reset to zero (Or 
 // near-zero if the value happens to not be exactly the same as this threshold value).
@@ -193,15 +193,15 @@ function str_textbox(_index) : str_base(_index) constructor {
 		
 		// Since the original values are no longer needed, they are offset for the position of the anchor
 		// point that the textbox's control information will be place on the GUI.
-		_viewWidth  -= TBOX_CONTROL_GROUP_XOFFSET;
-		_viewHeight	-= TBOX_CONTROL_GROUP_YOFFSET;
+		_viewWidth  -= TBOX_CTRL_GRP_XOFFSET;
+		_viewHeight	-= TBOX_CTRL_GRP_YOFFSET;
 		
 		// Finally, setup the control group that will be utilized by the Textbox and calculate the positions
 		// of the icons and their descriptors so they're displayed at the proper offset. Then, set the
 		// textbox's reference to its control group so it can be referenced for drawing the group when needed.
 		var _controlGroupRef = REF_INVALID;
 		with(CONTROL_UI_MANAGER){
-			_controlGroupRef = create_control_group(TBOX_ICONUI_CONTROL_GROUP, _viewWidth, _viewHeight, 3, ICONUI_DRAW_LEFT);
+			_controlGroupRef = create_control_group(TBOX_ICONUI_CTRL_GRP, _viewWidth, _viewHeight, 3, ICONUI_DRAW_LEFT);
 			add_control_group_icon(_controlGroupRef, ICONUI_TBOX_ADVANCE, "Next");
 			add_control_group_icon(_controlGroupRef, ICONUI_TBOX_LOG, "Log");
 		}

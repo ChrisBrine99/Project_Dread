@@ -99,6 +99,8 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 		set_keyboard_control_icon(ICONUI_MENU_LEFT,		_inputs[STNG_INPUT_MENU_LEFT]);
 		set_keyboard_control_icon(ICONUI_MENU_UP,		_inputs[STNG_INPUT_MENU_UP]);
 		set_keyboard_control_icon(ICONUI_MENU_DOWN,		_inputs[STNG_INPUT_MENU_DOWN]);
+		set_keyboard_control_icon(ICONUI_SELECT,		_inputs[STNG_INPUT_SELECT]);
+		set_keyboard_control_icon(ICONUI_RETURN,		_inputs[STNG_INPUT_RETURN]);
 		
 		// Getting icon info for the textbox-specific keyboard bindings.
 		set_keyboard_control_icon(ICONUI_TBOX_ADVANCE,	_inputs[STNG_INPUT_TBOX_ADVANCE]);
