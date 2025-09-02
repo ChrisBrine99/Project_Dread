@@ -59,6 +59,7 @@ function load_json(_filename){
 // Each will be placed into a variable within the struct found in the processed item data structure list.
 #macro	KEY_NAME						"Name"
 #macro	KEY_STACK						"Stack"
+#macro	KEY_INFO						"Info"
 #macro	KEY_DURABILITY					"Durability"
 
 // Macros for keys that show up in the Weapon and Ammo sections of the unprocessed item data structure.
@@ -74,6 +75,7 @@ function load_json(_filename){
 #macro	KEY_IS_AUTO_FLAG				"Is_Auto"
 #macro	KEY_IS_BURST_FLAG				"Is_Burst"
 #macro	KEY_IS_THROWN_FLAG				"Is_Thrown"
+#macro	KEY_IS_HITSCAN_FLAG				"Is_Hitscan"
 #macro	KEY_AMMO_TYPES					"Ammo_Types"
 
 // Macros for keys that show up exclusively within the Ammo section of the unprocessed item data structure.
@@ -241,6 +243,8 @@ function load_item(_section, _itemKey, _itemIndex, _data){
 		case KEY_WEAPONS: // Parse through the data of a weapon item.
 			with(_itemStructRef){
 				typeID		= ITEM_TYPE_WEAPON;
+				itemInfo	= string_split_lines(_data[? KEY_INFO], fnt_small, 
+								MENUITM_OPTION_INFO_MAX_WIDTH, MENUITM_OPTION_INFO_MAX_LINES);
 				stackLimit	= _data[? KEY_STACK];
 				
 				// Begin adding parameters that are unique to a weapon type item (Some are also the same as 
@@ -259,7 +263,8 @@ function load_item(_section, _itemKey, _itemIndex, _data){
 				flags	    = (bool(_data[? KEY_IS_MELEE_FLAG])				) |
 							  (bool(_data[? KEY_IS_AUTO_FLAG])		<<	 1	) |
 							  (bool(_data[? KEY_IS_BURST_FLAG])		<<	 2	) |
-							  (bool(_data[? KEY_IS_THROWN_FLAG])	<<	 3	);
+							  (bool(_data[? KEY_IS_THROWN_FLAG])	<<	 3	) |
+							  (bool(_data[? KEY_IS_HITSCAN_FLAG])	<<	 4	);
 							  
 				// Determine which type of weapon this is when equipped by checking if the item is thrown or
 				// not. If it is thrown, it will always be considered a subweapon.

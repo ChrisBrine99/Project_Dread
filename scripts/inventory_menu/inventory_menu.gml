@@ -33,7 +33,8 @@
 #macro	MENUINV_CTRL_GRP_XOFFSET		5
 #macro	MENUINV_CTRL_GRP_YOFFSET		display_get_gui_height() - 12
 
-// 
+// Each macro represents the index values where each of the two menu cursor movement icon/descriptor pairs 
+// and each of the two inventory page shift icon/descriptor pairs, respectively.
 #macro	MENUINV_CTRL_GRP_CURSOR_UP		0
 #macro	MENUINV_CTRL_GRP_CURSOR_DOWN	1
 #macro	MENUINV_CTRL_GRP_PAGE_LEFT		2
@@ -43,10 +44,16 @@
 // close input information.
 #macro	MENUINV_ICONUI_CTRL_GRP2		"menuinv_selret_icons"
 
-//	
+// Determines the position of this second control group on the screen, as well as the amount of padding
+// between each group's icon/descriptor pair.
 #macro	MENUINV_CTRL_GRP2_PADDING		2
 #macro	MENUINV_CTRL_GRP2_XOFFSET		display_get_gui_width()	 - 5
 #macro	MENUINV_CTRL_GRP2_YOFFSET		display_get_gui_height() - 12
+
+// Each macro represents the index values where the menu select icon/descriptor pair and menu return icon/
+// descriptor pair, respectively.
+#macro	MENUINV_CTRL_GRP2_SELECT		0
+#macro	MENUINV_CTRL_GRP2_RETURN		1
 
 #endregion Macros for Inventory Menu Struct
 
@@ -141,15 +148,20 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	///	@param {Real}	xPos	The menu's current x position, rounded down.
 	/// @param {Real}	yPos	The menu's current y position, rounded down.
 	draw_gui_event = function(_xPos, _yPos){
-		draw_sprite_ext(spr_rectangle, 0, _xPos, _yPos, display_get_gui_width(), display_get_gui_height(), 
-			0.0, COLOR_BLACK, alpha * 0.5);
+		// 
+		var _alpha = alpha;
+		with(global.colorFadeShader){
+			activate_shader(0x100000);
+			draw_circle_ext(display_get_gui_width() >> 1, display_get_gui_height() >> 1, 
+				240, 130, COLOR_GRAY, COLOR_WHITE, _alpha);
+			shader_reset();
+		}
 		
 		// 
 		draw_visible_options(fnt_medium, _xPos, _yPos, COLOR_DARK_GRAY, 0.75);
 			
 		// Ensure the current submenu's alpha always matches the main menu's alpha level, so they don't each
 		// need their own opening/closing animations that would just match the inventory's.
-		var _alpha = alpha;
 		with(menuRef[curOption])
 			alpha = _alpha;
 			

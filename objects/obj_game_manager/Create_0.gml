@@ -320,6 +320,7 @@ global.colorFadeShader = {
 	activate_shader		: function(_color){
 		if (shader_current() == shd_color_fade)
 			return;
+		set_effect_color(_color);
 		shader_set(shd_color_fade);
 		shader_set_uniform_f_array(uFadeColor, curColorRGB);
 	},

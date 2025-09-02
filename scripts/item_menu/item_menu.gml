@@ -15,8 +15,13 @@
 
 // Calculations for the position of the an item's info text when it is currently being highlighted by the
 // player. Since they use "_xPos" and "_yPos" they must be used IN THE DRAW GUI EVENT ONLY!!!
-#macro	MENUITM_OPTION_INFO_X			(_xPos + optionX)
-#macro	MENUITM_OPTION_INFO_Y			(_yPos + optionY + (MENUITM_VISIBLE_HEIGHT * optionSpacingY) + 10) 
+#macro	MENUITM_OPTION_INFO_X			(_xPos + optionX - 48)
+#macro	MENUITM_OPTION_INFO_Y			(_yPos + optionY + (MENUITM_VISIBLE_HEIGHT * optionSpacingY) + 5) 
+
+// Determines the maximum line width for an item's description string as well as the maximum number of lines
+// that can exist for display within the inventory's item section.
+#macro	MENUITM_OPTION_INFO_MAX_WIDTH	160
+#macro	MENUITM_OPTION_INFO_MAX_LINES	4
 
 // Values for some constant characteristics about how the item inventory will be shown to the player. These
 // are specifically for the maximum number of item slots visible to the player at once, the color of the text's
@@ -174,14 +179,17 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			if (secondAmulet != INV_EMPTY_SLOT) { ds_list_add(_equippedSlots, secondAmulet); }
 		}
 		
-		// 
+		// Jump into the control ui manager struct's scope to attempt to retrieve the desired control group
+		// reference. If it doesn't exist, it will be created and then after that initial ccreation it will
+		// exist for reference until the control group is ever deleted from memory.
 		var _controlGroupRef = REF_INVALID;
 		with(CONTROL_UI_MANAGER){
 			_controlGroupRef = ds_map_find_value(controlGroup, MENUINV_ICONUI_CTRL_GRP2);
 			if (!is_undefined(_controlGroupRef))
 				break;
 			
-			// 
+			// Create the control group in question which is used in this menu alongside the note and map
+			// menus as they all use the Select/Close inputs.
 			_controlGroupRef = create_control_group(MENUINV_ICONUI_CTRL_GRP2, MENUINV_CTRL_GRP2_XOFFSET, 
 				MENUINV_CTRL_GRP2_YOFFSET, MENUINV_CTRL_GRP2_PADDING, ICONUI_DRAW_LEFT);
 			add_control_group_icon(_controlGroupRef, ICONUI_SELECT, "Select");
@@ -291,10 +299,10 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		if (curOption >= 0 && curOption < ds_list_size(options)){
 			var _curOption = options[| curOption];
 			draw_text_shadow(MENUITM_OPTION_INFO_X, MENUITM_OPTION_INFO_Y, _curOption.oInfo, 
-				COLOR_WHITE, alpha, MENUITM_TEXT_SHADOW_COLOR, _shadowAlpha);
+				COLOR_LIGHT_GRAY, alpha, MENUITM_TEXT_SHADOW_COLOR, _shadowAlpha);
 		}
 		
-		// 
+		// Jump into the control ui manager struct so the required control group can be drawn onto the GUI.
 		var _alpha			 = alpha;
 		var _controlGroupRef = controlGroupRef;
 		with(CONTROL_UI_MANAGER)
@@ -462,6 +470,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			// Jump into scope of the item inventory's sub menu so it can be activated along with replacing
 			// the previous options if the menu already existed previous (This occurs when two or more items
 			// have been selected by the user during the lifetime of this menu).
+			var _optionSpacingY = 0;
 			with(itemOptionsMenu){
 				flags = flags | MENU_FLAG_ACTIVE;
 				
@@ -469,7 +478,13 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 					replace_options(_options, 1, 1, array_length(_options));
 					flags = flags & ~MENUSUB_FLAG_CLOSING; // Also flip this bit so the menu doesn't instantly close.
 				}
+				
+				_optionSpacingY = optionSpacingY;
 			}
+			
+			// 
+			var _yOffset = min((curOption - visibleAreaY) * optionSpacingY, 
+							   (visibleAreaH - array_length(_options)) * _optionSpacingY);
 			
 			// Finally, swap over the opening state for the item options menu. On top of that, set the flag
 			// that lets this menu know that sub menu is open, and position it to show up beside the selected
@@ -477,7 +492,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			object_set_state(state_open_item_options);
 			flags			 = flags | MENUITM_FLAG_OPTIONS_OPEN;
 			itemOptionsMenuX = optionX - SUBMENU_ITM_OFFSET_X;
-			itemOptionsMenuY = optionY + ((curOption - visibleAreaY) * optionSpacingY);
+			itemOptionsMenuY = optionY + _yOffset;
 			cursorAnimTimer	 = 0.0;
 			return;
 		}

@@ -62,7 +62,6 @@
 #macro	PINPUT_SPRINT_PRESSED			((inputFlags & PINPUT_FLAG_SPRINT)			!= 0 && (prevInputFlags & PINPUT_FLAG_SPRINT)			== 0)
 #macro	PINPUT_READY_WEAPON_PRESSED		((inputFlags & PINPUT_FLAG_READY_WEAPON)	!= 0 && (prevInputFlags & PINPUT_FLAG_READY_WEAPON)		== 0)
 #macro	PINPUT_FLASHLIGHT_PRESSED		((inputFlags & PINPUT_FLAG_FLASHLIGHT)		!= 0 && (prevInputFlags & PINPUT_FLAG_FLASHLIGHT)		== 0)
-#macro	PINPUT_USE_WEAPON_PRESSED		((inputFlags & PINPUT_FLAG_USE_WEAPON)		!= 0 && (prevInputFlags & PINPUT_FLAG_USE_WEAPON)		== 0)
 #macro	PINPUT_CHANGE_AMMO_PRESSED		((inputFlags & PINPUT_FLAG_CHANGE_AMMO)		!= 0 && (prevInputFlags & PINPUT_FLAG_CHANGE_AMMO)		== 0)
 #macro	PINPUT_RELOAD_WEAPON_PRESSED	((inputFlags & PINPUT_FLAG_RELOAD_WEAPON)	!= 0 && (prevInputFlags & PINPUT_FLAG_RELOAD_WEAPON)	== 0)
 #macro	PINPUT_READY_WEAPON_HELD		((inputFlags & PINPUT_FLAG_READY_WEAPON)	!= 0)
@@ -70,11 +69,11 @@
 #macro	PINPUT_SPRINT_RELEASED			((inputFlags & PINPUT_FLAG_SPRINT)			== 0 && (prevInputFlags & PINPUT_FLAG_SPRINT)			!= 0)
 #macro	PINPUT_READY_WEAPON_RELEASED	((inputFlags & PINPUT_FLAG_READY_WEAPON)	== 0 && (prevInputFlags & PINPUT_FLAG_READY_WEAPON)		!= 0)
 #macro	PINPUT_FLASHLIGHT_RELEASED		((inputFlags & PINPUT_FLAG_FLASHLIGHT)		== 0 && (prevInputFlags & PINPUT_FLAG_FLASHLIGHT)		!= 0)
+#macro	PINPUT_USE_WEAPON_RELEASED		((inputFlags & PINPUT_FLAG_USE_WEAPON)		== 0 && (prevInputFlags & PINPUT_FLAG_USE_WEAPON)		!= 0)
 #macro	PINPUT_OPEN_ITEMS_RELEASED		((inputFlags & PINPUT_FLAG_ITEM_MENU)		== 0 && (prevInputFlags & PINPUT_FLAG_ITEM_MENU)		!= 0)
 #macro	PINPUT_OPEN_NOTES_RELEASED		((inputFlags & PINPUT_FLAG_NOTES_MENU)		== 0 && (prevInputFlags & PINPUT_FLAG_NOTES_MENU)		!= 0)
 #macro	PINPUT_OPEN_MAPS_RELEASED		((inputFlags & PINPUT_FLAG_MAP_MENU)		== 0 && (prevInputFlags & PINPUT_FLAG_MAP_MENU)			!= 0)
 #macro	PINPUT_OPEN_PAUSE_RELEASED		((inputFlags & PINPUT_FLAG_PAUSE_MENU)		== 0 && (prevInputFlags & PINPUT_FLAG_PAUSE_MENU)		!= 0)
-	
 
 // Two unique flags contained within the player's "inputFlags" variable. They will let the rest of the code
 // run by the player which of the two sticks are being used for movement during the current frame.
@@ -116,7 +115,7 @@
 #macro	PLYR_BLEEDING_TIMER				2
 #macro	PLYR_POISON_TIMER				3
 #macro	PLYR_RELOAD_TIMER				4
-#macro	PLYR_WEAPON_COOLDOWN_TIMER		5
+#macro	PLYR_WEAPON_ATTACK_TIMER		5
 #macro	PLYR_TOTAL_TIMERS				6
 
 // Macros that determine the speed at which various interval-based actions will occur for the player.
@@ -257,11 +256,21 @@ equipment = {
 	secondAmulet		: INV_EMPTY_SLOT,
 };
 
+// Stores the total number of bullets that can be fired by holding down the "use weapon" input. When this
+// value matches the total number, the player will need to release the input before being able to fire the
+// weapon again. If the total is -1 they will never have to release the input.
+weaponBulletCount	= 0;
+bulletCounter		= 0;
+
+// Determines how much ammo is remaining with the equipped weapon's current clip/magazine to avoid having
+// to constantly jump into the struct stored within the item inventory array to grab said value.
+weaponRemainingAmmo	= 0;
+
 // Store copies of the reload and fire rate/attack speed for the currently equipped weapon outside of the 
 // equipment struct since having to jump into there to get the reference to the equipped weapon's item struct
 // reference so those two values can be grabbed each time they're needed.
 weaponReloadSpeed	= 0.0;
-weaponCooldownSpeed	= 0.0;
+weaponAttackSpeed	= 0.0;
 
 // Stores the instance ID for the nearest interactable object to the player's current position.
 interactableID		= noone;
@@ -520,12 +529,19 @@ update_equip_slot = function(_firstSlot, _secondSlot){
 /// @param {Struct._structRef}	itemStructRef	Reference to the struct in the global item data that represents the weapon.
 ///	@param {Real}				itemSlot		Slot in the item inventory where the main weapon being equipped is located.
 equip_main_weapon = function(_itemStructRef, _itemSlot){
+	var _quantity = 0;
 	with(equipment){
 		// First, copy the slot index where the weapon is found in the item inventory. Then, store the
-		// reference to that weapon's data so it can be accessed later as required and grab the current ammo
-		// type within said weapon.
+		// reference to that weapon's data so it can be accessed later as required.
 		weapon			= _itemSlot;
 		weaponStatRef	= _itemStructRef;
+		
+		// 
+		var _ammoIndex	= 0;
+		with(global.curItems[_itemSlot]){
+			_quantity	= quantity;
+			_ammoIndex	= ammoIndex;
+		}
 		curAmmoIndex	= global.curItems[_itemSlot].ammoIndex;
 		// show_debug_message("Current Weapon: {0}", weaponStatRef);
 		
@@ -550,18 +566,26 @@ equip_main_weapon = function(_itemStructRef, _itemSlot){
 			// show_debug_message("Ammo ID: {0}, Amount: {1}", _ammoTypes[i], ammoCount[i]);
 		}
 	}
+	weaponRemainingAmmo	= _quantity;
 	
-	// Grab the reload and attacking speeds out of the weapon's item data struct since they are utilized
-	// a lot while using the now-equipped weapon. These values also need to be converted from 1 unit = ~1
-	// real-world second to 60 units = ~1 real-world second before being copied over.
+	// Grab some values from the item data struct of the weapon that will be frequently used by the player
+	// for various states and operations to avoid having to constantly jump around to grab said values.
+	var _bulletCount = -1;
 	var _reloadSpeed = 0;
 	var _attackSpeed = 0;
 	with(_itemStructRef){
+		// When set to be a burstfire weapon, the bullet count will match what is specified in the item
+		// data. Otherwise, the count is set to one and that value will be used to determine how many
+		// projectiles to spawn for a single bullet (Ex. shotguns).
+		if (WEAPON_IS_BURSTFIRE)		{ _bulletCount = bulletCount; }
+		else if (!WEAPON_IS_AUTOMATIC)	{ _bulletCount = 1; }
+		else							{ _bulletCount = -1; }
 		_reloadSpeed = reloadSpeed * GAME_TARGET_FPS;
 		_attackSpeed = attackSpeed * GAME_TARGET_FPS;
 	}
+	weaponBulletCount	= _bulletCount;
 	weaponReloadSpeed	= _reloadSpeed;
-	weaponCooldownSpeed	= _attackSpeed;
+	weaponAttackSpeed	= _attackSpeed;
 }
 
 /// @description 
@@ -581,9 +605,11 @@ unequip_main_weapon = function(){
 		curAmmoStatRef	= undefined;
 	}
 	
-	// Finally, clear the two external speed values since they're no longer needed.
+	// Finally, clear the external values found in the player's sope since they're no longer needed.
+	weaponRemainingAmmo = 0;
+	weaponBulletCount	= 0;
 	weaponReloadSpeed	= 0.0;
-	weaponCooldownSpeed	= 0.0;
+	weaponAttackSpeed	= 0.0;
 }
 
 /// @description 
@@ -640,6 +666,7 @@ unequip_flashlight = function(){
 /// weapon in question.
 ///	
 reload_current_weapon = function(){
+	var _quantity = weaponRemainingAmmo;
 	with(equipment){
 		// Jump into the struct referenced within the equipped weapon for its stats/variables; copying over
 		// the ID for the ammo being used and the stack limit for the equipped weapon which is the same as
@@ -666,9 +693,11 @@ reload_current_weapon = function(){
 		with(global.curItems[weapon]){
 			var _availableSpace = _stackLimit - quantity;
 			var _remainder		= item_inventory_remove(_ammoItemID, _availableSpace);
-			quantity			= _stackLimit - _remainder;
+			_quantity			= _stackLimit - _remainder;
+			quantity			= _quantity;
 		}
 	}
+	weaponRemainingAmmo = _quantity;
 }
 
 /// @description 
@@ -787,14 +816,14 @@ update_current_ammo_counts = function(_itemID, _quantity){
 #region End Step Event Function Override Definition
 
 // Stores a reference to the original function so it can be called within the overridden function.
-___end_step_event = end_step_event;
+__end_step_event = end_step_event;
 /// @description
 ///	An inherited version of the "end_step_event" function found witin "par_dynamic_entity" that updates the
 /// player's various timers and other non-state dependent logic.
 ///
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 end_step_event = function(_delta){
-	___end_step_event(_delta);
+	__end_step_event(_delta);
 	
 	// Always tranfer the current frame's input states into the variable that stores the state from the
 	// previous frame, and then set the main input state storing variable to zero regardless of if there
@@ -887,7 +916,7 @@ state_initialize = function(_delta){
 	if (STNG_IS_AIM_INPUT_TOGGLE)	 { flags = flags | PLYR_FLAG_AIM_TOGGLE; }
 	
 	item_inventory_add("Flashlight", 1, 0);
-	item_inventory_add("Flashlight", 1, 0);
+	item_inventory_add(ITEM_SUBMACHINE_GUN, 20, 20);
 	
 	object_set_state(state_default);
 }
@@ -1071,6 +1100,59 @@ state_player_weapon_ready = function(_delta){
 		object_set_state(state_default);
 		return;
 	}
+	
+	// 
+	if (timers[PLYR_WEAPON_ATTACK_TIMER] == 0.0 && PINPUT_USE_WEAPON_HELD && 
+			(bulletCounter < weaponBulletCount || weaponBulletCount == -1)){
+		// The weapon's clip/magazine is currently empty, so check if a reload is possible and do so instead
+		// of firing the weapon when it shouldn't be able to.
+		if (weaponRemainingAmmo == 0){
+			// Check to make sure there is ammunition within the player's item inventory they can even use
+			// to reload their equipped weapon. If not, the state immediately exits and the weapon will not
+			// be fired OR reloaded.
+			with(equipment){
+				if (ammoCount[curAmmoIndex] == 0)
+					return;
+			}
+			
+			// Since remaining ammo was found, the player's state is switched to their reloading state so
+			// they can reloading when trying to fire a weapon that is currently empty.
+			object_set_state(state_player_reloading);
+			timers[PLYR_RELOAD_TIMER] = weaponReloadSpeed;
+			return;
+		}
+		
+		// Check if the weapon is set to fire a single time/automatically or it is set to fire a burst of
+		// bullets before the input needs to be released. If it is the latter, the attack speed for that
+		// burst is significantly faster than the regular fire rate.
+		if (weaponBulletCount > 1)  { timers[PLYR_WEAPON_ATTACK_TIMER] = weaponAttackSpeed * 0.3; }
+		else						{ timers[PLYR_WEAPON_ATTACK_TIMER] = weaponAttackSpeed; }
+		
+		// 
+		bulletCounter++;
+		weaponRemainingAmmo--;
+		
+		// 
+		with(equipment){
+			// Subtract one from the weapon's current quantity since that value is used for the ammunition
+			// currently found within the wepaon's magazine/clip.
+			with(global.curItems[weapon])
+				quantity--;
+			
+			// 
+			// var _isHitscan = false;
+			// with(weaponStatRef) // Jump into scope of the weapon's item data so the hitscan flag can be checked.
+				// _isHitscan = WEAPON_IS_HITSCAN;
+				
+			show_debug_message("Weapon fired");
+		}
+		return;
+	}
+	
+	// Releasing the input while using a non-automatic weapon will have its remaining bullet before needing
+	// to release the input reset to what the total count of bullets for that burst fire is.
+	if (PINPUT_USE_WEAPON_RELEASED && weaponBulletCount != -1)
+		bulletCounter = 0;
 	
 	// The player has pressed the input that changes the equipped weapon's current ammunition to another
 	// type (So long as another type exists), so the function for swapping ammo is called which handles the

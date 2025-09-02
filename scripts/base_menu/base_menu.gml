@@ -587,7 +587,7 @@ function str_base_menu(_index) : str_base(_index) constructor {
 					if (!isActive)						{ _color = COLOR_DARK_GRAY; }
 					else if (_auxSelOption == _oIndex)	{ _color = COLOR_RED; }
 					else if (_selOption == _oIndex)		{ _color = COLOR_LIGHT_GREEN; }
-					else if (_curOption == _oIndex)		{ _color = COLOR_LIGHT_ORANGE; }
+					else if (_curOption == _oIndex)		{ _color = COLOR_YELLOW; }
 					else								{ _color = COLOR_WHITE; }
 					
 					draw_text_shadow(_xx, _yy, oName, _color, _alpha, 

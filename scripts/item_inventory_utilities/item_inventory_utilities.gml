@@ -25,12 +25,14 @@
 #macro	WEAP_FLAG_IS_AUTOMATIC			0x00000002
 #macro	WEAP_FLAG_IS_BURSTFIRE			0x00000004
 #macro	WEAP_FLAG_IS_THROWN				0x00000008
+#macro	WEAP_FLAG_IS_HITSCAN			0x00000010
 
 // Macros that represent the checks for specific bit states within the flags variable of a weapon-type item.
 #macro	WEAPON_IS_MELEE					((flags & WEAP_FLAG_IS_MELEE)		!= 0)
 #macro	WEAPON_IS_AUTOMATIC				((flags & WEAP_FLAG_IS_AUTOMATIC)	!= 0)
 #macro	WEAPON_IS_BURSTFIRE				((flags & WEAP_FLAG_IS_BURSTFIRE)	!= 0)
 #macro	WEAPON_IS_THROWN				((flags & WEAP_FLAG_IS_THROWN)		!= 0)
+#macro	WEAPON_IS_HITSCAN				((flags & WEAP_FLAG_IS_HITSCAN)		!= 0)
 
 // Macros for the bit values of the flags that exist within every consumable-type item.
 #macro	CNSM_FLAG_CURE_POISON			0x00000001
