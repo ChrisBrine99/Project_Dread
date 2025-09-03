@@ -10,7 +10,7 @@
 #macro	MENUITM_ARE_OPTIONS_OPEN		((flags & MENUITM_FLAG_OPTIONS_OPEN)	!= 0)
 
 // Two calculations for the item menu's cursor arrow and an item's current quantity if that value is visible.
-#macro	MENUINV_CURSOR_X_OFFSET		   -2
+#macro	MENUINV_CURSOR_X_OFFSET		   -8
 #macro	MENUITM_ITEM_QUANTITY_X_OFFSET	110
 
 // Calculations for the position of the an item's info text when it is currently being highlighted by the
@@ -104,8 +104,10 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	itemOptionsMenu		= noone;
 	selfRef				= noone;
 	
-	// Stores a reference to the control icon group that displays input information for the item menu.
-	controlGroupRef		= REF_INVALID;
+	// Store references to the control group information that is created/gotten and drawn by the inventory
+	// menu instance. This allows the item menu to adjust what is shown in each group as required by its state.
+	movementCtrlGroup	= REF_INVALID;
+	interactCtrlGroup	= REF_INVALID;
 	
 	// Variables specific to the item options menu and how it is rendered within the item menu iteself. They
 	// are the surface that the sub menu is drawn onto (Its default rendering method is disabled to allow 
@@ -178,24 +180,6 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			if (firstAmulet  != INV_EMPTY_SLOT)	{ ds_list_add(_equippedSlots, firstAmulet); }
 			if (secondAmulet != INV_EMPTY_SLOT) { ds_list_add(_equippedSlots, secondAmulet); }
 		}
-		
-		// Jump into the control ui manager struct's scope to attempt to retrieve the desired control group
-		// reference. If it doesn't exist, it will be created and then after that initial ccreation it will
-		// exist for reference until the control group is ever deleted from memory.
-		var _controlGroupRef = REF_INVALID;
-		with(CONTROL_UI_MANAGER){
-			_controlGroupRef = ds_map_find_value(controlGroup, MENUINV_ICONUI_CTRL_GRP2);
-			if (!is_undefined(_controlGroupRef))
-				break;
-			
-			// Create the control group in question which is used in this menu alongside the note and map
-			// menus as they all use the Select/Close inputs.
-			_controlGroupRef = create_control_group(MENUINV_ICONUI_CTRL_GRP2, MENUINV_CTRL_GRP2_XOFFSET, 
-				MENUINV_CTRL_GRP2_YOFFSET, MENUINV_CTRL_GRP2_PADDING, ICONUI_DRAW_LEFT);
-			add_control_group_icon(_controlGroupRef, ICONUI_SELECT, "Select");
-			add_control_group_icon(_controlGroupRef, ICONUI_RETURN, "Close");
-		}
-		controlGroupRef = _controlGroupRef;
 	}
 	
 	/// Store the pointer to the base menu's destroy event so it can be called within the item menu's version
@@ -227,6 +211,24 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	///	@param {Real}	xPos	The menu's current x position, rounded down.
 	/// @param {Real}	yPos	The menu's current y position, rounded down.
 	draw_gui_event = function(_xPos, _yPos){
+		// Create local values for the location of the currently highlighted item on the visible portion of
+		// the item inventory menu, which are then used to position various elements that rely on the current
+		// option's index to be drawn.
+		var _curOptionX = _xPos + optionX + MENUINV_CURSOR_X_OFFSET;
+		var _curOptionY = _yPos + optionY + ((curOption - visibleAreaY) * optionSpacingY);
+		
+		// Displays a translucent rectangle behind the currently highlight item. If that item happens to be
+		// selected and its option menu is on display, the color will be green instead of yellow.
+		var _bkgColor = (selOption == curOption) ? COLOR_LIGHT_GREEN : COLOR_LIGHT_YELLOW;
+		if (auxSelOption == curOption) {_bkgColor = COLOR_LIGHT_RED; } // Turn it red for an auxilliary selection.
+		draw_sprite_ext(spr_rectangle, 0, _curOptionX - 2, _curOptionY - 1, 122, optionSpacingY, 0.0, 
+			_bkgColor, alpha * 0.2);
+			
+		// Above the backing rectangle for the highlighted item, a cursor using the greater-than symbol will
+		// be drawn; shifting left and right based on the current value of cursorAnimTimer.
+		draw_text_shadow(_curOptionX + floor(cursorAnimTimer), _curOptionY, ">", 
+			COLOR_WHITE, alpha, MENUITM_TEXT_SHADOW_COLOR, MENUITM_TEXT_SHADOW_ALPHA);
+		
 		// Display the currently visible region of this menu with the default function provided by the 
 		// inherited base menu struct.
 		draw_visible_options(fnt_small, _xPos, _yPos, MENUITM_TEXT_SHADOW_COLOR, MENUITM_TEXT_SHADOW_ALPHA);
@@ -235,7 +237,6 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		// to the right of each item name as required.
 		draw_set_halign(fa_right);
 		var _index		 = -1;
-		var _shadowAlpha = alpha * MENUITM_TEXT_SHADOW_ALPHA;
 		var _isWeapon	 = false;
 		var _item		 = INV_EMPTY_SLOT;
 		var _quantity	 = 0;
@@ -244,12 +245,6 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		var _curX		 = _xPos + optionX;
 		var _curY		 = _yPos + optionY;
 		for (var i = visibleAreaY; i < visibleAreaY + visibleAreaH; i++){
-			// Draw an arrow at the cursor's current position within the visible menu region.
-			if (i == curOption){
-				draw_text_shadow(_curX + floor(cursorAnimTimer) + MENUINV_CURSOR_X_OFFSET, _curY, ">", 
-					COLOR_WHITE, alpha, MENUITM_TEXT_SHADOW_COLOR, _shadowAlpha);
-			}
-			
 			// Get the value currently stored in the player's item inventory array to see if the slot is empty
 			// or not. If it isn't empty, its quantity and item type will determine how the quantity will be
 			// drawn and if it will even be drawn to begin with.
@@ -278,7 +273,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 				
 				// Display the quantity as it was formatted above.
 				draw_text_shadow(_curX + MENUITM_ITEM_QUANTITY_X_OFFSET, _curY, _sQuantity, 
-					_sColor, alpha, MENUITM_TEXT_SHADOW_COLOR, _shadowAlpha);
+					_sColor, alpha, MENUITM_TEXT_SHADOW_COLOR, MENUITM_TEXT_SHADOW_ALPHA);
 			}
 			
 			// Display an "E" symbol next to each visible item that is currently equipped to one of the five
@@ -299,14 +294,8 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		if (curOption >= 0 && curOption < ds_list_size(options)){
 			var _curOption = options[| curOption];
 			draw_text_shadow(MENUITM_OPTION_INFO_X, MENUITM_OPTION_INFO_Y, _curOption.oInfo, 
-				COLOR_LIGHT_GRAY, alpha, MENUITM_TEXT_SHADOW_COLOR, _shadowAlpha);
+				COLOR_LIGHT_GRAY, alpha, MENUITM_TEXT_SHADOW_COLOR, MENUITM_TEXT_SHADOW_ALPHA);
 		}
-		
-		// Jump into the control ui manager struct so the required control group can be drawn onto the GUI.
-		var _alpha			 = alpha;
-		var _controlGroupRef = controlGroupRef;
-		with(CONTROL_UI_MANAGER)
-			draw_control_group(_controlGroupRef, _alpha, COLOR_WHITE, COLOR_DARK_GRAY, _alpha * 0.75); 
 		
 		// Don't bother with any of the surface rendering/swapping logic below if the sub menu containing the
 		// selected item's options isn't currently opened for the player to select from.
@@ -341,14 +330,17 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	/// state_default.
 	///	
 	reset_to_default_state = function(){
-		with(prevMenu){
-			flags = flags | MENUINV_FLAG_CAN_CLOSE | MENUINV_FLAG_CAN_CHANGE_PAGE;
-			var _controlGroupRef = controlGroupRef;
-			with(CONTROL_UI_MANAGER){ // Re-enable the "Change Page" inputs so they're displayed again.
-				update_control_group_icon_active_state(_controlGroupRef, MENUINV_CTRL_GRP_PAGE_LEFT,  true);
-				update_control_group_icon_active_state(_controlGroupRef, MENUINV_CTRL_GRP_PAGE_RIGHT, true);
-			}
+		// Re-enable the "Change Page" inputs within the menu movement control group so they are shown again.
+		var _movementCtrlGroup = movementCtrlGroup;
+		with(CONTROL_UI_MANAGER){
+			update_control_group_icon_active_state(_movementCtrlGroup, MENUINV_CTRL_GRP_PAGE_LEFT,  true);
+			update_control_group_icon_active_state(_movementCtrlGroup, MENUINV_CTRL_GRP_PAGE_RIGHT, true);
 		}
+		
+		// After re-enabling the necessary input information, the inventory has flags set that re-enable its
+		// ability to close through the return input being pressed, its ability to switch from one section to
+		// another, and the item menu is reset to its default state.
+		with(prevMenu) { flags = flags | MENUINV_FLAG_CAN_CLOSE | MENUINV_FLAG_CAN_CHANGE_PAGE; }
 		object_set_state(state_default);
 		flags			= flags & ~MENUITM_FLAG_MOVING_ITEM;
 		auxSelOption	= -1;
@@ -396,13 +388,14 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			var _isMovingItem = MENUITM_IS_MOVING_ITEM;
 			if (!_isMovingItem && invItemRefs[curOption] == INV_EMPTY_SLOT)
 				return;
-			with(prevMenu){ 
-				flags = flags & ~(MENUINV_FLAG_CAN_CLOSE | MENUINV_FLAG_CAN_CHANGE_PAGE);
-				var _controlGroupRef = controlGroupRef;
-				with(CONTROL_UI_MANAGER){ // Disable the page left/right input information since the menu can't change pages at the moment.
-					update_control_group_icon_active_state(_controlGroupRef, MENUINV_CTRL_GRP_PAGE_LEFT,  false);
-					update_control_group_icon_active_state(_controlGroupRef, MENUINV_CTRL_GRP_PAGE_RIGHT, false);
-				}
+			with(prevMenu){ flags = flags & ~(MENUINV_FLAG_CAN_CLOSE | MENUINV_FLAG_CAN_CHANGE_PAGE); }
+			
+			// Disable the page left/right input information since the inventory is no longer able to switch
+			// between each of the three sections contained within it.
+			var _movementCtrlGroup = movementCtrlGroup;
+			with(CONTROL_UI_MANAGER){ 
+				update_control_group_icon_active_state(_movementCtrlGroup, MENUINV_CTRL_GRP_PAGE_LEFT,  false);
+				update_control_group_icon_active_state(_movementCtrlGroup, MENUINV_CTRL_GRP_PAGE_RIGHT, false);
 			}
 			selOption = curOption;
 			

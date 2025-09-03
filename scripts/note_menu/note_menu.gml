@@ -2,6 +2,9 @@
 
 /// @param {Function}	index	The value of "str_note_menu" as determined by GameMaker during runtime.
 function str_note_menu(_index) : str_base_menu(_index) constructor {	
+	// Stores a reference to the control icon group that displays input information for the note menu.
+	controlGroupRef		= REF_INVALID;
+	
 	/// @description 
 	///	
 	///	

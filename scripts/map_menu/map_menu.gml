@@ -1,7 +1,13 @@
 #region Map Menu Struct Definition
 
 /// @param {Function}	index	The value of "str_map_menu" as determined by GameMaker during runtime.
-function str_map_menu(_index) : str_base_menu(_index) constructor {	
+function str_map_menu(_index) : str_base_menu(_index) constructor {
+	// Stores a reference to the control icon group that displays input information for the map menu as well
+	// as the group that is normally managed by the inventory since it holds info about cursor movement and
+	// that needs to be updated when a map is selected for viewing/moving around it.
+	controlGroupRef		= REF_INVALID;
+	invControlGroupRef	= REF_INVALID;
+	
 	/// @description 
 	///	
 	///	

@@ -371,6 +371,7 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 				var _sprHeight		= 0;
 				var _strWidth		= 0;
 				var _width			= 0;
+				var _addedPixel		= int64(_gamepadActive);
 				var _xOffset		= xPos;
 				var _yOffset		= yPos;
 				var _drawDirection	= drawDirection;
@@ -392,7 +393,7 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 						// descriptor's y offset will always be two pixels lower on the screen than the icon 
 						// since that looks best.
 						iconX		= _xOffset;
-						iconY		= _yOffset;
+						iconY		= _yOffset + _addedPixel;
 						descriptorX	= _xOffset;
 						descriptorY	= _yOffset + 2;
 				

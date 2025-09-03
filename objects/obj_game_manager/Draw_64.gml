@@ -21,7 +21,7 @@ for (var i = 0; i < _length; i++){
 	with(global.menus[| i]){
 		if (alpha <= _minAlpha || !MENU_IS_VISIBLE)
 			continue;
-		draw_gui_event(floor(x), floor(y));
+		draw_gui_event(x, y);
 	}
 }
 
@@ -32,4 +32,11 @@ with(TEXTBOX){
 	if (alpha <= _minAlpha || y >= VIEWPORT_HEIGHT)
 		break;
 	draw_gui_event(_delta);
+}
+
+// FOR TESTING PURPOSES ONLY
+if (GAME_IS_MENU_OPEN){
+	draw_set_font(fnt_small);
+	draw_set_color(COLOR_TRUE_WHITE);
+	draw_text(5, 3, string("FPS {0}", floor(fps_real)));
 }

@@ -170,7 +170,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 	advArrowOffset		= 0.0;
 
 	// Stores a reference to the control icon group that displays input information for the textbox.
-	controlGroupRef		= REF_INVALID;
+	tboxCtrlGroup		= REF_INVALID;
 
 	/// @description 
 	///	The textbox struct's create event. It will simply initialize the control icon group that will be drawn
@@ -199,13 +199,13 @@ function str_textbox(_index) : str_base(_index) constructor {
 		// Finally, setup the control group that will be utilized by the Textbox and calculate the positions
 		// of the icons and their descriptors so they're displayed at the proper offset. Then, set the
 		// textbox's reference to its control group so it can be referenced for drawing the group when needed.
-		var _controlGroupRef = REF_INVALID;
+		var _tboxCtrlGroup = REF_INVALID;
 		with(CONTROL_UI_MANAGER){
-			_controlGroupRef = create_control_group(TBOX_ICONUI_CTRL_GRP, _viewWidth, _viewHeight, 3, ICONUI_DRAW_LEFT);
-			add_control_group_icon(_controlGroupRef, ICONUI_TBOX_ADVANCE, "Next");
-			add_control_group_icon(_controlGroupRef, ICONUI_TBOX_LOG, "Log");
+			_tboxCtrlGroup = create_control_group(TBOX_ICONUI_CTRL_GRP, _viewWidth, _viewHeight, 3, ICONUI_DRAW_LEFT);
+			add_control_group_icon(_tboxCtrlGroup, ICONUI_TBOX_ADVANCE, "Next");
+			add_control_group_icon(_tboxCtrlGroup, ICONUI_TBOX_LOG, "Log");
 		}
-		controlGroupRef = _controlGroupRef;
+		tboxCtrlGroup = _tboxCtrlGroup;
 	}
 
 	/// @description 
@@ -370,9 +370,9 @@ function str_textbox(_index) : str_base(_index) constructor {
 		// After rendering the textbox and all its required elements, the control icon group for the textbox 
 		// will be drawn at their calculated positions. The color of the text (Both it and the drop shadow)
 		// are set to match the default color for text within the textbox.
-		var _controlGroupRef = controlGroupRef;
+		var _tboxCtrlGroup = tboxCtrlGroup;
 		with(CONTROL_UI_MANAGER){
-			draw_control_group(_controlGroupRef, _alpha, COLOR_WHITE, COLOR_DARK_GRAY, 
+			draw_control_group(_tboxCtrlGroup, _alpha, COLOR_WHITE, COLOR_DARK_GRAY, 
 				_alpha * TBOX_TEXT_SHADOW_ALPHA); 
 		}
 	}

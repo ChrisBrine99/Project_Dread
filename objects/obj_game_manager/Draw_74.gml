@@ -12,6 +12,9 @@ if (!GAME_IS_PAUSED){
 
 /// DEBUG INFORMATION DRAWN BELOW HERE //////////////////////////////////////////////////////////////////////
 
+if (GAME_IS_MENU_OPEN)
+	return;
+
 draw_set_font(fnt_small);
 draw_set_halign(fa_right);
 
@@ -32,8 +35,28 @@ with(PLAYER){
 	}
 }
 
-draw_text_shadow(90, 5, 
-	string("\n{0}\n{1}\n\n{2}\n{3}\n{4}\n{5}\n{6}\n{7}\n{8}\n{9}\n\n{10}\n{11}\n{12}\n\n{13}", 
+draw_text_shadow(
+	90, 
+	5, 
+	string(
+		@"
+		{0}
+		{1}
+		
+		{2}
+		{3}
+		{4}
+		{5}
+		{6}
+		{7}
+		{8}
+		{9}
+		
+		{10}
+		{11}
+		{12}
+		
+		{13}", 
 		floor(fps_real), 
 		global.deltaTime, 
 		GAME_IS_IN_GAME,
@@ -53,22 +76,28 @@ draw_text_shadow(90, 5,
 );
 
 draw_set_halign(fa_left);
-draw_text_shadow(5, 5, 
-	string(@"-- Frame Data --
-	curFPS
-	Delta
-	-- Global Flags --
-	inGame
-	inMenu
-	inCutscene
-	isPaused
-	roomWarp
-	transitionActive
-	textboxOpen
-	gamepadActive
-	-- Render Data --
-	drawnEntities
-	drawnDynamic
-	drawnStatic
-	-- Struct Data --
-	curActiveStructs"), COLOR_WHITE);
+draw_text_shadow(
+	5, 
+	5, 
+	string(
+		@"-- Frame Data --
+		curFPS
+		Delta
+		-- Global Flags --
+		inGame
+		inMenu
+		inCutscene
+		isPaused
+		roomWarp
+		transitionActive
+		textboxOpen
+		gamepadActive
+		-- Render Data --
+		drawnEntities
+		drawnDynamic
+		drawnStatic
+		-- Struct Data --
+		active"
+	), 
+	COLOR_TRUE_WHITE
+);

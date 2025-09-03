@@ -11,6 +11,13 @@
 #macro	MENUINV_IS_OPENED				((flags & MENUINV_FLAG_OPENED)			!= 0)
 #macro	MENUINV_CAN_CHANGE_PAGE			((flags & MENUINV_FLAG_CAN_CHANGE_PAGE) != 0)
 
+// Various constants relating to the options shown by the inventory menu; their positioning offset relative 
+// to the entire menu, and spacing between each option along both axes.
+#macro	MENUINV_OPTION_XOFFSET			(display_get_gui_width() >> 1) - 50
+#macro	MENUINV_OPTION_YOFFSET			3
+#macro	MENUINV_OPTION_XSPACING			50
+#macro	MENUINV_OPTION_YSPACING			0
+
 // Index values for the positions of the submenu references within the inventory's "menuRef" array. The final
 // value is the sum of the number of submenus which is also the length of the array the references reside in.
 #macro	MENUINV_INDEX_ITEM_MENU			0
@@ -18,10 +25,13 @@
 #macro	MENUINV_INDEX_MAP_MENU			2
 #macro	MENUINV_TOTAL_SUBMENUS			3
 
-// Determines the speed that the inventory menu's current opacity will increase or decrease depending on if 
-// the menu is opening or closing, respectively.
-#macro	MENUINV_OANIM_ALPHA_SPEED		0.075
-#macro	MENUINV_CANIM_ALPHA_SPEED		0.075
+// 
+#macro	MENUINV_OANIM_ALPHA_SPEED		0.06
+#macro	MENUINV_OANIM_MOVE_SPEED		0.25
+#macro	MENUINV_OANIM_YTARGET			0.0
+
+// 
+#macro	MENUINV_CANIM_ALPHA_SPEED		0.08
 
 // The macro for the unique key used to store the control icon group for the invenory's cursor movement/page
 // shifting input information.
@@ -55,6 +65,17 @@
 #macro	MENUINV_CTRL_GRP2_SELECT		0
 #macro	MENUINV_CTRL_GRP2_RETURN		1
 
+// Determines the radius of the main background, which uses a colored circle to create a sort-of vignette
+// effect in the main window background (Where the current section's contents are located).
+#macro	MENUINV_MAINBG_XRADIUS			210
+#macro	MENUINV_MAINBG_YRADIUS			125 - _yPos
+
+// The alpha levels for the two circles that are drawn for the main window background to create a very subtle
+// blue hue to said background. As such, the first is the black circle and the second is the blue color which
+// is blended onto that initial black circle on the background.
+#macro	MENUINV_MAINBG_ALPHA1			(_alpha * 0.8)
+#macro	MENUINV_MAINBG_ALPHA2			(_alpha * 0.3)
+
 #endregion Macros for Inventory Menu Struct
 
 #region Inventory Menu Struct Definition
@@ -63,14 +84,15 @@
 function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	// Stores a reference to the three "submenus" that are managed by this main menu: the item menu, note
 	// menu, and the map menu, respectively.
-	menuRef			= array_create(MENUINV_TOTAL_SUBMENUS, noone);
+	menuRef				= array_create(MENUINV_TOTAL_SUBMENUS, noone);
 	
 	// Holds a reference to the inventory menu itself which is then passed along to the submenus when they
 	// are created by the player shifting through its various pages.
-	selfRef			= noone;
+	selfRef				= noone;
 	
-	// Stores a reference to the control icon group that displays input information for the inventory menu.
-	controlGroupRef	= REF_INVALID;
+	//
+	movementCtrlGroup	= REF_INVALID;
+	interactCtrlGroup	= REF_INVALID;
 	
 	/// @description 
 	///	The inventory menu struct's create event. Required menu parameters are initialized, the required 
@@ -87,8 +109,9 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		// Initialize the menu's base parameters as well as its option parameters. Since this menu works as
 		// more of a manager of other menus, these options won't have logic for selection and the menu will
 		// only show the current option (AKA menu) that is visible for the player to interact with.
-		initialize_params(0, 0, true, true, 3, 3, 1);
-		initialize_option_params((display_get_gui_width() >> 1) - 90, 2, 90, 0, fa_center, fa_top, false);
+		initialize_params(0, -20, true, true, 3, 3, 1);
+		initialize_option_params(MENUINV_OPTION_XOFFSET, MENUINV_OPTION_YOFFSET, 
+			MENUINV_OPTION_XSPACING, MENUINV_OPTION_YSPACING, fa_center, fa_top, false);
 		
 		// Add "options" for the menu that are simply the names for each page of the inventory. Those pages
 		// themselves are unique menu instances that manage their own data and input independent of this one.
@@ -101,23 +124,43 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		
 		// Attempt to grab the control group that is utilized by the inventory menu. If it doesn't exist, the
 		// returned value is undefined and then the group is created and stored in the local value.
-		var _controlGroupRef = REF_INVALID;
+		var _movementCtrlGroup = REF_INVALID;
 		with(CONTROL_UI_MANAGER){
-			_controlGroupRef = ds_map_find_value(controlGroup, MENUINV_ICONUI_CTRL_GRP);
-			if (!is_undefined(_controlGroupRef))
+			_movementCtrlGroup = ds_map_find_value(controlGroup, MENUINV_ICONUI_CTRL_GRP);
+			if (!is_undefined(_movementCtrlGroup))
 				break; // The control group already exists; exit before attempt to create and add elements again.
 			
 			// Create the control group at the desired position on the inventory menu, and store the reference
 			// it returns so the inventory can then store it for use when drawing the group. Then, add the
 			// desired elements to the group in question.
-			_controlGroupRef = create_control_group(MENUINV_ICONUI_CTRL_GRP, MENUINV_CTRL_GRP_XOFFSET, 
+			_movementCtrlGroup = create_control_group(MENUINV_ICONUI_CTRL_GRP, MENUINV_CTRL_GRP_XOFFSET, 
 				MENUINV_CTRL_GRP_YOFFSET, MENUINV_CTRL_GRP_PADDING, ICONUI_DRAW_RIGHT);
-			add_control_group_icon(_controlGroupRef, ICONUI_MENU_UP);
-			add_control_group_icon(_controlGroupRef, ICONUI_MENU_DOWN, "Cursor");
-			add_control_group_icon(_controlGroupRef, ICONUI_INV_LEFT);
-			add_control_group_icon(_controlGroupRef, ICONUI_INV_RIGHT, "Page");
+			add_control_group_icon(_movementCtrlGroup, ICONUI_MENU_UP);
+			add_control_group_icon(_movementCtrlGroup, ICONUI_MENU_DOWN, "Cursor");
+			add_control_group_icon(_movementCtrlGroup, ICONUI_INV_LEFT);
+			add_control_group_icon(_movementCtrlGroup, ICONUI_INV_RIGHT, "Page");
 		}
-		controlGroupRef = _controlGroupRef;
+		
+		// After the required section has had its menu initialized, its control group information is grabbed
+		// if it already exists, or created should the group not currently exists. It will store info for
+		// menu interaction inputs.
+		var _interactCtrlGroup = REF_INVALID;
+		with(CONTROL_UI_MANAGER){
+			_interactCtrlGroup = ds_map_find_value(controlGroup, MENUINV_ICONUI_CTRL_GRP2);
+			if (!is_undefined(_interactCtrlGroup))
+				break;
+			
+			// Create the control group in question which is used in this menu alongside the note and map
+			// menus as they all use the Select/Close inputs.
+			_interactCtrlGroup = create_control_group(MENUINV_ICONUI_CTRL_GRP2, MENUINV_CTRL_GRP2_XOFFSET, 
+				MENUINV_CTRL_GRP2_YOFFSET, MENUINV_CTRL_GRP2_PADDING, ICONUI_DRAW_LEFT);
+			add_control_group_icon(_interactCtrlGroup, ICONUI_SELECT, "Select");
+			add_control_group_icon(_interactCtrlGroup, ICONUI_RETURN, "Close");
+		}
+		
+		// Finally, store both references into their respective variables within the inventory menu's data.
+		movementCtrlGroup = _movementCtrlGroup;
+		interactCtrlGroup = _interactCtrlGroup;
 	}
 	
 	/// Carry over the reference to the base struct's destroy event so it can be called through the inventory
@@ -148,27 +191,54 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	///	@param {Real}	xPos	The menu's current x position, rounded down.
 	/// @param {Real}	yPos	The menu's current y position, rounded down.
 	draw_gui_event = function(_xPos, _yPos){
-		// 
-		var _alpha = alpha;
+		// Create a unique looking vignette effect for the background of the inventory which is tinted a very
+		// slight blue relative to the blending of the two circles drawn below. After that, the remaining
+		// elements of the inventory's background will be drawn.
+		var _guiWidth	= display_get_gui_width();
+		var _guiHeight	= display_get_gui_height();
+		var _bgCenterX	= _guiWidth	>> 1;
+		var _bgCenterY	= _guiHeight >> 1;
+		var _alpha		= alpha;
 		with(global.colorFadeShader){
-			activate_shader(0x100000);
-			draw_circle_ext(display_get_gui_width() >> 1, display_get_gui_height() >> 1, 
-				240, 130, COLOR_GRAY, COLOR_WHITE, _alpha);
+			activate_shader(COLOR_BLACK);
+			draw_circle_ext(_bgCenterX, _bgCenterY, MENUINV_MAINBG_XRADIUS, MENUINV_MAINBG_YRADIUS, 
+				COLOR_GRAY, COLOR_WHITE, MENUINV_MAINBG_ALPHA1);
+			set_effect_color(COLOR_VERY_DARK_BLUE);
+			draw_circle_ext(_bgCenterX, _bgCenterY, MENUINV_MAINBG_XRADIUS, MENUINV_MAINBG_YRADIUS, 
+				COLOR_LIGHT_GRAY, COLOR_WHITE, MENUINV_MAINBG_ALPHA2);
 			shader_reset();
 		}
 		
-		// 
-		draw_visible_options(fnt_medium, _xPos, _yPos, COLOR_DARK_GRAY, 0.75);
+		// Draws white lines that divide the currently active section's contents from the control information
+		// that is currently being displayed along the bottom of the GUI, and the names of each section which
+		// appear on the top of the GUI.
+		draw_sprite_ext(spr_rectangle, 0, _xPos, _yPos + 13,				_guiWidth, 
+			1, 0.0, COLOR_WHITE, alpha);
+		draw_sprite_ext(spr_rectangle, 0, _xPos, -_yPos + _guiHeight - 14,	_guiWidth, 
+			1, 0.0, COLOR_WHITE, alpha);
+		
+		// Ensure the proper alpha level and blending color are set before the background for the top and
+		// bottom of the menu are drawn. They use a simple 32 by 16 greyscale sprite that contains a gradient
+		// that is interpolated so as to not appear incredibly pixelated.
+		draw_set_alpha(alpha);
+		draw_set_color(COLOR_WHITE);
+		gpu_set_tex_filter(true);
+		draw_sprite_stretched(spr_iteminv_header_footer_bkg, 0, _xPos,  _yPos,					 _guiWidth, 13);
+		draw_sprite_stretched(spr_iteminv_header_footer_bkg, 0, _xPos, -_yPos + _guiHeight - 13, _guiWidth, 13);
+		gpu_set_tex_filter(false);
+		
+		// After the background elements have all been drawn, the inventory's section names will be drawn on
+		// the top portion of the menu that is outside of the currently active section.
+		draw_visible_options(fnt_medium, _xPos, _yPos, COLOR_BLACK, 1.0);
 			
-		// Ensure the current submenu's alpha always matches the main menu's alpha level, so they don't each
-		// need their own opening/closing animations that would just match the inventory's.
-		with(menuRef[curOption])
-			alpha = _alpha;
-			
-		// 
-		var _controlGroupRef = controlGroupRef;
-		with(CONTROL_UI_MANAGER)
-			draw_control_group(_controlGroupRef, _alpha, COLOR_WHITE, COLOR_DARK_GRAY, _alpha * 0.75); 
+		// Finally, display the icon/descriptor data that exists within the cursor movement and menu 
+		// interaction inputs, respectively.
+		var _movementCtrlGroup = movementCtrlGroup;
+		var _interactCtrlGroup = interactCtrlGroup;
+		with(CONTROL_UI_MANAGER){
+			draw_control_group(_movementCtrlGroup, _alpha, COLOR_WHITE, COLOR_BLACK, _alpha);
+			draw_control_group(_interactCtrlGroup, _alpha, COLOR_WHITE, COLOR_BLACK, _alpha);
+		}
 	}
 	
 	/// @description 
@@ -205,14 +275,24 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		if (_menuInstance == noone)
 			_menuInstance = ds_map_find_value(global.sInstances, _menu);
 		
+		// Store the references to each control group so they can be manipulated by the current section if
+		// that is needed given the current state of that section. Also store the alpha so it can be copied
+		// over since this function can be called both before and after the inventory's opening animation.
+		var _movementCtrlGroup	= movementCtrlGroup;
+		var _interactCtrlGroup	= interactCtrlGroup;
+		var _alpha				= alpha;
+		
 		// Store the reference to the inventory's page and then set the flags that activate the menu as the
 		// current page. A reference to this main management menu is also passed in as the page's previous
 		// menu, so it knows it is not the root menu.
 		menuRef[_index]	= _menuInstance;
 		with(_menuInstance){
 			if (_isOpened) { object_set_state(state_default); }
-			flags	    = flags | MENU_FLAG_ACTIVE | MENU_FLAG_VISIBLE;
-			prevMenu	= other.selfRef;
+			flags				= flags | MENU_FLAG_ACTIVE | MENU_FLAG_VISIBLE;
+			prevMenu			= other.selfRef;
+			movementCtrlGroup	= _movementCtrlGroup;
+			interactCtrlGroup	= _interactCtrlGroup;
+			alpha				= _alpha;
 		}
 	}
 	
@@ -294,15 +374,53 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_open_animation = function(_delta){
-		alpha += MENUINV_OANIM_ALPHA_SPEED * _delta;
-		if (alpha >= 1.0){
-			flags = flags | MENUINV_FLAG_OPENED | MENUINV_FLAG_CAN_CHANGE_PAGE;
-			alpha = 1.0;
+		// Keep updating the position of the menu until it reaches its target value. The control group managed
+		// by this menu and the one managed by the current section will also have their positions updated.
+		if (y != MENUINV_OANIM_YTARGET){
+			y -= y * MENUINV_OANIM_MOVE_SPEED * _delta;
+			
+			// Double the inventory's current y position so these upper elements slide up from the bottom 
+			// of the screen instead of sliding down alongside the upper elements as they slide down onto the
+			// screen from above it.
+			var _y	= y * 2.0; 
+			with(movementCtrlGroup) { yPos = MENUINV_CTRL_GRP_YOFFSET  - _y; }
+			with(interactCtrlGroup)	{ yPos = MENUINV_CTRL_GRP2_YOFFSET - _y; }
+				
+			// The distance between the current y position and its target is close enough that the animation
+			// can finish its movement-based portion. As such, y is set to zero and positional updates will
+			// no longer occur.
+			if (y > -_delta){
+				y = MENUINV_OANIM_YTARGET;
+				
+				// Also set both control groups to their required target values in case they were some decimal
+				// value as y would be despite being higher than the current negative delta.
+				with(movementCtrlGroup) { yPos = MENUINV_CTRL_GRP_YOFFSET; }
+				with(interactCtrlGroup) { yPos = MENUINV_CTRL_GRP2_YOFFSET; }
+			}
+		}
+		
+		// Increase the visibility of the inventory by the desired speed. If the value goes above 1.0 it will
+		// be limited back to 1.0 in case it hits that value before the movement portion of the animation has
+		// completed.
+		if (alpha < 1.0){
+			alpha += MENUINV_OANIM_ALPHA_SPEED * _delta;
+			if (alpha > 1.0)
+				alpha = 1.0;
+			
+			// Update the current section's alpha level to match the inventory's current alpha.
+			var _alpha = alpha;
+			with(menuRef[curOption])
+				alpha = _alpha;
+		}
+		
+		// The conditions for the animation are checked. If they've been met, the inventory will activate 
+		// itself by moving onto its default state, and the current section will have the same occur.
+		if (alpha == 1.0 && y == MENUINV_OANIM_YTARGET){
 			object_set_state(state_default);
+			flags = flags | MENUINV_FLAG_OPENED | MENUINV_FLAG_CAN_CHANGE_PAGE;
 			
 			with(menuRef[curOption])
 				object_set_state(state_default);
-			return;
 		}
 	}
 	
@@ -312,8 +430,21 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_close_animation = function(_delta){
-		alpha -= MENUINV_CANIM_ALPHA_SPEED * _delta;
-		if (alpha <= 0.0) { instance_destroy_menu_struct(selfRef); }
+		y		= lerp(-20.0, 0.0, alpha);
+		var _y	= y * 2.0; // Double current y to allow control groups to slide off the bottom of the screen.
+		with(movementCtrlGroup) { yPos = MENUINV_CTRL_GRP2_YOFFSET - _y; }
+		with(interactCtrlGroup) { yPos = MENUINV_CTRL_GRP_YOFFSET  - _y; }
+		
+		alpha  -= MENUINV_CANIM_ALPHA_SPEED * _delta;
+		if (alpha <= 0.0){
+			instance_destroy_menu_struct(selfRef);
+			return;
+		}
+		
+		// Update the current section's alpha level to match the inventory's current alpha.
+		var _alpha = alpha;
+		with(menuRef[curOption]) 
+			alpha = _alpha;
 	}
 }
 
@@ -331,7 +462,6 @@ function menu_inventory_open(_index){
 	if (_ref == noone) // The inventory already exists; don't attempt to create another instance.
 		return;
 	with(_ref){
-		_index = clamp(_index, MENUINV_INDEX_ITEM_MENU, MENUINV_INDEX_MAP_MENU);
 		initialize_submenu(_index);
 		curOption = _index;
 	}

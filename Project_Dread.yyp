@@ -130,6 +130,7 @@
     {"id":{"name":"spr_fog","path":"sprites/spr_fog/spr_fog.yy",},},
     {"id":{"name":"spr_item_pouch","path":"sprites/spr_item_pouch/spr_item_pouch.yy",},},
     {"id":{"name":"spr_iteminv_equip_icon","path":"sprites/spr_iteminv_equip_icon/spr_iteminv_equip_icon.yy",},},
+    {"id":{"name":"spr_iteminv_header_footer_bkg","path":"sprites/spr_iteminv_header_footer_bkg/spr_iteminv_header_footer_bkg.yy",},},
     {"id":{"name":"spr_key_icons_large","path":"sprites/spr_key_icons_large/spr_key_icons_large.yy",},},
     {"id":{"name":"spr_key_icons_medium","path":"sprites/spr_key_icons_medium/spr_key_icons_medium.yy",},},
     {"id":{"name":"spr_key_icons_small","path":"sprites/spr_key_icons_small/spr_key_icons_small.yy",},},

@@ -531,19 +531,28 @@ update_equip_slot = function(_firstSlot, _secondSlot){
 equip_main_weapon = function(_itemStructRef, _itemSlot){
 	var _quantity = 0;
 	with(equipment){
+		// Make sure the previously equipped weapon's ammo index is carried over into the item inventory data
+		// if another weapon happened to be previously equipped before this function executed to equip another
+		// weapon. Then, normal equipping logic can commence.
+		if (weapon != INV_EMPTY_SLOT){
+			var _curAmmoIndex = curAmmoIndex;
+			with(global.curItems[weapon])
+				ammoIndex = _curAmmoIndex;
+		}
+		
 		// First, copy the slot index where the weapon is found in the item inventory. Then, store the
 		// reference to that weapon's data so it can be accessed later as required.
 		weapon			= _itemSlot;
 		weaponStatRef	= _itemStructRef;
 		
-		// 
+		// Grab some data from the item inventory slot that holds the weapon that is to be equipped. Then,
+		// set the current ammunition index within this struct to match so the proper ammo is utilized.
 		var _ammoIndex	= 0;
 		with(global.curItems[_itemSlot]){
 			_quantity	= quantity;
 			_ammoIndex	= ammoIndex;
 		}
 		curAmmoIndex	= global.curItems[_itemSlot].ammoIndex;
-		// show_debug_message("Current Weapon: {0}", weaponStatRef);
 		
 		// Using the current ammunition found within the gun, get the ID for the item it is tied to and check
 		// if that value isn't (-1). If it is, the weapon doesn't use ammo and the function exits early.
@@ -554,17 +563,14 @@ equip_main_weapon = function(_itemStructRef, _itemSlot){
 			
 		// Grab a reference to the current ammunition's data so it can be referenced later as required.
 		curAmmoStatRef	= array_get(global.itemIDs, _ammoID);
-		// show_debug_message("Current Ammo: {0}", curAmmoStatRef);
 		
 		// Loop through all possible ammo type of the equipped weapon, storing the current sum of each into
 		// an array that is updated as the equipped weapon's possible ammo types are added/removed from the
 		// item inventory.
 		var _ammoNum = array_length(_ammoTypes);
 		array_resize(ammoCount, _ammoNum);
-		for (var i = 0; i < _ammoNum; i++){
+		for (var i = 0; i < _ammoNum; i++)
 			ammoCount[i] = item_inventory_count(_ammoTypes[i]);
-			// show_debug_message("Ammo ID: {0}, Amount: {1}", _ammoTypes[i], ammoCount[i]);
-		}
 	}
 	weaponRemainingAmmo	= _quantity;
 	
@@ -599,6 +605,8 @@ unequip_main_weapon = function(){
 		var _curAmmoIndex = curAmmoIndex;
 		with(global.curItems[weapon])
 			ammoIndex = _curAmmoIndex;
+			
+		// Clear the necessary values to signify a weapon is no longer equipped.
 		weapon			= INV_EMPTY_SLOT;
 		weaponStatRef	= undefined;
 		curAmmoIndex	= 0;
