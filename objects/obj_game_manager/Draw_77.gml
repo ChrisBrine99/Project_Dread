@@ -1,3 +1,5 @@
+// Activate the shader responsible for the PSX-like effects that get applied onto everything currently on
+// the screen (The noise is drawn on top of all of this in the Draw GUI event).
 shader_set(shd_retro_effects);
 
 // Apply the values that will enable the scanline, quantization, and dithering effects to function.

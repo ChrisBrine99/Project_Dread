@@ -28,7 +28,7 @@
     "name":"Inventory",
     "path":"folders/Sprites/UI/Menus/Inventory.yy",
   },
-  "preMultiplyAlpha":false,
+  "preMultiplyAlpha":true,
   "resourceType":"GMSprite",
   "resourceVersion":"2.0",
   "sequence":{

@@ -575,11 +575,13 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	/// here; it simply displays all control icon/descriptors at wherever they were calculated to be.
 	///	
 	///	@param {Struct._structRef}	controlGroupRef		Reference to the control group that will be drawn.
+	///	@param {Real}				viewX
+	/// @param {Real}				viewY
 	/// @param {Real}				alpha				Overall opacity of the icon and descriptor text.
 	///	@param {Real}				textColor			(Optional) Determines the color of each icon's descriptor text.
 	/// @param {Real}				shadowColor			(Optional) Determines the color of the drop shadow behind all descriptor text.
 	/// @param {Real}				shadowAlpha			(Optional) Overall opacity of the drop shadow on drawn text.
-	draw_control_group = function(_controlGroupRef, _alpha, _textColor = COLOR_WHITE, _shadowColor = COLOR_BLACK, _shadowAlpha = 1.0){
+	draw_control_group = function(_controlGroupRef, _viewX, _viewY, _alpha, _textColor = COLOR_WHITE, _shadowColor = COLOR_BLACK, _shadowAlpha = 1.0){
 		with(_controlGroupRef){
 			// First, check to see if the current icon type matches the currently active input method. If it
 			// doesn't (Or it hasn't even been set yet), the positions for each icon/descriptor pair will be
@@ -607,12 +609,13 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 					// is provided, the iocn rendering is skipped.
 					if (_iconData != ICONUI_NO_ICON){
 						draw_sprite_ext(_iconData[ICONUI_ICON_SPRITE], _iconData[ICONUI_ICON_SUBIMAGE], 
-							iconX, iconY, 1.0, 1.0, 0.0, COLOR_TRUE_WHITE, _alpha);
+							_viewX + iconX, _viewY + iconY, 1.0, 1.0, 0.0, COLOR_TRUE_WHITE, _alpha);
 					}
 						
 					// After the icon is drawn (Or is skipped over since no valid data was present), the 
 					// descriptor is drawn at its determined position.
-					draw_text_shadow(descriptorX, descriptorY, descriptor, _textColor, _alpha, _shadowColor, _shadowAlpha);
+					draw_text_shadow(_viewX + descriptorX, _viewY + descriptorY, descriptor, 
+						_textColor, _alpha, _shadowColor, _shadowAlpha);
 				}
 			}
 		}

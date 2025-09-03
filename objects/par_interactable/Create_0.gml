@@ -54,35 +54,39 @@ on_player_interact = function(_delta){
 /// The default GUI overlay for an interactable that the player is able to interact with currently. It simply
 ///	shows the appropriate icon for the current input method's interact command; along with the text "interact".
 ///	
-draw_gui_event = function(){
+/// @param {Real}	xPos
+/// @parma {Real}	yPos 
+draw_gui_event = function(_xPos, _yPos){
 	draw_set_font(fnt_small); // Assign the proper font.
 	
 	// Get the current dimensions of the GUI layer in order to properly center the input binding icon (If one
 	// currently exists for the input) and the descriptive text that goes alongside it. If no icon exists,
 	// only the text will be shown to tell the player they can interact with an object.
+	var _messageWidth	= string_width(interactMessage);
 	var _guiWidth		= display_get_gui_width();
 	var _guiHeight		= display_get_gui_height();
-	var _messageWidth	= string_width(interactMessage);
+	var _xOffset		= _xPos + ((_guiWidth - _messageWidth) >> 1);
+	var _yOffset		= _yPos + _guiHeight;
 	var _iconData		= CONTROL_UI_MANAGER.get_control_icon(ICONUI_INTERACT);
 	if (_iconData != ICONUI_NO_ICON){
 		// Get the width of the input binding's icon. Then, offset the position by the width of the icon, 
 		// the width of the message, and a three-pixel spacing between the two to place it in its cenetered 
 		// position.
 		var _iconWidth	= sprite_get_width(_iconData[ICONUI_ICON_SPRITE]);
-		var _xOffset	= (_guiWidth - _messageWidth - _iconWidth - INTR_ICON_TEXT_PADDING) >> 1;
 		draw_sprite_ext(_iconData[ICONUI_ICON_SPRITE], _iconData[ICONUI_ICON_SUBIMAGE], 
-			_xOffset, _guiHeight - 32, 1.0, 1.0, 0.0, COLOR_TRUE_WHITE, 1.0);
+			_xOffset - ((_iconWidth - INTR_ICON_TEXT_PADDING) >> 1), _yOffset - 32, 
+				1.0, 1.0, 0.0, COLOR_TRUE_WHITE, 1.0);
 		
 		// After the icon has been drawn, the offset is updated to apply the icon's width plus the three-
 		// pixel spacing so the message is placed where is should be while being centered alongside the icon.
 		_xOffset	   += _iconWidth + INTR_ICON_TEXT_PADDING;
-		draw_text_shadow(_xOffset, _guiHeight - 30, interactMessage, COLOR_WHITE);
+		draw_text_shadow(_xOffset, _yOffset - 30, interactMessage, COLOR_WHITE);
 		return;
 	}
 	
 	// If no icon exists for the input that is currently set, the message is simply drawn on the GUI at the
 	// center of the screen.
-	draw_text_shadow((_guiWidth - _messageWidth) >> 1, _guiHeight - 30, interactMessage, COLOR_WHITE);
+	draw_text_shadow(_xOffset, _yOffset, interactMessage, COLOR_WHITE);
 }
 
 #endregion Function Initializations

@@ -1,6 +1,7 @@
 // Create a few local variables that will be used and referenced throughout the event by different instances
 // and structures to avoid having to constantly get the same values over and over again.
 var _minAlpha		= gpu_get_alphatestref() / 255.0;
+var _delta			= global.deltaTime;
 var _viewX			= 0;
 var _viewY			= 0;
 
@@ -41,11 +42,10 @@ with(CAMERA){
 	gpu_set_blendmode(bm_add);
 	
 	// Loop through all existing light sources and render them if they are on screen.
-	var _delta	= global.deltaTime;
+	var _length	= ds_list_size(global.lights);
 	var _viewW	= viewportX + viewportWidth;
 	var _viewH	= viewportY + viewportHeight;
 	var _light	= noone;
-	var _length	= ds_list_size(global.lights);
 	var _index	= 0;
 	while (_index < _length){
 		_light = ds_list_find_value(global.lights, _index);
@@ -82,3 +82,53 @@ shader_set_uniform_f(uLightContrast,	0.19);
 texture_set_stage(uLightTexture,		global.lightTexture);
 draw_surface(global.worldSurface, _viewX, _viewY);
 shader_reset();
+
+// Display the interaction prompt for the current interactable the player is focused on. If that interactable
+// objects happens to not be active/visible or the player cannot currently interact with it, the prompt will
+// not be displayed on the UI.
+with(PLAYER){
+	with(interactableID){
+		if (!ENTT_IS_VISIBLE || !INTR_CAN_PLAYER_INTERACT)
+			break;
+		draw_gui_event(_viewX, _viewY);
+	}
+}
+
+// Loop through all currently active menus; rendering them to the screen if they're flagged to be visible and
+// their current alpha level is above the minimum alpha threshold. If a menu fails to meet these conditions it
+// will not be rendered to the GUI layer.
+var _length = ds_list_size(global.menus);
+for (var i = 0; i < _length; i++){
+	with(global.menus[| i]){
+		if (alpha <= _minAlpha || !MENU_IS_VISIBLE)
+			continue;
+		draw_gui_event(x + _viewX, y + _viewY);
+	}
+}
+
+// Attempt to render the textbox onto the screen, but only if the alpha isn't below the minimum threshold and
+// if its current y coordinate has it visible on the screen. Otherwise, it will not be rendered.
+with(TEXTBOX){
+	if (alpha <= _minAlpha || y >= VIEWPORT_HEIGHT)
+		break;
+	draw_gui_event(_viewX, _viewY, _delta);
+}
+
+// Draw the screen fade onto the screen after all UI elements have been rendered onto the application surface.
+with(SCREEN_FADE){
+	if (!FADE_IS_ACTIVE || alpha < gpu_get_alphatestref() / 255.0)
+		break; // Skip over rendering the screen fade it its alpha isn't high enough or it is inactive.
+	
+	var _color = fadeColor;
+	var _alpha = alpha;
+	with(CAMERA){ // Jump into the camera's scope so the viewport's values can be utilized.
+		draw_sprite_ext(spr_rectangle, 0, viewportX, viewportY, viewportWidth, viewportHeight, 0, _color, _alpha);
+	}
+}
+
+// FOR TESTING PURPOSES ONLY
+if (GAME_IS_MENU_OPEN){
+	draw_set_font(fnt_small);
+	draw_set_color(COLOR_TRUE_WHITE);
+	draw_text(_viewX + 5, _viewY + 3, string("FPS {0}", floor(fps_real)));
+}

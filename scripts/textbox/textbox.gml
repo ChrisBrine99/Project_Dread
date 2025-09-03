@@ -71,10 +71,10 @@
 #macro	TBOX_PUNCT_EXCLAIM_DELAY		0.075
 
 // Determines the position on the GUI the textbox will begin the opening animation at.
-#macro	TBOX_Y_START					display_get_gui_width() + 30
+#macro	TBOX_Y_START					VIEWPORT_HEIGHT + 30
 
 // Determines the position on the GUI the textbox will rest at after its opening transition has completed.
-#macro	TBOX_Y_TARGET					display_get_gui_height() - 64
+#macro	TBOX_Y_TARGET					VIEWPORT_HEIGHT - 64
 
 // Macros for the characteristics of the opening and closing animations; denoted as such by containing either
 // "OANIM" for opening, and "CANIM" for closing, respectively
@@ -179,29 +179,20 @@ function str_textbox(_index) : str_base(_index) constructor {
 	create_event = function(){
 		if (room != rm_init)
 			return; // Prevents a call to this function from executing outside of the game's initialization.
-		
-		// Grab the dimensions of the game's GUI layer as it will be used multiple times throughout the 
-		// create event of the textbox.
-		var _viewWidth	= display_get_gui_width();
-		var _viewHeight	= display_get_gui_height();
 
 		// Determine the starting position of the textbox. The x position will remain constant, but the y 
 		// value will change during the opening animation; going from the position set below to the value 
 		// found in the constant "TBOX_Y_TARGET".
-		x = floor((_viewWidth - TBOX_BG_WIDTH) / 2) - 20; // Offset by 20 to account for the space between the background and the GUI's size.  
-		y = _viewHeight + 30; // The same value as "TBOX_Y_START" but utilizing the fact the height was stored locally previously.
-		
-		// Since the original values are no longer needed, they are offset for the position of the anchor
-		// point that the textbox's control information will be place on the GUI.
-		_viewWidth  -= TBOX_CTRL_GRP_XOFFSET;
-		_viewHeight	-= TBOX_CTRL_GRP_YOFFSET;
+		x = floor((VIEWPORT_WIDTH - TBOX_BG_WIDTH) / 2) - 20; // Offset by 20 to account for the space between the background and the GUI's size.  
+		y = VIEWPORT_HEIGHT + 30; // The same value as "TBOX_Y_START" but utilizing the fact the height was stored locally previously.
 		
 		// Finally, setup the control group that will be utilized by the Textbox and calculate the positions
 		// of the icons and their descriptors so they're displayed at the proper offset. Then, set the
 		// textbox's reference to its control group so it can be referenced for drawing the group when needed.
 		var _tboxCtrlGroup = REF_INVALID;
 		with(CONTROL_UI_MANAGER){
-			_tboxCtrlGroup = create_control_group(TBOX_ICONUI_CTRL_GRP, _viewWidth, _viewHeight, 3, ICONUI_DRAW_LEFT);
+			_tboxCtrlGroup = create_control_group(TBOX_ICONUI_CTRL_GRP, VIEWPORT_WIDTH - TBOX_CTRL_GRP_XOFFSET, 
+				VIEWPORT_HEIGHT - TBOX_CTRL_GRP_YOFFSET, 3, ICONUI_DRAW_LEFT);
 			add_control_group_icon(_tboxCtrlGroup, ICONUI_TBOX_ADVANCE, "Next");
 			add_control_group_icon(_tboxCtrlGroup, ICONUI_TBOX_LOG, "Log");
 		}
@@ -225,8 +216,10 @@ function str_textbox(_index) : str_base(_index) constructor {
 	///	Called to render the textbox and its current contents whenever the textbox struct is currently showing
 	/// information taht has been queued up for the player to see.
 	///	
-	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
-	draw_gui_event = function(_delta){
+	///	@param {Real}	viewX		X position of the viewport within the current room.
+	/// @parma {Real}	viewY		Y position of the viewport within the current room.
+	///	@param {Real}	delta		The difference in time between the execution of this frame and the last.
+	draw_gui_event = function(_viewX, _viewY, _delta){
 		// Ensures that the surface will be valid should it randomly be flushed from memory by the GPU. Then,
 		// the previous surface's contents are copied from their buffer onto the newly formed surface.
 		if (!surface_exists(textSurface)){
@@ -324,23 +317,21 @@ function str_textbox(_index) : str_base(_index) constructor {
 			surface_reset_target();
 			buffer_get_surface(surfBuffer, textSurface, 0);
 		}
-
-		// Get the non-decimal position of the textbox so there aren't any odd subpixel rendering done when the
-		// goal is a pixel-perfect aesthetic. Then the textbox graphics are drawn in their required order.
-		var _xPos = floor(x);
-		var _yPos = floor(y);
 		
 		// Display the background contents of the textbox, which includes the background that is always shown
 		// behind the text being displayed, and an arrow that shows up once it is possible to advance to the
 		// next chunk of text or close the texxtbox.
-		draw_sprite_stretched_ext(spr_tbox_background, 0, _xPos + TBOX_BG_X_OFFSET, _yPos + TBOX_BG_Y_OFFSET, 
-			TBOX_BG_WIDTH, TBOX_BG_HEIGHT, COLOR_TRUE_WHITE, alpha);
+		draw_sprite_stretched_ext(spr_tbox_background, 0, 
+			x + _viewX + TBOX_BG_X_OFFSET, 
+			y + _viewY + TBOX_BG_Y_OFFSET, 
+			TBOX_BG_WIDTH, TBOX_BG_HEIGHT, COLOR_TRUE_WHITE, alpha
+		);
 		if (curChar == textLength){
 			// Display the advance indicator at the bottom-right of the textbox window relative to the value 
 			// of the offset timer/value with the fraction component removed. 
 			draw_sprite_ext(spr_tbox_advance_indicator, 0, 
-				_xPos + TBOX_ARROW_X_OFFSET, 
-				_yPos + TBOX_ARROW_Y_OFFSET + floor(advArrowOffset),
+				x + _viewX + TBOX_ARROW_X_OFFSET, 
+				y + _viewY + TBOX_ARROW_Y_OFFSET + floor(advArrowOffset),
 				1.0, 1.0, 0.0, COLOR_TRUE_WHITE, alpha
 			);
 			
@@ -352,18 +343,16 @@ function str_textbox(_index) : str_base(_index) constructor {
 		}
 		
 		// Simply draw the currently rendered text onto the screen with this single draw call.
-		draw_surface_ext(textSurface, _xPos + TBOX_TEXT_X_OFFSET, _yPos + TBOX_TEXT_Y_OFFSET, 
+		draw_surface_ext(textSurface, x + _viewX + TBOX_TEXT_X_OFFSET, y + _viewY + TBOX_TEXT_Y_OFFSET, 
 			1.0, 1.0, 0.0, COLOR_TRUE_WHITE, alpha);
 		
 		// Draw a black background with a nice alpha gradient applied to it. This will be found behind the 
 		// control information for the textbox, but in front of all elements; causing the textbox to slide in
 		// from behind this element during its opening animation.
-		var _alpha		= alpha;
-		var _guiWidth	= display_get_gui_width();
-		var _guiHeight	= display_get_gui_height();
+		var _alpha = alpha;
 		with(global.colorFadeShader){
 			activate_shader(COLOR_BLACK);
-			draw_circle_ext(_guiWidth / 2, _guiHeight, 300.0, 30.0, COLOR_WHITE, COLOR_BLACK, _alpha);
+			draw_circle_ext(_viewX + (VIEWPORT_WIDTH / 2), _viewY + VIEWPORT_HEIGHT, 300.0, 30.0, COLOR_WHITE, COLOR_BLACK, _alpha);
 			shader_reset();
 		}
 		
@@ -372,7 +361,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 		// are set to match the default color for text within the textbox.
 		var _tboxCtrlGroup = tboxCtrlGroup;
 		with(CONTROL_UI_MANAGER){
-			draw_control_group(_tboxCtrlGroup, _alpha, COLOR_WHITE, COLOR_DARK_GRAY, 
+			draw_control_group(_tboxCtrlGroup, _viewX, _viewY, _alpha, COLOR_WHITE, COLOR_DARK_GRAY, 
 				_alpha * TBOX_TEXT_SHADOW_ALPHA); 
 		}
 	}

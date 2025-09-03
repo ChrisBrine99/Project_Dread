@@ -47,7 +47,7 @@
     "name":"Textbox",
     "path":"folders/Sprites/UI/Textbox.yy",
   },
-  "preMultiplyAlpha":false,
+  "preMultiplyAlpha":true,
   "resourceType":"GMSprite",
   "resourceVersion":"2.0",
   "sequence":{

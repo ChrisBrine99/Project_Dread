@@ -208,8 +208,8 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	/// to the game's GUI layer. Note that its position refers to the top-left of the menu itself, and its
 	/// contents will be offset from that point based on each of their unique position values.
 	///	
-	///	@param {Real}	xPos	The menu's current x position, rounded down.
-	/// @param {Real}	yPos	The menu's current y position, rounded down.
+	///	@param {Real}	xPos	The menu's current x position added with the viewport's current x position.
+	/// @param {Real}	viewY	The menu's current y position added with the viewport's current x position.
 	draw_gui_event = function(_xPos, _yPos){
 		// Create local values for the location of the currently highlighted item on the visible portion of
 		// the item inventory menu, which are then used to position various elements that rely on the current
@@ -311,17 +311,19 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		// Then, jump into scope of the menu in question and draw its options to the screen.
 		surface_set_target(itemOptionsSurf);
 		draw_clear_alpha(COLOR_BLACK, 0.0);
+		var _x = x;
+		var _y = y;
 		with(itemOptionsMenu){
 			// Only display the options if they will be visible on the surface to begin with (As they slide
 			// to the left during the opening animation and to the right in the closing animation).
 			if (optionX < SUBMENU_ITM_SURFACE_WIDTH)
-				draw_gui_event(_xPos, _yPos);
+				draw_gui_event(_x, _y);
 		}
 		surface_reset_target();
 		
 		// Finally, draw the current capture of the selected item's option menu onto the screen.
 		draw_set_alpha(alpha);
-		draw_surface(itemOptionsSurf, itemOptionsMenuX, itemOptionsMenuY);
+		draw_surface(itemOptionsSurf, _xPos + itemOptionsMenuX, _yPos + itemOptionsMenuY);
 	}
 	
 	/// @description 

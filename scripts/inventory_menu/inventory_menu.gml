@@ -25,13 +25,18 @@
 #macro	MENUINV_INDEX_MAP_MENU			2
 #macro	MENUINV_TOTAL_SUBMENUS			3
 
-// 
+// Determines the characteristics of the opening animation for the inventory; consisting of shifting contents
+// from off the top and bottom and the screen onto the screen while its opacity slowly increases to a value
+// of 1.0 AKA fully opaque.
 #macro	MENUINV_OANIM_ALPHA_SPEED		0.06
 #macro	MENUINV_OANIM_MOVE_SPEED		0.25
 #macro	MENUINV_OANIM_YTARGET			0.0
 
-// 
-#macro	MENUINV_CANIM_ALPHA_SPEED		0.08
+// Characteristic for the closing animation for the inventory. It's similar to the opening animation, but
+// moves the elements off the top and bottom of the screen linearly instead of the smooth decay of the 
+// opening animation's movement logic.
+#macro	MENUINV_CANIM_ALPHA_SPEED		0.09
+#macro	MENUINV_CANIM_YTARGET		   -20.0
 
 // The macro for the unique key used to store the control icon group for the invenory's cursor movement/page
 // shifting input information.
@@ -68,7 +73,7 @@
 // Determines the radius of the main background, which uses a colored circle to create a sort-of vignette
 // effect in the main window background (Where the current section's contents are located).
 #macro	MENUINV_MAINBG_XRADIUS			210
-#macro	MENUINV_MAINBG_YRADIUS			125 - _yPos
+#macro	MENUINV_MAINBG_YRADIUS			140
 
 // The alpha levels for the two circles that are drawn for the main window background to create a very subtle
 // blue hue to said background. As such, the first is the black circle and the second is the blue color which
@@ -90,7 +95,7 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	// are created by the player shifting through its various pages.
 	selfRef				= noone;
 	
-	//
+	// 
 	movementCtrlGroup	= REF_INVALID;
 	interactCtrlGroup	= REF_INVALID;
 	
@@ -109,7 +114,7 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		// Initialize the menu's base parameters as well as its option parameters. Since this menu works as
 		// more of a manager of other menus, these options won't have logic for selection and the menu will
 		// only show the current option (AKA menu) that is visible for the player to interact with.
-		initialize_params(0, -20, true, true, 3, 3, 1);
+		initialize_params(0, MENUINV_CANIM_YTARGET, true, true, 3, 3, 1);
 		initialize_option_params(MENUINV_OPTION_XOFFSET, MENUINV_OPTION_YOFFSET, 
 			MENUINV_OPTION_XSPACING, MENUINV_OPTION_YSPACING, fa_center, fa_top, false);
 		
@@ -188,16 +193,16 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	/// to the game's GUI layer. Note that its position refers to the top-left of the menu itself, and its
 	/// contents will be offset from that point based on each of their unique position values.
 	///	
-	///	@param {Real}	xPos	The menu's current x position, rounded down.
-	/// @param {Real}	yPos	The menu's current y position, rounded down.
+	///	@param {Real}	xPos	The menu's current x position added with the viewport's current x position.
+	/// @param {Real}	yPos	The menu's current y position added with the viewport's current x position.
 	draw_gui_event = function(_xPos, _yPos){
 		// Create a unique looking vignette effect for the background of the inventory which is tinted a very
 		// slight blue relative to the blending of the two circles drawn below. After that, the remaining
 		// elements of the inventory's background will be drawn.
 		var _guiWidth	= display_get_gui_width();
 		var _guiHeight	= display_get_gui_height();
-		var _bgCenterX	= _guiWidth	>> 1;
-		var _bgCenterY	= _guiHeight >> 1;
+		var _bgCenterX	= _xPos + (_guiWidth  >> 1);
+		var _bgCenterY	= _yPos + (_guiHeight >> 1);
 		var _alpha		= alpha;
 		with(global.colorFadeShader){
 			activate_shader(COLOR_BLACK);
@@ -212,9 +217,9 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		// Draws white lines that divide the currently active section's contents from the control information
 		// that is currently being displayed along the bottom of the GUI, and the names of each section which
 		// appear on the top of the GUI.
-		draw_sprite_ext(spr_rectangle, 0, _xPos, _yPos + 13,				_guiWidth, 
+		draw_sprite_ext(spr_rectangle, 0, _xPos, _yPos + 13,						_guiWidth, 
 			1, 0.0, COLOR_WHITE, alpha);
-		draw_sprite_ext(spr_rectangle, 0, _xPos, -_yPos + _guiHeight - 14,	_guiWidth, 
+		draw_sprite_ext(spr_rectangle, 0, _xPos, _yPos - (y * 2) + _guiHeight - 14,	_guiWidth, 
 			1, 0.0, COLOR_WHITE, alpha);
 		
 		// Ensure the proper alpha level and blending color are set before the background for the top and
@@ -223,12 +228,16 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		draw_set_alpha(alpha);
 		draw_set_color(COLOR_WHITE);
 		gpu_set_tex_filter(true);
-		draw_sprite_stretched(spr_iteminv_header_footer_bkg, 0, _xPos,  _yPos,					 _guiWidth, 13);
-		draw_sprite_stretched(spr_iteminv_header_footer_bkg, 0, _xPos, -_yPos + _guiHeight - 13, _guiWidth, 13);
+		draw_sprite_stretched(spr_iteminv_header_footer_bkg, 0, _xPos, _yPos,								_guiWidth, 13);
+		draw_sprite_stretched(spr_iteminv_header_footer_bkg, 0, _xPos, _yPos - (y * 2) + _guiHeight - 13,	_guiWidth, 13);
 		gpu_set_tex_filter(false);
 		
-		// After the background elements have all been drawn, the inventory's section names will be drawn on
-		// the top portion of the menu that is outside of the currently active section.
+		// 
+		var _curOptionX = _xPos + optionX + (curOption * optionSpacingX) - 25.0;
+		draw_sprite_ext(spr_rectangle, 0, _curOptionX, _yPos, 50.0, 13.0, 0.0, COLOR_LIGHT_YELLOW, _alpha * 0.3);
+		
+		// After the background elements have all been drawn, the inventory's section names will be drawn 
+		// on the top portion of the menu that is outside of the currently active section.
 		draw_visible_options(fnt_medium, _xPos, _yPos, COLOR_BLACK, 1.0);
 			
 		// Finally, display the icon/descriptor data that exists within the cursor movement and menu 
@@ -236,8 +245,8 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		var _movementCtrlGroup = movementCtrlGroup;
 		var _interactCtrlGroup = interactCtrlGroup;
 		with(CONTROL_UI_MANAGER){
-			draw_control_group(_movementCtrlGroup, _alpha, COLOR_WHITE, COLOR_BLACK, _alpha);
-			draw_control_group(_interactCtrlGroup, _alpha, COLOR_WHITE, COLOR_BLACK, _alpha);
+			draw_control_group(_movementCtrlGroup, _xPos, _yPos, _alpha, COLOR_WHITE, COLOR_BLACK, _alpha);
+			draw_control_group(_interactCtrlGroup, _xPos, _yPos, _alpha, COLOR_WHITE, COLOR_BLACK, _alpha);
 		}
 	}
 	
@@ -430,7 +439,7 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_close_animation = function(_delta){
-		y		= lerp(-20.0, 0.0, alpha);
+		y		= lerp(MENUINV_CANIM_YTARGET, MENUINV_OANIM_YTARGET, alpha);
 		var _y	= y * 2.0; // Double current y to allow control groups to slide off the bottom of the screen.
 		with(movementCtrlGroup) { yPos = MENUINV_CTRL_GRP2_YOFFSET - _y; }
 		with(interactCtrlGroup) { yPos = MENUINV_CTRL_GRP_YOFFSET  - _y; }
