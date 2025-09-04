@@ -9,40 +9,53 @@
 #macro	MENUITM_IS_MOVING_ITEM			((flags & MENUITM_FLAG_MOVING_ITEM)		!= 0)
 #macro	MENUITM_ARE_OPTIONS_OPEN		((flags & MENUITM_FLAG_OPTIONS_OPEN)	!= 0)
 
-//
-#macro	MENUITM_OPTIONS_X				(VIEWPORT_WIDTH - 130)
+// Since the maximum visible portions of the item menu are constant (1 by 10), the values are set as macros
+// so the compiler can optimize these into simple constants instead of variable load/reads.
+#macro	MENUITM_VISIBLE_WIDTH			1
+#macro	MENUITM_VISIBLE_HEIGHT			10
+
+// Since the positional offsets for the options and their spacing are constant in the item menu, they will 
+// be set using macros instead of referencing their relevant variables within the menu, which should result
+// in VERY slightly faster execution.
+#macro	MENUITM_OPTIONS_X				(VIEWPORT_WIDTH - 135)
 #macro	MENUITM_OPTIONS_Y				6
 #macro	MENUITM_OPTION_SPACING_X		0
 #macro	MENUITM_OPTION_SPACING_Y		10
 
-// 
+// Positional offset for the position of the an item's info text when it is currently being highlighted by 
+// the menu's cursor.
+#macro	MENUITM_OPTION_INFO_X			(MENUITM_OPTIONS_X - 50)
+#macro	MENUITM_OPTION_INFO_Y			(MENUITM_MAIN_WINDOW_HEIGHT + 8) 
+
+// Since these background elements remain constant in their positions, they will be set using macros instead
+// of creating instance or local variables to store that same data, which should make the code very VERY
+// slightly more efficient.
 #macro	MENUITM_MAIN_WINDOW_LEFT		(MENUITM_OPTIONS_X -  10)
 #macro	MENUITM_MAIN_WINDOW_RIGHT		(MENUITM_OPTIONS_X + 124)
 #macro	MENUITM_MAIN_WINDOW_WIDTH		(MENUITM_MAIN_WINDOW_RIGHT - MENUITM_MAIN_WINDOW_LEFT)
+#macro	MENUITM_MAIN_WINDOW_HEIGHT		(MENUITM_OPTIONS_Y + (MENUITM_VISIBLE_HEIGHT * MENUITM_OPTION_SPACING_Y))
 
-// 
+// Since the position and width of the item menu's option window are constant values, they are set as macros
+// here to be used instead of having to reference these values within variables in the instance itself.
+#macro	MENUITM_INFO_WINDOW_LEFT		(MENUITM_OPTION_INFO_X - 5)
+#macro	MENUITM_INFO_WINDOW_WIDTH		(MENUITM_MAIN_WINDOW_RIGHT - MENUITM_INFO_WINDOW_LEFT)
+
+// Determines the horizontal positions of vvarious menu elements relative to other characteristics of the
+// menu like the x position of the visible options, the background elements, and so on.
 #macro	MENUITM_CURSOR_X				(MENUITM_OPTIONS_X		   - 7)
 #macro	MENUITM_CUROPTION_BOX_X			(MENUITM_MAIN_WINDOW_LEFT  + 1)
 #macro	MENUITM_QUANTITY_X			    (MENUITM_OPTIONS_X		   + 120)
 #macro	MENUITM_EQUIP_ICON_X			(MENUITM_QUANTITY_X		   - maxQuantityWidth - 8)
 
-// 
+// Determines the width of the highlight rectangle that shows up behind the option the cursor is next to.
 #macro	MENUITM_CUROPTION_BOX_WIDTH		(MENUITM_MAIN_WINDOW_WIDTH - 1)
-
-// Calculations for the position of the an item's info text when it is currently being highlighted by the
-// player. Since they use "_xPos" and "_yPos" they must be used IN THE DRAW GUI EVENT ONLY!!!
-#macro	MENUITM_OPTION_INFO_X			(_xPos + optionX - 48)
-#macro	MENUITM_OPTION_INFO_Y			(_yPos + optionY + (MENUITM_VISIBLE_HEIGHT * optionSpacingY) + 8) 
 
 // Determines the maximum line width for an item's description string as well as the maximum number of lines
 // that can exist for display within the inventory's item section.
-#macro	MENUITM_OPTION_INFO_MAX_WIDTH	160
+#macro	MENUITM_OPTION_INFO_MAX_WIDTH	(MENUITM_INFO_WINDOW_WIDTH - 5)
 #macro	MENUITM_OPTION_INFO_MAX_LINES	4
 
-// Values for some constant characteristics about how the item inventory will be shown to the player. These
-// are specifically for the maximum number of item slots visible to the player at once, the color of the text's
-// drop shadow effect, and the opacity for that drop shadow.
-#macro	MENUITM_VISIBLE_HEIGHT			10
+// 
 #macro	MENUITM_TEXT_SHADOW_COLOR		COLOR_DARK_GRAY
 #macro	MENUITM_TEXT_SHADOW_ALPHA		0.75
 
@@ -153,7 +166,8 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		// Set up the item menu to it has the same number of options as there are slots available in the
 		// player's item inventory. Using that number, the base and option parameters are both initialized.
 		var _invSize	= array_length(invItemRefs);
-		initialize_params(0, 14, true, true, 1, 1, min(_invSize, MENUITM_VISIBLE_HEIGHT), 0, 2);
+		initialize_params(0, 14, true, true, 1, MENUITM_VISIBLE_WIDTH, 
+			min(_invSize, MENUITM_VISIBLE_HEIGHT), 0, 2);
 		initialize_option_params(MENUITM_OPTIONS_X, MENUITM_OPTIONS_Y, 
 			MENUITM_OPTION_SPACING_X, MENUITM_OPTION_SPACING_Y, fa_left, fa_top, true);
 		
@@ -224,7 +238,8 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	///	@param {Real}	xPos	The menu's current x position added with the viewport's current x position.
 	/// @param {Real}	yPos	The menu's current y position added with the viewport's current x position.
 	draw_gui_event = function(_xPos, _yPos){
-		// 
+		// Create the left border of the item menu's main window, which consists of three pieces to create a
+		// line that fades out along the top and bottom of itself.
 		draw_sprite_ext(spr_item_menu_border_edge, 0, _xPos + MENUITM_MAIN_WINDOW_LEFT, _yPos, 
 			1, 1, 0.0, COLOR_WHITE, alpha); // Top portion of the window's left edge.
 		draw_sprite_ext(spr_rectangle, 0, _xPos + MENUITM_MAIN_WINDOW_LEFT, _yPos + 20,
@@ -232,13 +247,22 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		draw_sprite_ext(spr_item_menu_border_edge, 0, _xPos + MENUITM_MAIN_WINDOW_LEFT, _yPos + 110, 
 			1, -1, 0.0, COLOR_WHITE, alpha); // Bottom portion of the window's left edge.
 			
-		// 
+		// Do the same as above, but for the right edge of the item menu's main window.
 		draw_sprite_ext(spr_item_menu_border_edge, 0, _xPos + MENUITM_MAIN_WINDOW_RIGHT, _yPos, 
 			1, 1, 0.0, COLOR_WHITE, alpha); // Top portion of the window's right edge.
 		draw_sprite_ext(spr_rectangle, 0, _xPos + MENUITM_MAIN_WINDOW_RIGHT, _yPos + 20,
-			1, 70, 0.0, COLOR_WHITE, alpha);
-		draw_sprite_ext(spr_item_menu_border_edge, 0, _xPos + MENUITM_MAIN_WINDOW_RIGHT, _yPos + 110, 
+			1, 112, 0.0, COLOR_WHITE, alpha);
+		draw_sprite_ext(spr_item_menu_border_edge, 0, _xPos + MENUITM_MAIN_WINDOW_RIGHT, _yPos + 152, 
 			1, -1, 0.0, COLOR_WHITE, alpha); // Bottom portion of the window's right edge.
+			
+		// 
+		draw_sprite_ext(spr_item_menu_border_edge, 0, _xPos + MENUITM_INFO_WINDOW_LEFT, 
+			_yPos + MENUITM_MAIN_WINDOW_HEIGHT, 1, 1, 0.0, COLOR_WHITE, alpha); // Top portion of the info window's right edge.
+		draw_sprite_ext(spr_rectangle, 0, _xPos + MENUITM_INFO_WINDOW_LEFT, 
+			_yPos + MENUITM_MAIN_WINDOW_HEIGHT + 20, 1, 6, 0.0, COLOR_WHITE, alpha);
+		draw_sprite_ext(spr_item_menu_border_edge, 0, _xPos + MENUITM_INFO_WINDOW_LEFT, 
+			_yPos + 152, 1, -1, 0.0, COLOR_WHITE, alpha); // Bottom portion of the info window's left edge.
+			
 		
 		// Create local values for the location of the currently highlighted item on the visible portion of
 		// the item inventory menu, which are then used to position various elements that rely on the current
@@ -324,7 +348,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		// the item inventory. For now, it simply displays it with no animations or fancy flairs.
 		if (curOption >= 0 && curOption < ds_list_size(options)){
 			var _curOption = options[| curOption];
-			draw_text_shadow(MENUITM_OPTION_INFO_X, MENUITM_OPTION_INFO_Y, _curOption.oInfo, 
+			draw_text_shadow(_xPos + MENUITM_OPTION_INFO_X, _yPos + MENUITM_OPTION_INFO_Y, _curOption.oInfo, 
 				COLOR_LIGHT_GRAY, alpha, MENUITM_TEXT_SHADOW_COLOR, MENUITM_TEXT_SHADOW_ALPHA);
 		}
 		
@@ -567,7 +591,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		var _isClosed = false;
 		with(itemOptionsMenu){
 			optionX  = lerp(SUBMENU_ITM_ANIM_X1, SUBMENU_ITM_ANIM_X2, alpha); 
-			alpha -= SUBMENU_ITM_CANIM_ALPHA_SPEED * _delta;
+			alpha   -= SUBMENU_ITM_CANIM_ALPHA_SPEED * _delta;
 			if (alpha <= 0.0){ // Animation has completed; reset flags and set values to their targets.
 				flags		= flags & ~(MENU_FLAG_ACTIVE | MENU_FLAG_CURSOR_AUTOSCROLL);
 				alpha		= 0.0;
