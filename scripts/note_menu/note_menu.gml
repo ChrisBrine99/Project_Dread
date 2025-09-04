@@ -26,7 +26,7 @@ function str_note_menu(_index) : str_base_menu(_index) constructor {
 	draw_gui_event = function(_xPos, _yPos){
 		draw_set_halign(fa_center);
 		draw_set_valign(fa_middle);
-		draw_text_shadow(VIEWPORT_WIDTH >> 1, VIEWPORT_HEIGHT >> 1, "NOTES", COLOR_WHITE, alpha);
+		draw_text_shadow(_xPos + (VIEWPORT_WIDTH >> 1), _yPos + (VIEWPORT_HEIGHT >> 1), "NOTES", COLOR_WHITE, alpha);
 		draw_set_halign(fa_left);
 		draw_set_valign(fa_top);
 	}

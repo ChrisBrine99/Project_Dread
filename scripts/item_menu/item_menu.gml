@@ -9,14 +9,30 @@
 #macro	MENUITM_IS_MOVING_ITEM			((flags & MENUITM_FLAG_MOVING_ITEM)		!= 0)
 #macro	MENUITM_ARE_OPTIONS_OPEN		((flags & MENUITM_FLAG_OPTIONS_OPEN)	!= 0)
 
-// Two calculations for the item menu's cursor arrow and an item's current quantity if that value is visible.
-#macro	MENUINV_CURSOR_X_OFFSET		   -8
-#macro	MENUITM_ITEM_QUANTITY_X_OFFSET	110
+//
+#macro	MENUITM_OPTIONS_X				(VIEWPORT_WIDTH - 130)
+#macro	MENUITM_OPTIONS_Y				6
+#macro	MENUITM_OPTION_SPACING_X		0
+#macro	MENUITM_OPTION_SPACING_Y		10
+
+// 
+#macro	MENUITM_MAIN_WINDOW_LEFT		(MENUITM_OPTIONS_X -  10)
+#macro	MENUITM_MAIN_WINDOW_RIGHT		(MENUITM_OPTIONS_X + 124)
+#macro	MENUITM_MAIN_WINDOW_WIDTH		(MENUITM_MAIN_WINDOW_RIGHT - MENUITM_MAIN_WINDOW_LEFT)
+
+// 
+#macro	MENUITM_CURSOR_X				(MENUITM_OPTIONS_X		   - 7)
+#macro	MENUITM_CUROPTION_BOX_X			(MENUITM_MAIN_WINDOW_LEFT  + 1)
+#macro	MENUITM_QUANTITY_X			    (MENUITM_OPTIONS_X		   + 120)
+#macro	MENUITM_EQUIP_ICON_X			(MENUITM_QUANTITY_X		   - maxQuantityWidth - 8)
+
+// 
+#macro	MENUITM_CUROPTION_BOX_WIDTH		(MENUITM_MAIN_WINDOW_WIDTH - 1)
 
 // Calculations for the position of the an item's info text when it is currently being highlighted by the
 // player. Since they use "_xPos" and "_yPos" they must be used IN THE DRAW GUI EVENT ONLY!!!
 #macro	MENUITM_OPTION_INFO_X			(_xPos + optionX - 48)
-#macro	MENUITM_OPTION_INFO_Y			(_yPos + optionY + (MENUITM_VISIBLE_HEIGHT * optionSpacingY) + 5) 
+#macro	MENUITM_OPTION_INFO_Y			(_yPos + optionY + (MENUITM_VISIBLE_HEIGHT * optionSpacingY) + 8) 
 
 // Determines the maximum line width for an item's description string as well as the maximum number of lines
 // that can exist for display within the inventory's item section.
@@ -32,10 +48,6 @@
 
 // Determines how fast the menu's cursor will move back and forth along the x axis.
 #macro	MENUITM_CURSOR_ANIM_SPEED		0.07
-
-// Determines where the "E" icon for signifying the item in a given slot is equipped to the player will be
-// placed relative to the item's name's x position on the currently visible portion of the menu.
-#macro	MENUITM_EQUIP_ICON_X_OFFSET		(MENUITM_ITEM_QUANTITY_X_OFFSET - maxQuantityWidth - 8)
 
 // The two variations on how displayed item quantities within the inventory can be formatted. The first is the
 // default method for anything with a stack limit greater than one, and the second is the amount of ammunition
@@ -64,7 +76,7 @@
 
 // Stores the offset position of a selected item's option sub menu along the x axis so it appears to the right 
 // of said item relative to its vertical position on the visible portion of the menu.
-#macro	SUBMENU_ITM_OFFSET_X			50
+#macro	SUBMENU_ITM_OFFSET_X			MENUITM_OPTIONS_X - 51
 
 // The dimensions of the surface that the selected item's option menu will be rendered onto, so it can have a
 // sliding animation that doesn't render outside of the dimensions of the menu after animations have completed.
@@ -73,8 +85,8 @@
 
 // Determines the two x positions the item's option menu text will shift between during the opening and closing
 // animations for this sub menu; allowing it to slide on and off of the surface it will be drawn onto.
-#macro	SUBMENU_ITM_ANIM_X1				50.0
-#macro	SUBMENU_ITM_ANIM_X2				0.0
+#macro	SUBMENU_ITM_ANIM_X1				51
+#macro	SUBMENU_ITM_ANIM_X2				0
 
 // Determines how fast the selected item's option menu will fade into and out of visibility during its opening
 // and closing animations. It also works as the value used to lerp the menu's options between the two x
@@ -141,8 +153,9 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		// Set up the item menu to it has the same number of options as there are slots available in the
 		// player's item inventory. Using that number, the base and option parameters are both initialized.
 		var _invSize	= array_length(invItemRefs);
-		initialize_params(x, y, true, true, 1, 1, min(_invSize, MENUITM_VISIBLE_HEIGHT), 0, 2);
-		initialize_option_params(display_get_gui_width() - 120, 20, 50, 10, fa_left, fa_top, true);
+		initialize_params(0, 14, true, true, 1, 1, min(_invSize, MENUITM_VISIBLE_HEIGHT), 0, 2);
+		initialize_option_params(MENUITM_OPTIONS_X, MENUITM_OPTIONS_Y, 
+			MENUITM_OPTION_SPACING_X, MENUITM_OPTION_SPACING_Y, fa_left, fa_top, true);
 		
 		// Looping through the player's items so they can be added as options to this menu. From here, the
 		// player will be able to select a highlighted item to interact with in in various ways relative to
@@ -209,25 +222,44 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	/// contents will be offset from that point based on each of their unique position values.
 	///	
 	///	@param {Real}	xPos	The menu's current x position added with the viewport's current x position.
-	/// @param {Real}	viewY	The menu's current y position added with the viewport's current x position.
+	/// @param {Real}	yPos	The menu's current y position added with the viewport's current x position.
 	draw_gui_event = function(_xPos, _yPos){
+		// 
+		draw_sprite_ext(spr_item_menu_border_edge, 0, _xPos + MENUITM_MAIN_WINDOW_LEFT, _yPos, 
+			1, 1, 0.0, COLOR_WHITE, alpha); // Top portion of the window's left edge.
+		draw_sprite_ext(spr_rectangle, 0, _xPos + MENUITM_MAIN_WINDOW_LEFT, _yPos + 20,
+			1, 70, 0.0, COLOR_WHITE, alpha);
+		draw_sprite_ext(spr_item_menu_border_edge, 0, _xPos + MENUITM_MAIN_WINDOW_LEFT, _yPos + 110, 
+			1, -1, 0.0, COLOR_WHITE, alpha); // Bottom portion of the window's left edge.
+			
+		// 
+		draw_sprite_ext(spr_item_menu_border_edge, 0, _xPos + MENUITM_MAIN_WINDOW_RIGHT, _yPos, 
+			1, 1, 0.0, COLOR_WHITE, alpha); // Top portion of the window's right edge.
+		draw_sprite_ext(spr_rectangle, 0, _xPos + MENUITM_MAIN_WINDOW_RIGHT, _yPos + 20,
+			1, 70, 0.0, COLOR_WHITE, alpha);
+		draw_sprite_ext(spr_item_menu_border_edge, 0, _xPos + MENUITM_MAIN_WINDOW_RIGHT, _yPos + 110, 
+			1, -1, 0.0, COLOR_WHITE, alpha); // Bottom portion of the window's right edge.
+		
 		// Create local values for the location of the currently highlighted item on the visible portion of
 		// the item inventory menu, which are then used to position various elements that rely on the current
 		// option's index to be drawn.
-		var _curOptionX = _xPos + optionX + MENUINV_CURSOR_X_OFFSET;
-		var _curOptionY = _yPos + optionY + ((curOption - visibleAreaY) * optionSpacingY);
+		var _curOptionY = _yPos + MENUITM_OPTIONS_Y + ((curOption - visibleAreaY) * MENUITM_OPTION_SPACING_Y);
 		
 		// Displays a translucent rectangle behind the currently highlight item. If that item happens to be
-		// selected and its option menu is on display, the color will be green instead of yellow.
-		var _bkgColor = (selOption == curOption) ? COLOR_LIGHT_GREEN : COLOR_LIGHT_YELLOW;
-		if (auxSelOption == curOption) {_bkgColor = COLOR_LIGHT_RED; } // Turn it red for an auxilliary selection.
-		draw_sprite_ext(spr_rectangle, 0, _curOptionX - 2, _curOptionY - 1, 122, optionSpacingY, 0.0, 
+		// selected and its option menu is on display, the color will be green instead of yellow. Auxillary
+		// selections will tint the background light red.
+		var _bkgColor = COLOR_LIGHT_YELLOW;
+		if (auxSelOption == curOption)	 { _bkgColor = COLOR_LIGHT_RED; }
+		else if (selOption == curOption) { _bkgColor = COLOR_LIGHT_GREEN; }	
+		draw_sprite_ext(spr_rectangle, 0, 
+			_xPos + MENUITM_CUROPTION_BOX_X, _curOptionY - 1, 
+			MENUITM_CUROPTION_BOX_WIDTH, MENUITM_OPTION_SPACING_Y, 0.0, 
 			_bkgColor, alpha * 0.2);
 			
 		// Above the backing rectangle for the highlighted item, a cursor using the greater-than symbol will
 		// be drawn; shifting left and right based on the current value of cursorAnimTimer.
-		draw_text_shadow(_curOptionX + floor(cursorAnimTimer), _curOptionY, ">", 
-			COLOR_WHITE, alpha, MENUITM_TEXT_SHADOW_COLOR, MENUITM_TEXT_SHADOW_ALPHA);
+		draw_sprite_ext(spr_item_menu_cursor, 0, _xPos + MENUITM_CURSOR_X + floor(cursorAnimTimer), 
+			_curOptionY + 1, 1.0, 1.0, 0.0, COLOR_WHITE, alpha);
 		
 		// Display the currently visible region of this menu with the default function provided by the 
 		// inherited base menu struct.
@@ -236,14 +268,13 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		// After the visible menu options have been draw, a cursor and the current quantities will be drawns
 		// to the right of each item name as required.
 		draw_set_halign(fa_right);
-		var _index		 = -1;
-		var _isWeapon	 = false;
-		var _item		 = INV_EMPTY_SLOT;
-		var _quantity	 = 0;
-		var _sQuantity	 = "";
-		var _sColor		 = COLOR_WHITE;
-		var _curX		 = _xPos + optionX;
-		var _curY		 = _yPos + optionY;
+		var _index		= -1;
+		var _isWeapon	= false;
+		var _item		= INV_EMPTY_SLOT;
+		var _quantity	= 0;
+		var _sQuantity	= "";
+		var _sColor		= COLOR_WHITE;
+		var _yy			= _yPos + MENUITM_OPTIONS_Y;
 		for (var i = visibleAreaY; i < visibleAreaY + visibleAreaH; i++){
 			// Get the value currently stored in the player's item inventory array to see if the slot is empty
 			// or not. If it isn't empty, its quantity and item type will determine how the quantity will be
@@ -272,7 +303,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 				}
 				
 				// Display the quantity as it was formatted above.
-				draw_text_shadow(_curX + MENUITM_ITEM_QUANTITY_X_OFFSET, _curY, _sQuantity, 
+				draw_text_shadow(_xPos + MENUITM_QUANTITY_X, _yy, _sQuantity, 
 					_sColor, alpha, MENUITM_TEXT_SHADOW_COLOR, MENUITM_TEXT_SHADOW_ALPHA);
 			}
 			
@@ -281,11 +312,11 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			_index = ds_list_find_index(equippedSlots, i);
 			if (_index != -1){
 				draw_set_alpha(alpha);
-				draw_sprite(spr_iteminv_equip_icon, 0, _curX + MENUITM_EQUIP_ICON_X_OFFSET, _curY);
+				draw_sprite(spr_item_menu_equip_icon, 0, _xPos + MENUITM_EQUIP_ICON_X, _yy);
 			}
 			
 			// Shift the y position down for the next potential item quantity to draw at.
-			_curY += optionSpacingY;
+			_yy += MENUITM_OPTION_SPACING_Y;
 		}
 		draw_set_halign(fa_left);
 		
@@ -311,19 +342,17 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		// Then, jump into scope of the menu in question and draw its options to the screen.
 		surface_set_target(itemOptionsSurf);
 		draw_clear_alpha(COLOR_BLACK, 0.0);
-		var _x = x;
-		var _y = y;
 		with(itemOptionsMenu){
 			// Only display the options if they will be visible on the surface to begin with (As they slide
 			// to the left during the opening animation and to the right in the closing animation).
 			if (optionX < SUBMENU_ITM_SURFACE_WIDTH)
-				draw_gui_event(_x, _y);
+				draw_gui_event(0, 0);
 		}
 		surface_reset_target();
 		
 		// Finally, draw the current capture of the selected item's option menu onto the screen.
 		draw_set_alpha(alpha);
-		draw_surface(itemOptionsSurf, _xPos + itemOptionsMenuX, _yPos + itemOptionsMenuY);
+		draw_surface(itemOptionsSurf, _xPos + SUBMENU_ITM_OFFSET_X, _yPos + itemOptionsMenuY);
 	}
 	
 	/// @description 
@@ -465,7 +494,6 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			// Jump into scope of the item inventory's sub menu so it can be activated along with replacing
 			// the previous options if the menu already existed previous (This occurs when two or more items
 			// have been selected by the user during the lifetime of this menu).
-			var _optionSpacingY = 0;
 			with(itemOptionsMenu){
 				flags = flags | MENU_FLAG_ACTIVE;
 				
@@ -473,22 +501,19 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 					replace_options(_options, 1, 1, array_length(_options));
 					flags = flags & ~MENUSUB_FLAG_CLOSING; // Also flip this bit so the menu doesn't instantly close.
 				}
-				
-				_optionSpacingY = optionSpacingY;
 			}
-			
-			// 
-			var _yOffset = min((curOption - visibleAreaY) * optionSpacingY, 
-							   (visibleAreaH - array_length(_options)) * _optionSpacingY);
 			
 			// Finally, swap over the opening state for the item options menu. On top of that, set the flag
 			// that lets this menu know that sub menu is open, and position it to show up beside the selected
 			// item's name. The cursor animation offset/timer is also reset to zero.
 			object_set_state(state_open_item_options);
 			flags			 = flags | MENUITM_FLAG_OPTIONS_OPEN;
-			itemOptionsMenuX = optionX - SUBMENU_ITM_OFFSET_X;
-			itemOptionsMenuY = optionY + _yOffset;
 			cursorAnimTimer	 = 0.0;
+			
+			// Calculate the offset for the item's options menu, which has a limit preventing it from going
+			// to low on the screen as to overlap the selected item's description area of the item menu.
+			var _yOffsetMultiplier  = min(curOption - visibleAreaY, visibleAreaH - array_length(_options))
+			itemOptionsMenuY		= MENUITM_OPTIONS_Y + (_yOffsetMultiplier * MENUITM_OPTION_SPACING_Y);
 			return;
 		}
 		

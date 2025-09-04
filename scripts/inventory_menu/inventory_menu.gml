@@ -95,7 +95,9 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	// are created by the player shifting through its various pages.
 	selfRef				= noone;
 	
-	// 
+	// Stores the two control groups utilized by the inventory menu and all of its sections. The references are
+	// kept track of here and then are passed to each section as required. Then, rendering of the groups is
+	// handled here.
 	movementCtrlGroup	= REF_INVALID;
 	interactCtrlGroup	= REF_INVALID;
 	
@@ -199,10 +201,8 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		// Create a unique looking vignette effect for the background of the inventory which is tinted a very
 		// slight blue relative to the blending of the two circles drawn below. After that, the remaining
 		// elements of the inventory's background will be drawn.
-		var _guiWidth	= display_get_gui_width();
-		var _guiHeight	= display_get_gui_height();
-		var _bgCenterX	= _xPos + (_guiWidth  >> 1);
-		var _bgCenterY	= _yPos + (_guiHeight >> 1);
+		var _bgCenterX	= _xPos + (VIEWPORT_WIDTH  >> 1);
+		var _bgCenterY	= _yPos + (VIEWPORT_HEIGHT >> 1);
 		var _alpha		= alpha;
 		with(global.colorFadeShader){
 			activate_shader(COLOR_BLACK);
@@ -214,12 +214,15 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 			shader_reset();
 		}
 		
+		// 
+		var _yy = (y * 2.0);
+		
 		// Draws white lines that divide the currently active section's contents from the control information
 		// that is currently being displayed along the bottom of the GUI, and the names of each section which
 		// appear on the top of the GUI.
-		draw_sprite_ext(spr_rectangle, 0, _xPos, _yPos + 13,						_guiWidth, 
+		draw_sprite_ext(spr_rectangle, 0, _xPos, _yPos + 13,						VIEWPORT_WIDTH, 
 			1, 0.0, COLOR_WHITE, alpha);
-		draw_sprite_ext(spr_rectangle, 0, _xPos, _yPos - (y * 2) + _guiHeight - 14,	_guiWidth, 
+		draw_sprite_ext(spr_rectangle, 0, _xPos, _yPos - _yy + VIEWPORT_HEIGHT - 14,	VIEWPORT_WIDTH, 
 			1, 0.0, COLOR_WHITE, alpha);
 		
 		// Ensure the proper alpha level and blending color are set before the background for the top and
@@ -228,13 +231,13 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		draw_set_alpha(alpha);
 		draw_set_color(COLOR_WHITE);
 		gpu_set_tex_filter(true);
-		draw_sprite_stretched(spr_iteminv_header_footer_bkg, 0, _xPos, _yPos,								_guiWidth, 13);
-		draw_sprite_stretched(spr_iteminv_header_footer_bkg, 0, _xPos, _yPos - (y * 2) + _guiHeight - 13,	_guiWidth, 13);
+		draw_sprite_stretched(spr_inv_menu_header_footer_bkg, 0, _xPos, _yPos, VIEWPORT_WIDTH, 13);
+		draw_sprite_stretched(spr_inv_menu_header_footer_bkg, 0, _xPos, _yPos - _yy + VIEWPORT_HEIGHT - 13,	VIEWPORT_WIDTH, 13);
 		gpu_set_tex_filter(false);
 		
 		// 
-		var _curOptionX = _xPos + optionX + (curOption * optionSpacingX) - 25.0;
-		draw_sprite_ext(spr_rectangle, 0, _curOptionX, _yPos, 50.0, 13.0, 0.0, COLOR_LIGHT_YELLOW, _alpha * 0.3);
+		// var _curOptionX = _xPos + optionX + (curOption * optionSpacingX) - 25.0;
+		// draw_sprite_ext(spr_rectangle, 0, _curOptionX, _yPos, 50.0, 13.0, 0.0, COLOR_LIGHT_YELLOW, _alpha * 0.3);
 		
 		// After the background elements have all been drawn, the inventory's section names will be drawn 
 		// on the top portion of the menu that is outside of the currently active section.
