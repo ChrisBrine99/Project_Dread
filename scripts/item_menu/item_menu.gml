@@ -24,40 +24,46 @@
 
 // Positional offset for the position of the an item's info text when it is currently being highlighted by 
 // the menu's cursor.
-#macro	MENUITM_OPTION_INFO_X			(MENUITM_OPTIONS_X - 50)
-#macro	MENUITM_OPTION_INFO_Y			(MENUITM_MAIN_WINDOW_HEIGHT + 8) 
+#macro	MENUITM_OPTION_INFO_X			(MENUITM_OPTIONS_X		 - 50)
+#macro	MENUITM_OPTION_INFO_Y			(MENUITM_INFO_WINDOW_TOP +  8)
 
 // Since these background elements remain constant in their positions, they will be set using macros instead
 // of creating instance or local variables to store that same data, which should make the code very VERY
 // slightly more efficient.
 #macro	MENUITM_MAIN_WINDOW_LEFT		(MENUITM_OPTIONS_X -  10)
 #macro	MENUITM_MAIN_WINDOW_RIGHT		(MENUITM_OPTIONS_X + 124)
-#macro	MENUITM_MAIN_WINDOW_WIDTH		(MENUITM_MAIN_WINDOW_RIGHT - MENUITM_MAIN_WINDOW_LEFT)
-#macro	MENUITM_MAIN_WINDOW_HEIGHT		(MENUITM_OPTIONS_Y + (MENUITM_VISIBLE_HEIGHT * MENUITM_OPTION_SPACING_Y))
+#macro	MENUITM_MAIN_WINDOW_WIDTH		(MENUITM_MAIN_WINDOW_RIGHT - MENUITM_MAIN_WINDOW_LEFT - 1)
+#macro	MENUITM_MAIN_WINDOW_LHEIGHT		110
+#macro	MENUITM_MAIN_WINDOW_RHEIGHT		152
 
-// Since the position and width of the item menu's option window are constant values, they are set as macros
-// here to be used instead of having to reference these values within variables in the instance itself.
+// The horizontal position of the info window relative to the current info text's x position on the menu. A
+// right side position isn't necessary as the main window already encapsulates it as they share the same
+// border. The width and height of this window are also stored in this group of macros. 
 #macro	MENUITM_INFO_WINDOW_LEFT		(MENUITM_OPTION_INFO_X - 5)
-#macro	MENUITM_INFO_WINDOW_WIDTH		(MENUITM_MAIN_WINDOW_RIGHT - MENUITM_INFO_WINDOW_LEFT)
+// The right side of the info window is shared with the right side of the main window as calculated above.
+#macro	MENUITM_INFO_WINDOW_WIDTH		(MENUITM_MAIN_WINDOW_RIGHT - MENUITM_INFO_WINDOW_LEFT - 1)
+#macro	MENUITM_INFO_WINDOW_HEIGHT		46
+
+// Some vertical offsets for the info window's background to use while rendering itself onto the menu.
+#macro	MENUITM_INFO_WINDOW_TOP			(MENUITM_MAIN_WINDOW_LHEIGHT -  4)
+#macro	MENUITM_INFO_WINDOW_MIDDLE		(MENUITM_INFO_WINDOW_TOP	 + 20)
+#macro	MENUITM_INFO_WINDOW_BOTTOM		(MENUITM_INFO_WINDOW_TOP	 + MENUITM_INFO_WINDOW_HEIGHT)
 
 // Determines the horizontal positions of vvarious menu elements relative to other characteristics of the
 // menu like the x position of the visible options, the background elements, and so on.
-#macro	MENUITM_CURSOR_X				(MENUITM_OPTIONS_X		   - 7)
-#macro	MENUITM_CUROPTION_BOX_X			(MENUITM_MAIN_WINDOW_LEFT  + 1)
+#macro	MENUITM_CURSOR_X				(MENUITM_OPTIONS_X		   -   7)
+#macro	MENUITM_CUROPTION_BOX_X			(MENUITM_MAIN_WINDOW_LEFT  +   1)
 #macro	MENUITM_QUANTITY_X			    (MENUITM_OPTIONS_X		   + 120)
 #macro	MENUITM_EQUIP_ICON_X			(MENUITM_QUANTITY_X		   - maxQuantityWidth - 8)
 
-// Determines the width of the highlight rectangle that shows up behind the option the cursor is next to.
-#macro	MENUITM_CUROPTION_BOX_WIDTH		(MENUITM_MAIN_WINDOW_WIDTH - 1)
-
 // Determines the maximum line width for an item's description string as well as the maximum number of lines
 // that can exist for display within the inventory's item section.
-#macro	MENUITM_OPTION_INFO_MAX_WIDTH	(MENUITM_INFO_WINDOW_WIDTH - 5)
+#macro	MENUITM_OPTION_INFO_MAX_WIDTH	(MENUITM_INFO_WINDOW_WIDTH -   5)
 #macro	MENUITM_OPTION_INFO_MAX_LINES	4
 
-// 
+// Determines the color of the shadows found behind text rendered through this menu's draw_gui event.
 #macro	MENUITM_TEXT_SHADOW_COLOR		COLOR_DARK_GRAY
-#macro	MENUITM_TEXT_SHADOW_ALPHA		0.75
+#macro	MENUITM_TEXT_SHADOW_ALPHA		1.0
 
 // Determines how fast the menu's cursor will move back and forth along the x axis.
 #macro	MENUITM_CURSOR_ANIM_SPEED		0.07
@@ -240,29 +246,116 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	draw_gui_event = function(_xPos, _yPos){
 		// Create the left border of the item menu's main window, which consists of three pieces to create a
 		// line that fades out along the top and bottom of itself.
-		draw_sprite_ext(spr_item_menu_border_edge, 0, _xPos + MENUITM_MAIN_WINDOW_LEFT, _yPos, 
-			1, 1, 0.0, COLOR_WHITE, alpha); // Top portion of the window's left edge.
-		draw_sprite_ext(spr_rectangle, 0, _xPos + MENUITM_MAIN_WINDOW_LEFT, _yPos + 20,
-			1, 70, 0.0, COLOR_WHITE, alpha);
-		draw_sprite_ext(spr_item_menu_border_edge, 0, _xPos + MENUITM_MAIN_WINDOW_LEFT, _yPos + 110, 
-			1, -1, 0.0, COLOR_WHITE, alpha); // Bottom portion of the window's left edge.
+		draw_sprite_ext( // Top portion of the main window's left edge.
+			spr_item_menu_border_edge, 0,					// Sprite/Subimage (Unused so set to 0)
+			_xPos + MENUITM_MAIN_WINDOW_LEFT, _yPos, 		// X/Y
+			1, 1,											// Width (1 = 1px)/Y Scale (1 = 20px)
+			0.0, COLOR_WHITE, alpha							// Angle (Unused so set to 0), Color, and Opacity
+		);
+		draw_sprite_ext( // Middle portion of the main window's left edge.
+			spr_rectangle, 0,								// Sprite/Subimage (Unused so set to 0)
+			_xPos + MENUITM_MAIN_WINDOW_LEFT, _yPos + 20,	// X/Y
+			1, 70,											// Width (1 = 1px)/Height (1 = 1px)
+			0.0, COLOR_WHITE, alpha							// Angle (Unused so set to 0), Color, and Opacity
+		);
+		draw_sprite_ext( // Bottom portion of the main window's left edge.
+			spr_item_menu_border_edge, 0,					// Sprite/Subimage (Unused so set to 0)
+			_xPos + MENUITM_MAIN_WINDOW_LEFT, _yPos + 110, 	// X/Y
+			1, -1,											// Width (1 = 1px)/Vertical Scaling (1 = 20px) 
+			0.0, COLOR_WHITE, alpha							// Angle (Unused so set to 0), Color, and Opacity
+		);
+		// NOTE --	Comments displayed on the right of this first triplet of draw_sprite_ext commands apply
+		//			to every other triplet in this section of the code, so use them for reference to the
+		//			numerical values/macros found in those lines if needed.
 			
-		// Do the same as above, but for the right edge of the item menu's main window.
-		draw_sprite_ext(spr_item_menu_border_edge, 0, _xPos + MENUITM_MAIN_WINDOW_RIGHT, _yPos, 
-			1, 1, 0.0, COLOR_WHITE, alpha); // Top portion of the window's right edge.
-		draw_sprite_ext(spr_rectangle, 0, _xPos + MENUITM_MAIN_WINDOW_RIGHT, _yPos + 20,
-			1, 112, 0.0, COLOR_WHITE, alpha);
-		draw_sprite_ext(spr_item_menu_border_edge, 0, _xPos + MENUITM_MAIN_WINDOW_RIGHT, _yPos + 152, 
-			1, -1, 0.0, COLOR_WHITE, alpha); // Bottom portion of the window's right edge.
+		// Do the same as above, but for the right edge of the item menu's main window. Note that the right
+		// side of the window also acts as the border for the highlighted item's info window, so it will have
+		// an increased height to compensate.
+		draw_sprite_ext( // Top portion of the main/info window's right edge.
+			spr_item_menu_border_edge, 0,
+			_xPos + MENUITM_MAIN_WINDOW_RIGHT, _yPos,
+			1, 1,
+			0.0, COLOR_WHITE, alpha	
+		);
+		draw_sprite_ext( // Middle portion of the main/info window's right edge.
+			spr_rectangle, 0,
+			_xPos + MENUITM_MAIN_WINDOW_RIGHT, _yPos + 20,
+			1, 112,
+			0.0, COLOR_WHITE, alpha
+		);
+		draw_sprite_ext( // Bottom portion of the main window's right edge.
+			spr_item_menu_border_edge, 0, 
+			_xPos + MENUITM_MAIN_WINDOW_RIGHT, _yPos + MENUITM_MAIN_WINDOW_RHEIGHT,
+			1, -1,
+			0.0, COLOR_WHITE, alpha
+		);
 			
-		// 
-		draw_sprite_ext(spr_item_menu_border_edge, 0, _xPos + MENUITM_INFO_WINDOW_LEFT, 
-			_yPos + MENUITM_MAIN_WINDOW_HEIGHT, 1, 1, 0.0, COLOR_WHITE, alpha); // Top portion of the info window's right edge.
-		draw_sprite_ext(spr_rectangle, 0, _xPos + MENUITM_INFO_WINDOW_LEFT, 
-			_yPos + MENUITM_MAIN_WINDOW_HEIGHT + 20, 1, 6, 0.0, COLOR_WHITE, alpha);
-		draw_sprite_ext(spr_item_menu_border_edge, 0, _xPos + MENUITM_INFO_WINDOW_LEFT, 
-			_yPos + 152, 1, -1, 0.0, COLOR_WHITE, alpha); // Bottom portion of the info window's left edge.
+		// Drawing a border for the highlighted item's descriptive text/graphical representation.
+		draw_sprite_ext( // Top portion of the info window's right edge.
+			spr_item_menu_border_edge, 0, 
+			_xPos + MENUITM_INFO_WINDOW_LEFT, _yPos + MENUITM_INFO_WINDOW_TOP,
+			1, 1,
+			0.0, COLOR_WHITE, alpha
+		);
+		draw_sprite_ext( // Middle portion of the info window's right edge.
+			spr_rectangle, 0, 
+			_xPos + MENUITM_INFO_WINDOW_LEFT, _yPos + MENUITM_INFO_WINDOW_MIDDLE,
+			1, 6,
+			0.0, COLOR_WHITE, alpha
+		);
+		draw_sprite_ext( // Bottom portion of the info window's left edge.
+			spr_item_menu_border_edge, 0, 
+			_xPos + MENUITM_INFO_WINDOW_LEFT, _yPos + MENUITM_INFO_WINDOW_BOTTOM,
+			1, -1,
+			0.0, COLOR_WHITE, alpha
+		);
 			
+		// Since all background elements share the same relative opacity value, it is calculated and stored
+		// into a local value here to be used as required in the code below.
+		var _bkgAlpha = alpha * 0.5;
+		
+		// Draws the background for the main window in a way that's nearly identical to how its borders were
+		// drawn at the start of this event. The only difference being the single-pixel sprites are stretched
+		// across the area between each edge by increase the horizontal scaling of the sprite.
+		draw_sprite_ext( // Top portion of the main window's background.
+			spr_item_menu_border_edge, 0, 
+			_xPos + MENUITM_MAIN_WINDOW_LEFT + 1, _yPos,
+			MENUITM_MAIN_WINDOW_WIDTH, 1,
+			0.0, COLOR_BLACK, _bkgAlpha
+		); 
+		draw_sprite_ext( // Middle portion of the main window's background.
+			spr_rectangle, 0, 
+			_xPos + MENUITM_MAIN_WINDOW_LEFT + 1, _yPos + 20,
+			MENUITM_MAIN_WINDOW_WIDTH, 70,
+			0.0, COLOR_BLACK, _bkgAlpha
+		);
+		draw_sprite_ext( // Bottom portion of the main window's background.
+			spr_item_menu_border_edge, 0,
+			_xPos + MENUITM_MAIN_WINDOW_LEFT + 1, _yPos + 110,
+			MENUITM_MAIN_WINDOW_WIDTH, -1,
+			0.0, COLOR_BLACK, _bkgAlpha
+		);
+		
+		// Do the same as above for drawing the info window's background since they share the same style;
+		// scaling the logic for drawing each edge across the distance between those edges with the same sprites.
+		draw_sprite_ext( // Top portion of the info window's background.
+			spr_item_menu_border_edge, 0, 
+			_xPos + MENUITM_INFO_WINDOW_LEFT + 1, _yPos + MENUITM_INFO_WINDOW_TOP,
+			MENUITM_INFO_WINDOW_WIDTH, 1,
+			0.0, COLOR_DARK_BLUE, _bkgAlpha
+		);
+		draw_sprite_ext( // Middle portion of the info window's background.
+			spr_rectangle, 0, 
+			_xPos + MENUITM_INFO_WINDOW_LEFT + 1, _yPos + MENUITM_INFO_WINDOW_MIDDLE,
+			MENUITM_INFO_WINDOW_WIDTH, 6,
+			0.0, COLOR_DARK_BLUE, _bkgAlpha
+		);
+		draw_sprite_ext( // Bottom portion of the info window's background.
+			spr_item_menu_border_edge, 0, 
+			_xPos + MENUITM_INFO_WINDOW_LEFT + 1, _yPos + MENUITM_INFO_WINDOW_BOTTOM,
+			MENUITM_INFO_WINDOW_WIDTH, -1,
+			0.0, COLOR_DARK_BLUE, _bkgAlpha
+		);
 		
 		// Create local values for the location of the currently highlighted item on the visible portion of
 		// the item inventory menu, which are then used to position various elements that rely on the current
@@ -275,15 +368,22 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		var _bkgColor = COLOR_LIGHT_YELLOW;
 		if (auxSelOption == curOption)	 { _bkgColor = COLOR_LIGHT_RED; }
 		else if (selOption == curOption) { _bkgColor = COLOR_LIGHT_GREEN; }	
-		draw_sprite_ext(spr_rectangle, 0, 
+		draw_sprite_ext(
+			spr_rectangle, 0, 
 			_xPos + MENUITM_CUROPTION_BOX_X, _curOptionY - 1, 
-			MENUITM_CUROPTION_BOX_WIDTH, MENUITM_OPTION_SPACING_Y, 0.0, 
-			_bkgColor, alpha * 0.2);
+			MENUITM_MAIN_WINDOW_WIDTH, MENUITM_OPTION_SPACING_Y, 
+			0.0, _bkgColor, _bkgAlpha
+		);
 			
 		// Above the backing rectangle for the highlighted item, a cursor using the greater-than symbol will
 		// be drawn; shifting left and right based on the current value of cursorAnimTimer.
-		draw_sprite_ext(spr_item_menu_cursor, 0, _xPos + MENUITM_CURSOR_X + floor(cursorAnimTimer), 
-			_curOptionY + 1, 1.0, 1.0, 0.0, COLOR_WHITE, alpha);
+		draw_sprite_ext(
+			spr_item_menu_cursor, 0, 
+			_xPos + MENUITM_CURSOR_X + floor(cursorAnimTimer), 
+			_curOptionY + 1, 
+			1, 1, 
+			0.0, COLOR_WHITE, alpha
+		);
 		
 		// Display the currently visible region of this menu with the default function provided by the 
 		// inherited base menu struct.

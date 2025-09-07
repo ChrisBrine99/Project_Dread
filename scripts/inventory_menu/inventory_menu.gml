@@ -210,7 +210,7 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 				COLOR_GRAY, COLOR_WHITE, MENUINV_MAINBG_ALPHA1);
 			set_effect_color(COLOR_VERY_DARK_BLUE);
 			draw_circle_ext(_bgCenterX, _bgCenterY, MENUINV_MAINBG_XRADIUS, MENUINV_MAINBG_YRADIUS, 
-				COLOR_LIGHT_GRAY, COLOR_WHITE, MENUINV_MAINBG_ALPHA2);
+				COLOR_GRAY, COLOR_WHITE, MENUINV_MAINBG_ALPHA2);
 			shader_reset();
 		}
 		
@@ -241,15 +241,15 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		
 		// After the background elements have all been drawn, the inventory's section names will be drawn 
 		// on the top portion of the menu that is outside of the currently active section.
-		draw_visible_options(fnt_medium, _xPos, _yPos, COLOR_BLACK, 1.0);
+		draw_visible_options(fnt_medium, _xPos, _yPos, COLOR_DARK_GRAY, 1.0);
 			
 		// Finally, display the icon/descriptor data that exists within the cursor movement and menu 
 		// interaction inputs, respectively.
 		var _movementCtrlGroup = movementCtrlGroup;
 		var _interactCtrlGroup = interactCtrlGroup;
 		with(CONTROL_UI_MANAGER){
-			draw_control_group(_movementCtrlGroup, _xPos, _yPos, _alpha, COLOR_WHITE, COLOR_BLACK, _alpha);
-			draw_control_group(_interactCtrlGroup, _xPos, _yPos, _alpha, COLOR_WHITE, COLOR_BLACK, _alpha);
+			draw_control_group(_movementCtrlGroup, _xPos, _yPos, _alpha, COLOR_WHITE, COLOR_DARK_GRAY, _alpha);
+			draw_control_group(_interactCtrlGroup, _xPos, _yPos, _alpha, COLOR_WHITE, COLOR_DARK_GRAY, _alpha);
 		}
 	}
 	
