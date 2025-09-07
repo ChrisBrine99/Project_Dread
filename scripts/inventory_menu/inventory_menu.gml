@@ -46,7 +46,7 @@
 // relative to the bottom-right of the GUI and the spacing between each icon/descriptor pairs.
 #macro	MENUINV_CTRL_GRP_PADDING		2
 #macro	MENUINV_CTRL_GRP_XOFFSET		5
-#macro	MENUINV_CTRL_GRP_YOFFSET		display_get_gui_height() - 12
+#macro	MENUINV_CTRL_GRP_YOFFSET		(VIEWPORT_HEIGHT - 12)
 
 // Each macro represents the index values where each of the two menu cursor movement icon/descriptor pairs 
 // and each of the two inventory page shift icon/descriptor pairs, respectively.
@@ -62,24 +62,27 @@
 // Determines the position of this second control group on the screen, as well as the amount of padding
 // between each group's icon/descriptor pair.
 #macro	MENUINV_CTRL_GRP2_PADDING		2
-#macro	MENUINV_CTRL_GRP2_XOFFSET		display_get_gui_width()	 - 5
-#macro	MENUINV_CTRL_GRP2_YOFFSET		display_get_gui_height() - 12
+#macro	MENUINV_CTRL_GRP2_XOFFSET		(VIEWPORT_WIDTH - 5)
+#macro	MENUINV_CTRL_GRP2_YOFFSET		(VIEWPORT_HEIGHT - 12)
 
 // Each macro represents the index values where the menu select icon/descriptor pair and menu return icon/
 // descriptor pair, respectively.
 #macro	MENUINV_CTRL_GRP2_SELECT		0
 #macro	MENUINV_CTRL_GRP2_RETURN		1
 
-// Determines the radius of the main background, which uses a colored circle to create a sort-of vignette
-// effect in the main window background (Where the current section's contents are located).
-#macro	MENUINV_MAINBG_XRADIUS			210
-#macro	MENUINV_MAINBG_YRADIUS			140
+// 
+#macro	MENUINV_MAINBKG_XRADIUS			210
+#macro	MENUINV_MAINBKG_YRADIUS			140
+#macro	MENUINV_MAINBKG_ALPHA1			0.8
+#macro	MENUINV_MAINBKG_ALPHA2			0.3
 
-// The alpha levels for the two circles that are drawn for the main window background to create a very subtle
-// blue hue to said background. As such, the first is the black circle and the second is the blue color which
-// is blended onto that initial black circle on the background.
-#macro	MENUINV_MAINBG_ALPHA1			(_alpha * 0.8)
-#macro	MENUINV_MAINBG_ALPHA2			(_alpha * 0.3)
+//
+#macro	MENUINV_HEADER_HEIGHT			14
+#macro	MENUINV_FOOTER_Y				(VIEWPORT_HEIGHT - 14)
+
+// 
+#macro	MENUINV_SECTION_WIDTH			(VIEWPORT_WIDTH	- 5)
+#macro	MENUINV_SECTION_HEIGHT			(MENUINV_FOOTER_Y - MENUINV_HEADER_HEIGHT)
 
 #endregion Macros for Inventory Menu Struct
 
@@ -198,46 +201,89 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	///	@param {Real}	xPos	The menu's current x position added with the viewport's current x position.
 	/// @param {Real}	yPos	The menu's current y position added with the viewport's current x position.
 	draw_gui_event = function(_xPos, _yPos){
-		// Create a unique looking vignette effect for the background of the inventory which is tinted a very
-		// slight blue relative to the blending of the two circles drawn below. After that, the remaining
-		// elements of the inventory's background will be drawn.
-		var _bgCenterX	= _xPos + (VIEWPORT_WIDTH  >> 1);
-		var _bgCenterY	= _yPos + (VIEWPORT_HEIGHT >> 1);
-		var _alpha		= alpha;
-		with(global.colorFadeShader){
-			activate_shader(COLOR_BLACK);
-			draw_circle_ext(_bgCenterX, _bgCenterY, MENUINV_MAINBG_XRADIUS, MENUINV_MAINBG_YRADIUS, 
-				COLOR_GRAY, COLOR_WHITE, MENUINV_MAINBG_ALPHA1);
-			set_effect_color(COLOR_VERY_DARK_BLUE);
-			draw_circle_ext(_bgCenterX, _bgCenterY, MENUINV_MAINBG_XRADIUS, MENUINV_MAINBG_YRADIUS, 
-				COLOR_GRAY, COLOR_WHITE, MENUINV_MAINBG_ALPHA2);
-			shader_reset();
-		}
-		
-		// 
+		// A local value that allows menu elements to slide off/on the bottom of the screen as other elements
+		// go off/on the otp of the screen alongside the menu y position during the opening/closing animation,
+		// respectively. Multiplied by two to cancel out that upward sliding motion of the y value.
 		var _yy = (y * 2.0);
 		
-		// Draws white lines that divide the currently active section's contents from the control information
-		// that is currently being displayed along the bottom of the GUI, and the names of each section which
-		// appear on the top of the GUI.
-		draw_sprite_ext(spr_rectangle, 0, _xPos, _yPos + 13,						VIEWPORT_WIDTH, 
-			1, 0.0, COLOR_WHITE, alpha);
-		draw_sprite_ext(spr_rectangle, 0, _xPos, _yPos - _yy + VIEWPORT_HEIGHT - 14,	VIEWPORT_WIDTH, 
-			1, 0.0, COLOR_WHITE, alpha);
+		#region Render Vignette-style Background Behind Menu Section's Contents
 		
-		// Ensure the proper alpha level and blending color are set before the background for the top and
-		// bottom of the menu are drawn. They use a simple 32 by 16 greyscale sprite that contains a gradient
-		// that is interpolated so as to not appear incredibly pixelated.
-		draw_set_alpha(alpha);
-		draw_set_color(COLOR_WHITE);
-		gpu_set_tex_filter(true);
-		draw_sprite_stretched(spr_inv_menu_header_footer_bkg, 0, _xPos, _yPos, VIEWPORT_WIDTH, 13);
-		draw_sprite_stretched(spr_inv_menu_header_footer_bkg, 0, _xPos, _yPos - _yy + VIEWPORT_HEIGHT - 13,	VIEWPORT_WIDTH, 13);
-		gpu_set_tex_filter(false);
+			var _alpha = alpha;
+			with(global.colorFadeShader){
+				activate_shader(COLOR_BLACK);
+				draw_circle_ext( // The main portion of the background.
+					_xPos + VIEWPORT_HALF_WIDTH, _yPos + VIEWPORT_HALF_HEIGHT,
+					MENUINV_MAINBKG_XRADIUS, MENUINV_MAINBKG_YRADIUS,
+					COLOR_GRAY, COLOR_WHITE,
+					_alpha * MENUINV_MAINBKG_ALPHA1
+				);
+				set_effect_color(COLOR_VERY_DARK_BLUE);
+				draw_circle_ext( // Adds a subtle blue hue to the background.
+					_xPos + VIEWPORT_HALF_WIDTH, _yPos + VIEWPORT_HALF_HEIGHT,
+					MENUINV_MAINBKG_XRADIUS, MENUINV_MAINBKG_YRADIUS, 
+					COLOR_GRAY, COLOR_WHITE,
+					_alpha * MENUINV_MAINBKG_ALPHA2
+				);
+				shader_reset();
+			}
 		
-		// 
-		// var _curOptionX = _xPos + optionX + (curOption * optionSpacingX) - 25.0;
-		// draw_sprite_ext(spr_rectangle, 0, _curOptionX, _yPos, 50.0, 13.0, 0.0, COLOR_LIGHT_YELLOW, _alpha * 0.3);
+		#endregion Render Vignette-style Background Behind Menu Section's Contents		
+		#region Drawing White Rectangle Around Active Menu Section's Contents
+		
+			draw_sprite_ext( // Left side of the rectangle.
+				spr_rectangle,
+				0,		// Unused
+				_xPos, _yPos + 14,
+				1, MENUINV_SECTION_HEIGHT - _yy,
+				0.0,	// Unused
+				COLOR_WHITE, alpha
+			);
+			draw_sprite_ext( // Right side of the rectangle.
+				spr_rectangle,
+				0,		// Unused
+				_xPos + VIEWPORT_WIDTH - 1, _yPos + MENUINV_HEADER_HEIGHT,
+				1, MENUINV_SECTION_HEIGHT - _yy,
+				0.0,	// Unused
+				COLOR_WHITE, alpha
+			);
+			draw_sprite_ext( // Top side of the rectangle.
+				spr_rectangle, 
+				0,		// Unused 
+				_xPos, _yPos + MENUINV_HEADER_HEIGHT,
+				VIEWPORT_WIDTH, 1,
+				0.0,	// Unused 
+				COLOR_WHITE, alpha
+			);
+			draw_sprite_ext( // Bottom side of the rectangle.
+				spr_rectangle, 
+				0,		// Unused 
+				_xPos, _yPos + MENUINV_FOOTER_Y - _yy,
+				VIEWPORT_WIDTH, 1, 
+				0.0,	// Unused
+				COLOR_WHITE, alpha
+			);
+			
+		#endregion Drawing White Rectangle Around Active Menu Section's Contents
+		#region Drawing Header and Footer Backgrounds
+		
+			draw_set_alpha(alpha);
+			draw_set_color(COLOR_WHITE);
+			gpu_set_tex_filter(true);
+			draw_sprite_stretched( // The header background.
+				spr_inv_menu_header_footer_bkg, 
+				0,	// Unused
+				_xPos, _yPos, 
+				VIEWPORT_WIDTH, 13
+			);
+			draw_sprite_stretched( // The footer background.
+				spr_inv_menu_header_footer_bkg, 
+				0,	// Unused
+				_xPos, _yPos - _yy + VIEWPORT_HEIGHT - 13,	
+				VIEWPORT_WIDTH, 13
+			);
+			gpu_set_tex_filter(false);
+		
+		#endregion Drawing Header and Footer Backgrounds
 		
 		// After the background elements have all been drawn, the inventory's section names will be drawn 
 		// on the top portion of the menu that is outside of the currently active section.

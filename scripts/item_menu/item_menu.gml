@@ -271,24 +271,24 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		// Do the same as above, but for the right edge of the item menu's main window. Note that the right
 		// side of the window also acts as the border for the highlighted item's info window, so it will have
 		// an increased height to compensate.
-		draw_sprite_ext( // Top portion of the main/info window's right edge.
-			spr_item_menu_border_edge, 0,
-			_xPos + MENUITM_MAIN_WINDOW_RIGHT, _yPos,
-			1, 1,
-			0.0, COLOR_WHITE, alpha	
-		);
-		draw_sprite_ext( // Middle portion of the main/info window's right edge.
-			spr_rectangle, 0,
-			_xPos + MENUITM_MAIN_WINDOW_RIGHT, _yPos + 20,
-			1, 112,
-			0.0, COLOR_WHITE, alpha
-		);
-		draw_sprite_ext( // Bottom portion of the main window's right edge.
-			spr_item_menu_border_edge, 0, 
-			_xPos + MENUITM_MAIN_WINDOW_RIGHT, _yPos + MENUITM_MAIN_WINDOW_RHEIGHT,
-			1, -1,
-			0.0, COLOR_WHITE, alpha
-		);
+		//	draw_sprite_ext( // Top portion of the main/info window's right edge.
+		//		spr_item_menu_border_edge, 0,
+		//		_xPos + MENUITM_MAIN_WINDOW_RIGHT, _yPos,
+		//		1, 1,
+		//		0.0, COLOR_WHITE, alpha	
+		//	);
+		//	draw_sprite_ext( // Middle portion of the main/info window's right edge.
+		//		spr_rectangle, 0,
+		//		_xPos + MENUITM_MAIN_WINDOW_RIGHT, _yPos + 20,
+		//		1, 112,
+		//		0.0, COLOR_WHITE, alpha
+		//	);
+		//	draw_sprite_ext( // Bottom portion of the main window's right edge.
+		//		spr_item_menu_border_edge, 0, 
+		//		_xPos + MENUITM_MAIN_WINDOW_RIGHT, _yPos + MENUITM_MAIN_WINDOW_RHEIGHT,
+		//		1, -1,
+		//		0.0, COLOR_WHITE, alpha
+		//	);
 			
 		// Drawing a border for the highlighted item's descriptive text/graphical representation.
 		draw_sprite_ext( // Top portion of the info window's right edge.

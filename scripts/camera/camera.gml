@@ -9,10 +9,15 @@
 #macro	CAM_ARE_BOUNDS_LOCKED			((flags & CAM_FLAG_BOUNDS_LOCKED)		!= 0)
 #macro	CAM_IS_FOLLOWING_OBJECT			((flags & CAM_FLAG_FOLLOWING_OBJECT)	!= 0)
 
-// The default viewport width and height. The application window size should ALWAYS be set to a whole number 
-// multiple of these values. Otherwise pixels on the screen won't be equally sized; ruining the image quality.
+// The application window size should ALWAYS be set to a whole number multiple of these values. Otherwise 
+// pixels on the screen won't be equally sized; ruining the image quality.
 #macro	VIEWPORT_WIDTH					320
 #macro	VIEWPORT_HEIGHT					180
+
+// The values for half the viewport's width and height, respectively. These represent the exact center of the
+// screen which can be used to help calculate various UI elements and such.
+#macro	VIEWPORT_HALF_WIDTH				(VIEWPORT_WIDTH >> 1)
+#macro	VIEWPORT_HALF_HEIGHT			(VIEWPORT_HEIGHT >> 1)
 
 // Determines a square region with a width and height of the value below multiplied by two where the camera
 // will no longer move alongside the object it is currently set to follow.
