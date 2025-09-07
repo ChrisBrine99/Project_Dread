@@ -416,10 +416,41 @@ add_instance_to_warp = function(_id, _targetX, _targetY){
 
 #endregion Game Manager Local Function Initializations
 
-// These calls and variables are for testing purposes
+#region Debug Variable Initializations
+
+// Stores a list of structs that are lines rendered to the screen for a limited amount of time or indefintely
+// if that is required. Useful for tracking hitscan collision paths or distances between objects and so on.
+debugLines		= ds_list_create();
+
+// Stores the number of dynamic and static entities currently being drawn in the current room, respectively.
+numDynamicDrawn	= 0;
+numStaticDrawn	= 0;
+
+#endregion Debug Variable Initialzations
+
+#region Debug Function Initializations
+
+/// @description 
+///	
+///	
+///	@param {Real}	startX
+/// @param {Real}	startY
+/// @param {Real}	endX
+/// @param {Real}	endY
+/// @param {Real}	lifetime
+add_debug_line = function(_startX, _startY, _endX, _endY, _lifetime){
+	ds_list_add(debugLines, {
+		startX		: _startX,
+		startY		: _startY,
+		endX		: _endX,
+		endY		: _endY,
+		curLifetime	: _lifetime,
+		lifetime	: max(_lifetime, 1),
+	});
+}
+
+#endregion Debug Function Initializations
+
 load_item_data("items.dat");
 item_inventory_initialize(GAME_FLAG_CMBTDIFF_STANDARD);
 show_debug_overlay(false);
-
-numDynamicDrawn = 0;
-numStaticDrawn = 0;

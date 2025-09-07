@@ -83,6 +83,30 @@ texture_set_stage(uLightTexture,		global.lightTexture);
 draw_surface(global.worldSurface, _viewX, _viewY);
 shader_reset();
 
+#region Debug Element Rendering Code
+
+var _length = ds_list_size(debugLines);
+if (_length > 0){
+	var _debugLines = debugLines;
+	draw_set_color(COLOR_WHITE);
+	for (var i = 0; i < _length; i++){
+		with(debugLines[| i]){
+			draw_set_alpha(1.0 * curLifetime / lifetime);
+			draw_line(startX, startY, endX, endY);
+		
+			curLifetime -= _delta;
+			if (curLifetime <= 0.0){
+				delete _debugLines[| i];
+				ds_list_delete(_debugLines, i);
+				_length--;
+				i--;
+			}
+		}
+	}
+}
+
+#endregion Debug Element Rendering Code
+
 // Display the interaction prompt for the current interactable the player is focused on. If that interactable
 // objects happens to not be active/visible or the player cannot currently interact with it, the prompt will
 // not be displayed on the UI.
@@ -97,7 +121,7 @@ with(PLAYER){
 // Loop through all currently active menus; rendering them to the screen if they're flagged to be visible and
 // their current alpha level is above the minimum alpha threshold. If a menu fails to meet these conditions it
 // will not be rendered to the GUI layer.
-var _length = ds_list_size(global.menus);
+_length = ds_list_size(global.menus);
 for (var i = 0; i < _length; i++){
 	with(global.menus[| i]){
 		if (alpha <= _minAlpha || !MENU_IS_VISIBLE)
