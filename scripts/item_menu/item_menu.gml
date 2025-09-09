@@ -147,6 +147,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	itemOptionsSurf		= -1;
 	itemOptionsMenuX	= 0;
 	itemOptionsMenuY	= 0;
+	itemOptionsAlpha	= 0.0;
 	
 	// A value used to allow the menu's cursor to move back and forth by one pixel along the x axis.
 	// cursorAnimTimer		= 0.0;
@@ -171,7 +172,9 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		initialize_option_params(MENUITM_OPTIONS_X, MENUITM_OPTIONS_Y, 
 			MENUITM_OPTION_SPACING_X, MENUITM_OPTION_SPACING_Y, fa_left, fa_top, true);
 		
-		// 
+		// Create a temporary list that will store the slot indexes that any of the player's equipment are
+		// found within the item inventory. These will be used to see what needs to have an "E" on their slot
+		// upon initial menu startup.
 		var _equippedSlots	= ds_list_create();
 		with(PLAYER.equipment){
 			if (weapon		 != INV_EMPTY_SLOT)	{ ds_list_add(_equippedSlots, weapon); }
@@ -181,19 +184,22 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			if (secondAmulet != INV_EMPTY_SLOT) { ds_list_add(_equippedSlots, secondAmulet); }
 		}
 		
-		// 
+		// Create some local variables that will help the item menu construct its contents with the information
+		// found in the item inventory. They store data that is passed between the different structs involved
+		// in this creation process.
 		var _itemRef		= noone;
 		var _itemName		= "";
 		var _itemInfo		= "";
 		var _itemID			= ID_INVALID;
 		var _quantity		= 0;
 		
-		// 
+		// Local variables that are used to setup what extra information is rendered on top of an item slot.
 		var _equipSlot		= 0;
 		var _quantityCol	= COLOR_WHITE;
 		var _showStack		= false;
 		
-		// 
+		// Loop through the item inventory array so the menu can construct itself to accurately represent what
+		// is currently contained within that data.
 		var _invItem		= INV_EMPTY_SLOT;
 		var _length			= array_length(global.curItems);
 		for (var i = 0; i < _length; i++){
@@ -203,30 +209,38 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 				continue;
 			}
 			
-			// 
+			// Grab information about the item from the slot's contents; its name, ID, and quantity. These
+			// values will be used below as required. Note that the quantity is capped at displaying "999"
+			// for a maximum.
 			with(_invItem){
 				_itemName	= itemName;
 				_itemID		= itemID;
 				_quantity	= min(999, quantity);
-				if (_quantity == 0) // 
+				if (_quantity == 0) // If the quantity happens to be zero; set the number to dark red.
 					_quantityCol = COLOR_DARK_RED;
 			}
 			
-			// 
+			// Grab a reference to the item's data struct based on the ID found in the item inventory's array.
+			// Within that struct, the item's description, and whether or not the item will have its quantity
+			// displayed on its slot.
 			_itemRef = global.itemIDs[_itemID];
 			with(_itemRef){
 				_itemInfo	= itemInfo;
 				_showStack	= ((typeID == ITEM_TYPE_WEAPON && !WEAPON_IS_MELEE) || stackLimit > 1);
-				if (_quantity == stackLimit) // 
+				if (_quantity == stackLimit) // When the quantity is full turn the quantity's color to light green.
 					_quantityCol = COLOR_LIGHT_GREEN;
 			}
 			
-			// 
+			// Create the menu option using the name of the item and its description as the option's description.
+			// Then, store the reference to the item struct so it can be used to handle other functionality of
+			// the item inventory menu.
 			add_option(_itemName, _itemInfo);
 			array_set(invItemRefs, i, _itemRef);
 			
-			// 
-			_equipSlot	= ds_list_find_index(_equippedSlots, i);
+			// Create a struct containing infomation about the item occupying the current slot in the item
+			// inventory. It stores the quantity, its color, whether it's equipped or not, and any other info
+			// required for display on the slot itself within the item inventory.
+			_equipSlot = ds_list_find_index(_equippedSlots, i);
 			array_set(itemDataToRender, i, {
 				quantityStr	: _showStack ? string(_quantity) : "",
 				quantityCol	: _quantityCol,
@@ -237,7 +251,8 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			_quantityCol = COLOR_WHITE;
 		}
 		
-		// 
+		// Finally, clear the list that was used to temporarily store the slot indexes where the player's
+		// current equipment is stored in the item inventory.
 		ds_list_clear(_equippedSlots);
 		ds_list_destroy(_equippedSlots);
 	}
@@ -258,7 +273,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		if (itemOptionsMenu != noone)		 { instance_destroy_menu_struct(itemOptionsMenu); }
 		if (surface_exists(itemOptionsSurf)) { surface_free(itemOptionsSurf); }
 		
-		// Clean up any elements that are currently occupied by structs.
+		// Clean up any elements that are currently occupied by extra item data structs.
 		var _length = array_length(itemDataToRender);
 		for (var i = 0; i < _length; i++){
 			if (itemDataToRender[i] != INV_EMPTY_SLOT)
@@ -348,16 +363,12 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		// Then, jump into scope of the menu in question and draw its options to the screen.
 		surface_set_target(itemOptionsSurf);
 		draw_clear_alpha(COLOR_BLACK, 0.0);
-		with(itemOptionsMenu){
-			// Only display the options if they will be visible on the surface to begin with (As they slide
-			// to the left during the opening animation and to the right in the closing animation).
-			if (optionX < SUBMENU_ITM_SURFACE_WIDTH)
-				draw_gui_event(0, 0);
-		}
+		with(itemOptionsMenu)
+			draw_gui_event(0, 0, COLOR_DARK_GRAY);
 		surface_reset_target();
 		
 		// Finally, draw the current capture of the selected item's option menu onto the screen.
-		draw_set_alpha(alpha);
+		draw_set_alpha(itemOptionsAlpha);
 		draw_surface(itemOptionsSurf, _xPos + itemOptionsMenuX, _yPos + itemOptionsMenuY);
 	}
 	
@@ -493,8 +504,9 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			// through or not. If the menu was created, this bool is set to true and some code below is skipped.
 			var _menuCreated = false;
 			if (itemOptionsMenu == noone){
-				itemOptionsMenu	= create_sub_menu(selfRef, 0, 0, _options, 1, 1, array_length(_options));
-				_menuCreated	= true;
+				itemOptionsMenu			= create_sub_menu(selfRef, 0, 0, _options, 1, 1, array_length(_options));
+				itemOptionsMenu.alpha	= 1.0;
+				_menuCreated			= true;
 			}
 				
 			// Jump into scope of the item inventory's sub menu so it can be activated along with replacing
@@ -536,17 +548,19 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		// Jump into the submenu's scope and update the parameters involved in the animation. Once all values
 		// have reached their targets, flip the flag _isOpened to true to signify the animation is done and
 		// the item menu's state should change.
-		var _isOpened = false;
+		var _isOpened			= false;
+		var _itemOptionsAlpha	= itemOptionsAlpha;
 		with(itemOptionsMenu){
-			optionX  = lerp(SUBMENU_ITM_ANIM_X1, SUBMENU_ITM_ANIM_X2, alpha); 
-			alpha	+= SUBMENU_ITM_OANIM_ALPHA_SPEED * _delta;
-			if (alpha >= 1.0){ // Animation has completed; set values to their targets.
+			optionX				= lerp(SUBMENU_ITM_ANIM_X1, SUBMENU_ITM_ANIM_X2, _itemOptionsAlpha); 
+			_itemOptionsAlpha  += SUBMENU_ITM_OANIM_ALPHA_SPEED * _delta;
+			if (_itemOptionsAlpha >= 1.0){ // Animation has completed; set values to their targets.
 				object_set_state(state_default);
-				optionX		= SUBMENU_ITM_ANIM_X2;
-				alpha		= 1.0;
-				_isOpened	= true;
+				optionX				= SUBMENU_ITM_ANIM_X2;
+				_itemOptionsAlpha	= 1.0;
+				_isOpened			= true;
 			}
 		}
+		itemOptionsAlpha = _itemOptionsAlpha;
 		
 		// Once the opening animation is finished, set the state of this menu to handle submenu logic.
 		if (_isOpened) { object_set_state(state_navigating_item_options); }
@@ -562,17 +576,19 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		// Jump into the select item's option menu submenu to update the parameters that are used in the
 		// closing animation. Once the conditions of the animation are met, the local _isClosed flag is
 		// set to true to signify the item menu can reset itself.
-		var _isClosed = false;
+		var _isClosed			= false;
+		var _itemOptionsAlpha	= itemOptionsAlpha;
 		with(itemOptionsMenu){
-			optionX  = lerp(SUBMENU_ITM_ANIM_X1, SUBMENU_ITM_ANIM_X2, alpha); 
-			alpha   -= SUBMENU_ITM_CANIM_ALPHA_SPEED * _delta;
-			if (alpha <= 0.0){ // Animation has completed; reset flags and set values to their targets.
-				flags		= flags & ~(MENU_FLAG_ACTIVE | MENU_FLAG_CURSOR_AUTOSCROLL);
-				optionX		= SUBMENU_ITM_ANIM_X1;
-				alpha		= 0.0;
-				_isClosed	= true;
+			optionX				= lerp(SUBMENU_ITM_ANIM_X1, SUBMENU_ITM_ANIM_X2, _itemOptionsAlpha); 
+			_itemOptionsAlpha  -= SUBMENU_ITM_CANIM_ALPHA_SPEED * _delta;
+			if (_itemOptionsAlpha <= 0.0){ // Animation has completed; reset flags and set values to their targets.
+				flags				= flags & ~(MENU_FLAG_ACTIVE | MENU_FLAG_CURSOR_AUTOSCROLL);
+				optionX				= SUBMENU_ITM_ANIM_X1;
+				_itemOptionsAlpha	= 0.0;
+				_isClosed			= true;
 			}
 		}
+		itemOptionsAlpha = _itemOptionsAlpha;
 		
 		// When flagged to close, the menu calls its reset function if there isn't an auxillary option
 		// selected by the item menu. Otherwise, it simply just updates its state so further functionality

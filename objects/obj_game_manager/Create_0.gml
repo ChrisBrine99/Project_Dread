@@ -431,7 +431,9 @@ numStaticDrawn	= 0;
 #region Debug Function Initializations
 
 /// @description 
-///	
+///	Creates a line within the world from the provided starting coordinates to the provided ending coordinates
+/// for the lifetime set in the final parameter (60 units = 1 second of real-time). Useful for showing hitscan
+/// collision lines and such.
 ///	
 ///	@param {Real}	startX
 /// @param {Real}	startY

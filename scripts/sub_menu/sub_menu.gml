@@ -24,10 +24,12 @@ function str_sub_menu(_index) : str_base_menu(_index) constructor{
 	/// to the game's GUI layer. Note that its position refers to the top-left of the menu itself, and its
 	/// contents will be offset from that point based on each of their unique position values.
 	///	
-	///	@param {Real}	xPos	The menu's current x position, rounded down.
-	/// @param {Real}	yPos	The menu's current y position, rounded down.
-	draw_gui_event = function(_xPos, _yPos){
-		draw_visible_options(font, _xPos, _yPos, COLOR_DARK_GRAY, 0.75);
+	///	@param {Real}	xPos		The menu's current x position, rounded down.
+	/// @param {Real}	yPos		The menu's current y position, rounded down.
+	///	@param {Real}	shadowColor	Determines the color used for the option text's drop shadow.
+	/// @param {Real}	shadowAlpha	Determines the opacity of the option text's drop shadow.
+	draw_gui_event = function(_xPos, _yPos, _shadowColor = COLOR_BLACK, _shadowAlpha = 1.0){
+		draw_visible_options(font, _xPos, _yPos, _shadowColor, _shadowAlpha);
 	}
 	
 	/// @description 

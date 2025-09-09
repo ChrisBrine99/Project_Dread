@@ -1,8 +1,14 @@
+// Make sure the item isn't a weapon before checking if the quantity is less then or equal to zero, so that
+// check is skipped over for weapon's that have an empty magazine/clip.
+var _notWeapon = false;
+with(global.itemData[? itemName])
+	_notWeapon = (typeID != ITEM_TYPE_WEAPON);
+
 // First, check if the item has been properly initialized. To meet this criteria, the item needs to have a 
 // valid world item ID (This allows reference to the data struccture managing the item's properties between 
 // rooms), a valid item ID, as well as a valid quantity (Greater than zero) and durability (Greater than or 
 // equal to zero).
-if (worldItemID == ID_INVALID || itemName == "" || itemQuantity <= 0 || itemDurability < 0){
+if (worldItemID == ID_INVALID || itemName == "" || (_notWeapon && itemQuantity <= 0) || itemDurability < 0){
 	instance_destroy(id);
 	return;
 }

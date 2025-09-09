@@ -201,7 +201,7 @@ function item_inventory_initialize(_cmbDiffFlagBit){
 	
 	// Fill the array with -1 values since each index defaults to 0 when a resize adds new indices.
 	var _length = array_length(global.curItems);
-	for (var i = 0; i < 20; i++)
+	for (var i = 0; i < _length; i++)
 		array_set(global.curItems, i, INV_EMPTY_SLOT);
 }
 
@@ -286,6 +286,11 @@ function item_inventory_add(_item, _amount, _durability = 0, _ammoIndex = 0){
 			ammoIndex	: _ammoIndex,
 		};
 		global.curItems[i] = _invItem;
+		
+		// The item that was added to the inventory was a weapon, so the value returned is -1 to signify it
+		// was successfully added in case the magazine/clip of the wepaon in question was empty.
+		if (global.itemIDs[_itemID].typeID == ITEM_TYPE_WEAPON)
+			return -1;
 		
 		// 
 		with(_invItem){

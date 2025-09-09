@@ -49,10 +49,9 @@ itemAmmoIndex	= 0;
 ///	
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 on_player_interact = function(_delta){
-	var _amount = item_inventory_add(itemName, itemQuantity, itemDurability, itemAmmoIndex);
-	
 	// The player's item inventory is completely full, so the textbox that is created will display flavor text
 	// of the character saying to themselves (In their head) that they have no room remaining.
+	var _amount = item_inventory_add(itemName, itemQuantity, itemDurability, itemAmmoIndex);
 	if (_amount == itemQuantity){
 		var _message = textboxMessage;
 		with(TEXTBOX){
@@ -62,7 +61,8 @@ on_player_interact = function(_delta){
 		return;
 	}
 	
-	// 
+	// Get the reference to the item's struct containing all its data, and then grab the type of the item from
+	// that data since it is utilized throughout this interaction function.
 	var _itemData = global.itemData[? itemName];
 	var _itemType = _itemData.typeID;
 	
@@ -83,14 +83,16 @@ on_player_interact = function(_delta){
 			quantity = _amount;
 		itemQuantity = _amount;
 		
-		// 
+		// If the item was ammunition, make sure to check if the current ammunition counts for the equipped
+		// weapon (If there is one to begin with) need to be updated based on the ammo that was just picked up.
 		if (_itemType == ITEM_TYPE_AMMO){
 			with(PLAYER) { update_current_ammo_counts(_itemData.itemID, _quantity); }
 		}
 		return;
 	}
 	
-	// 
+	// Grab the item's stack limit from within the item struct's data, and set it to one if the item happens
+	// to be either an equipable item or a weapon so the textbox doesn't display its quantity on pick up.
 	var _itemStackLimit	= _itemData.stackLimit;
 	if (_itemType == ITEM_TYPE_EQUIPABLE || _itemType == ITEM_TYPE_WEAPON)
 		_itemStackLimit = 1; // Treat these types of items as one per slot regardless of stack size.
@@ -104,7 +106,8 @@ on_player_interact = function(_delta){
 		activate_textbox();
 	}
 	
-	// 
+	// If the item was ammunition, make sure to check if the current ammunition counts for the equipped weapon 
+	// (If there is one to begin with) need to be updated based on the ammo that was just picked up.
 	if (_itemType == ITEM_TYPE_AMMO){
 		with(PLAYER) { update_current_ammo_counts(_itemData.itemID, _quantity); }
 	}
