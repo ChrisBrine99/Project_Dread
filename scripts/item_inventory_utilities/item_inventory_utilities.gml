@@ -66,11 +66,11 @@
 #macro	ITEMINV_START_SIZE_ONELIFE		6
 
 // Macros that store the maximum possible size of the item inventory for each combat difficulty level.
-#macro	ITEMINV_MAX_SIZE_FORGIVING		24
+#macro	ITEMINV_MAX_SIZE_FORGIVING		20
 #macro	ITEMINV_MAX_SIZE_STANDARD		20
 #macro	ITEMINV_MAX_SIZE_PUNISHING		16
-#macro	ITEMINV_MAX_SIZE_NIGHTMARE		14
-#macro	ITEMINV_MAX_SIZE_ONELIFE		12
+#macro	ITEMINV_MAX_SIZE_NIGHTMARE		12
+#macro	ITEMINV_MAX_SIZE_ONELIFE		10
 
 #endregion Macros Utilized Primarily by the Inventory System
 
@@ -201,7 +201,7 @@ function item_inventory_initialize(_cmbDiffFlagBit){
 	
 	// Fill the array with -1 values since each index defaults to 0 when a resize adds new indices.
 	var _length = array_length(global.curItems);
-	for (var i = 0; i < _length; i++)
+	for (var i = 0; i < 20; i++)
 		array_set(global.curItems, i, INV_EMPTY_SLOT);
 }
 

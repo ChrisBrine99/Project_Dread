@@ -366,6 +366,7 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 				// store important information to position and calculate the positions for each icon/descriptor
 				// pair; utilizing the offset from the last pair until the list is fully iterated.
 				draw_set_font(fnt_small);
+				var _isActive		= false;
 				var _sprIndex		= -1;
 				var _sprWidth		= 0;
 				var _sprHeight		= 0;
@@ -379,7 +380,8 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 				for (var i = 0; i < _length; i++){
 					with(iconsToDraw[| i]){
 						// When inactive, the control icon/descriptor pair will be skipped over in the process.
-						if (!isActive)		{ continue; }
+						_isActive = isActive;
+						if (!isActive) { break; }
 						
 						// Determine which sprite to use based on the currently active input method. Then, 
 						// this sprite is used to fill in the _sprWidth and _sprHeight variables, respectively.
@@ -422,6 +424,10 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 						if (descriptor == "")
 							_width -= 2;
 					}
+					
+					// Skip adding any values to the x offset if the current control group element is set to
+					// inactive. Otherwise, the wrong values will be calculated.
+					if (!_isActive) { continue; }
 			
 					// Determine how to update the current x/y offset values by checking the direction that 
 					// the elements will be drawn relative to the anchor point. Then, move onto the next 

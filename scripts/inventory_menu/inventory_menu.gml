@@ -50,10 +50,12 @@
 
 // Each macro represents the index values where each of the two menu cursor movement icon/descriptor pairs 
 // and each of the two inventory page shift icon/descriptor pairs, respectively.
-#macro	MENUINV_CTRL_GRP_CURSOR_UP		0
-#macro	MENUINV_CTRL_GRP_CURSOR_DOWN	1
-#macro	MENUINV_CTRL_GRP_PAGE_LEFT		2
-#macro	MENUINV_CTRL_GRP_PAGE_RIGHT		3
+#macro	MENUINV_CTRL_GRP_CURSOR_LEFT	0
+#macro	MENUINV_CTRL_GRP_CURSOR_RIGHT	1
+#macro	MENUINV_CTRL_GRP_CURSOR_UP		2
+#macro	MENUINV_CTRL_GRP_CURSOR_DOWN	3
+#macro	MENUINV_CTRL_GRP_PAGE_LEFT		4
+#macro	MENUINV_CTRL_GRP_PAGE_RIGHT		5
 
 // The macro for the unique key used to store the control icon group for the inventory's selection/return/
 // close input information.
@@ -145,6 +147,8 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 			// desired elements to the group in question.
 			_movementCtrlGroup = create_control_group(MENUINV_ICONUI_CTRL_GRP, MENUINV_CTRL_GRP_XOFFSET, 
 				MENUINV_CTRL_GRP_YOFFSET, MENUINV_CTRL_GRP_PADDING, ICONUI_DRAW_RIGHT);
+			add_control_group_icon(_movementCtrlGroup, ICONUI_MENU_LEFT);
+			add_control_group_icon(_movementCtrlGroup, ICONUI_MENU_RIGHT);
 			add_control_group_icon(_movementCtrlGroup, ICONUI_MENU_UP);
 			add_control_group_icon(_movementCtrlGroup, ICONUI_MENU_DOWN, "Cursor");
 			add_control_group_icon(_movementCtrlGroup, ICONUI_INV_LEFT);

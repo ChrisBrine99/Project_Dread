@@ -23,44 +23,10 @@
 #macro	MENUITM_OPTION_SPACING_X		21
 #macro	MENUITM_OPTION_SPACING_Y		21
 
-// Positional offset for the position of the an item's info text when it is currently being highlighted by 
-// the menu's cursor.
-#macro	MENUITM_OPTION_INFO_X			(MENUITM_OPTIONS_X		 - 50)
-#macro	MENUITM_OPTION_INFO_Y			(MENUITM_INFO_WINDOW_TOP +  8)
-
-// Since these background elements remain constant in their positions, they will be set using macros instead
-// of creating instance or local variables to store that same data, which should make the code very VERY
-// slightly more efficient.
-#macro	MENUITM_MAIN_WINDOW_LEFT		(MENUITM_OPTIONS_X -  10)
-#macro	MENUITM_MAIN_WINDOW_RIGHT		(MENUITM_OPTIONS_X + 124)
-#macro	MENUITM_MAIN_WINDOW_WIDTH		(MENUITM_MAIN_WINDOW_RIGHT - MENUITM_MAIN_WINDOW_LEFT - 1)
-#macro	MENUITM_MAIN_WINDOW_LHEIGHT		110
-#macro	MENUITM_MAIN_WINDOW_RHEIGHT		152
-
-// The horizontal position of the info window relative to the current info text's x position on the menu. A
-// right side position isn't necessary as the main window already encapsulates it as they share the same
-// border. The width and height of this window are also stored in this group of macros. 
-#macro	MENUITM_INFO_WINDOW_LEFT		(MENUITM_OPTION_INFO_X - 5)
-// The right side of the info window is shared with the right side of the main window as calculated above.
-#macro	MENUITM_INFO_WINDOW_WIDTH		(MENUITM_MAIN_WINDOW_RIGHT - MENUITM_INFO_WINDOW_LEFT - 1)
-#macro	MENUITM_INFO_WINDOW_HEIGHT		46
-
-// Some vertical offsets for the info window's background to use while rendering itself onto the menu.
-#macro	MENUITM_INFO_WINDOW_TOP			(MENUITM_MAIN_WINDOW_LHEIGHT -  4)
-#macro	MENUITM_INFO_WINDOW_MIDDLE		(MENUITM_INFO_WINDOW_TOP	 + 20)
-#macro	MENUITM_INFO_WINDOW_BOTTOM		(MENUITM_INFO_WINDOW_TOP	 + MENUITM_INFO_WINDOW_HEIGHT)
-
-// Determines the horizontal positions of vvarious menu elements relative to other characteristics of the
-// menu like the x position of the visible options, the background elements, and so on.
-#macro	MENUITM_CURSOR_X				(MENUITM_OPTIONS_X		   -   7)
-#macro	MENUITM_CUROPTION_BOX_X			(MENUITM_MAIN_WINDOW_LEFT  +   1)
-#macro	MENUITM_QUANTITY_X			    (MENUITM_OPTIONS_X		   + 120)
-#macro	MENUITM_EQUIP_ICON_X			(MENUITM_QUANTITY_X		   - maxQuantityWidth - 8)
-
 // Determines the maximum line width for an item's description string as well as the maximum number of lines
 // that can exist for display within the inventory's item section.
-#macro	MENUITM_OPTION_INFO_MAX_WIDTH	(MENUITM_INFO_WINDOW_WIDTH -   5)
-#macro	MENUITM_OPTION_INFO_MAX_LINES	4
+#macro	MENUITM_OPTION_INFO_MAX_WIDTH	180
+#macro	MENUITM_OPTION_INFO_MAX_LINES	3
 
 // Determines the color of the shadows found behind text rendered through this menu's draw_gui event.
 #macro	MENUITM_TEXT_SHADOW_COLOR		COLOR_DARK_GRAY
@@ -148,6 +114,9 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	itemOptionsMenuX	= 0;
 	itemOptionsMenuY	= 0;
 	itemOptionsAlpha	= 0.0;
+	
+	// 
+	curOptionOffset = 0.0;
 	
 	// A value used to allow the menu's cursor to move back and forth by one pixel along the x axis.
 	// cursorAnimTimer		= 0.0;
@@ -295,10 +264,16 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		draw_set_alpha(alpha);
 		
 		// 
+		curOptionOffset += 0.075 * global.deltaTime;
+		if (curOptionOffset >= 2.0)
+			curOptionOffset = 0.0;
+		
+		// 
 		var _item			= INV_EMPTY_SLOT;
 		var _alpha			= alpha;
 		var _optionX		= _xPos + optionX;
 		var _optionY		= _yPos + optionY;
+		var _curOptOffset	= 0;
 		var _option			= 0;
 		var _slotCol		= COLOR_TRUE_WHITE;
 		var _length			= ds_list_size(options);
@@ -311,25 +286,39 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 					break;
 				}
 				
-				// 
-				if (_option == auxSelOption)	{ _slotCol = COLOR_RED; }
-				else if (_option == selOption)	{ _slotCol = COLOR_GREEN; }
-				else if (_option == curOption)	{ _slotCol = COLOR_YELLOW; }
-				else							{ _slotCol = COLOR_TRUE_WHITE; }
+				// Determine blending characteristics of the item slot/icon as well as the icon's positional
+				// offset based on whether the slot in question is visible (the "else" block), highlighted
+				// (_option == curOption), the primary selection (_option == selOption), of the stored
+				// selection (_option == auxSelOption), respectively.
+				if (_option == auxSelOption){ 
+					_slotCol		= COLOR_RED;
+					_curOptOffset	= (_option == curOption) ? floor(curOptionOffset) : 1;
+				} else if (_option == selOption){
+					_slotCol		= COLOR_GREEN;
+					_curOptOffset	= 1;
+				} else if (_option == curOption){ 
+					_slotCol		= COLOR_YELLOW;
+					_curOptOffset	= floor(curOptionOffset);
+				} else{
+					_slotCol		= COLOR_TRUE_WHITE;
+					_curOptOffset	= 0;
+				}
 				
-				// 
+				// Determine whether to use the default version of the slot sprite or its highlighted
+				// counterpart depending on what the _slotCol variable was set to in the if/else block above.
 				var _imageIndex = (_slotCol != COLOR_TRUE_WHITE);
-				draw_sprite_ext(spr_item_menu_slot, _imageIndex, _optionX, _optionY, 
-					1.0, 1.0, 0.0, _slotCol, alpha);
+				draw_sprite_ext(spr_item_menu_slot, _imageIndex, _optionX, 
+					_optionY, 1.0, 1.0, 0.0, _slotCol, alpha);
 				
 				// 
 				_item = global.curItems[_option];
 				if (_item != INV_EMPTY_SLOT){
 					with(_item){ // 
-						if (_slotCol == COLOR_TRUE_WHITE) // Darkens any non-highlighted item icons.
-							_slotCol = COLOR_GRAY;
-						draw_sprite_ext(spr_item_menu_item_icons, itemID, _optionX, _optionY, 
-							1.0, 1.0, 0.0, _slotCol, _alpha);
+						if (_slotCol == COLOR_TRUE_WHITE)	{ _slotCol = COLOR_GRAY; }
+						else if (_slotCol == COLOR_YELLOW)	{ _slotCol = COLOR_TRUE_WHITE; }
+						
+						draw_sprite_ext(spr_item_menu_item_icons, itemID, _optionX, 
+							_optionY - _curOptOffset, 1.0, 1.0, 0.0, _slotCol, _alpha);
 					}
 					
 					// 
@@ -348,6 +337,19 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		}
 		draw_set_halign(fa_left);
 		draw_set_valign(fa_top);
+		
+		// 
+		_optionX	= _xPos + optionX;
+		_optionY	= _yPos + optionY;
+		_item		= invItemRefs[curOption];
+		if (_item != INV_EMPTY_SLOT){
+			with(_item){
+				draw_text_shadow(_optionX + 5, _optionY + 106, itemName, 
+					COLOR_WHITE, _alpha, COLOR_DARK_GRAY, _alpha);
+				draw_text_shadow(_optionX, _optionY + 118, itemInfo,
+					COLOR_LIGHT_GRAY, _alpha, COLOR_DARK_GRAY, _alpha);
+			}
+		}
 		
 		// Don't bother with any of the surface rendering/swapping logic below if the sub menu containing the
 		// selected item's options isn't currently opened for the player to select from.
@@ -378,11 +380,14 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	/// state_default.
 	///	
 	reset_to_default_state = function(){
-		// Re-enable the "Change Page" inputs within the menu movement control group so they are shown again.
+		// Re-enable the change page and two additional cursor movement inputs within the menu movement 
+		// control group so they are shown again.
 		var _movementCtrlGroup = movementCtrlGroup;
 		with(CONTROL_UI_MANAGER){
-			update_control_group_icon_active_state(_movementCtrlGroup, MENUINV_CTRL_GRP_PAGE_LEFT,  true);
-			update_control_group_icon_active_state(_movementCtrlGroup, MENUINV_CTRL_GRP_PAGE_RIGHT, true);
+			update_control_group_icon_active_state(_movementCtrlGroup, MENUINV_CTRL_GRP_CURSOR_LEFT,	true);
+			update_control_group_icon_active_state(_movementCtrlGroup, MENUINV_CTRL_GRP_CURSOR_RIGHT,	true);
+			update_control_group_icon_active_state(_movementCtrlGroup, MENUINV_CTRL_GRP_PAGE_LEFT,		true);
+			update_control_group_icon_active_state(_movementCtrlGroup, MENUINV_CTRL_GRP_PAGE_RIGHT,		true);
 		}
 		
 		// After re-enabling the necessary input information, the inventory has flags set that re-enable its
@@ -430,20 +435,22 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		// The select input was released, so an item will be selected for the player to interact with its
 		// list of available options.
 		if (MINPUT_IS_SELECT_RELEASED){
-			// Don't jump into any of this selection code logic if the current slot is empty AND the inventory
-			// isn't currently set to move an item to another slot. If slot movement is occurring, the check
-			// is bypassed to be stopped further below.
+			// Don't jump into any of this selection code logic if the current slot is empty AND the 
+			// inventory isn't currently set to move an item to another slot. If slot movement is occurring, 
+			// the check is bypassed to be stopped further below.
 			var _isMovingItem = MENUITM_IS_MOVING_ITEM;
 			if (!_isMovingItem && invItemRefs[curOption] == INV_EMPTY_SLOT)
 				return;
 			with(prevMenu){ flags = flags & ~(MENUINV_FLAG_CAN_CLOSE | MENUINV_FLAG_CAN_CHANGE_PAGE); }
 			
-			// Disable the page left/right input information since the inventory is no longer able to switch
-			// between each of the three sections contained within it.
+			// Disable the page and cursor left/right input information since the inventory is no longer 
+			// able to switch between each of the three sections contained within it.
 			var _movementCtrlGroup = movementCtrlGroup;
 			with(CONTROL_UI_MANAGER){ 
-				update_control_group_icon_active_state(_movementCtrlGroup, MENUINV_CTRL_GRP_PAGE_LEFT,  false);
-				update_control_group_icon_active_state(_movementCtrlGroup, MENUINV_CTRL_GRP_PAGE_RIGHT, false);
+				update_control_group_icon_active_state(_movementCtrlGroup, MENUINV_CTRL_GRP_CURSOR_LEFT,	false);
+				update_control_group_icon_active_state(_movementCtrlGroup, MENUINV_CTRL_GRP_CURSOR_RIGHT,	false);
+				update_control_group_icon_active_state(_movementCtrlGroup, MENUINV_CTRL_GRP_PAGE_LEFT,		false);
+				update_control_group_icon_active_state(_movementCtrlGroup, MENUINV_CTRL_GRP_PAGE_RIGHT,		false);
 			}
 			selOption = curOption;
 			
