@@ -233,10 +233,10 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 			draw_sprite_ext( // Left side of the rectangle.
 				spr_rectangle,
 				0,		// Unused
-				_xPos, _yPos + 14,
+				_xPos, _yPos + MENUINV_HEADER_HEIGHT,
 				1, MENUINV_SECTION_HEIGHT - _yy,
 				0.0,	// Unused
-				COLOR_WHITE, alpha
+				COLOR_DARK_GRAY, alpha
 			);
 			draw_sprite_ext( // Right side of the rectangle.
 				spr_rectangle,
@@ -244,15 +244,15 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 				_xPos + VIEWPORT_WIDTH - 1, _yPos + MENUINV_HEADER_HEIGHT,
 				1, MENUINV_SECTION_HEIGHT - _yy,
 				0.0,	// Unused
-				COLOR_WHITE, alpha
+				COLOR_DARK_GRAY, alpha
 			);
 			draw_sprite_ext( // Top side of the rectangle.
 				spr_rectangle, 
 				0,		// Unused 
-				_xPos, _yPos + MENUINV_HEADER_HEIGHT,
+				_xPos, _yPos + MENUINV_HEADER_HEIGHT - 1,
 				VIEWPORT_WIDTH, 1,
 				0.0,	// Unused 
-				COLOR_WHITE, alpha
+				COLOR_DARK_GRAY, alpha
 			);
 			draw_sprite_ext( // Bottom side of the rectangle.
 				spr_rectangle, 
@@ -260,7 +260,7 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 				_xPos, _yPos + MENUINV_FOOTER_Y - _yy,
 				VIEWPORT_WIDTH, 1, 
 				0.0,	// Unused
-				COLOR_WHITE, alpha
+				COLOR_DARK_GRAY, alpha
 			);
 			
 		#endregion Drawing White Rectangle Around Active Menu Section's Contents

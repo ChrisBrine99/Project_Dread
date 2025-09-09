@@ -201,7 +201,7 @@ function item_inventory_initialize(_cmbDiffFlagBit){
 	
 	// Fill the array with -1 values since each index defaults to 0 when a resize adds new indices.
 	var _length = array_length(global.curItems);
-	for (var i = 0; i < _length; i++)
+	for (var i = 0; i < 20; i++)
 		array_set(global.curItems, i, INV_EMPTY_SLOT);
 }
 

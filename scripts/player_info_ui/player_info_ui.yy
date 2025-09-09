@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"player_info_ui",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"player_info_ui",
+  "parent":{
+    "name":"Other",
+    "path":"folders/Scripts/Structs/UI/Other.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

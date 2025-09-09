@@ -9,18 +9,19 @@
 #macro	MENUITM_IS_MOVING_ITEM			((flags & MENUITM_FLAG_MOVING_ITEM)		!= 0)
 #macro	MENUITM_ARE_OPTIONS_OPEN		((flags & MENUITM_FLAG_OPTIONS_OPEN)	!= 0)
 
-// Since the maximum visible portions of the item menu are constant (1 by 10), the values are set as macros
-// so the compiler can optimize these into simple constants instead of variable load/reads.
-#macro	MENUITM_VISIBLE_WIDTH			1
-#macro	MENUITM_VISIBLE_HEIGHT			10
+// 
+#macro	MENUITM_WIDTH					4
+#macro	MENUITM_HEIGHT					6
+#macro	MENUITM_VISIBLE_WIDTH			4
+#macro	MENUITM_VISIBLE_HEIGHT			6
 
 // Since the positional offsets for the options and their spacing are constant in the item menu, they will 
 // be set using macros instead of referencing their relevant variables within the menu, which should result
 // in VERY slightly faster execution.
-#macro	MENUITM_OPTIONS_X				(VIEWPORT_WIDTH - 135)
-#macro	MENUITM_OPTIONS_Y				6
-#macro	MENUITM_OPTION_SPACING_X		0
-#macro	MENUITM_OPTION_SPACING_Y		10
+#macro	MENUITM_OPTIONS_X				20
+#macro	MENUITM_OPTIONS_Y				4
+#macro	MENUITM_OPTION_SPACING_X		21
+#macro	MENUITM_OPTION_SPACING_Y		21
 
 // Positional offset for the position of the an item's info text when it is currently being highlighted by 
 // the menu's cursor.
@@ -95,7 +96,7 @@
 
 // Stores the offset position of a selected item's option sub menu along the x axis so it appears to the right 
 // of said item relative to its vertical position on the visible portion of the menu.
-#macro	SUBMENU_ITM_OFFSET_X			MENUITM_OPTIONS_X - 51
+#macro	SUBMENU_ITM_OFFSET_X			220
 
 // The dimensions of the surface that the selected item's option menu will be rendered onto, so it can have a
 // sliding animation that doesn't render outside of the dimensions of the menu after animations have completed.
@@ -104,8 +105,8 @@
 
 // Determines the two x positions the item's option menu text will shift between during the opening and closing
 // animations for this sub menu; allowing it to slide on and off of the surface it will be drawn onto.
-#macro	SUBMENU_ITM_ANIM_X1				51
-#macro	SUBMENU_ITM_ANIM_X2				0
+#macro	SUBMENU_ITM_ANIM_X1			   -50
+#macro	SUBMENU_ITM_ANIM_X2				8
 
 // Determines how fast the selected item's option menu will fade into and out of visibility during its opening
 // and closing animations. It also works as the value used to lerp the menu's options between the two x
@@ -119,14 +120,14 @@
 
 /// @param {Function}	index	The value of "str_item_menu" as determined by GameMaker during runtime.
 function str_item_menu(_index) : str_base_menu(_index) constructor {
-	// An array that stores references to item structs for items currently contained within the item inventory 
-	// so they can be quickly accessed instead of iterating through the item data map or ID list whenever they
-	// are required for various processes handled by the item menu.
-	invItemRefs			= array_create(array_length(global.curItems), INV_EMPTY_SLOT);
+	// 
+	var _itemInvSize	= array_length(global.curItems);
+	invItemRefs			= array_create(_itemInvSize, INV_EMPTY_SLOT);
+	itemDataToRender	= array_create(_itemInvSize, INV_EMPTY_SLOT);
 	
 	// Stores the slots that have equipped items currently occupying them. This allows the item inventory to
 	// know what is equipped or not without having to constantly reference the player's "equipment" struct.
-	equippedSlots		= ds_list_create();
+	// equippedSlots	= ds_list_create();
 	
 	// Two variables that store references to menus. The first will hold the sub menu instance that is
 	// responsible for displaying and processing logic for the list of options available to the player for 
@@ -148,12 +149,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	itemOptionsMenuY	= 0;
 	
 	// A value used to allow the menu's cursor to move back and forth by one pixel along the x axis.
-	cursorAnimTimer		= 0.0;
-	
-	// Calculate the maximum width for the largest string that can display an item's quantity. This value is
-	// then used to offset the "E" icon that is placed next to items that are currently equipped.
-	draw_set_font(fnt_small);
-	maxQuantityWidth	= string_width("[000]");
+	// cursorAnimTimer		= 0.0;
 	
 	/// @description 
 	///	The item menus struct's create event. It initializes required parameters; sets up the auxillary return
@@ -161,51 +157,22 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	///	
 	create_event = function(){
 		// Get a referfence to this struct so its submenu can reference it in its "prevMenu" variable.
-		selfRef			= instance_find_struct(structID);
+		selfRef				= instance_find_struct(structID);
 		
 		// Set up the "auxilliary" return inputs to the input that opens up this menu during gameplay, so 
 		// it can also close the menu should the player choose to use it instead of the standard input.
-		var _inputs		= global.settings.inputs;
-		keyAuxReturn	= _inputs[STNG_INPUT_ITEM_MENU];
-		padAuxReturn	= _inputs[STNG_INPUT_ITEM_MENU + 1];
+		var _inputs			= global.settings.inputs;
+		keyAuxReturn		= _inputs[STNG_INPUT_ITEM_MENU];
+		padAuxReturn		= _inputs[STNG_INPUT_ITEM_MENU + 1];
 		
 		// Set up the item menu to it has the same number of options as there are slots available in the
 		// player's item inventory. Using that number, the base and option parameters are both initialized.
-		var _invSize	= array_length(invItemRefs);
-		initialize_params(0, 14, true, true, 1, MENUITM_VISIBLE_WIDTH, 
-			min(_invSize, MENUITM_VISIBLE_HEIGHT), 0, 2);
+		initialize_params(0, 14, true, true, MENUITM_WIDTH, MENUITM_VISIBLE_WIDTH, MENUITM_VISIBLE_HEIGHT);
 		initialize_option_params(MENUITM_OPTIONS_X, MENUITM_OPTIONS_Y, 
 			MENUITM_OPTION_SPACING_X, MENUITM_OPTION_SPACING_Y, fa_left, fa_top, true);
 		
-		// Looping through the player's items so they can be added as options to this menu. From here, the
-		// player will be able to select a highlighted item to interact with in in various ways relative to
-		// the item's type and potential subtype.
-		var _itemName	= "";
-		var _itemInfo	= "";
-		var _itemID		= ID_INVALID;
-		var _invItem	= INV_EMPTY_SLOT;
-		for (var i = 0; i < _invSize; i++){
-			_invItem = item_inventory_slot_get_data(i);
-			if (_invItem == INV_EMPTY_SLOT){ // Occupy the slot with an empty option.
-				add_option(MENUITM_DEFAULT_STRING, MENUITM_DEFAULT_STRING);
-				continue;
-			}
-			
-			// Jump into the current item struct's scope to grab the relevant data for the item menu's option
-			// element and reference array can utilize in their initializations.
-			with(_invItem){
-				_itemName	= itemName;
-				_itemInfo	= itemInfo;
-				_itemID		= itemID;
-			}
-			add_option(_itemName, _itemInfo);
-			invItemRefs[i] = global.itemIDs[_itemID];
-		}
-		
-		// The item inventory doesn't know where each equipped item resides on the player when it is first
-		// created, so a quick check to see if there are valid slot values within each equip slot is done and
-		// if they are valid they are added to the euqippedSlots list.
-		var _equippedSlots = equippedSlots;
+		// 
+		var _equippedSlots	= ds_list_create();
 		with(PLAYER.equipment){
 			if (weapon		 != INV_EMPTY_SLOT)	{ ds_list_add(_equippedSlots, weapon); }
 			if (armor		 != INV_EMPTY_SLOT)	{ ds_list_add(_equippedSlots, armor); }
@@ -213,6 +180,66 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			if (firstAmulet  != INV_EMPTY_SLOT)	{ ds_list_add(_equippedSlots, firstAmulet); }
 			if (secondAmulet != INV_EMPTY_SLOT) { ds_list_add(_equippedSlots, secondAmulet); }
 		}
+		
+		// 
+		var _itemRef		= noone;
+		var _itemName		= "";
+		var _itemInfo		= "";
+		var _itemID			= ID_INVALID;
+		var _quantity		= 0;
+		
+		// 
+		var _equipSlot		= 0;
+		var _quantityCol	= COLOR_WHITE;
+		var _showStack		= false;
+		
+		// 
+		var _invItem		= INV_EMPTY_SLOT;
+		var _length			= array_length(global.curItems);
+		for (var i = 0; i < _length; i++){
+			_invItem = global.curItems[i];
+			if (_invItem == INV_EMPTY_SLOT){ // Occupy the slot with an empty option.
+				add_option(MENUITM_DEFAULT_STRING, MENUITM_DEFAULT_STRING);
+				continue;
+			}
+			
+			// 
+			with(_invItem){
+				_itemName	= itemName;
+				_itemID		= itemID;
+				_quantity	= min(999, quantity);
+				if (_quantity == 0) // 
+					_quantityCol = COLOR_DARK_RED;
+			}
+			
+			// 
+			_itemRef = global.itemIDs[_itemID];
+			with(_itemRef){
+				_itemInfo	= itemInfo;
+				_showStack	= ((typeID == ITEM_TYPE_WEAPON && !WEAPON_IS_MELEE) || stackLimit > 1);
+				if (_quantity == stackLimit) // 
+					_quantityCol = COLOR_LIGHT_GREEN;
+			}
+			
+			// 
+			add_option(_itemName, _itemInfo);
+			array_set(invItemRefs, i, _itemRef);
+			
+			// 
+			_equipSlot	= ds_list_find_index(_equippedSlots, i);
+			array_set(itemDataToRender, i, {
+				quantityStr	: _showStack ? string(_quantity) : "",
+				quantityCol	: _quantityCol,
+				isEquipped	: (_equipSlot != -1),
+			});
+			
+			// Reset this value after it has been set in its respective variable in the data created above.
+			_quantityCol = COLOR_WHITE;
+		}
+		
+		// 
+		ds_list_clear(_equippedSlots);
+		ds_list_destroy(_equippedSlots);
 	}
 	
 	/// Store the pointer to the base menu's destroy event so it can be called within the item menu's version
@@ -231,9 +258,12 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		if (itemOptionsMenu != noone)		 { instance_destroy_menu_struct(itemOptionsMenu); }
 		if (surface_exists(itemOptionsSurf)) { surface_free(itemOptionsSurf); }
 		
-		// Remove the ds_list that kept track of the slots where player's currently equipped items were contained.
-		ds_list_clear(equippedSlots);
-		ds_list_destroy(equippedSlots);
+		// Clean up any elements that are currently occupied by structs.
+		var _length = array_length(itemDataToRender);
+		for (var i = 0; i < _length; i++){
+			if (itemDataToRender[i] != INV_EMPTY_SLOT)
+				delete itemDataToRender[i];
+		}
 	}
 	
 	/// @description
@@ -244,213 +274,65 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	///	@param {Real}	xPos	The menu's current x position added with the viewport's current x position.
 	/// @param {Real}	yPos	The menu's current y position added with the viewport's current x position.
 	draw_gui_event = function(_xPos, _yPos){
-		// Create the left border of the item menu's main window, which consists of three pieces to create a
-		// line that fades out along the top and bottom of itself.
-		draw_sprite_ext( // Top portion of the main window's left edge.
-			spr_item_menu_border_edge, 0,					// Sprite/Subimage (Unused so set to 0)
-			_xPos + MENUITM_MAIN_WINDOW_LEFT, _yPos, 		// X/Y
-			1, 1,											// Width (1 = 1px)/Y Scale (1 = 20px)
-			0.0, COLOR_WHITE, alpha							// Angle (Unused so set to 0), Color, and Opacity
-		);
-		draw_sprite_ext( // Middle portion of the main window's left edge.
-			spr_rectangle, 0,								// Sprite/Subimage (Unused so set to 0)
-			_xPos + MENUITM_MAIN_WINDOW_LEFT, _yPos + 20,	// X/Y
-			1, 70,											// Width (1 = 1px)/Height (1 = 1px)
-			0.0, COLOR_WHITE, alpha							// Angle (Unused so set to 0), Color, and Opacity
-		);
-		draw_sprite_ext( // Bottom portion of the main window's left edge.
-			spr_item_menu_border_edge, 0,					// Sprite/Subimage (Unused so set to 0)
-			_xPos + MENUITM_MAIN_WINDOW_LEFT, _yPos + 110, 	// X/Y
-			1, -1,											// Width (1 = 1px)/Vertical Scaling (1 = 20px) 
-			0.0, COLOR_WHITE, alpha							// Angle (Unused so set to 0), Color, and Opacity
-		);
-		// NOTE --	Comments displayed on the right of this first triplet of draw_sprite_ext commands apply
-		//			to every other triplet in this section of the code, so use them for reference to the
-		//			numerical values/macros found in those lines if needed.
-			
-		// Do the same as above, but for the right edge of the item menu's main window. Note that the right
-		// side of the window also acts as the border for the highlighted item's info window, so it will have
-		// an increased height to compensate.
-		//	draw_sprite_ext( // Top portion of the main/info window's right edge.
-		//		spr_item_menu_border_edge, 0,
-		//		_xPos + MENUITM_MAIN_WINDOW_RIGHT, _yPos,
-		//		1, 1,
-		//		0.0, COLOR_WHITE, alpha	
-		//	);
-		//	draw_sprite_ext( // Middle portion of the main/info window's right edge.
-		//		spr_rectangle, 0,
-		//		_xPos + MENUITM_MAIN_WINDOW_RIGHT, _yPos + 20,
-		//		1, 112,
-		//		0.0, COLOR_WHITE, alpha
-		//	);
-		//	draw_sprite_ext( // Bottom portion of the main window's right edge.
-		//		spr_item_menu_border_edge, 0, 
-		//		_xPos + MENUITM_MAIN_WINDOW_RIGHT, _yPos + MENUITM_MAIN_WINDOW_RHEIGHT,
-		//		1, -1,
-		//		0.0, COLOR_WHITE, alpha
-		//	);
-			
-		// Drawing a border for the highlighted item's descriptive text/graphical representation.
-		draw_sprite_ext( // Top portion of the info window's right edge.
-			spr_item_menu_border_edge, 0, 
-			_xPos + MENUITM_INFO_WINDOW_LEFT, _yPos + MENUITM_INFO_WINDOW_TOP,
-			1, 1,
-			0.0, COLOR_WHITE, alpha
-		);
-		draw_sprite_ext( // Middle portion of the info window's right edge.
-			spr_rectangle, 0, 
-			_xPos + MENUITM_INFO_WINDOW_LEFT, _yPos + MENUITM_INFO_WINDOW_MIDDLE,
-			1, 6,
-			0.0, COLOR_WHITE, alpha
-		);
-		draw_sprite_ext( // Bottom portion of the info window's left edge.
-			spr_item_menu_border_edge, 0, 
-			_xPos + MENUITM_INFO_WINDOW_LEFT, _yPos + MENUITM_INFO_WINDOW_BOTTOM,
-			1, -1,
-			0.0, COLOR_WHITE, alpha
-		);
-			
-		// Since all background elements share the same relative opacity value, it is calculated and stored
-		// into a local value here to be used as required in the code below.
-		var _bkgAlpha = alpha * 0.5;
-		
-		// Draws the background for the main window in a way that's nearly identical to how its borders were
-		// drawn at the start of this event. The only difference being the single-pixel sprites are stretched
-		// across the area between each edge by increase the horizontal scaling of the sprite.
-		draw_sprite_ext( // Top portion of the main window's background.
-			spr_item_menu_border_edge, 0, 
-			_xPos + MENUITM_MAIN_WINDOW_LEFT + 1, _yPos,
-			MENUITM_MAIN_WINDOW_WIDTH, 1,
-			0.0, COLOR_BLACK, _bkgAlpha
-		); 
-		draw_sprite_ext( // Middle portion of the main window's background.
-			spr_rectangle, 0, 
-			_xPos + MENUITM_MAIN_WINDOW_LEFT + 1, _yPos + 20,
-			MENUITM_MAIN_WINDOW_WIDTH, 70,
-			0.0, COLOR_BLACK, _bkgAlpha
-		);
-		draw_sprite_ext( // Bottom portion of the main window's background.
-			spr_item_menu_border_edge, 0,
-			_xPos + MENUITM_MAIN_WINDOW_LEFT + 1, _yPos + 110,
-			MENUITM_MAIN_WINDOW_WIDTH, -1,
-			0.0, COLOR_BLACK, _bkgAlpha
-		);
-		
-		// Do the same as above for drawing the info window's background since they share the same style;
-		// scaling the logic for drawing each edge across the distance between those edges with the same sprites.
-		draw_sprite_ext( // Top portion of the info window's background.
-			spr_item_menu_border_edge, 0, 
-			_xPos + MENUITM_INFO_WINDOW_LEFT + 1, _yPos + MENUITM_INFO_WINDOW_TOP,
-			MENUITM_INFO_WINDOW_WIDTH, 1,
-			0.0, COLOR_DARK_BLUE, _bkgAlpha
-		);
-		draw_sprite_ext( // Middle portion of the info window's background.
-			spr_rectangle, 0, 
-			_xPos + MENUITM_INFO_WINDOW_LEFT + 1, _yPos + MENUITM_INFO_WINDOW_MIDDLE,
-			MENUITM_INFO_WINDOW_WIDTH, 6,
-			0.0, COLOR_DARK_BLUE, _bkgAlpha
-		);
-		draw_sprite_ext( // Bottom portion of the info window's background.
-			spr_item_menu_border_edge, 0, 
-			_xPos + MENUITM_INFO_WINDOW_LEFT + 1, _yPos + MENUITM_INFO_WINDOW_BOTTOM,
-			MENUITM_INFO_WINDOW_WIDTH, -1,
-			0.0, COLOR_DARK_BLUE, _bkgAlpha
-		);
-		
-		// Create local values for the location of the currently highlighted item on the visible portion of
-		// the item inventory menu, which are then used to position various elements that rely on the current
-		// option's index to be drawn.
-		var _curOptionY = _yPos + MENUITM_OPTIONS_Y + ((curOption - visibleAreaY) * MENUITM_OPTION_SPACING_Y);
-		
-		// Displays a translucent rectangle behind the currently highlight item. If that item happens to be
-		// selected and its option menu is on display, the color will be green instead of yellow. Auxillary
-		// selections will tint the background light red.
-		var _bkgColor = COLOR_LIGHT_YELLOW;
-		if (auxSelOption == curOption)	 { _bkgColor = COLOR_LIGHT_RED; }
-		else if (selOption == curOption) { _bkgColor = COLOR_LIGHT_GREEN; }	
-		draw_sprite_ext(
-			spr_rectangle, 0, 
-			_xPos + MENUITM_CUROPTION_BOX_X, _curOptionY - 1, 
-			MENUITM_MAIN_WINDOW_WIDTH, MENUITM_OPTION_SPACING_Y, 
-			0.0, _bkgColor, _bkgAlpha
-		);
-			
-		// Above the backing rectangle for the highlighted item, a cursor using the greater-than symbol will
-		// be drawn; shifting left and right based on the current value of cursorAnimTimer.
-		draw_sprite_ext(
-			spr_item_menu_cursor, 0, 
-			_xPos + MENUITM_CURSOR_X + floor(cursorAnimTimer), 
-			_curOptionY + 1, 
-			1, 1, 
-			0.0, COLOR_WHITE, alpha
-		);
-		
-		// Display the currently visible region of this menu with the default function provided by the 
-		// inherited base menu struct.
-		draw_visible_options(fnt_small, _xPos, _yPos, MENUITM_TEXT_SHADOW_COLOR, MENUITM_TEXT_SHADOW_ALPHA);
-		
-		// After the visible menu options have been draw, a cursor and the current quantities will be drawns
-		// to the right of each item name as required.
+		// 
 		draw_set_halign(fa_right);
-		var _index		= -1;
-		var _isWeapon	= false;
-		var _item		= INV_EMPTY_SLOT;
-		var _quantity	= 0;
-		var _sQuantity	= "";
-		var _sColor		= COLOR_WHITE;
-		var _yy			= _yPos + MENUITM_OPTIONS_Y;
-		for (var i = visibleAreaY; i < visibleAreaY + visibleAreaH; i++){
-			// Get the value currently stored in the player's item inventory array to see if the slot is empty
-			// or not. If it isn't empty, its quantity and item type will determine how the quantity will be
-			// drawn and if it will even be drawn to begin with.
-			_item = global.curItems[i];
-			if (_item != INV_EMPTY_SLOT){
-				_quantity = min(999, _item.quantity); // Limit to showing 999 at most.
-				with(invItemRefs[i]){
-					// So long as the item is a weapon that uses ammo (All ranged weapons + the chainsaw), the
-					// quantity is formatted as [{quantity}]. Otherwise, it will be shown as x{quantity} so
-					// long as the max stack is high than one.
-					if (typeID == ITEM_TYPE_WEAPON && !WEAPON_IS_MELEE){
-						_sQuantity = string(MENUINM_QUANTITY_WEAPON, _quantity);
-					} else if (stackLimit > 1 && !_isWeapon){
-						_sQuantity = string(MENUINM_QUANTITY_STANDARD, _quantity);
-					} else{ // Clear the string to signify the quantity doesn't need to be shown for the item.
-						_sQuantity = "";
-					}
-					
-					// After the string is formatted, the color for the text will be determined. The default
-					// is white, but a quantity of 0 (Weapons that use ammunition are the only items this
-					// applies to) will turn the quantity text red, and a full stack in a slot will be green.
-					if (_quantity == stackLimit)	{ _sColor = COLOR_LIGHT_GREEN; }
-					else if (_quantity == 0)		{ _sColor = COLOR_RED; }
-					else							{ _sColor = COLOR_WHITE; }
+		draw_set_valign(fa_bottom);
+		draw_set_alpha(alpha);
+		
+		// 
+		var _item			= INV_EMPTY_SLOT;
+		var _alpha			= alpha;
+		var _optionX		= _xPos + optionX;
+		var _optionY		= _yPos + optionY;
+		var _option			= 0;
+		var _slotCol		= COLOR_TRUE_WHITE;
+		var _length			= ds_list_size(options);
+		for (var yy = 0; yy < height; yy++){
+			for (var xx = 0; xx < width; xx++){
+				// 
+				_option = (yy * width) + xx;
+				if (_option >= _length){
+					yy = height;
+					break;
 				}
 				
-				// Display the quantity as it was formatted above.
-				draw_text_shadow(_xPos + MENUITM_QUANTITY_X, _yy, _sQuantity, 
-					_sColor, alpha, MENUITM_TEXT_SHADOW_COLOR, MENUITM_TEXT_SHADOW_ALPHA);
+				// 
+				if (_option == auxSelOption)	{ _slotCol = COLOR_RED; }
+				else if (_option == selOption)	{ _slotCol = COLOR_GREEN; }
+				else if (_option == curOption)	{ _slotCol = COLOR_YELLOW; }
+				else							{ _slotCol = COLOR_TRUE_WHITE; }
+				
+				// 
+				var _imageIndex = (_slotCol != COLOR_TRUE_WHITE);
+				draw_sprite_ext(spr_item_menu_slot, _imageIndex, _optionX, _optionY, 
+					1.0, 1.0, 0.0, _slotCol, alpha);
+				
+				// 
+				_item = global.curItems[_option];
+				if (_item != INV_EMPTY_SLOT){
+					with(_item){ // 
+						if (_slotCol == COLOR_TRUE_WHITE) // Darkens any non-highlighted item icons.
+							_slotCol = COLOR_GRAY;
+						draw_sprite_ext(spr_item_menu_item_icons, itemID, _optionX, _optionY, 
+							1.0, 1.0, 0.0, _slotCol, _alpha);
+					}
+					
+					// 
+					with(itemDataToRender[_option]){
+						draw_text_shadow(_optionX + 18, _optionY + 19, quantityStr, quantityCol, _alpha, COLOR_DARK_GRAY, _alpha);
+						if (isEquipped){
+							draw_sprite_ext(spr_item_menu_equip_icon, 0, _optionX + 11, _optionY - 1, 
+								1.0, 1.0, 0.0, COLOR_TRUE_WHITE, _alpha);
+						}
+					}
+				}
+				_optionX += optionSpacingX;
 			}
-			
-			// Display an "E" symbol next to each visible item that is currently equipped to one of the five
-			// slots they have available for equipment.
-			_index = ds_list_find_index(equippedSlots, i);
-			if (_index != -1){
-				draw_set_alpha(alpha);
-				draw_sprite(spr_item_menu_equip_icon, 0, _xPos + MENUITM_EQUIP_ICON_X, _yy);
-			}
-			
-			// Shift the y position down for the next potential item quantity to draw at.
-			_yy += MENUITM_OPTION_SPACING_Y;
+			_optionX	= _xPos + optionX;
+			_optionY   += optionSpacingY;
 		}
 		draw_set_halign(fa_left);
-		
-		// Draw the highlighted/selected item's description below the current visible region of options in 
-		// the item inventory. For now, it simply displays it with no animations or fancy flairs.
-		if (curOption >= 0 && curOption < ds_list_size(options)){
-			var _curOption = options[| curOption];
-			draw_text_shadow(_xPos + MENUITM_OPTION_INFO_X, _yPos + MENUITM_OPTION_INFO_Y, _curOption.oInfo, 
-				COLOR_LIGHT_GRAY, alpha, MENUITM_TEXT_SHADOW_COLOR, MENUITM_TEXT_SHADOW_ALPHA);
-		}
+		draw_set_valign(fa_top);
 		
 		// Don't bother with any of the surface rendering/swapping logic below if the sub menu containing the
 		// selected item's options isn't currently opened for the player to select from.
@@ -476,7 +358,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		
 		// Finally, draw the current capture of the selected item's option menu onto the screen.
 		draw_set_alpha(alpha);
-		draw_surface(itemOptionsSurf, _xPos + SUBMENU_ITM_OFFSET_X, _yPos + itemOptionsMenuY);
+		draw_surface(itemOptionsSurf, _xPos + itemOptionsMenuX, _yPos + itemOptionsMenuY);
 	}
 	
 	/// @description 
@@ -604,7 +486,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			
 			// An item that would normally have the "Equip" option as the first in the list of available options
 			// will have it changed to "Unequip" if the weapon happens to be equipped to the player.
-			if (_options[0] == MENUITM_OPTION_EQUIP && ds_list_find_index(equippedSlots, selOption) != -1)
+			if (_options[0] == MENUITM_OPTION_EQUIP && itemDataToRender[selOption].isEquipped)
 				_options[0] = MENUITM_OPTION_UNEQUIP;
 			
 			// Create a local variable that will store whether or not the sub menu struct was created this time
@@ -632,20 +514,12 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			// item's name. The cursor animation offset/timer is also reset to zero.
 			object_set_state(state_open_item_options);
 			flags			 = flags | MENUITM_FLAG_OPTIONS_OPEN;
-			cursorAnimTimer	 = 0.0;
 			
-			// Calculate the offset for the item's options menu, which has a limit preventing it from going
-			// to low on the screen as to overlap the selected item's description area of the item menu.
-			var _yOffsetMultiplier  = min(curOption - visibleAreaY, visibleAreaH - array_length(_options))
-			itemOptionsMenuY		= MENUITM_OPTIONS_Y + (_yOffsetMultiplier * MENUITM_OPTION_SPACING_Y);
+			// Calculate the offset for the item's options menu.
+			itemOptionsMenuX = MENUITM_OPTIONS_X + ((curOption % width)		 * MENUITM_OPTION_SPACING_X) + 18;
+			itemOptionsMenuY = MENUITM_OPTIONS_Y + (floor(curOption / width) * MENUITM_OPTION_SPACING_Y);
 			return;
 		}
-		
-		// Update the cursor's animation timer (This is also used to display the animation's current offset)
-		// so it shifts back and forth at a regular interval.
-		cursorAnimTimer += MENUITM_CURSOR_ANIM_SPEED * _delta;
-		if (cursorAnimTimer >= 2.0)
-			cursorAnimTimer -= 2.0;
 		
 		// After checking for the relevant non-cursor movements have been checked, the cursor will check if its
 		// position should be updated based on its "auto-shift" timer is that is active, or if a direction was
@@ -668,8 +542,8 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			alpha	+= SUBMENU_ITM_OANIM_ALPHA_SPEED * _delta;
 			if (alpha >= 1.0){ // Animation has completed; set values to their targets.
 				object_set_state(state_default);
+				optionX		= SUBMENU_ITM_ANIM_X2;
 				alpha		= 1.0;
-				optionX		= 0.0;
 				_isOpened	= true;
 			}
 		}
@@ -694,8 +568,8 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			alpha   -= SUBMENU_ITM_CANIM_ALPHA_SPEED * _delta;
 			if (alpha <= 0.0){ // Animation has completed; reset flags and set values to their targets.
 				flags		= flags & ~(MENU_FLAG_ACTIVE | MENU_FLAG_CURSOR_AUTOSCROLL);
+				optionX		= SUBMENU_ITM_ANIM_X1;
 				alpha		= 0.0;
-				optionX		= 50.0;
 				_isClosed	= true;
 			}
 		}
@@ -731,8 +605,9 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		// happen within the item menu since it has ties to the player's item inventory and the sub menu is a
 		// generic menu that doesn't handle its own selected option(s) automatically.
 		if (_selOption != -1){
-			var _oName		= "";
-			with(itemOptionsMenu){ _oName = options[| selOption].oName; }
+			var _oName = "";
+			with(itemOptionsMenu)
+				_oName = options[| selOption].oName;
 			
 			// Determine what should be done based on the name of the option that was selected by the player.
 			switch(_oName){
@@ -751,11 +626,14 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 					auxSelOption = selOption;
 					break;
 				case MENUITM_OPTION_DROP:		// Removes slot from the inventory; creates a world item on the floor representing the slot's contents.
-					// Check if the item that was dropped was equipped to one of the player's equipment slots. 
-					// If so, state that normally handles unequipping an item will be immediately called, and 
-					// then the remaining logic for removing an item is handled to avoid issue.
-					var _index = ds_list_find_index(equippedSlots, selOption);
-					if (_index != -1) { state_unequip_item(_delta); }
+					// 
+					var _dataRef = itemDataToRender[selOption];
+					if (_dataRef != INV_EMPTY_SLOT){ 
+						if (_dataRef.isEquipped) // Unequip the item if it happens to be equipped.
+							state_unequip_item(_delta);
+						itemDataToRender[selOption] = INV_EMPTY_SLOT;
+						delete _dataRef;
+					}
 					
 					// After the item is unequipped, it will be removed from the inventory and have an instance 
 					// of obj_world_item containing the characteristics of what was in this slot.
@@ -817,13 +695,10 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			}
 		}
 		
-		// After equipping the item, check if it already exists within the "equippedSlots" array that handles
-		// displaying an "E" symbol next to all equipped items. If it does, update the value to match the
-		// new slot value. Otherwise, no previous item of that same type was equipped so a new element is
-		// added to the list.
-		var _index = ds_list_find_index(equippedSlots, _slotToCheck);
-		if (_index != -1)	{ ds_list_set(equippedSlots, _index, _selOption); }
-		else				{ ds_list_add(equippedSlots, _selOption); }
+		// 
+		if (_slotToCheck != INV_EMPTY_SLOT)
+			itemDataToRender[_slotToCheck].isEquipped = false;
+		itemDataToRender[selOption].isEquipped = true;
 		
 		// Finally, switch to the state that will close the selected item's option menu/window so normal
 		// functionality can return to the item menu.
@@ -847,11 +722,8 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			}
 		}
 		
-		// If the item's slot is found in the list tracking equipped slots for the item inventory to display
-		// the "E" symbol next to equipped items, it will be removed from that list to stop the "E" symbol
-		// from displaying on that item inventory slot.
-		var _index = ds_list_find_index(equippedSlots, _selOption);
-		if (_index != -1) { ds_list_delete(equippedSlots, _index); }
+		// 
+		itemDataToRender[selOption].isEquipped = false;
 		
 		// Finally, switch to the state that will close the selected item's option menu/window so normal
 		// functionality can return to the item menu.
@@ -877,33 +749,31 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		if (auxSelOption != curOption){ // Only bother swapping data if two unique slots were chosen.
 			item_inventory_slot_swap(auxSelOption, curOption);
 			
-			// Check if any slots that contain equipped items need to be updated to match the fact that items
-			// were moved in the item inventory. If so, update them with the new values.
-			var _firstSlotIndex		= ds_list_find_index(equippedSlots, auxSelOption);
-			var _secondSlotIndex	= ds_list_find_index(equippedSlots, curOption);
-			if (_firstSlotIndex == -1 && _secondSlotIndex != -1)		{ equippedSlots[| _secondSlotIndex] = auxSelOption; }
-			else if (_firstSlotIndex != -1 && _secondSlotIndex == -1)	{ equippedSlots[| _firstSlotIndex]	= curOption; }
-			
 			// Perform a check that will see if any of the current equipment slot values need to be updated to
 			// match the fact that an item (Or two) were moved from their previous slots. If so, they will
 			// be updated through this function call.
-			if (_firstSlotIndex != -1 || _secondSlotIndex != -1){
+			if (itemDataToRender[auxSelOption] != INV_EMPTY_SLOT || itemDataToRender[curOption] != INV_EMPTY_SLOT){
 				var _auxSelOption	= auxSelOption;
 				var _curOption		= curOption;
 				with(PLAYER) { update_equip_slot(_auxSelOption, _curOption); }
 			}
+			
+			// 
+			var _prevAuxSelOptionData		= itemDataToRender[auxSelOption];
+			itemDataToRender[auxSelOption]	= itemDataToRender[curOption];
+			itemDataToRender[curOption]		= _prevAuxSelOptionData;
 				
 			// Update the references to item structs within the item inventory so the slots they occupy matches
 			// where they are now located after the slot swap occurs.
-			var _tempInvItemRef			= invItemRefs[auxSelOption];
-			invItemRefs[auxSelOption]	= invItemRefs[curOption];
-			invItemRefs[curOption]		= _tempInvItemRef;
+			var _tempInvItemRef				= invItemRefs[auxSelOption];
+			invItemRefs[auxSelOption]		= invItemRefs[curOption];
+			invItemRefs[curOption]			= _tempInvItemRef;
 			
 			// Like above, the option contents need to be swapped to match the fact that two items changed
 			// places within the item inventory.
-			var _tempOptionRef		= options[| auxSelOption];
-			options[| auxSelOption] = options[| curOption];
-			options[| curOption]	= _tempOptionRef;
+			var _tempOptionRef				= options[| auxSelOption];
+			options[| auxSelOption]			= options[| curOption];
+			options[| curOption]			= _tempOptionRef;
 		}
 		reset_to_default_state();
 	}
