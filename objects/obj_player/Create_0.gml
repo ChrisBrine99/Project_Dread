@@ -272,6 +272,10 @@ weaponRemainingAmmo	= 0;
 weaponReloadSpeed	= 0.0;
 weaponAttackSpeed	= 0.0;
 
+// Determines the penalty applied to the weapon's accuracy as it is used coninuously. Value goes down when
+// the player is no longer actively firing their weapon.
+curAccuracyPenalty	= 0.0;
+
 // Stores the instance ID for the nearest interactable object to the player's current position.
 interactableID		= noone;
 
@@ -722,7 +726,7 @@ swap_current_ammo_index = function(){
 		// an invalid ID (-1) it means an ammo swap should never occur, so the function will exit early.
 		var _length	= array_length(ammoCount);
 		if (_length == 1 || weaponStatRef.ammoTypes[0] == ID_INVALID)
-			return;
+			return false;
 		
 		// Keep looping until the same value is hit again for the current ammo index or the new value's
 		// count is a value other than zero; meaning a swap can occur.
@@ -738,7 +742,7 @@ swap_current_ammo_index = function(){
 		// The previous and current index values match. This means no ammunition switch could occur and the
 		// function will exit early instead of swapping ammo types.
 		if (_prevAmmoIndex == _curAmmoIndex)
-			return;
+			return false;
 		
 		// Get the name for the previous ammo in use so it can be added to the inventory while removing
 		// it from the quantity of the current weapon's magazine/clip.
@@ -777,11 +781,15 @@ swap_current_ammo_index = function(){
 		// Finally, update the count of the previous ammunition to match what was successfully added to
 		// the player's item inventory. If _remainder is zero, the full quantity is added.
 		ammoCount[_prevAmmoIndex] += _quantity - _remainder;
+		
+		// Return true to signify the ammo swqp was successful so the correct actions can be taken outside
+		// of this funciton.
+		return true;
 	}
 	
-	// Set the player to reload and set the reload timer to the equipped weapon's reload speed.
-	object_set_state(state_player_reloading);
-	timers[PLYR_RELOAD_TIMER] = weaponReloadSpeed;
+	// Return false if the equipment struct's scope was never entered into. This should never happen, but
+	// in case it does somehow this will cause ammo swapping to cease its function.
+	return false;
 }
 
 /// @description 
@@ -887,6 +895,13 @@ end_step_event = function(_delta){
 		} else{
 			flags = flags & ~PLYR_FLAG_UP_POISON_DAMAGE;
 		}
+	}
+	
+	// 
+	if (curAccuracyPenalty > 0.0 && timers[PLYR_WEAPON_ATTACK_TIMER] == 0.0){
+		curAccuracyPenalty -= 0.01 * _delta;
+		if (curAccuracyPenalty < 0.0)
+			curAccuracyPenalty = 0.0;
 	}
 }
 
@@ -1109,7 +1124,9 @@ state_player_weapon_ready = function(_delta){
 		return;
 	}
 	
-	// 
+	// Firing or using the equipped weapon. For fully automatic weapons, the input doesn't need to be 
+	// released. For melee and non-automatic weapons, the input will need to be released and pressed again
+	// to use the weapon again.
 	if (timers[PLYR_WEAPON_ATTACK_TIMER] == 0.0 && PINPUT_USE_WEAPON_HELD && 
 			(bulletCounter < weaponBulletCount || weaponBulletCount == -1)){
 		// The weapon's clip/magazine is currently empty, so check if a reload is possible and do so instead
@@ -1133,27 +1150,91 @@ state_player_weapon_ready = function(_delta){
 		// Check if the weapon is set to fire a single time/automatically or it is set to fire a burst of
 		// bullets before the input needs to be released. If it is the latter, the attack speed for that
 		// burst is significantly faster than the regular fire rate.
-		if (weaponBulletCount > 1)  { timers[PLYR_WEAPON_ATTACK_TIMER] = weaponAttackSpeed * 0.3; }
+		if (weaponBulletCount > 1)  { timers[PLYR_WEAPON_ATTACK_TIMER] = weaponAttackSpeed * 0.1; }
 		else						{ timers[PLYR_WEAPON_ATTACK_TIMER] = weaponAttackSpeed; }
 		
-		// 
+		// Increase the bullet counter and lower the remaining ammo value, but only do the latter if the
+		// remaining ammo is any value greater than zero.
 		bulletCounter++;
-		weaponRemainingAmmo--;
+		if (weaponRemainingAmmo != -1)
+			weaponRemainingAmmo--;
 		
 		// 
+		var _direction		 = floor(direction / 90) * 90;
+		var _accuracyPenalty = curAccuracyPenalty;
+		
+		// 
+		curAccuracyPenalty += 0.15;
+		if (curAccuracyPenalty > 1.75)
+			curAccuracyPenalty = 1.75;
+		
+		// Jump into scope of the equipment struct so its values can be utilized for determining how the
+		// weapon will be used.
 		with(equipment){
-			// Subtract one from the weapon's current quantity since that value is used for the ammunition
-			// currently found within the wepaon's magazine/clip.
-			with(global.curItems[weapon])
-				quantity--;
+			// Grab the weapon's flags so they can be referenced throughout this code to see what should
+			// and should not occur depending on the flags that are cleared and set.
+			var _flags = false;
+			with(weaponStatRef) { _flags = flags; }
+			
+			// Jump into scope fo the weapon's item inventory struct to see if its quantity and/or durabilty
+			// needs to be reduced to reflect the use of the weapon.
+			var _isMelee = ((_flags & WEAP_FLAG_IS_MELEE) != 0);
+			with(global.curItems[weapon]){
+				if (!_isMelee) { quantity--; }
+				
+				// On higher difficulties, durability will be reduced by one every time the wepaon is used.
+				if (global.flags & (GAME_FLAG_CMBTDIFF_PUNISHING | GAME_FLAG_CMBTDIFF_NIGHTMARE | GAME_FLAG_CMBTDIFF_ONELIFE) != 0)
+					durability--;
+			}
 			
 			// 
-			// var _isHitscan = false;
-			// with(weaponStatRef) // Jump into scope of the weapon's item data so the hitscan flag can be checked.
-				// _isHitscan = WEAPON_IS_HITSCAN;
+			var _damage			= 0;
+			var _range			= 0;
+			var _accuracy		= 0;
+			var _bulletCount	= 0;
+			with(weaponStatRef){
+				_damage			= damage;
+				_range			= range;
+				_accuracy		= accuracy;
+				_bulletCount	= bulletCount;
+			}
+			
+			// 
+			if (!_isMelee){
+				with(curAmmoStatRef){
+					_damage		   += damage;
+					_range		   += range;
+					_accuracy	   += accuracy;
+					_bulletCount   += bulletCount;
+				}
 				
-			show_debug_message("Weapon fired");
+				// 
+				_accuracy += (_accuracy * _accuracyPenalty);
+			}
+			
+			// 
+			_direction += random_range(-_accuracy, _accuracy);
+			
+			// 
+			if ((_flags & WEAP_FLAG_IS_HITSCAN) != 0){
+				for (var i = 0; i < _bulletCount; i++){
+					with(GAME_MANAGER){
+						var _pX = PLAYER.x;
+						var _pY = PLAYER.y;
+						add_debug_line(_pX, _pY, 
+							_pX + lengthdir_x(_range, _direction), _pY + lengthdir_y(_range, _direction), 
+								120);
+					}
+				}
+				
+				// 
+				return;
+			}
+			
+			// TODO -- Create a projectile object here for the weapon.
 		}
+		
+		// Don't allow execution of the remaining portion of this state.
 		return;
 	}
 	
@@ -1165,8 +1246,9 @@ state_player_weapon_ready = function(_delta){
 	// The player has pressed the input that changes the equipped weapon's current ammunition to another
 	// type (So long as another type exists), so the function for swapping ammo is called which handles the
 	// logic for switch ammo types if possible.
-	if (PINPUT_CHANGE_AMMO_PRESSED){
-		swap_current_ammo_index();
+	if (PINPUT_CHANGE_AMMO_PRESSED && swap_current_ammo_index()){
+		object_set_state(state_player_reloading);
+		timers[PLYR_RELOAD_TIMER] = weaponReloadSpeed;
 		return;
 	}
 	

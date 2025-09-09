@@ -23,6 +23,8 @@ with(PLAYER){
 	for (var i = 0; i < PLYR_TOTAL_TIMERS; i++)
 		draw_text_shadow(315, 25 + (i * 10), string("{0}: {1}", i, timers[i]));
 		
+	draw_text_shadow(315, 85, string(curAccuracyPenalty));
+		
 	with(equipment){
 		if (weapon == INV_EMPTY_SLOT)
 			break;

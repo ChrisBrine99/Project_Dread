@@ -8,3 +8,8 @@
 
 
 // item_inventory_remove(global.itemData[? ITEM_HANDGUN_AMMO].itemID, irandom_range(3, 32));
+
+var _pX		= PLAYER.x;
+var _pY		= PLAYER.y;
+var _dir	= random(360);
+add_debug_line(_pX, _pY, _pX + lengthdir_x(100, _dir), _pY + lengthdir_y(100, _dir), 120.0);
