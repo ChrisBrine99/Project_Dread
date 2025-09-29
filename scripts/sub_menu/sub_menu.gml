@@ -8,7 +8,7 @@
 
 // Since sub menu instances default to a vertical orientation with a width of one option per row, this value
 // is used to determine the spacing needed for said default orientation.
-#macro	MENUSUB_OPTION_SPACING_Y		10
+#macro	MENUSUB_OPTION_SPACING_Y		9
 
 #endregion Sub Menu Macro Definitions
 

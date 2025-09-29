@@ -60,10 +60,6 @@
 
 #region Macros for Item Options Sub Menu
 
-// Stores the offset position of a selected item's option sub menu along the x axis so it appears to the right 
-// of said item relative to its vertical position on the visible portion of the menu.
-#macro	SUBMENU_ITM_OFFSET_X			220
-
 // The dimensions of the surface that the selected item's option menu will be rendered onto, so it can have a
 // sliding animation that doesn't render outside of the dimensions of the menu after animations have completed.
 #macro	SUBMENU_ITM_SURFACE_WIDTH		40
@@ -72,7 +68,7 @@
 // Determines the two x positions the item's option menu text will shift between during the opening and closing
 // animations for this sub menu; allowing it to slide on and off of the surface it will be drawn onto.
 #macro	SUBMENU_ITM_ANIM_X1			   -50
-#macro	SUBMENU_ITM_ANIM_X2				8
+#macro	SUBMENU_ITM_ANIM_X2				0
 
 // Determines how fast the selected item's option menu will fade into and out of visibility during its opening
 // and closing animations. It also works as the value used to lerp the menu's options between the two x
@@ -86,7 +82,8 @@
 
 /// @param {Function}	index	The value of "str_item_menu" as determined by GameMaker during runtime.
 function str_item_menu(_index) : str_base_menu(_index) constructor {
-	// 
+	// Create two arrays that will store data about the item inventory's contents so the relevant parts can
+	// be used and/or displayed on the UI for the player to see while accessing their items.
 	var _itemInvSize	= array_length(global.curItems);
 	invItemRefs			= array_create(_itemInvSize, INV_EMPTY_SLOT);
 	itemDataToRender	= array_create(_itemInvSize, INV_EMPTY_SLOT);
@@ -115,11 +112,9 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	itemOptionsMenuY	= 0;
 	itemOptionsAlpha	= 0.0;
 	
-	// 
+	// Value that loops between zero and 2.0 to create a verticalbobbing motion for an item that is currently 
+	// being highlighted by the menu's cursor.
 	curOptionOffset = 0.0;
-	
-	// A value used to allow the menu's cursor to move back and forth by one pixel along the x axis.
-	// cursorAnimTimer		= 0.0;
 	
 	/// @description 
 	///	The item menus struct's create event. It initializes required parameters; sets up the auxillary return
@@ -364,14 +359,21 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		// the color (0, 0, 0, 0) so the previous frame's rendering doesn't show up again creating a smear.
 		// Then, jump into scope of the menu in question and draw its options to the screen.
 		surface_set_target(itemOptionsSurf);
-		draw_clear_alpha(COLOR_BLACK, 0.0);
+		draw_clear_alpha(COLOR_BLACK, 0);
 		with(itemOptionsMenu)
-			draw_gui_event(0, 0, COLOR_DARK_GRAY);
+			draw_gui_event(4, 2, COLOR_DARK_GRAY);
 		surface_reset_target();
 		
-		// Finally, draw the current capture of the selected item's option menu onto the screen.
+		// Remaining elements to draw all rely on these offsets, so calculate them once here.
+		_xPos += itemOptionsMenuX;
+		_yPos += itemOptionsMenuY;
+		
+		// 
+		draw_sprite_ext(spr_rectangle, 0, _xPos, _yPos, SUBMENU_ITM_SURFACE_WIDTH, SUBMENU_ITM_SURFACE_HEIGHT, 0.0, COLOR_BLACK, itemOptionsAlpha);
+		
+		// Finally, draw the current capture of the selected item's option menu text onto the screen.
 		draw_set_alpha(itemOptionsAlpha);
-		draw_surface(itemOptionsSurf, _xPos + itemOptionsMenuX, _yPos + itemOptionsMenuY);
+		draw_surface(itemOptionsSurf, _xPos, _yPos);
 	}
 	
 	/// @description 
@@ -647,9 +649,17 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 					flags = flags | MENUITM_FLAG_MOVING_ITEM;
 				case MENUITM_OPTION_COMBINE:	// The item is being combined; store its slot index, and return to normal inventory function so another can be selected.
 					auxSelOption = selOption;
+					
+					// Update the Control UI for the Item Menu so it displays the left and right cursor 
+					// movement inputs alongside the up/down inputs that were displayed for the selected
+					// item's option menu.
+					var _movementCtrlGroup = movementCtrlGroup;
+					with(CONTROL_UI_MANAGER){
+						update_control_group_icon_active_state(_movementCtrlGroup, MENUINV_CTRL_GRP_CURSOR_LEFT,	true);
+						update_control_group_icon_active_state(_movementCtrlGroup, MENUINV_CTRL_GRP_CURSOR_RIGHT,	true);
+					}
 					break;
 				case MENUITM_OPTION_DROP:		// Removes slot from the inventory; creates a world item on the floor representing the slot's contents.
-					// 
 					var _dataRef = itemDataToRender[selOption];
 					if (_dataRef != INV_EMPTY_SLOT){ 
 						if (_dataRef.isEquipped) // Unequip the item if it happens to be equipped.
