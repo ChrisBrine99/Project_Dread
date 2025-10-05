@@ -11,9 +11,9 @@
 
 // 
 #macro	MENUITM_WIDTH					4
-#macro	MENUITM_HEIGHT					6
+#macro	MENUITM_HEIGHT					5
 #macro	MENUITM_VISIBLE_WIDTH			4
-#macro	MENUITM_VISIBLE_HEIGHT			6
+#macro	MENUITM_VISIBLE_HEIGHT			5
 
 // Since the positional offsets for the options and their spacing are constant in the item menu, they will 
 // be set using macros instead of referencing their relevant variables within the menu, which should result
@@ -369,8 +369,10 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		_yPos += itemOptionsMenuY;
 		
 		// 
-		draw_sprite_ext(spr_rectangle, 0, _xPos, _yPos, SUBMENU_ITM_SURFACE_WIDTH, SUBMENU_ITM_SURFACE_HEIGHT, 0.0, COLOR_BLACK, itemOptionsAlpha);
-		
+		draw_sprite_stretched_ext(spr_item_menu_slot, 1, _xPos - 2, _yPos - 2, 
+			SUBMENU_ITM_SURFACE_WIDTH + 4, SUBMENU_ITM_SURFACE_HEIGHT + 4,
+				COLOR_YELLOW, itemOptionsAlpha);
+				
 		// Finally, draw the current capture of the selected item's option menu text onto the screen.
 		draw_set_alpha(itemOptionsAlpha);
 		draw_surface(itemOptionsSurf, _xPos, _yPos);
@@ -537,7 +539,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			flags			 = flags | MENUITM_FLAG_OPTIONS_OPEN;
 			
 			// Calculate the offset for the item's options menu.
-			itemOptionsMenuX = MENUITM_OPTIONS_X + ((curOption % width)		 * MENUITM_OPTION_SPACING_X) + 18;
+			itemOptionsMenuX = MENUITM_OPTIONS_X + ((curOption % width)		 * MENUITM_OPTION_SPACING_X) + MENUITM_OPTION_SPACING_X;
 			itemOptionsMenuY = MENUITM_OPTIONS_Y + (floor(curOption / width) * MENUITM_OPTION_SPACING_Y);
 			return;
 		}

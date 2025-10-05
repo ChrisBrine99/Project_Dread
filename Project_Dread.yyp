@@ -132,7 +132,6 @@
     {"id":{"name":"spr_floor_materials","path":"sprites/spr_floor_materials/spr_floor_materials.yy",},},
     {"id":{"name":"spr_fog","path":"sprites/spr_fog/spr_fog.yy",},},
     {"id":{"name":"spr_inv_menu_header_footer_bkg","path":"sprites/spr_inv_menu_header_footer_bkg/spr_inv_menu_header_footer_bkg.yy",},},
-    {"id":{"name":"spr_item_menu_cursor","path":"sprites/spr_item_menu_cursor/spr_item_menu_cursor.yy",},},
     {"id":{"name":"spr_item_menu_equip_icon","path":"sprites/spr_item_menu_equip_icon/spr_item_menu_equip_icon.yy",},},
     {"id":{"name":"spr_item_menu_item_icons","path":"sprites/spr_item_menu_item_icons/spr_item_menu_item_icons.yy",},},
     {"id":{"name":"spr_item_menu_slot","path":"sprites/spr_item_menu_slot/spr_item_menu_slot.yy",},},
