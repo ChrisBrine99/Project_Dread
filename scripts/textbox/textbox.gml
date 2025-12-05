@@ -185,6 +185,11 @@ function str_textbox(_index) : str_base(_index) constructor {
 		x = floor((VIEWPORT_WIDTH - TBOX_BG_WIDTH) / 2) - 20; // Offset by 20 to account for the space between the background and the GUI's size.  
 		y = VIEWPORT_HEIGHT + 30; // The same value as "TBOX_Y_START" but utilizing the fact the height was stored locally previously.
 		
+		// Copy the x value of the text so the visible logs are in the same relative area horizontally on the
+		// game's screen. The value never changes hence why it is copied after initially being set.
+		var _x = x;
+		with(TEXTBOX_LOG) { textX = _x; }
+		
 		// Finally, setup the control group that will be utilized by the Textbox and calculate the positions
 		// of the icons and their descriptors so they're displayed at the proper offset. Then, set the
 		// textbox's reference to its control group so it can be referenced for drawing the group when needed.
@@ -213,7 +218,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 	
 	/// @description 
 	///	Called to render the textbox and its current contents whenever the textbox struct is currently showing
-	/// information taht has been queued up for the player to see.
+	/// information that has been queued up for the player to see.
 	///	
 	///	@param {Real}	viewX		X position of the viewport within the current room.
 	/// @parma {Real}	viewY		Y position of the viewport within the current room.
@@ -306,8 +311,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 				
 				// Once the proper coordinates have been set as required, the character is drawn and the width
 				// of the drawn character is added to properly offset the next character in the string.
-				draw_text_shadow(charX, charY, _curChar, 
-					_curColor, TBOX_TEXT_ALPHA, COLOR_GRAY);
+				draw_text_shadow(charX, charY, _curChar, _curColor, TBOX_TEXT_ALPHA, COLOR_GRAY);
 				charX += string_width(_curChar);
 			}
 			
@@ -518,7 +522,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 			var _parsedData = string_parse_color_data(content);
 			content			= string_split_lines(_parsedData.fullText, fnt_small, 
 								TBOX_SURFACE_WIDTH, TBOX_MAX_LINES_PER_BOX);
-			colorData		= _parsedData.colorData;
+			colorData = _parsedData.colorData;
 			delete _parsedData;
 		}
 	}
@@ -587,10 +591,21 @@ function str_textbox(_index) : str_base(_index) constructor {
 	state_default = function(_delta){
 		process_textbox_input();
 		
+		//
+		if (TBOX_WAS_TEXT_LOG_PRESSED){
+			object_set_state(state_open_log_animation);
+			return;
+		}
+		
 		// The text animation has completed, so nextChar no longer needs to have its value incremented, and
 		// the user can now press the advance key to move onto the next textbox.
 		if (nextChar == textLength){
 			if (TBOX_WAS_ADVANCE_PRESSED){
+				// Store the previous textbox's struct in the textbox log's data so it can be pulled up by the 
+				// player to view it again should they need a refresher on what was previously said.
+				var _textData = textData[| textIndex];
+				with(TEXTBOX_LOG) { queue_new_text(_textData); }
+				
 				// Close the textbox if the next index is less than 0, equal to the current index, or outside
 				// of the valid bounds of textbox data indices.
 				if (nextIndex < 0 && nextIndex == textIndex || nextIndex >= ds_list_size(textData)){
@@ -630,7 +645,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 	/// also smoothly shifting the textbox upward from the bottom of the screen. Once the target y position
 	/// is reached AND the alpha is set to 1.0, the opening animation will be considered complete.
 	///	
-	///	@param {Real}	delta 
+	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_open_animation = function(_delta){
 		// Give the player control over the textbox by shifting into its default state function. This state 
 		// is also responsible for "typing" the characters onto the textbox until they're all shown.
@@ -662,7 +677,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 	/// is completely invisible to the player. Then, it determines whether to deactivate the current textbox
 	/// or re-opens it if an actor name change is why the textbox "closed".
 	///	
-	///	@param {Real}	delta 
+	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_close_animation = function(_delta){
 		// Repeat the opening animation or deactivate the textbox depending on the current value of nextIndex.
 		if (alpha == 0.0){
@@ -681,6 +696,53 @@ function str_textbox(_index) : str_base(_index) constructor {
 		alpha -= TBOX_CANIM_ALPHA_SPEED * _delta;
 		if (alpha <= 0.0) // Prevent the value from going negative.
 			alpha = 0.0;
+	}
+	
+	/// @description 
+	///
+	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
+	state_view_log = function(_delta){
+		process_textbox_input();
+		
+		if (TBOX_WAS_TEXT_LOG_PRESSED){
+			object_set_state(state_close_log_animation);
+		}
+	}
+	
+	/// @description 
+	///
+	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
+	state_open_log_animation = function(_delta){
+		var _animFinished = false;
+		with(TEXTBOX_LOG){
+			alpha += _delta * 0.1;
+			if (alpha >= 1.0){
+				flags  |= TBOXLOG_FLAG_ACTIVE;
+				alpha	= 1.0;
+				_animFinished = true;
+			}
+		}
+		
+		if (_animFinished)
+			object_set_state(state_view_log);
+	}
+	
+	/// @descripiton 
+	///	
+	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
+	state_close_log_animation = function(_delta){
+		var _animFinished = false;
+		with(TEXTBOX_LOG){
+			alpha -= _delta * 0.1;
+			if (alpha <= 0.0){
+				flags  &= ~TBOXLOG_FLAG_ACTIVE;
+				alpha	= 0.0;
+				_animFinished = true;
+			}
+		}
+		
+		if (_animFinished)
+			object_set_state(state_default);
 	}
 }
 

@@ -46,6 +46,7 @@
 #macro	CONTROL_UI_MANAGER				global.sInstances[? str_control_ui_manager]
 #macro	CAMERA							global.sInstances[? str_camera]
 #macro	TEXTBOX							global.sInstances[? str_textbox]
+#macro	TEXTBOX_LOG						global.sInstances[? str_textbox_log]
 #macro	SCREEN_FADE						global.sInstances[? str_screen_fade]
 
 // Macros for referencing the instance IDs of all runtime singletons. These will return "noone" if no instance

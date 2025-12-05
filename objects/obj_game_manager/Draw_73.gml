@@ -138,6 +138,13 @@ with(TEXTBOX){
 	draw_gui_event(_viewX, _viewY, _delta);
 }
 
+// 
+with(TEXTBOX_LOG){
+	if (alpha <= _minAlpha)
+		break;
+	draw_gui_event(_viewX, _viewY, _delta);
+}
+
 // Draw the screen fade onto the screen after all UI elements have been rendered onto the application surface.
 with(SCREEN_FADE){
 	if (!FADE_IS_ACTIVE || alpha < gpu_get_alphatestref() / 255.0)

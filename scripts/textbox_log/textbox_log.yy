@@ -1,9 +1,9 @@
 {
   "$GMScript":"v1",
-  "%Name":"textbox",
+  "%Name":"textbox_log",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"textbox",
+  "name":"textbox_log",
   "parent":{
     "name":"Textbox",
     "path":"folders/Scripts/Structs/UI/Textbox.yy",

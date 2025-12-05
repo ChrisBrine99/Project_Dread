@@ -27,6 +27,7 @@ ds_map_add(global.sInstances, obj_player,				_playerInstance);
 ds_map_add(global.sInstances, str_control_ui_manager,	new str_control_ui_manager(str_control_ui_manager));
 ds_map_add(global.sInstances, str_camera,				new str_camera(str_camera));
 ds_map_add(global.sInstances, str_textbox,				new str_textbox(str_textbox));
+ds_map_add(global.sInstances, str_textbox_log,			new str_textbox_log(str_textbox));
 ds_map_add(global.sInstances, str_screen_fade,			new str_screen_fade(str_screen_fade));
 // NOTE -- This is the only time the default ways of struct and object creation should be used!!!
 

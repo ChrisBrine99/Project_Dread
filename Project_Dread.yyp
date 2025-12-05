@@ -2,7 +2,7 @@
   "$GMProject":"v1",
   "%Name":"Project_Dread",
   "AudioGroups":[
-    {"$GMAudioGroup":"","%Name":"audiogroup_default","name":"audiogroup_default","resourceType":"GMAudioGroup","resourceVersion":"2.0","targets":-1,},
+    {"$GMAudioGroup":"v1","%Name":"audiogroup_default","exportDir":"","name":"audiogroup_default","resourceType":"GMAudioGroup","resourceVersion":"2.0","targets":-1,},
   ],
   "configs":{
     "children":[],
@@ -38,6 +38,7 @@
     {"$GMFolder":"","%Name":"Menus","folderPath":"folders/Scripts/Structs/UI/Menus.yy","name":"Menus","resourceType":"GMFolder","resourceVersion":"2.0",},
     {"$GMFolder":"","%Name":"Inventory","folderPath":"folders/Scripts/Structs/UI/Menus/Inventory.yy","name":"Inventory","resourceType":"GMFolder","resourceVersion":"2.0",},
     {"$GMFolder":"","%Name":"Other","folderPath":"folders/Scripts/Structs/UI/Other.yy","name":"Other","resourceType":"GMFolder","resourceVersion":"2.0",},
+    {"$GMFolder":"","%Name":"Textbox","folderPath":"folders/Scripts/Structs/UI/Textbox.yy","name":"Textbox","resourceType":"GMFolder","resourceVersion":"2.0",},
     {"$GMFolder":"","%Name":"Utilities","folderPath":"folders/Scripts/Utilities.yy","name":"Utilities","resourceType":"GMFolder","resourceVersion":"2.0",},
     {"$GMFolder":"","%Name":"Shaders","folderPath":"folders/Shaders.yy","name":"Shaders","resourceType":"GMFolder","resourceVersion":"2.0",},
     {"$GMFolder":"","%Name":"Sprites","folderPath":"folders/Sprites.yy","name":"Sprites","resourceType":"GMFolder","resourceVersion":"2.0",},
@@ -69,7 +70,7 @@
   "isEcma":false,
   "LibraryEmitters":[],
   "MetaData":{
-    "IDEVersion":"2024.13.1.193",
+    "IDEVersion":"2024.14.1.210",
   },
   "name":"Project_Dread",
   "resources":[
@@ -114,6 +115,7 @@
     {"id":{"name":"screen_fade","path":"scripts/screen_fade/screen_fade.yy",},},
     {"id":{"name":"struct_utilities","path":"scripts/struct_utilities/struct_utilities.yy",},},
     {"id":{"name":"sub_menu","path":"scripts/sub_menu/sub_menu.yy",},},
+    {"id":{"name":"textbox_log","path":"scripts/textbox_log/textbox_log.yy",},},
     {"id":{"name":"textbox","path":"scripts/textbox/textbox.yy",},},
     {"id":{"name":"shd_color_fade","path":"shaders/shd_color_fade/shd_color_fade.yy",},},
     {"id":{"name":"shd_lighting","path":"shaders/shd_lighting/shd_lighting.yy",},},
