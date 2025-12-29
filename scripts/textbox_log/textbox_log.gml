@@ -5,11 +5,11 @@
 #macro	TBOXLOG_FLAG_ACTIVE				0x00000002
 
 // 
-#macro	TBOXLOG_SHOULD_RENDER			(flags & TBOXLOG_FLAG_RENDER)
-#macro	TBOXLOG_IS_ACTIVE				(flags & TBOXLOG_FLAG_ACTIVE)
+#macro	TBOXLOG_SHOULD_RENDER			((flags & TBOXLOG_FLAG_RENDER)		!= 0)
+#macro	TBOXLOG_IS_ACTIVE				((flags & TBOXLOG_FLAG_ACTIVE)		!= 0)
 
 // 
-#macro	TBOXLOG_MAXIMUM_STORED			100
+#macro	TBOXLOG_MAXIMUM_STORED			128
 #macro	TBOXLOG_MAXIMUM_VISIBLE			4
 
 // 
@@ -30,6 +30,9 @@
 function str_textbox_log(_index) : str_base(_index) constructor {
 	flags				= STR_FLAG_PERSISTENT;
 	
+	// 
+	prevInputFlags		= 0;
+	
 	// Determines the overall transparency level for every graphics element of the textbox log.
 	alpha				= 0.0;
 	
@@ -48,6 +51,7 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 	
 	// 
 	curOffset			= 0;
+	logSize				= 0;
 	
 	// 
 	movementCtrlGroup	= REF_INVALID;
@@ -137,7 +141,7 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 		}
 		
 		// 
-		var _logSize			= ds_list_size(textData);
+		var _logSize			= logSize;
 		var _movementCtrlGroup	= movementCtrlGroup;
 		var _inputCtrlGroup		= inputCtrlGroup;
 		with(CONTROL_UI_MANAGER){
@@ -149,7 +153,7 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 		// 
 		if (!TBOXLOG_SHOULD_RENDER)
 			return;
-		flags &= ~TBOXLOG_FLAG_RENDER;
+		flags = flags & ~TBOXLOG_FLAG_RENDER;
 		
 		// 
 		draw_set_font(fnt_small);
@@ -241,17 +245,19 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 			colorData	: _colorData,
 			actorIndex	: 0,
 		});
-		flags |= TBOXLOG_FLAG_RENDER;
+		flags = flags | TBOXLOG_FLAG_RENDER;
 		
 		// Update the offset of the textbox log so that it always starts off showing the newest element that
 		// have been added to it (Or 0 if there are less than four elements total at the moment).
-		var _size = ds_list_size(textData);
-		curOffset = _size - 1;
+		var _size	= ds_list_size(textData);
+		curOffset	= _size - 1;
+		logSize		= _size;
 		
 		// Remove the oldest element from the list if the log has hit its limit of text it can hold onto.
 		if (_size > TBOXLOG_MAXIMUM_STORED){
 			ds_list_delete(textData, 0);
 			curOffset--;
+			logSize--;
 		}
 	}
 }

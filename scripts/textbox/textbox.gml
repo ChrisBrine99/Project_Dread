@@ -4,16 +4,20 @@
 // by it to achieve some sort of state-based functionality outside of the standard step event state machine.
 #macro	TBOX_INFLAG_ADVANCE				0x00000001
 #macro	TBOX_INFLAG_TEXT_LOG			0x00000002
-#macro	TBOX_FLAG_ACTIVE				0x00000004
-#macro	TBOX_FLAG_WIPE_DATA				0x00000008
-#macro	TBOX_FLAG_CLEAR_SURFACE			0x00000010
-#macro	TBOX_FLAG_SHOW_NAME				0x00000020
-#macro	TBOX_FLAG_LOG_ACTIVE			0x00000040
+#macro	TBOX_INFLAG_LOG_UP				0x00000004
+#macro	TBOX_INFLAG_LOG_DOWN			0x00000008
+#macro	TBOX_FLAG_ACTIVE				0x00000010
+#macro	TBOX_FLAG_WIPE_DATA				0x00000020
+#macro	TBOX_FLAG_CLEAR_SURFACE			0x00000040
+#macro	TBOX_FLAG_SHOW_NAME				0x00000080
+#macro	TBOX_FLAG_LOG_ACTIVE			0x00000100
 
 // Macros that condense the checks required for specific states that the textbox must be in for it to process
 // certain aspects of the data it is displaying the user, if it is allowed to do that currently to begin with.
-#macro	TBOX_WAS_ADVANCE_PRESSED		((flags & TBOX_INFLAG_ADVANCE)		!= 0 && (prevInputFlags & TBOX_INFLAG_ADVANCE)	== 0)
-#macro	TBOX_WAS_TEXT_LOG_PRESSED		((flags & TBOX_INFLAG_TEXT_LOG)		!= 0 && (prevInputFlags & TBOX_INFLAG_TEXT_LOG)	== 0)
+#macro	TBOX_WAS_ADVANCE_PRESSED		((flags & TBOX_INFLAG_ADVANCE)		!= 0 && (prevInputFlags & TBOX_INFLAG_ADVANCE)		== 0)
+#macro	TBOX_WAS_TEXT_LOG_PRESSED		((flags & TBOX_INFLAG_TEXT_LOG)		!= 0 && (prevInputFlags & TBOX_INFLAG_TEXT_LOG)		== 0)
+#macro	TBOX_WAS_LOG_UP_PRESSED			((flags & TBOX_INFLAG_LOG_UP)		!= 0 && (prevInputFlags & TBOX_INFLAG_LOG_UP)		== 0)
+#macro	TBOX_WAS_LOG_DOWN_PRESSED		((flags & TBOX_INFLAG_LOG_DOWN)		!= 0 && (prevInputFlags & TBOX_INFLAG_LOG_DOWN)		== 0)
 #macro	TBOX_IS_ACTIVE					((flags & TBOX_FLAG_ACTIVE)			!= 0)
 #macro	TBOX_CAN_WIPE_DATA				((flags & TBOX_FLAG_WIPE_DATA)		!= 0)
 #macro	TBOX_SHOULD_CLEAR_SURFACE		((flags & TBOX_FLAG_CLEAR_SURFACE)	!= 0)
@@ -379,21 +383,25 @@ function str_textbox(_index) : str_base(_index) constructor {
 	/// @description 
 	/// Captures the user's input for the current frame. Instead of storing the current input flags in their
 	/// own dedicated variable, they're placed within the default "flags" variable since there is plenty of
-	/// room for the two user inputs required for the textbox to function. The previous frame's inputs are
-	/// still stored in the standard "prevInputFlags" variable.
+	/// room for the four user inputs required for the textbox and its log to function. The previous frame's 
+	/// inputs are still stored in the standard "prevInputFlags" variable.
 	/// 
-	process_textbox_input = function(){
-		prevInputFlags	= flags &  (TBOX_INFLAG_ADVANCE | TBOX_INFLAG_TEXT_LOG);
-		flags		    = flags & ~(TBOX_INFLAG_ADVANCE | TBOX_INFLAG_TEXT_LOG);
+	process_input = function(){
+		prevInputFlags	= flags &  (TBOX_INFLAG_ADVANCE | TBOX_INFLAG_TEXT_LOG | TBOX_INFLAG_LOG_UP | TBOX_INFLAG_LOG_DOWN);
+		flags		    = flags & ~(TBOX_INFLAG_ADVANCE | TBOX_INFLAG_TEXT_LOG | TBOX_INFLAG_LOG_UP | TBOX_INFLAG_LOG_DOWN);
 		
 		if (GAME_IS_GAMEPAD_ACTIVE){
 			flags = flags | (MENU_PAD_TBOX_ADVANCE		); // Offset based on position of the bit within the variable.
 			flags = flags | (MENU_PAD_TBOX_LOG		<< 1);
+			flags = flags | (MENU_PAD_UP			<< 2);
+			flags = flags | (MENU_PAD_DOWN			<< 3);
 			return;
 		}
 		
 		flags = flags | (MENU_KEY_TBOX_ADVANCE		); // Offset based on position of the bit within the variable.
 		flags = flags | (MENU_KEY_TBOX_LOG		<< 1);
+		flags = flags | (MENU_KEY_UP			<< 2);
+		flags = flags | (MENU_KEY_DOWN			<< 3);
 	}
 	
 	/// @description 
@@ -597,9 +605,9 @@ function str_textbox(_index) : str_base(_index) constructor {
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_default = function(_delta){
-		process_textbox_input();
+		process_input();
 		
-		//
+		// 
 		if (TBOX_WAS_TEXT_LOG_PRESSED){
 			object_set_state(state_open_log_animation);
 			flags = flags | TBOX_FLAG_LOG_ACTIVE;
@@ -708,17 +716,43 @@ function str_textbox(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	///
+	/// 
+	/// 
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_view_log = function(_delta){
-		process_textbox_input();
+		process_input();
 		
-		if (TBOX_WAS_TEXT_LOG_PRESSED)
+		// 
+		if (TBOX_WAS_TEXT_LOG_PRESSED){
 			object_set_state(state_close_log_animation);
+			return;
+		}
+		
+		// 
+		var _moveDirection = TBOX_WAS_LOG_DOWN_PRESSED - TBOX_WAS_LOG_UP_PRESSED;
+		if (_moveDirection == 0)
+			return;
+		
+		// 
+		with(TEXTBOX_LOG){
+			// 
+			if (logSize <= TBOXLOG_MAXIMUM_VISIBLE)
+				return;
+			
+			// 
+			if (_moveDirection == MENU_MOVEMENT_UP && curOffset > TBOXLOG_MAXIMUM_VISIBLE){ 
+				curOffset--; 
+			} else if (_moveDirection == MENU_MOVEMENT_DOWN && 
+					curOffset < logSize - 1){ 
+				curOffset++;
+			}
+			flags = flags | TBOXLOG_FLAG_RENDER;
+		}
 	}
 	
 	/// @description 
 	///
+	/// 
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_open_log_animation = function(_delta){
 		var _animFinished = false;
@@ -737,6 +771,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 	
 	/// @descripiton 
 	///	
+	/// 
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_close_log_animation = function(_delta){
 		var _animFinished = false;
