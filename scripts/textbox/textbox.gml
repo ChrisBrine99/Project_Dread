@@ -8,6 +8,7 @@
 #macro	TBOX_FLAG_WIPE_DATA				0x00000008
 #macro	TBOX_FLAG_CLEAR_SURFACE			0x00000010
 #macro	TBOX_FLAG_SHOW_NAME				0x00000020
+#macro	TBOX_FLAG_LOG_ACTIVE			0x00000040
 
 // Macros that condense the checks required for specific states that the textbox must be in for it to process
 // certain aspects of the data it is displaying the user, if it is allowed to do that currently to begin with.
@@ -17,6 +18,7 @@
 #macro	TBOX_CAN_WIPE_DATA				((flags & TBOX_FLAG_WIPE_DATA)		!= 0)
 #macro	TBOX_SHOULD_CLEAR_SURFACE		((flags & TBOX_FLAG_CLEAR_SURFACE)	!= 0)
 #macro	TBOX_SHOULD_SHOW_NAME			((flags & TBOX_FLAG_SHOW_NAME)		!= 0)
+#macro	TBOX_IS_LOG_ACTIVE				((flags & TBOX_FLAG_LOG_ACTIVE)		!= 0)
 
 // The value the textbox is looking for within its "nextIndex" variable so it knows it can deactivate itself.
 // This value is then reset to 0 after the deactivation is completed.
@@ -359,6 +361,11 @@ function str_textbox(_index) : str_base(_index) constructor {
 			shader_reset();
 		}
 		
+		// Don't display the control UI information for the textbox if the player is currently viewing the 
+		// textbox's history log.
+		if (TBOX_IS_LOG_ACTIVE)
+			return;
+		
 		// After rendering the textbox and all its required elements, the control icon group for the textbox 
 		// will be drawn at their calculated positions. The color of the text (Both it and the drop shadow)
 		// are set to match the default color for text within the textbox.
@@ -497,6 +504,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 	queue_new_text = function(_text, _actorIndex = 0, _nextIndex = -1){
 		if (_text == "") // Don't attempt to add empty text to the queue.
 			return;
+			
 		ds_list_add(textData, {
 			content		: _text,
 			colorData	: -1,
@@ -594,6 +602,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 		//
 		if (TBOX_WAS_TEXT_LOG_PRESSED){
 			object_set_state(state_open_log_animation);
+			flags = flags | TBOX_FLAG_LOG_ACTIVE;
 			return;
 		}
 		
@@ -704,9 +713,8 @@ function str_textbox(_index) : str_base(_index) constructor {
 	state_view_log = function(_delta){
 		process_textbox_input();
 		
-		if (TBOX_WAS_TEXT_LOG_PRESSED){
+		if (TBOX_WAS_TEXT_LOG_PRESSED)
 			object_set_state(state_close_log_animation);
-		}
 	}
 	
 	/// @description 
@@ -717,8 +725,8 @@ function str_textbox(_index) : str_base(_index) constructor {
 		with(TEXTBOX_LOG){
 			alpha += _delta * 0.1;
 			if (alpha >= 1.0){
-				flags  |= TBOXLOG_FLAG_ACTIVE;
-				alpha	= 1.0;
+				flags = flags | TBOXLOG_FLAG_ACTIVE;
+				alpha = 1.0;
 				_animFinished = true;
 			}
 		}
@@ -735,14 +743,16 @@ function str_textbox(_index) : str_base(_index) constructor {
 		with(TEXTBOX_LOG){
 			alpha -= _delta * 0.1;
 			if (alpha <= 0.0){
-				flags  &= ~TBOXLOG_FLAG_ACTIVE;
-				alpha	= 0.0;
+				flags = flags & ~TBOXLOG_FLAG_ACTIVE;
+				alpha = 0.0;
 				_animFinished = true;
 			}
 		}
 		
-		if (_animFinished)
+		if (_animFinished){
 			object_set_state(state_default);
+			flags = flags & ~TBOX_FLAG_LOG_ACTIVE;
+		}
 	}
 }
 

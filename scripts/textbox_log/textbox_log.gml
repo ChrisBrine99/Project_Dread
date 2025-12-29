@@ -12,6 +12,16 @@
 #macro	TBOXLOG_MAXIMUM_STORED			100
 #macro	TBOXLOG_MAXIMUM_VISIBLE			4
 
+// 
+#macro	TBOXLOG_ICONUI_CTRL_GRP_MOVE	"tlog_icons_move"
+#macro	TBOXLOG_ICONUI_CTRL_GRP_INPUT	"tlog_icons_input"
+
+// 
+#macro	TBOXLOG_CTRL_GRP_XOFFSET		5
+#macro	TBOXLOG_CTRL_GRP_YOFFSET		12
+#macro	TBOXLOG_CTRL_GRP_INPUT_PADDING	3
+#macro	TBOXLOG_CTRL_GRP_MOVE_PADDING	2
+
 #endregion Macros for Textbox Log Struct
 
 #region Textbox Log Struct Definition
@@ -38,6 +48,38 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 	
 	// 
 	curOffset			= 0;
+	
+	// 
+	movementCtrlGroup	= REF_INVALID;
+	inputCtrlGroup		= REF_INVALID;
+	
+	/// @description 
+	///	
+	///	
+	create_event = function(){
+		if (room != rm_init)
+			return; // Prevents a call to this function from executing outside of the game's initialization.
+		
+		// 
+		var _movementCtrlGroup	= REF_INVALID;
+		var _inputCtrlGroup		= REF_INVALID;
+		with(CONTROL_UI_MANAGER){
+			// 
+			_movementCtrlGroup = create_control_group(TBOXLOG_ICONUI_CTRL_GRP_MOVE,
+				TBOXLOG_CTRL_GRP_XOFFSET, VIEWPORT_HEIGHT - TBOXLOG_CTRL_GRP_YOFFSET,
+					TBOXLOG_CTRL_GRP_INPUT_PADDING, ICONUI_DRAW_RIGHT);
+			add_control_group_icon(_movementCtrlGroup, ICONUI_MENU_UP);
+			add_control_group_icon(_movementCtrlGroup, ICONUI_MENU_DOWN, "Navigate");
+			
+			// 
+			_inputCtrlGroup = create_control_group(TBOXLOG_ICONUI_CTRL_GRP_INPUT, 
+				VIEWPORT_WIDTH - TBOXLOG_CTRL_GRP_XOFFSET, VIEWPORT_HEIGHT - TBOXLOG_CTRL_GRP_YOFFSET, 
+					TBOXLOG_CTRL_GRP_MOVE_PADDING, ICONUI_DRAW_LEFT);
+			add_control_group_icon(_inputCtrlGroup, ICONUI_TBOX_LOG, "Close");
+		}
+		movementCtrlGroup	= _movementCtrlGroup;
+		inputCtrlGroup		= _inputCtrlGroup;
+	}
 	
 	/// @description 
 	///	The textbox log struct's destroy event. It will clean up anything that isn't automatically cleaned up 
@@ -90,8 +132,18 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 				buffer_set_surface(surfBuffer, textSurfaces[i], TBOX_SURFACE_WIDTH * TBOX_SURFACE_HEIGHT * 4 * i);
 			}
 			
-			draw_surface_ext(textSurfaces[i], _viewX + textX + TBOX_TEXT_X_OFFSET, _viewY + 120 - (i * 30), 
+			draw_surface_ext(textSurfaces[i], _viewX + textX + TBOX_TEXT_X_OFFSET, _viewY + 132 - (i * 38), 
 				1.0, 1.0, 0.0, COLOR_TRUE_WHITE, alpha);
+		}
+		
+		// 
+		var _logSize			= ds_list_size(textData);
+		var _movementCtrlGroup	= movementCtrlGroup;
+		var _inputCtrlGroup		= inputCtrlGroup;
+		with(CONTROL_UI_MANAGER){
+			if (_logSize > TBOXLOG_MAXIMUM_VISIBLE) // Only show movement inputs when the history can be scrolled up or down.
+				draw_control_group(_movementCtrlGroup, _viewX, _viewY, 1.0, COLOR_WHITE, COLOR_DARK_GRAY, 1.0); 
+			draw_control_group(_inputCtrlGroup, _viewX, _viewY, 1.0, COLOR_WHITE, COLOR_DARK_GRAY, 1.0); 
 		}
 		
 		// 

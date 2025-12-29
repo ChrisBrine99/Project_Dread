@@ -140,6 +140,13 @@
 // curs the status or dies from the damage. The damage is reset once the player's poison status is removed.
 #macro	PLYR_POISON_BASE_DAMAGE			0.01
 
+// Determines various characteristics of the accuracy penalty system; how they'll incur over sustained weapon
+// usage, how large the penalty can be, and how quick it will decay to zero once no longer using the weapon,
+// respectively.
+#macro	PLYR_ACCPEN_DECAY_INCREMENT		0.15
+#macro	PLYR_ACCPEN_MAX_VALUE			1.75
+#macro	PLYR_ACCPEN_DECAY_AMOUNT		0.01
+
 // Macros for the values/properties applied to the player's ambient light source whenever they're in the world
 // without a flashlight or with their equipped flashlight turned off.
 #macro	PLYR_AMBLIGHT_XOFFSET			0
@@ -897,9 +904,11 @@ end_step_event = function(_delta){
 		}
 	}
 	
-	// 
+	// Lowering the current accuracy penalty (How many additional degrees are added to the equipped firearm's
+	// base accuracy) once the weapon's recoil timer has completed; reducing at a constant speed until it
+	// hits zero once again.
 	if (curAccuracyPenalty > 0.0 && timers[PLYR_WEAPON_ATTACK_TIMER] == 0.0){
-		curAccuracyPenalty -= 0.01 * _delta;
+		curAccuracyPenalty -= PLYR_ACCPEN_DECAY_AMOUNT * _delta;
 		if (curAccuracyPenalty < 0.0)
 			curAccuracyPenalty = 0.0;
 	}
@@ -1159,22 +1168,35 @@ state_player_weapon_ready = function(_delta){
 		if (weaponRemainingAmmo != -1)
 			weaponRemainingAmmo--;
 		
-		// 
+		// Store the player's directional value truncated donw to one of four possible values, and store the
+		// current accuracy penalty value that will be applied to the accuracy of the fired bullet.
 		var _direction		 = floor(direction / 90) * 90;
 		var _accuracyPenalty = curAccuracyPenalty;
 		
-		// 
-		curAccuracyPenalty += 0.15;
-		if (curAccuracyPenalty > 1.75)
-			curAccuracyPenalty = 1.75;
+		// Add to the current accuracy penalty's value whenever a firearm is used. This value isn't reflected
+		// in the accuracy of the current fired bullet, but all the ones fired after it.
+		curAccuracyPenalty += PLYR_ACCPEN_DECAY_INCREMENT;
+		if (curAccuracyPenalty > PLYR_ACCPEN_MAX_VALUE)
+			curAccuracyPenalty = PLYR_ACCPEN_MAX_VALUE;
 		
 		// Jump into scope of the equipment struct so its values can be utilized for determining how the
 		// weapon will be used.
 		with(equipment){
-			// Grab the weapon's flags so they can be referenced throughout this code to see what should
-			// and should not occur depending on the flags that are cleared and set.
-			var _flags = false;
-			with(weaponStatRef) { _flags = flags; }
+			// Copy over some of the equipped weapon's characteristics as they will be used to determine how
+			// much damage the weapon will do, how many projectiles it needs to spawn, the flags it has toggled,
+			// and so on.
+			var _damage			= 0;
+			var _range			= 0;
+			var _accuracy		= 0;
+			var _bulletCount	= 0;
+			var _flags			= 0;
+			with(weaponStatRef){
+				_damage			= damage;
+				_range			= range;
+				_accuracy		= accuracy;
+				_bulletCount	= bulletCount;
+				_flags			= flags;
+			}
 			
 			// Jump into scope fo the weapon's item inventory struct to see if its quantity and/or durabilty
 			// needs to be reduced to reflect the use of the weapon.
@@ -1188,46 +1210,46 @@ state_player_weapon_ready = function(_delta){
 			}
 			
 			// 
-			var _damage			= 0;
-			var _range			= 0;
-			var _accuracy		= 0;
-			var _bulletCount	= 0;
-			with(weaponStatRef){
-				_damage			= damage;
-				_range			= range;
-				_accuracy		= accuracy;
-				_bulletCount	= bulletCount;
+			if (_isMelee){
+				// TODO -- Create melee hitbox object here.
+				return;
 			}
 			
-			// 
-			if (!_isMelee){
-				with(curAmmoStatRef){
-					_damage		   += damage;
-					_range		   += range;
-					_accuracy	   += accuracy;
-					_bulletCount   += bulletCount;
-				}
+			// When a non-melee weapon is being used, the ammunition it utilizes needs to have an effect on
+			// the damage, range, accuracy, and bullet count of the projectile. So, this values are all added
+			// to what values are currently there.
+			with(curAmmoStatRef){
+				_damage		   += damage;
+				_range		   += range;
+				_accuracy	   += accuracy;
+				_bulletCount   += bulletCount;
+			}
 				
-				// 
-				_accuracy += (_accuracy * _accuracyPenalty);
-			}
-			
-			// 
+			// Multiply the accuracy against the current penalty value. At the worst, an additional 75%
+			// is added to the accuracy value to make constant shooting incredihbly inaccurate.
+			_accuracy += (_accuracy * _accuracyPenalty);
+				
+			// Use the accuracy value calculated above to create a range that is -accuracy and +accuracy from
+			// the cardinal direction the player is currently facing. A random direction within that area is
+			// chosen and added to the base direction to offset it.
 			_direction += random_range(-_accuracy, _accuracy);
 			
-			// 
+			// Hitscan projectiles will cast a ray between the barrel of the equipped weapon, and the endpoint
+			// of the bullet's path based on weapon's range stat. It then iterates through the objects until
+			// it hits an object that it can interact with. When that occurs, the bullet ignores the rest of
+			// the list as it will be assumed they cannot go through objects.
 			if ((_flags & WEAP_FLAG_IS_HITSCAN) != 0){
 				for (var i = 0; i < _bulletCount; i++){
 					with(GAME_MANAGER){
 						var _pX = PLAYER.x;
-						var _pY = PLAYER.y;
+						var _pY = PLAYER.y - 12;
 						add_debug_line(_pX, _pY, 
 							_pX + lengthdir_x(_range, _direction), _pY + lengthdir_y(_range, _direction), 
 								120);
 					}
 				}
 				
-				// 
+				// There is no need to continue with the state, so it will exit early.
 				return;
 			}
 			
@@ -1257,10 +1279,10 @@ state_player_weapon_ready = function(_delta){
 	if (!PINPUT_RELOAD_WEAPON_PRESSED)
 		return;
 	
-	// Check the current count for the ammo being used by the equipped weapon. If that value is zero, the
-	// reload input is rejected so no reload process can begin. Otherwise, begin the reload and set the timer.
+	// Make sure there is ammo in the player's inventory to use in the reload process and that the weapon
+	// isn't full on ammo already. If either happens to be true, the reload process isn't started.
 	with(equipment){
-		if (ammoCount[curAmmoIndex] == 0)
+		if (ammoCount[curAmmoIndex] == 0 || global.curItems[weapon].quantity == weaponStatRef.stackLimit)
 			return;
 	}
 	object_set_state(state_player_reloading);

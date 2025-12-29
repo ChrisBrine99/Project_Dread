@@ -64,6 +64,10 @@
 #macro	MENU_FIRST_AUTOSCROLL_TIME		30.0
 #macro	MENU_AUTOSCROLL_TIME			10.0
 
+// 
+#macro	MENU_ICONUI_CTRL_GRP_CURSOR		"menu_icons_cursor"
+#macro	MENU_ICONUI_CTRL_GRP_INPUT		"menu_icons_input"
+
 #endregion Macros for Base Menu Struct
 
 #region Base Menu Struct Definition
