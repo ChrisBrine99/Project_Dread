@@ -740,7 +740,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 				return;
 			
 			// 
-			if (_moveDirection == MENU_MOVEMENT_UP && curOffset > TBOXLOG_MAXIMUM_VISIBLE){ 
+			if (_moveDirection == MENU_MOVEMENT_UP && curOffset >= TBOXLOG_MAXIMUM_VISIBLE){ 
 				curOffset--; 
 			} else if (_moveDirection == MENU_MOVEMENT_DOWN && 
 					curOffset < logSize - 1){ 

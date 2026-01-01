@@ -73,7 +73,7 @@ if (GAME_IS_GAMEPAD_ACTIVE){
 
 // Looping through all buttons for the gamepad to see if any of them have been pressed by the user. If so,
 // control is moved over to the controller that the input was read from.
-var _gamepad	= global.gamepadID;
+var _gamepad = global.gamepadID;
 for (var i = gp_face1; i <= gp_padr; i++){
 	if (gamepad_button_check_pressed(_gamepad, i)){
 		global.flags = global.flags | GAME_FLAG_GAMEPAD_ACTIVE;

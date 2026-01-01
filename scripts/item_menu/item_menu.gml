@@ -261,120 +261,137 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		if (curOptionOffset >= MENUITM_HLITEM_OFFSET_LIMIT)
 			curOptionOffset -= MENUITM_HLITEM_OFFSET_LIMIT;
 		
-		// Loop to draw the inventory's available item slots UI elements and the elements for the item occupying
-		// that slot should there currently be an item there.
-		var _item			= INV_EMPTY_SLOT;
-		var _alpha			= alpha;
-		var _optionX		= _xPos + optionX;
-		var _optionY		= _yPos + optionY;
-		var _curOptOffset	= 0;
-		var _option			= 0;
-		var _slotCol		= COLOR_TRUE_WHITE;
-		var _length			= ds_list_size(options);
-		for (var yy = 0; yy < height; yy++){
-			for (var xx = 0; xx < width; xx++){
-				// Determine the option's index based on the current x/y position of the slot that will be 
-				// drawn. Should this value exceed the inventory's current size, it will break out of this
-				// loop and the outer loop by setting yy to the menu's height.
-				_option = (yy * width) + xx;
-				if (_option >= _length){
-					yy = height;
-					break;
-				}
-				
-				// Determine blending characteristics of the item slot/icon as well as the icon's positional
-				// offset based on whether the slot in question is visible (the "else" block), highlighted
-				// (_option == curOption), the primary selection (_option == selOption), of the stored
-				// selection (_option == auxSelOption), respectively.
-				if (_option == auxSelOption){ 
-					_slotCol		= COLOR_RED;
-					_curOptOffset	= (_option == curOption) ? floor(curOptionOffset) : 1;
-				} else if (_option == selOption){
-					_slotCol		= COLOR_GREEN;
-					_curOptOffset	= 1;
-				} else if (_option == curOption){ 
-					_slotCol		= COLOR_YELLOW;
-					_curOptOffset	= floor(curOptionOffset);
-				} else{
-					_slotCol		= COLOR_TRUE_WHITE;
-					_curOptOffset	= 0;
-				}
-				
-				// Determine whether to use the default version of the slot sprite or its highlighted
-				// counterpart depending on what the _slotCol variable was set to in the if/else block above.
-				var _imageIndex = (_slotCol != COLOR_TRUE_WHITE);
-				draw_sprite_ext(spr_item_menu_slot, _imageIndex, _optionX, 
-					_optionY, 1.0, 1.0, 0.0, _slotCol, alpha);
-				
-				// The current item in the slot will have its icon drawn and quantity, if that is also required.
-				_item = global.curItems[_option];
-				if (_item != INV_EMPTY_SLOT){
-					with(_item){ // Determine which shading to use for the item's icon.
-						if (_slotCol == COLOR_TRUE_WHITE)	{ _slotCol = COLOR_GRAY; }
-						else if (_slotCol == COLOR_YELLOW)	{ _slotCol = COLOR_TRUE_WHITE; }
-						
-						draw_sprite_ext(spr_item_menu_item_icons, itemID, _optionX, 
-							_optionY - _curOptOffset, 1.0, 1.0, 0.0, _slotCol, _alpha);
+		#region Drawing Inventory Item Slots and Their Elements
+
+			var _item			= INV_EMPTY_SLOT;
+			var _alpha			= alpha;
+			var _optionX		= _xPos + optionX;
+			var _optionY		= _yPos + optionY;
+			var _curOptOffset	= 0;
+			var _option			= 0;
+			var _slotCol		= COLOR_TRUE_WHITE;
+			var _length			= ds_list_size(options);
+			for (var yy = 0; yy < height; yy++){
+				for (var xx = 0; xx < width; xx++){
+					// Determine the option's index based on the current x/y position of the slot that will be 
+					// drawn. Should this value exceed the inventory's current size, it will break out of this
+					// loop and the outer loop by setting yy to the menu's height.
+					_option = (yy * width) + xx;
+					if (_option >= _length){
+						yy = height;
+						break;
 					}
 					
-					// Displays the current quantity and the symbol signifying the item is equipped if that
-					// flag is currently set within the render data struct.
-					with(itemDataToRender[_option]){
-						draw_text_shadow(_optionX + 18, _optionY + 19, quantityStr, quantityCol, _alpha, COLOR_DARK_GRAY, _alpha);
-						if (isEquipped){
-							draw_sprite_ext(spr_item_menu_equip_icon, 0, _optionX + 11, _optionY - 1, 
-								1.0, 1.0, 0.0, COLOR_TRUE_WHITE, _alpha);
+					// Determine blending characteristics of the item slot/icon as well as the icon's positional
+					// offset based on whether the slot in question is visible (the "else" block), highlighted
+					// (_option == curOption), the primary selection (_option == selOption), of the stored
+					// selection (_option == auxSelOption), respectively.
+					if (_option == auxSelOption){ 
+						_slotCol		= COLOR_RED;
+						_curOptOffset	= (_option == curOption) ? floor(curOptionOffset) : 1;
+					} else if (_option == selOption){
+						_slotCol		= COLOR_GREEN;
+						_curOptOffset	= 1;
+					} else if (_option == curOption){ 
+						_slotCol		= COLOR_YELLOW;
+						_curOptOffset	= floor(curOptionOffset);
+					} else{
+						_slotCol		= COLOR_TRUE_WHITE;
+						_curOptOffset	= 0;
+					}
+					
+					// Determine whether to use the default version of the slot sprite or its highlighted
+					// counterpart depending on what the _slotCol variable was set to in the if/else block 
+					// above.
+					var _imageIndex = (_slotCol != COLOR_TRUE_WHITE);
+					draw_sprite_ext(spr_item_menu_slot, _imageIndex, _optionX, 
+						_optionY, 1.0, 1.0, 0.0, _slotCol, alpha);
+					
+					// The current item in the slot will have its icon drawn and quantity, if that is also 
+					// required.
+					_item = global.curItems[_option];
+					if (_item != INV_EMPTY_SLOT){
+						with(_item){ // Determine which shading to use for the item's icon.
+							if (_slotCol == COLOR_TRUE_WHITE)	{ _slotCol = COLOR_GRAY; }
+							else if (_slotCol == COLOR_YELLOW)	{ _slotCol = COLOR_TRUE_WHITE; }
+							
+							draw_sprite_ext(spr_item_menu_item_icons, itemID, _optionX, 
+								_optionY - _curOptOffset, 1.0, 1.0, 0.0, _slotCol, _alpha);
+						}
+						
+						// Displays the current quantity and the symbol signifying the item is equipped if 
+						// that flag is currently set within the render data struct.
+						with(itemDataToRender[_option]){
+							draw_text_shadow(_optionX + 18, _optionY + 19, quantityStr, 
+								quantityCol, _alpha, COLOR_DARK_GRAY, _alpha);
+							if (isEquipped){
+								draw_sprite_ext(spr_item_menu_equip_icon, 0, _optionX + 11, _optionY - 1, 
+									1.0, 1.0, 0.0, COLOR_TRUE_WHITE, _alpha);
+							}
 						}
 					}
+					_optionX += optionSpacingX;
 				}
-				_optionX += optionSpacingX;
+				_optionX	= _xPos + optionX;
+				_optionY   += optionSpacingY;
 			}
-			_optionX	= _xPos + optionX;
-			_optionY   += optionSpacingY;
-		}
-		draw_set_halign(fa_left);
-		draw_set_valign(fa_top);
+			draw_set_halign(fa_left);
+			draw_set_valign(fa_top);
 		
-		// Displays the highlighted item's name and description below the slot UI/menu area.
-		_optionX	= _xPos + optionX;
-		_optionY	= _yPos + optionY;
-		_item		= invItemRefs[curOption];
-		if (_item != INV_EMPTY_SLOT){
-			with(_item){
-				draw_text_shadow(_optionX + 5, _optionY + 106, itemName, 
-					COLOR_WHITE, _alpha, COLOR_DARK_GRAY, _alpha);
-				draw_text_shadow(_optionX, _optionY + 118, itemInfo,
-					COLOR_LIGHT_GRAY, _alpha, COLOR_DARK_GRAY, _alpha);
+		#endregion Drawing Inventory Item Slots and Their Elements
+		#region Drawing Highlighted Item's Name and Descripiton
+		
+			_optionX	= _xPos + optionX;
+			_optionY	= _yPos + optionY;
+			_item		= invItemRefs[curOption];
+			if (_item != INV_EMPTY_SLOT){
+				with(_item){
+					draw_text_shadow(_optionX + 5, _optionY + 106, itemName, 
+						COLOR_WHITE, _alpha, COLOR_DARK_GRAY, _alpha);
+					draw_text_shadow(_optionX, _optionY + 118, itemInfo,
+						COLOR_LIGHT_GRAY, _alpha, COLOR_DARK_GRAY, _alpha);
+				}
 			}
-		}
+			
+		#endregion Drawing Highlighted Item's Name and Descripiton
 		
 		// Don't bother with any of the surface rendering/swapping logic below if the sub menu containing the
 		// selected item's options isn't currently opened for the player to select from.
 		if (!MENUITM_ARE_OPTIONS_OPEN)
 			return;
 		
-		// Make sure the surface for the selected item's option menu if it doesn't exist due to a GPU flush.
-		if (!surface_exists(itemOptionsSurf))
-			itemOptionsSurf = surface_create(SUBMENU_ITM_SURFACE_WIDTH, SUBMENU_ITM_SURFACE_HEIGHT);
+		#region Drawing Item Options to the Screen When Opened
+		
+			// Make sure the surface for the selected item's option menu if it doesn't exist due to a GPU flush.
+			if (!surface_exists(itemOptionsSurf))
+				itemOptionsSurf = surface_create(SUBMENU_ITM_SURFACE_WIDTH, SUBMENU_ITM_SURFACE_HEIGHT);
 			
-		// Switch to rendering onto the surface for the selected item's option menu. Clear the surface to
-		// the color (0, 0, 0, 0) so the previous frame's rendering doesn't show up again creating a smear.
-		// Then, jump into scope of the menu in question and draw its options to the screen.
-		surface_set_target(itemOptionsSurf);
-		draw_clear_alpha(COLOR_BLACK, 0);
-		with(itemOptionsMenu)
-			draw_gui_event(4, 2, COLOR_DARK_GRAY);
-		surface_reset_target();
+			// Switch to rendering onto the surface for the selected item's option menu. Clear the surface to
+			// the color (0, 0, 0, 0) so the previous frame's rendering doesn't show up again creating a smear.
+			// Then, jump into scope of the menu in question and draw its options to the screen.
+			surface_set_target(itemOptionsSurf);
+			draw_clear_alpha(COLOR_BLACK, 0);
+			with(itemOptionsMenu)
+				draw_gui_event(4, 2, COLOR_DARK_GRAY);
+			surface_reset_target();
+		
+		#endregion Drawing Item Options to the Screen When Opened
 		
 		// Remaining elements to draw all rely on these offsets, so calculate them once here.
 		_xPos += itemOptionsMenuX;
 		_yPos += itemOptionsMenuY;
 		
-		// Displays the background for the item's options menu by using a nine-slice stretch of the inventory
-		// item slot's background graphic.
-		draw_sprite_stretched_ext(spr_item_menu_slot, 1, _xPos - 2, _yPos - 2, 
-			SUBMENU_ITM_SURFACE_WIDTH + 4, itemOptionsMenuHeight,
-				COLOR_LIGHT_BLUE, itemOptionsAlpha);
+		#region Drawing Background for Item Options Menu
+		
+			draw_sprite_stretched_ext(
+				spr_item_menu_slot, 
+				1,		// Uses highlighted version of the sprite
+				_xPos - 2, _yPos - 2, 
+				SUBMENU_ITM_SURFACE_WIDTH + 4, itemOptionsMenuHeight,
+				COLOR_LIGHT_BLUE, itemOptionsAlpha
+			);
+		
+		#endregion Drawing Background for Item Options Menu
 				
 		// Finally, draw the current capture of the selected item's option menu text onto the screen.
 		draw_set_alpha(itemOptionsAlpha);

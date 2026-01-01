@@ -12,24 +12,26 @@ if (!GAME_IS_PAUSED){
 
 /// DEBUG INFORMATION DRAWN BELOW HERE //////////////////////////////////////////////////////////////////////
 
-if (GAME_IS_MENU_OPEN || GAME_IS_TEXTBOX_OPEN)
-	return;
-
 draw_set_font(fnt_small);
+if (GAME_IS_MENU_OPEN || GAME_IS_TEXTBOX_OPEN){
+	draw_text_shadow(5, 3, string("FPS {0}", floor(fps_real)), COLOR_TRUE_WHITE);
+	return; // Only the FPS is displayed whenever a GUI element is active.
+}
+
 draw_set_halign(fa_right);
 
 with(PLAYER){
-	draw_text_shadow(315, 15, "--- Timers ---");
+	draw_text_shadow(315, 13, "--- Timers ---");
 	for (var i = 0; i < PLYR_TOTAL_TIMERS; i++)
-		draw_text_shadow(315, 25 + (i * 10), string("{0}: {1}", i, timers[i]));
+		draw_text_shadow(315, 23 + (i * 10), string("{0}: {1}", i, timers[i]));
 		
-	draw_text_shadow(315, 85, string(curAccuracyPenalty));
+	draw_text_shadow(315, 83, string(curAccuracyPenalty));
 		
 	with(equipment){
 		if (weapon == INV_EMPTY_SLOT)
 			break;
 		
-		draw_text_shadow(315, 5, 
+		draw_text_shadow(315, 3, 
 			string("{0} (Count: {1})", 
 			global.itemIDs[weaponStatRef.ammoTypes[curAmmoIndex]].itemName,
 			ammoCount[curAmmoIndex])
@@ -38,8 +40,7 @@ with(PLAYER){
 }
 
 draw_text_shadow(
-	90, 
-	5, 
+	90, 3, 
 	string(
 		@"
 		{0}
@@ -79,8 +80,7 @@ draw_text_shadow(
 
 draw_set_halign(fa_left);
 draw_text_shadow(
-	5, 
-	5, 
+	5, 3, 
 	string(
 		@"-- Frame Data --
 		curFPS

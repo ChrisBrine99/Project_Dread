@@ -136,18 +136,22 @@ with(TEXTBOX){
 	if (alpha <= _minAlpha || y >= VIEWPORT_HEIGHT)
 		break;
 	draw_gui_event(_viewX, _viewY, _delta);
+	
+	// Since the textbox log should never be accessible to the player outside of when the textbox is active,
+	// the call to the textbox log struct's draw_gui event is within the scope of the textbox. This prevents
+	// an unnecessary jump to said struct during this event when trying to see if it can render when it does
+	// not need to be.
+	with(TEXTBOX_LOG){
+		if (alpha <= _minAlpha)
+			break;
+		draw_gui_event(_viewX, _viewY, _delta);
+	}
 }
 
-// 
-with(TEXTBOX_LOG){
-	if (alpha <= _minAlpha)
-		break;
-	draw_gui_event(_viewX, _viewY, _delta);
-}
 
 // Draw the screen fade onto the screen after all UI elements have been rendered onto the application surface.
 with(SCREEN_FADE){
-	if (!FADE_IS_ACTIVE || alpha < gpu_get_alphatestref() / 255.0)
+	if (!FADE_IS_ACTIVE || alpha < _minAlpha)
 		break; // Skip over rendering the screen fade it its alpha isn't high enough or it is inactive.
 	
 	var _color = fadeColor;
@@ -155,11 +159,4 @@ with(SCREEN_FADE){
 	with(CAMERA){ // Jump into the camera's scope so the viewport's values can be utilized.
 		draw_sprite_ext(spr_rectangle, 0, viewportX, viewportY, viewportWidth, viewportHeight, 0, _color, _alpha);
 	}
-}
-
-// FOR TESTING PURPOSES ONLY
-if (GAME_IS_MENU_OPEN){
-	draw_set_font(fnt_small);
-	draw_set_color(COLOR_TRUE_WHITE);
-	draw_text(_viewX + 5, _viewY + 3, string("FPS {0}", floor(fps_real)));
 }

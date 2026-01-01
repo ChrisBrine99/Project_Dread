@@ -292,7 +292,7 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		// After the background elements have all been drawn, the inventory's section names will be drawn 
 		// on the top portion of the menu that is outside of the currently active section.
 		draw_visible_options(fnt_medium, _xPos, _yPos, COLOR_DARK_GRAY, 1.0);
-			
+		
 		// Finally, display the icon/descriptor data that exists within the cursor movement and menu 
 		// interaction inputs, respectively.
 		var _movementCtrlGroup = movementCtrlGroup;
@@ -369,13 +369,13 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		inputFlags		= 0;
 		
 		if (GAME_IS_GAMEPAD_ACTIVE){
-			inputFlags = inputFlags | (MENU_PAD_INV_RIGHT			 ); // Offset based on position of the bit within the variable.
-			inputFlags = inputFlags | (MENU_PAD_INV_LEFT		<<  1);
+			inputFlags = inputFlags | (MENU_PAD_INV_RIGHT		 ); // Offset based on position of the bit within the variable.
+			inputFlags = inputFlags | (MENU_PAD_INV_LEFT	<<  1);
 			return;
 		}
 		
-		inputFlags = inputFlags | (MENU_KEY_INV_RIGHT			 ); // Offset based on position of the bit within the variable.
-		inputFlags = inputFlags | (MENU_KEY_INV_LEFT		<<  1);
+		inputFlags = inputFlags | (MENU_KEY_INV_RIGHT		 ); // Offset based on position of the bit within the variable.
+		inputFlags = inputFlags | (MENU_KEY_INV_LEFT	<<  1);
 	}
 	
 	/// @description 
