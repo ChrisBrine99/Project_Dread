@@ -42,10 +42,16 @@ switch(async_load[? "event_type"]){
 			set_gamepad_control_icon(ICONUI_MENU_LEFT,		_inputs[STNG_INPUT_MENU_LEFT	+ 1]);
 			set_gamepad_control_icon(ICONUI_MENU_UP,		_inputs[STNG_INPUT_MENU_UP		+ 1]);
 			set_gamepad_control_icon(ICONUI_MENU_DOWN,		_inputs[STNG_INPUT_MENU_DOWN	+ 1]);
+			set_gamepad_control_icon(ICONUI_SELECT,			_inputs[STNG_INPUT_SELECT		+ 1]);
+			set_gamepad_control_icon(ICONUI_RETURN,			_inputs[STNG_INPUT_RETURN		+ 1]);
 			
 			// Getting icon info the textbox-specific gamepad bindings.
 			set_gamepad_control_icon(ICONUI_TBOX_ADVANCE,	_inputs[STNG_INPUT_TBOX_ADVANCE	+ 1]);
 			set_gamepad_control_icon(ICONUI_TBOX_LOG,		_inputs[STNG_INPUT_TBOX_LOG		+ 1]);
+			
+			// Getting icon info for the inventory menu-specific keyboard bindings.
+			set_gamepad_control_icon(ICONUI_INV_LEFT,		_inputs[STNG_INPUT_INV_LEFT		+ 1]);
+			set_gamepad_control_icon(ICONUI_INV_RIGHT,		_inputs[STNG_INPUT_INV_RIGHT	+ 1]);
 		}
 		
 		// Store the gamepad's ID so input can be parsed with it later, but don't set it to active here.

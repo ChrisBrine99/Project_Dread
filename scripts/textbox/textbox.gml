@@ -607,7 +607,9 @@ function str_textbox(_index) : str_base(_index) constructor {
 	state_default = function(_delta){
 		process_input();
 		
-		// 
+		// When the text log input is pressed, the process for opening that log is set to execute from the
+		// next frame onward. The flag that tells the textbox if the log is open or not is set to prevent
+		// certain parts of the textbox from rendering while it is open.
 		if (TBOX_WAS_TEXT_LOG_PRESSED){
 			object_set_state(state_open_log_animation);
 			flags = flags | TBOX_FLAG_LOG_ACTIVE;
@@ -716,42 +718,54 @@ function str_textbox(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	/// 
+	/// Handles input processing logic for the textbox log. These inputs include shifting up and down through
+	/// the log's contents, and the input that causes the log to close.
 	/// 
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_view_log = function(_delta){
 		process_input();
 		
-		// 
+		// With the highest priority, pressing the textbox log's activation input will cause the log to being
+		// its closing process; with this state exiting before any other input can be processed.
 		if (TBOX_WAS_TEXT_LOG_PRESSED){
 			object_set_state(state_close_log_animation);
 			return;
 		}
 		
-		// 
+		// Determine the movement direction for the textbox log by subtracting the flag bit values for the
+		// textbox log up/down inputs. This results in either a -1, 0, or +1 to be calculated; resulting in
+		// movement up (-1), down (+1), or nothing (0).
 		var _moveDirection = TBOX_WAS_LOG_DOWN_PRESSED - TBOX_WAS_LOG_UP_PRESSED;
 		if (_moveDirection == 0)
 			return;
 		
-		// 
 		with(TEXTBOX_LOG){
-			// 
+			// If there aren't enough pieces of logged text, there is no input required since the entire log
+			// can be shown at once, so the logic below is skipped.
 			if (logSize <= TBOXLOG_MAXIMUM_VISIBLE)
 				return;
 			
-			// 
+			// Shifting the textbox log up and down relative to the input calculated in the code above this.
+			// When any movement is detected, a re-render is triggered for the log's surfaces, but a re-render
+			// isn't triggered if the value for "curOffset" isn't changed by the detected movement.
+			var _curOffset = curOffset;
 			if (_moveDirection == MENU_MOVEMENT_UP && curOffset >= TBOXLOG_MAXIMUM_VISIBLE){ 
-				curOffset--; 
+				curOffset--;
 			} else if (_moveDirection == MENU_MOVEMENT_DOWN && 
-					curOffset < logSize - 1){ 
+					curOffset < logSize - 1){
 				curOffset++;
 			}
-			flags = flags | TBOXLOG_FLAG_RENDER;
+			
+			if (_curOffset != curOffset)
+				flags = flags | TBOXLOG_FLAG_RENDER;
 		}
 	}
 	
 	/// @description 
-	///
+	/// State that handles the simple fading animation that is used when opening the textbox log. Once the log
+	/// has an alpha value of 1.0, the log will be completely closed, and the textbox itself will recind control
+	/// so that the textbox log can begin taking input from the user (Which is actually done through the textbox's
+	/// "state_view_log" state). 
 	/// 
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_open_log_animation = function(_delta){
@@ -770,7 +784,9 @@ function str_textbox(_index) : str_base(_index) constructor {
 	}
 	
 	/// @descripiton 
-	///	
+	///	State that handles the simple fading animation that is used when closing the textbox log. Once the log
+	/// has an alpha value of 0.0, the log will be completely closed, and the textbox itself will reset to its
+	/// default state to enable interaction with it once again.
 	/// 
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_close_log_animation = function(_delta){

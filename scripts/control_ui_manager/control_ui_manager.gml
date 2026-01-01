@@ -529,7 +529,8 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	/// @param {String}				descriptor			Text to replace the previous descriptor text with.
 	update_control_group_icon_descriptor = function(_controlGroupRef, _index, _descriptor){
 		with(_controlGroupRef){
-			var _iconType = iconType;
+			var _iconType		= iconType;
+			var _drawDirection	= drawDirection;
 			
 			// Jump into the desired icon/descriptor struct scope and replace the descriptor; getting the 
 			// dimensions of the string to see if the group's positions need to be adjusted to compensate if 
@@ -541,8 +542,8 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 				
 				// Check the relevant dimension relative to the direction the group is drawn in to see if there
 				// is a difference in size. If there is, clear the iconType variable so positions are updated.
-				var _isHorizontal	= (drawDirection == ICONUI_DRAW_RIGHT	|| drawDirection == ICONUI_DRAW_LEFT);
-				var _isVertical		= (drawDirection == ICONUI_DRAW_UP		|| drawDirection == ICONUI_DRAW_DOWN);
+				var _isHorizontal	= (_drawDirection == ICONUI_DRAW_RIGHT	|| _drawDirection == ICONUI_DRAW_LEFT);
+				var _isVertical		= (_drawDirection == ICONUI_DRAW_UP		|| _drawDirection == ICONUI_DRAW_DOWN);
 				if ((_isHorizontal && _prevWidth != string_width(_descriptor)) || 
 						(_isVertical && _prevHeight != string_height(_descriptor)))
 					_iconType = ICONUI_TYPE_UNSET;
