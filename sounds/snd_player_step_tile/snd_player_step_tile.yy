@@ -10,7 +10,7 @@
   "compression":0,
   "compressionQuality":4,
   "conversionMode":0,
-  "duration":0.13013606,
+  "duration":0.13015874,
   "exportDir":"",
   "name":"snd_player_step_tile",
   "parent":{

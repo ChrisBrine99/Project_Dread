@@ -11,6 +11,8 @@
 #macro	TBOX_FLAG_CLEAR_SURFACE			0x00000040
 #macro	TBOX_FLAG_SHOW_NAME				0x00000080
 #macro	TBOX_FLAG_LOG_ACTIVE			0x00000100
+#macro	TBOX_FLAG_HAS_OPTIONS			0x00000200
+#macro	TBOX_FLAG_OPTIONS_ACTIVE		0x00000400
 
 // Macros that condense the checks required for specific states that the textbox must be in for it to process
 // certain aspects of the data it is displaying the user, if it is allowed to do that currently to begin with.
@@ -23,6 +25,8 @@
 #macro	TBOX_SHOULD_CLEAR_SURFACE		((flags & TBOX_FLAG_CLEAR_SURFACE)	!= 0)
 #macro	TBOX_SHOULD_SHOW_NAME			((flags & TBOX_FLAG_SHOW_NAME)		!= 0)
 #macro	TBOX_IS_LOG_ACTIVE				((flags & TBOX_FLAG_LOG_ACTIVE)		!= 0)
+#macro	TBOX_HAS_OPTIONS				((flags & TBOX_FLAG_HAS_OPTIONS)	!= 0)
+#macro	TBOX_IS_OPTIONS_ACTIVE			((flags & TBOX_FLAG_OPTIONS_ACTIVE)	!= 0)
 
 // The value the textbox is looking for within its "nextIndex" variable so it knows it can deactivate itself.
 // This value is then reset to 0 after the deactivation is completed.
@@ -177,6 +181,10 @@ function str_textbox(_index) : str_base(_index) constructor {
 	// Stores a reference to the control icon group that displays input information for the textbox.
 	tboxCtrlGroup		= REF_INVALID;
 
+	// 
+	optionMenu			= noone;
+	optionDataRef		= REF_INVALID;
+
 	/// @description 
 	///	The textbox struct's create event. It will simply initialize the control icon group that will be drawn
 	/// whenever the textbox is actively being rendered onto the screen.
@@ -214,7 +222,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 	/// GameMaker when this struct is destroyed/out of scope.
 	///	
 	destroy_event = function(){
-		if (surface_exists(textSurface))
+		if (surface_exists(textSurface)) 
 			surface_free(textSurface);
 		buffer_delete(surfBuffer);
 		
@@ -335,49 +343,67 @@ function str_textbox(_index) : str_base(_index) constructor {
 			y + _viewY + TBOX_BG_Y_OFFSET, 
 			TBOX_BG_WIDTH, TBOX_BG_HEIGHT, COLOR_TRUE_WHITE, alpha
 		);
-		if (curChar == textLength){
-			// Display the advance indicator at the bottom-right of the textbox window relative to the value 
-			// of the offset timer/value with the fraction component removed. 
-			draw_sprite_ext(spr_tbox_advance_indicator, 0, 
-				x + _viewX + TBOX_ARROW_X_OFFSET, 
-				y + _viewY + TBOX_ARROW_Y_OFFSET + floor(advArrowOffset),
-				1.0, 1.0, 0.0, COLOR_TRUE_WHITE, alpha
-			);
-			
-			// Increment the value until it reaches 2.0 or higher, and then reduce it by two to bring it back
-			// to zero; allowing the arrow to bob up and down rhythmically on screen.
-			advArrowOffset += TBOX_ARROW_MOVE_SPEED * _delta;
-			if (advArrowOffset > TBOX_ARROW_OFFSET_THRESHOLD)
-				advArrowOffset -= TBOX_ARROW_OFFSET_THRESHOLD;
-		}
-		
+
 		// Simply draw the currently rendered text onto the screen with this single draw call.
 		draw_surface_ext(textSurface, x + _viewX + TBOX_TEXT_X_OFFSET, y + _viewY + TBOX_TEXT_Y_OFFSET, 
 			1.0, 1.0, 0.0, COLOR_TRUE_WHITE, alpha);
 		
-		// Draw a black background with a nice alpha gradient applied to it. This will be found behind the 
-		// control information for the textbox, but in front of all elements; causing the textbox to slide in
-		// from behind this element during its opening animation.
-		var _alpha = alpha;
-		with(global.colorFadeShader){
-			activate_shader(COLOR_BLACK);
-			draw_circle_ext(_viewX + (VIEWPORT_WIDTH / 2), _viewY + VIEWPORT_HEIGHT, 300.0, 30.0, COLOR_WHITE, COLOR_BLACK, _alpha);
-			shader_reset();
+		// Elements that will not be rendered until the textbox has finished typing out all the required
+		// characters for the textbox onto the screen.
+		if (curChar == textLength){
+			if (!TBOX_HAS_OPTIONS){
+				// Display the advance indicator at the bottom-right of the textbox window relative to the 
+				// value of the offset timer/value with the fraction component removed. 
+				draw_sprite_ext(spr_tbox_advance_indicator, 0, 
+					x + _viewX + TBOX_ARROW_X_OFFSET, 
+					y + _viewY + TBOX_ARROW_Y_OFFSET + floor(advArrowOffset),
+					1.0, 1.0, 0.0, COLOR_TRUE_WHITE, alpha
+				);
+			
+				// Increment the value until it reaches 2.0 or higher, and then reduce it by two to bring it 
+				// back to zero; allowing the arrow to bob up and down rhythmically on screen.
+				advArrowOffset += TBOX_ARROW_MOVE_SPEED * _delta;
+				if (advArrowOffset > TBOX_ARROW_OFFSET_THRESHOLD)
+					advArrowOffset -= TBOX_ARROW_OFFSET_THRESHOLD;
+			} else{
+				// When the textbox has options associated with it, the menu responsible for those options 
+				// will be drawn instead of the advancement indicator.
+				with(optionMenu)
+					draw_gui_event(x + _viewX, y + _viewY, COLOR_DARK_GRAY);
+			}
 		}
 		
-		// Don't display the control UI information for the textbox if the player is currently viewing the 
-		// textbox's history log.
-		if (TBOX_IS_LOG_ACTIVE)
-			return;
+		#region Rendering Control UI to Screen
 		
-		// After rendering the textbox and all its required elements, the control icon group for the textbox 
-		// will be drawn at their calculated positions. The color of the text (Both it and the drop shadow)
-		// are set to match the default color for text within the textbox.
-		var _tboxCtrlGroup = tboxCtrlGroup;
-		with(CONTROL_UI_MANAGER){
-			draw_control_group(_tboxCtrlGroup, _viewX, _viewY, _alpha, COLOR_WHITE, COLOR_DARK_GRAY, 
-				_alpha); 
-		}
+			// Draw a black background with a nice alpha gradient applied to it. This will be found behind the 
+			// control information for the textbox, but in front of all elements; causing the textbox to slide in
+			// from behind this element during its opening animation.
+			var _alpha = alpha;
+			with(global.colorFadeShader){
+				activate_shader(COLOR_BLACK);
+				draw_circle_ext(
+					_viewX + (VIEWPORT_WIDTH / 2), _viewY + VIEWPORT_HEIGHT, 
+					300.0, 30.0, 
+					COLOR_WHITE, COLOR_BLACK, 
+					_alpha
+				);
+				shader_reset();
+			}
+		
+			// Don't display the control UI information for the textbox if the player is currently viewing the 
+			// textbox's history log.
+			if (TBOX_IS_LOG_ACTIVE)
+				return;
+		
+			// After rendering the textbox and all its required elements, the control icon group for the textbox 
+			// will be drawn at their calculated positions. The color of the text (Both it and the drop shadow)
+			// are set to match the default color for text within the textbox.
+			var _tboxCtrlGroup = tboxCtrlGroup;
+			with(CONTROL_UI_MANAGER)
+				draw_control_group(_tboxCtrlGroup, _viewX, _viewY, _alpha, 
+					COLOR_WHITE, COLOR_DARK_GRAY, _alpha); 
+		
+		#endregion Rendering Control UI to Screen
 	}
 	
 	/// @description 
@@ -453,10 +479,17 @@ function str_textbox(_index) : str_base(_index) constructor {
 		for (var i = 0; i < _length; i++){
 			with(textData[| i]){ // Make sure color data structs are removed should any exist for the current textbox.
 				if (ds_exists(colorData, ds_type_list)){
-					var _cDataLength = ds_list_size(colorData);
-					for (var ii = 0; ii < _cDataLength; ii++)
+					var _dataLength = ds_list_size(colorData);
+					for (var ii = 0; ii < _dataLength; ii++)
 						delete colorData[| ii];
 					ds_list_destroy(colorData);
+				}
+				
+				if (ds_exists(optionData, ds_type_list)){
+					var _dataLength = ds_list_size(optionData);
+					for (var ii = 0; ii < _dataLength; ii++)
+						delete optionData[| ii];
+					ds_list_destroy(optionData);
 				}
 			}
 			delete textData[| i];
@@ -472,53 +505,117 @@ function str_textbox(_index) : str_base(_index) constructor {
 	///	
 	/// @param {Real}	index	The index within the textbox data to use for the displayed textbox.
 	set_textbox_index = function(_index){
-		var _textData		= textData[| _index];
+		// Format and parse the text before anything below is executed. If the function fails for whatever
+		// reason, it will return "noone" which will then close the textbox.
+		var _textData = process_text_to_show(_index);
+		if (_textData == noone){
+			object_set_state(state_close_animation);
+			nextIndex = TBOX_INDEX_CLOSE;
+			return;
+		}
+		
+		// Copy over all the data required from the text data contained at the index provided for this function
+		// within the textbox's current queue of text data.
+		var _textLength		= 0;
+		var _newActorIndex	= TBOX_ACTOR_INVALID;
+		var _nextIndex		= TBOX_INDEX_CLOSE;
+		var _colorData		= -1;
+		var _optionData		= -1;
+		with(_textData){
+			_textLength		= string_length(content) + 1;
+			_newActorIndex	= actorIndex;
+			_nextIndex		= nextIndex;
+			_colorData		= colorData;
+			_optionData		= optionData;
+		}
+		
+		// If the actor indexes between the two textboxes differ, the closing animation will play to create
+		// some separation between each actor when they speak. The name shown on the textbox is also updated.
 		var _prevActorIndex	= textData[| textIndex].actorIndex;
-		var _newActorIndex	= _textData.actorIndex;
 		if (_prevActorIndex != _newActorIndex)
 			object_set_state(state_close_animation);
 		
-		process_text_to_show(_index); // Format and parse the text before anything below is executed.
-		flags		    = flags | TBOX_FLAG_CLEAR_SURFACE;
-		textLength		= string_length(_textData.content) + 1;
+		flags		    = (flags | TBOX_FLAG_CLEAR_SURFACE) & ~(TBOX_FLAG_SHOW_NAME | TBOX_FLAG_HAS_OPTIONS);
+		textLength		= _textLength;
 		textIndex		= _index;
-		nextIndex		= _textData.nextIndex;
+		nextIndex		= _nextIndex;
 		actorName		= get_actor_name(_newActorIndex);
 		curChar			= 1;	// Reset these to their defaults so the typing animation can play again.
 		nextChar		= 1;
 		sndScrollTimer	= 0.0;
 		charX			= 0;
 		charY			= 0;
-		colorDataRef	= _textData.colorData;	// Overwrite the previous ds_list reference with either -1 or the new textbox's color list.
+		colorDataRef	= _colorData;	// Overwrite the previous ds_list reference with either -1 or the new textbox's color list.
 		totalColors		= (colorDataRef == -1) ? 0 : ds_list_size(colorDataRef);
 		charColorIndex	= 0;
+		optionDataRef	= _optionData;
 		
-		// Clear or set the flag that is responsible for allowing a textbox to display graphics related to an
-		// actor's name alongside that name itself depending on what "actorName" is set to by the call to the
-		// get_actor_name.
-		if (actorName != "") { flags = flags & ~TBOX_FLAG_SHOW_NAME; }
-		else				 { flags = flags |  TBOX_FLAG_SHOW_NAME; }
+		// Set additional flag bits if any of these checks return true.
+		if (actorName != "")	 { flags = flags | TBOX_FLAG_SHOW_NAME; }
+		if (optionDataRef != -1) { flags = flags | TBOX_FLAG_HAS_OPTIONS; }
 	}
 	
 	/// @description 
 	///	Adds another element to the textData data structure for the textbox to utilize when set to view its
-	/// contents. It will properly format the string so it doesn't overflow the textbox horizontally before
-	/// the string is converted into a text content struct containing the string and data is references. It
-	///	also discards any text that should exceed the 
+	/// contents.
 	///	
 	///	@param {String}	text		The text to format and enqueue for the textbox to display when ready.
 	/// @param {Real}	actorIndex	(Optional) If set to a value greater than 0, the actor's name relative to the index will be shown.
 	///	@param {Real}	nextIndex	(Optional) Determines which textbox out of the current data is after this one.
 	queue_new_text = function(_text, _actorIndex = 0, _nextIndex = -1){
 		if (_text == "") // Don't attempt to add empty text to the queue.
-			return;
+			return noone;
 			
-		ds_list_add(textData, {
+		var _textData = {
+			// Main variables for what will be shown and how it will be shown on that textbox when this data 
+			// is utilized.
 			content		: _text,
 			colorData	: -1,
 			actorIndex	: _actorIndex,
+			
+			// Determines the next textbox to display from the queue of data if there are no options contained
+			// within the "optionData" variable below. Otherwise, those will trigger a choice to be made by the
+			// user.
 			nextIndex	: _nextIndex == -1 ? ds_list_size(textData) + 1 : _nextIndex,
-		});
+			
+			// Main variables for decision data that can be optionally added to a textbox. By default, it will
+			// be set to -1 to not bloat non-decision textboxes, and will store a ds_list of option data should
+			// decisions be utilized by the textbox.
+			optionData	: -1,
+		};
+		
+		ds_list_add(textData, _textData);
+		return _textData;
+	}
+	
+	/// @description 
+	///	Adds a set of options to the provided struct of data containing a textbox's information that is
+	/// currently found in the textbox struct's queue. If an list of options already exists for the provided
+	/// data, the newly provided arrays will be ignored to prevent overwriting the old data and the function
+	/// will return without processing anything.
+	///	
+	/// @param {Struct._structRef}	textData	The text data from the textbox that these options will be tied to.
+	/// @param {Array<String>}		options		Array of strings that represent the available options to the player.
+	add_options = function(_textData, _options){
+		if (!is_array(_options)) // Don't attempt to add invalidly formatted options.
+			return;
+		
+		with(_textData){
+			if (ds_exists(optionData, ds_type_list)) // Don't overwrite already existing options.
+				return;
+			optionData = ds_list_create();
+			
+			// Loop through all options and add them to the textbox's option data list as structs containing
+			// the option's name which is shown to the player, and the parameters required for that option if
+			// they are selected by the player.
+			var _length = array_length(_options);
+			for (var i = 0; i < _length; i++){
+				ds_list_add(optionData, {
+					oName			: _options[i],
+					selectParams	: -1,
+				});
+			}
+		}
 	}
 	
 	/// @description 
@@ -530,17 +627,19 @@ function str_textbox(_index) : str_base(_index) constructor {
 	process_text_to_show = function(_index){
 		// Don't bother considering an index that exists outside the bounds of the current amount of text data.
 		if (_index < 0 || _index >= ds_list_size(textData))
-			return;
+			return noone;
 		
 		// Jump into the struct containing the data we want, and parse out any color information alongside the
 		// text that is then formatted to contain itself within the bounds of the textbox's available space.
-		with(textData[| _index]){
+		var _textData = textData[| _index];
+		with(_textData){
 			var _parsedData = string_parse_color_data(content);
 			content			= string_split_lines(_parsedData.fullText, fnt_small, 
 								TBOX_SURFACE_WIDTH, TBOX_MAX_LINES_PER_BOX);
-			colorData = _parsedData.colorData;
+			colorData		= _parsedData.colorData;
 			delete _parsedData;
 		}
+		return _textData;
 	}
 	
 	/// @description
@@ -616,46 +715,88 @@ function str_textbox(_index) : str_base(_index) constructor {
 			return;
 		}
 		
-		// The text animation has completed, so nextChar no longer needs to have its value incremented, and
-		// the user can now press the advance key to move onto the next textbox.
-		if (nextChar == textLength){
-			if (TBOX_WAS_ADVANCE_PRESSED){
-				// Store the previous textbox's struct in the textbox log's data so it can be pulled up by the 
-				// player to view it again should they need a refresher on what was previously said.
-				var _textData = textData[| textIndex];
-				with(TEXTBOX_LOG) { queue_new_text(_textData); }
-				
-				// Close the textbox if the next index is less than 0, equal to the current index, or outside
-				// of the valid bounds of textbox data indices.
-				if (nextIndex < 0 && nextIndex == textIndex || nextIndex >= ds_list_size(textData)){
-					object_set_state(state_close_animation);
-					textIndex = TBOX_INDEX_CLOSE;
-					return;
+		// 
+		if (nextChar < textLength){
+			// Calculate the "amount" of change during the previous frame and this one. This will then be used 
+			// to increment the character typing sound's timer and the character typing animation "timer" that 
+			// goes alongside said sound.
+			var _amount = nextCharDelay * _delta;
+			sndCharTypeTimer -= _amount;
+			if (sndCharTypeTimer <= 0.0){ // Play the sound and reset its playback timer.
+				sndCharTypeTimer += TBOX_SND_TYPE_PLAY_INTERVAL;
+				sound_effect_play_ext(snd_textbox_type, STNG_AUDIO_MENU_SOUNDS, TBOX_SND_TYPE_GAIN, 1.0, 0, true, false,
+					TBOX_SND_TYPE_GAIN_RANGE, TBOX_SND_TYPE_PITCH_RANGE);
+			}
+			
+			// Increment the nextChar variable by the amount calculated above. If that amount exceeds the length
+			// of the text being shown (Or the player pressed the advance input during the process), the text
+			// will be completely visible and will no longer need this value to count up.
+			nextChar += _amount;
+			if (TBOX_WAS_ADVANCE_PRESSED || nextChar > textLength){
+				nextChar		= textLength;
+				nextCharDelay	= TBOX_PUNCT_NONE;
+			}
+			return;
+		}
+
+		// 
+		if (TBOX_HAS_OPTIONS){
+			object_set_state(state_open_options_animation);
+			flags = flags | TBOX_FLAG_OPTIONS_ACTIVE;
+			
+			// 
+			draw_set_font(fnt_small); // Set for accurate string width calculation.
+			var _length		= ds_list_size(optionDataRef);
+			var _options	= array_create(_length, "");
+			var _oWidth		= 0;
+			var _maxWidth	= 0;
+			for (var i = 0; i < _length; i++){
+				_options[i] = optionDataRef[| i].oName;
+				_oWidth		= string_width(_options[i]);
+				if (_oWidth > _maxWidth || _maxWidth == 0)
+					_maxWidth = _oWidth;
+			}
+			
+			// 
+			var _yy = y;
+			with(optionMenu){
+				replace_options(_options, 1, 1, _length);
+				flags			= (flags | MENU_FLAG_ACTIVE) & ~MENUSUB_FLAG_CLOSING;
+				contentWidth	= _maxWidth;
+				contentHeight	= optionSpacingY * _length;
+				x				= TBOXMENU_XSTART;
+				y				= _yy - contentHeight;
+			}
+			
+			// 
+			if (optionMenu == noone){
+				optionMenu = create_sub_menu(str_textbox_options_menu, noone, TBOXMENU_XSTART, y, _options, 1, 1, _length);
+				with(optionMenu){
+					flags			= flags & ~MENUSUB_FLAG_CAN_CLOSE;
+					contentWidth	= _maxWidth;
+					contentHeight	= optionSpacingY * _length;
+					y			   -= contentHeight; 
 				}
-				set_textbox_index(nextIndex);
 			}
 			return;
 		}
 		
-		// Calculate the "amount" of change during the previous frame and this one. This will then be used 
-		// to increment the character typing sound's timer and the character typing animation "timer" that 
-		// goes alongside said sound.
-		var _amount = nextCharDelay * _delta;
-		sndCharTypeTimer -= _amount;
-		if (sndCharTypeTimer <= 0.0){ // Play the sound and reset its playback timer.
-			sndCharTypeTimer += TBOX_SND_TYPE_PLAY_INTERVAL;
-			sound_effect_play_ext(snd_textbox_type, STNG_AUDIO_MENU_SOUNDS, TBOX_SND_TYPE_GAIN, 1.0, 0, true, false,
-				TBOX_SND_TYPE_GAIN_RANGE, TBOX_SND_TYPE_PITCH_RANGE);
-		}
-		
-		// Increment the textbox's typing animation timer by the amount calculated above. If that value exceeds
-		// the number of characters in the string being displayed by the textbox (Or the advance input was hit
-		// before the typing animation completes), the animation is completed and characters will no longer
-		// by added to the textbox.
-		nextChar += _amount;
-		if (TBOX_WAS_ADVANCE_PRESSED || nextChar > textLength){
-			nextChar		= textLength;
-			nextCharDelay	= TBOX_PUNCT_NONE;
+		// Under normal circumstances, the advance input will be what moves the textbox to the next piece
+		// of data within its queue to display to the player.
+		if (TBOX_WAS_ADVANCE_PRESSED){
+			// Store the previous textbox's struct in the textbox log's data so it can be pulled up by the 
+			// player to view it again should they need a refresher on what was previously said.
+			var _textData = textData[| textIndex];
+			with(TEXTBOX_LOG) { queue_new_text(_textData); }
+			
+			// Close the textbox if the next index is less than 0, equal to the current index, or outside
+			// of the valid bounds of textbox data indices.
+			if (nextIndex < 0 && nextIndex == textIndex || nextIndex >= ds_list_size(textData)){
+				object_set_state(state_close_animation);
+				textIndex = TBOX_INDEX_CLOSE;
+				return;
+			}
+			set_textbox_index(nextIndex);
 		}
 	}
 	
@@ -749,11 +890,14 @@ function str_textbox(_index) : str_base(_index) constructor {
 			// When any movement is detected, a re-render is triggered for the log's surfaces, but a re-render
 			// isn't triggered if the value for "curOffset" isn't changed by the detected movement.
 			var _curOffset = curOffset;
-			if (_moveDirection == MENU_MOVEMENT_UP && curOffset >= TBOXLOG_MAXIMUM_VISIBLE){ 
+			if (_moveDirection == MENU_MOVEMENT_UP && curOffset >= TBOXLOG_MAXIMUM_VISIBLE - 1){ 
 				curOffset--;
-			} else if (_moveDirection == MENU_MOVEMENT_DOWN && 
-					curOffset < logSize - 1){
+				if (curOffset == TBOXLOG_MAXIMUM_VISIBLE - 2)
+					curOffset = logSize - 1;
+			} else if (_moveDirection == MENU_MOVEMENT_DOWN && curOffset < logSize){
 				curOffset++;
+				if (curOffset == logSize)
+					curOffset = TBOXLOG_MAXIMUM_VISIBLE - 1;
 			}
 			
 			if (_curOffset != curOffset)
@@ -773,9 +917,9 @@ function str_textbox(_index) : str_base(_index) constructor {
 		with(TEXTBOX_LOG){
 			alpha += _delta * 0.1;
 			if (alpha >= 1.0){
-				flags = flags | TBOXLOG_FLAG_ACTIVE;
-				alpha = 1.0;
-				_animFinished = true;
+				flags			= flags | TBOXLOG_FLAG_ACTIVE;
+				alpha			= 1.0;
+				_animFinished	= true;
 			}
 		}
 		
@@ -794,16 +938,80 @@ function str_textbox(_index) : str_base(_index) constructor {
 		with(TEXTBOX_LOG){
 			alpha -= _delta * 0.1;
 			if (alpha <= 0.0){
-				flags = flags & ~TBOXLOG_FLAG_ACTIVE;
-				alpha = 0.0;
-				_animFinished = true;
+				flags			= flags & ~TBOXLOG_FLAG_ACTIVE;
+				alpha			= 0.0;
+				_animFinished	= true;
 			}
 		}
 		
 		if (_animFinished){
-			object_set_state(state_default);
+			if (!TBOX_IS_OPTIONS_ACTIVE){ 
+				object_set_state(state_default); 
+			} else{ 
+				object_set_state(state_option_menu);
+				with(optionMenu) { flags = flags | MENU_FLAG_ACTIVE; }
+			}
 			flags = flags & ~TBOX_FLAG_LOG_ACTIVE;
 		}
+	}
+	
+	/// @description 
+	/// 
+	///	
+	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
+	state_option_menu = function(_delta){
+		process_input();
+		
+		// When the text log input is pressed, the process for opening that log is set to execute from the
+		// next frame onward. The flag that tells the textbox if the log is open or not is set to prevent
+		// certain parts of the textbox from rendering while it is open.
+		if (TBOX_WAS_TEXT_LOG_PRESSED){
+			object_set_state(state_open_log_animation);
+			flags = flags | TBOX_FLAG_LOG_ACTIVE;
+			
+			// Make sure to deactivate the option menu so the cursor cannot be interacted with while the log
+			// is open.
+			with(optionMenu) { flags = flags & ~MENU_FLAG_ACTIVE; }
+			return;
+		}
+	}
+	
+	/// @description
+	///	State that handles the fade in/left sliding animation that occurs when opening the textbox's option
+	/// menu. Once the menu is full opaque and the x position is where it needs to be, the function will
+	/// activate the options menu and change the textbox to its state for monitoring the state of the menu.
+	///	
+	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
+	state_open_options_animation = function(_delta){
+		var _animFinished = false;
+		with(optionMenu){
+			// Update the values that are involved in the animation.
+			var _targetX = VIEWPORT_WIDTH - TBOXMENU_BG_PADDING_LEFT - contentWidth;
+			x		    += (_targetX - x) * _delta * 0.2;
+			alpha		+= _delta * 0.075;
+			
+			// Check if all values have hit their respective targets. If so, activate the menu so the player
+			// can navigate its contents and select an option. Otherwise, continue the animation.
+			if (alpha >= 1.0 && x - _targetX <= _delta){
+				object_set_state(state_default);
+				flags			= flags | MENU_FLAG_ACTIVE;
+				x				= _targetX;
+				alpha			= 1.0;
+				_animFinished	= true;
+			}
+		}
+		
+		if (_animFinished){
+			object_set_state(state_option_menu);
+			// TODO -- Update Visible Control Information to Include Menu Up/Down Inputs.
+		}
+	}
+	
+	/// @description 
+	///	
+	///	
+	state_close_options_animation = function(_delta){
+		
 	}
 }
 

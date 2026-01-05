@@ -31,6 +31,7 @@ ds_map_add(global.structType, str_item_menu,			STRUCT_TYPE_RT_SINGLETON);
 ds_map_add(global.structType, str_note_menu,			STRUCT_TYPE_RT_SINGLETON);
 ds_map_add(global.structType, str_map_menu,				STRUCT_TYPE_RT_SINGLETON);
 ds_map_add(global.structType, str_sub_menu,				STRUCT_TYPE_GENERIC);
+ds_map_add(global.structType, str_textbox_options_menu,	STRUCT_TYPE_RT_SINGLETON);
 ds_map_add(global.structType, str_player_info_ui,		STRUCT_TYPE_RT_SINGLETON);
 ds_map_add(global.structType, str_light_basic,			STRUCT_TYPE_LIGHT_SOURCE);
 ds_map_add(global.structType, str_light_flicker,		STRUCT_TYPE_LIGHT_SOURCE);

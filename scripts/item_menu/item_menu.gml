@@ -527,26 +527,24 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			if (_options[0] == MENUITM_OPTION_EQUIP && itemDataToRender[selOption].isEquipped)
 				_options[0] = MENUITM_OPTION_UNEQUIP;
 			
-			// Create a local variable that will store whether or not the sub menu struct was created this time
-			// through or not. If the menu was created, this bool is set to true and some code below is skipped.
-			var _menuCreated = false;
-			if (itemOptionsMenu == noone){
-				itemOptionsMenu			= create_sub_menu(selfRef, 0, 0, _options, 1, 1, array_length(_options));
-				itemOptionsMenu.alpha	= 1.0;
-				_menuCreated			= true;
-			}
-				
-			// Jump into scope of the item inventory's sub menu so it can be activated along with replacing
-			// the previous options if the menu already existed previous (This occurs when two or more items
-			// have been selected by the user during the lifetime of this menu).
+			// If the struct already exists, replace the previous options and clear the bit that is normally
+			// set when the sub menu is closing. Finally, copy the vertical spacing between options like was
+			// done in below so the height of the menu's background can be calculated.
 			var _ySpacing = 0;
 			with(itemOptionsMenu){
-				flags		= flags | MENU_FLAG_ACTIVE;
+				replace_options(_options, 1, 1, array_length(_options));
+				flags		= flags & ~MENUSUB_FLAG_CLOSING;
 				_ySpacing	= optionSpacingY;
-				
-				if (!_menuCreated){
-					replace_options(_options, 1, 1, array_length(_options));
-					flags = flags & ~MENUSUB_FLAG_CLOSING; // Also flip this bit so the menu doesn't instantly close.
+			}
+			
+			// Create the sub menu for the select item's available options. Then, set the alpha to fully opaque
+			// since the item menu renders this sub menu onto a separate surface, and copy over the vertical
+			// spacing between options so the height of the menu's background can be calculated.
+			if (itemOptionsMenu == noone){
+				itemOptionsMenu	= create_sub_menu(str_sub_menu, selfRef, 0, 0, _options, 1, 1, array_length(_options));
+				with(itemOptionsMenu){
+					alpha		= 1.0;
+					_ySpacing	= optionSpacingY;
 				}
 			}
 			
@@ -554,7 +552,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			// that lets this menu know that sub menu is open, and position it to show up beside the selected
 			// item's name. The cursor animation offset/timer is also reset to zero.
 			object_set_state(state_open_item_options);
-			flags			 = flags | MENUITM_FLAG_OPTIONS_OPEN;
+			flags = flags | MENUITM_FLAG_OPTIONS_OPEN;
 			
 			// Calculate the offset for the item's options menu and its height for the background UI.
 			itemOptionsMenuX = MENUITM_OPTIONS_X + ((curOption % width)		 * MENUITM_OPTION_SPACING_X) + MENUITM_OPTION_SPACING_X;
@@ -585,6 +583,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			_itemOptionsAlpha  += SUBMENU_ITM_OANIM_ALPHA_SPEED * _delta;
 			if (_itemOptionsAlpha >= 1.0){ // Animation has completed; set values to their targets.
 				object_set_state(state_default);
+				flags				= flags | MENU_FLAG_ACTIVE;
 				optionX				= SUBMENU_ITM_ANIM_X2;
 				_itemOptionsAlpha	= 1.0;
 				_isOpened			= true;

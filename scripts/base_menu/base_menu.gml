@@ -64,10 +64,6 @@
 #macro	MENU_FIRST_AUTOSCROLL_TIME		30.0
 #macro	MENU_AUTOSCROLL_TIME			10.0
 
-// 
-#macro	MENU_ICONUI_CTRL_GRP_CURSOR		"menu_icons_cursor"
-#macro	MENU_ICONUI_CTRL_GRP_INPUT		"menu_icons_input"
-
 #endregion Macros for Base Menu Struct
 
 #region Base Menu Struct Definition
@@ -181,9 +177,9 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	///	Called during every frame that the menu exists for. It will be responsible for rendering its contents
-	/// to the game's GUI layer. Note that its position refers to the top-left of the menu itself, and its
-	/// contents will be offset from that point based on each of their unique position values.
+	///	Called during every frame that the menu exists for. It will be responsible for rendering menu's contents
+	/// to the game's screen. The argument values should include the menu's current position on the screen as
+	/// well as the screen's current position within the room since they use room-space coordinates.
 	///	
 	///	@param {Real}	xPos	The menu's current x position, rounded down.
 	/// @param {Real}	yPos	The menu's current y position, rounded down.

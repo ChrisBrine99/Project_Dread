@@ -2,9 +2,11 @@
 
 // Macros that equal the value of bits that are utilized within the sub menu for various purposes.
 #macro	MENUSUB_FLAG_CLOSING			0x00000001
+#macro	MENUSUB_FLAG_CAN_CLOSE			0x00000002
 
 // Macros that condense the code required to checks against the flag bits that are utilized by this struct.
-#macro	MENUSUB_IS_CLOSING				((flags & MENUSUB_FLAG_CLOSING) != 0)
+#macro	MENUSUB_IS_CLOSING				((flags & MENUSUB_FLAG_CLOSING)		!= 0)
+#macro	MENUSUB_CAN_CLOSE				((flags & MENUSUB_FLAG_CAN_CLOSE)	!= 0)
 
 // Since sub menu instances default to a vertical orientation with a width of one option per row, this value
 // is used to determine the spacing needed for said default orientation.
@@ -97,9 +99,10 @@ function str_sub_menu(_index) : str_base_menu(_index) constructor{
 			return;
 		}
 		
-		// The sub menu detects the return input was released, so it should signal that the sub menu needs to
-		// be closed; be it through an animation or having it instantly disappeared depending on context.
-		if (MINPUT_IS_RETURN_RELEASED){
+		// The sub menu detects the return input was released (If the necessary flag is set to allow that), 
+		// so it should signal that the sub menu needs to be closed; be it through an animation or having it 
+		// instantly disappeared depending on context.
+		if (MENUSUB_CAN_CLOSE && MINPUT_IS_RETURN_RELEASED){
 			flags = flags | MENUSUB_FLAG_CLOSING;
 			object_set_state(0);
 		}
@@ -119,6 +122,7 @@ function str_sub_menu(_index) : str_base_menu(_index) constructor{
 /// utilized by menus to have a confirmation window, or a subset of options that appears when an option is
 /// selected within that main menu, and so on.
 ///	
+/// @param {Function}			menuToCreate	A instance of a "str_sub_menu" child (Or "str_sub_menu" itself) that will be created.
 ///	@param {Struct._structRef}	parentMenu		Reference to the menu that is handling this menu.
 /// @param {Real}				x				Position on the x axis of the GUI to place the menu.
 /// @param {Real}				y				Position on the y axis of the GUI to place the menu.
@@ -127,11 +131,12 @@ function str_sub_menu(_index) : str_base_menu(_index) constructor{
 /// @param {Real}				visibleWidth	(Optional) Number of columns that are visible to the user at any given time; default value is one.
 /// @param {Real}				visibleHeight	(Optional) Number of rows that are visible to the user at any given time; default value is three.
 /// @param {Asset.GMFont}		font			(Optional) Font resource to use when displaying the menu's visible options.
-function create_sub_menu(_parentMenu, _x, _y, _options, _width = 1, _visibleWidth = 1, _visibleHeight = 3, _font = fnt_small){
-	var _submenuRef = instance_create_menu_struct(str_sub_menu);
+function create_sub_menu(_menuToCreate, _parentMenu, _x, _y, _options, _width = 1, _visibleWidth = 1, _visibleHeight = 3, _font = fnt_small){
+	var _submenuRef = instance_create_menu_struct(_menuToCreate);
 	with(_submenuRef){
 		initialize_params(_x, _y, false, false, _width, _visibleWidth, _visibleHeight);
 		initialize_option_params(0, 0, 0, MENUSUB_OPTION_SPACING_Y); // Default menu orientation is vertical.
+		flags		= flags | MENUSUB_FLAG_CAN_CLOSE;
 		prevMenu	= _parentMenu;
 		font		= _font;
 		
