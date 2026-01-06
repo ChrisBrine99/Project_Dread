@@ -1,3 +1,12 @@
+// Go through all singleton instances that require their destroy event in order to free any memory they've
+// allocated through the application's runtime. Then, the sInstance management map is destroyed.
+with(CAMERA)				{ destroy_event(); }	delete CAMERA;
+with(TEXTBOX)				{ destroy_event(); }	delete TEXTBOX;
+with(TEXTBOX_LOG)			{ destroy_event(); }	delete TEXTBOX_LOG;
+with(CONTROL_UI_MANAGER)	{ destroy_event(); }	delete CONTROL_UI_MANAGER;
+													delete SCREEN_FADE;
+ds_map_destroy(global.sInstances);
+
 var _length = 0; // Used by all array/data structure-based cleanup code, so it's initialized at the start.
 
 // Freeing any surfaces that might exist currently.
@@ -89,14 +98,6 @@ for (var i = 0; i < _length; i++)
 	instance_destroy_struct(global.structs[| i]);
 ds_list_clear(global.structs);
 ds_list_destroy(global.structs);
-
-// Go through all singleton instances that require their destroy event in order to free any memory they've
-// allocated through the application's runtime. Then, the sInstance management map is destroyed.
-with(CAMERA)				{ destroy_event(); }	delete CAMERA;
-with(TEXTBOX)				{ destroy_event(); }	delete TEXTBOX;
-with(CONTROL_UI_MANAGER)	{ destroy_event(); }	delete CONTROL_UI_MANAGER;
-													delete SCREEN_FADE;
-ds_map_destroy(global.sInstances);
 
 // Make sure the map that stores the type of struct is correctly cleared and deleted from memory as well.
 ds_map_clear(global.structType);

@@ -144,8 +144,8 @@ function str_textbox(_index) : str_base(_index) constructor {
 	// and next index as determined by the current index's data, and the length of the string found within the
 	// current index's data.
 	textData			= ds_list_create();
-	textIndex			= 0;
-	nextIndex			= 0;
+	textIndex			= TBOX_INDEX_CLOSE;
+	nextIndex			= TBOX_INDEX_CLOSE;
 	textLength			= 0;
 
 	// Stores the string that represents the name of the actor that is speaking in the current textbox. Can
@@ -469,6 +469,12 @@ function str_textbox(_index) : str_base(_index) constructor {
 		object_set_state(STATE_NONE);
 		flags		    = flags & ~TBOX_FLAG_ACTIVE;
 		global.flags    = global.flags & ~GAME_FLAG_TEXTBOX_OPEN;
+		
+		// 
+		instance_destroy_menu_struct(optionMenu);
+		optionMenu		= noone;
+		optionDataRef	= REF_INVALID;
+		
 		if (!TBOX_CAN_WIPE_DATA) // Prevent deleting any text information if the flag isn't toggled.
 			return;
 		flags = flags & ~TBOX_FLAG_WIPE_DATA;
@@ -510,7 +516,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 		var _textData = process_text_to_show(_index);
 		if (_textData == noone){
 			object_set_state(state_close_animation);
-			nextIndex = TBOX_INDEX_CLOSE;
+			textIndex = TBOX_INDEX_CLOSE;
 			return;
 		}
 		
@@ -529,12 +535,18 @@ function str_textbox(_index) : str_base(_index) constructor {
 			_optionData		= optionData;
 		}
 		
-		// If the actor indexes between the two textboxes differ, the closing animation will play to create
-		// some separation between each actor when they speak. The name shown on the textbox is also updated.
-		var _prevActorIndex	= textData[| textIndex].actorIndex;
-		if (_prevActorIndex != _newActorIndex)
-			object_set_state(state_close_animation);
-		
+		// 
+		if (textIndex != TBOX_INDEX_CLOSE){
+			// 
+			var _prevTextData = textData[| textIndex];
+			with(TEXTBOX_LOG) { queue_new_text(_prevTextData); }
+			
+			// 
+			var _prevActorIndex	= textData[| textIndex].actorIndex;
+			if (_prevActorIndex != _newActorIndex)
+				object_set_state(state_close_animation);
+		}
+			
 		flags		    = (flags | TBOX_FLAG_CLEAR_SURFACE) & ~(TBOX_FLAG_SHOW_NAME | TBOX_FLAG_HAS_OPTIONS);
 		textLength		= _textLength;
 		textIndex		= _index;
@@ -582,6 +594,10 @@ function str_textbox(_index) : str_base(_index) constructor {
 			// be set to -1 to not bloat non-decision textboxes, and will store a ds_list of option data should
 			// decisions be utilized by the textbox.
 			optionData	: -1,
+			
+			// When true, the textbox will know it no longer needs to try and parsed the text, as it has already
+			// been parsed when it was first viewed by the player.
+			isParsed	: false,
 		};
 		
 		ds_list_add(textData, _textData);
@@ -594,9 +610,10 @@ function str_textbox(_index) : str_base(_index) constructor {
 	/// data, the newly provided arrays will be ignored to prevent overwriting the old data and the function
 	/// will return without processing anything.
 	///	
-	/// @param {Struct._structRef}	textData	The text data from the textbox that these options will be tied to.
-	/// @param {Array<String>}		options		Array of strings that represent the available options to the player.
-	add_options = function(_textData, _options){
+	/// @param {Struct._structRef}	textData		The text data from the textbox that these options will be tied to.
+	/// @param {Array<String>}		options			Array of strings that represent the available options to the player.
+	///	@param {Array<Array<Any>>}	selectParams	An array of arrays that contain functions alongside their parameters that should be executed when an option is selected.
+	add_options = function(_textData, _options, _selectParams){
 		if (!is_array(_options)) // Don't attempt to add invalidly formatted options.
 			return;
 		
@@ -612,7 +629,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 			for (var i = 0; i < _length; i++){
 				ds_list_add(optionData, {
 					oName			: _options[i],
-					selectParams	: -1,
+					selectParams	: _selectParams[i],
 				});
 			}
 		}
@@ -633,6 +650,10 @@ function str_textbox(_index) : str_base(_index) constructor {
 		// text that is then formatted to contain itself within the bounds of the textbox's available space.
 		var _textData = textData[| _index];
 		with(_textData){
+			if (isParsed) // No need to parse text that is already parsed and formatted; exit the function.
+				return _textData;
+			isParsed = true;
+			
 			var _parsedData = string_parse_color_data(content);
 			content			= string_split_lines(_parsedData.fullText, fnt_small, 
 								TBOX_SURFACE_WIDTH, TBOX_MAX_LINES_PER_BOX);
@@ -695,6 +716,20 @@ function str_textbox(_index) : str_base(_index) constructor {
 		
 		// No punctuation has been found; return the default factor of 1.0 (No change to text speed).
 		return TBOX_PUNCT_NONE;
+	}
+	
+	/// @description 
+	/// 
+	/// 
+	close_current_textbox = function(){	
+		// Close the textbox if the next index is less than 0, equal to the current index, or outside
+		// of the valid bounds of textbox data indices.
+		if (nextIndex < 0 && nextIndex == textIndex || nextIndex >= ds_list_size(textData)){
+			object_set_state(state_close_animation);
+			textIndex = TBOX_INDEX_CLOSE;
+			return;
+		}
+		set_textbox_index(nextIndex);
 	}
 	
 	/// @description 
@@ -782,22 +817,10 @@ function str_textbox(_index) : str_base(_index) constructor {
 		}
 		
 		// Under normal circumstances, the advance input will be what moves the textbox to the next piece
-		// of data within its queue to display to the player.
-		if (TBOX_WAS_ADVANCE_PRESSED){
-			// Store the previous textbox's struct in the textbox log's data so it can be pulled up by the 
-			// player to view it again should they need a refresher on what was previously said.
-			var _textData = textData[| textIndex];
-			with(TEXTBOX_LOG) { queue_new_text(_textData); }
-			
-			// Close the textbox if the next index is less than 0, equal to the current index, or outside
-			// of the valid bounds of textbox data indices.
-			if (nextIndex < 0 && nextIndex == textIndex || nextIndex >= ds_list_size(textData)){
-				object_set_state(state_close_animation);
-				textIndex = TBOX_INDEX_CLOSE;
-				return;
-			}
-			set_textbox_index(nextIndex);
-		}
+		// of data within its queue to display to the player. This can only occur once all the text for the
+		// current textbox has been shown to them.
+		if (TBOX_WAS_ADVANCE_PRESSED)
+			close_current_textbox();
 	}
 	
 	/// @description 
@@ -945,9 +968,9 @@ function str_textbox(_index) : str_base(_index) constructor {
 		}
 		
 		if (_animFinished){
-			if (!TBOX_IS_OPTIONS_ACTIVE){ 
+			if (!TBOX_IS_OPTIONS_ACTIVE){ // Option menu not open; return to normal textbox function.
 				object_set_state(state_default); 
-			} else{ 
+			} else{ // Otherwise, reactivate the option menu and return to the state for processing that.
 				object_set_state(state_option_menu);
 				with(optionMenu) { flags = flags | MENU_FLAG_ACTIVE; }
 			}
@@ -974,6 +997,46 @@ function str_textbox(_index) : str_base(_index) constructor {
 			with(optionMenu) { flags = flags & ~MENU_FLAG_ACTIVE; }
 			return;
 		}
+		
+		// 
+		var _selOption = MENU_OPTION_INVALID;
+		with(optionMenu){
+			if (selOption == curOption){
+				_selOption	= selOption;
+				selOption	= MENU_OPTION_INVALID;
+			}
+		}
+		
+		// 
+		if (_selOption == MENU_OPTION_INVALID)
+			return;
+		
+		// 
+		var _selectParams = optionDataRef[| _selOption].selectParams;
+		if (array_length(_selectParams) == 0){
+			object_set_state(state_close_options_animation);
+			return;
+		}
+		
+		var _function	= array_create(1, _selectParams[0]);
+		var _length		= array_length(_selectParams);
+		var _index		= 1;
+		do{
+			if (is_method(_selectParams[_index])){
+				if (array_length(_function) > 1) { script_execute_ext(_function[0], _function, 1); }
+				else							 { script_execute(_function[0]); }
+				_function = array_create(0);
+			}
+			array_push(_function, _selectParams[_index]);
+			_index++;
+		} until(_index == _length);
+		
+		// 
+		if (array_length(_function) > 1) { script_execute_ext(_function[0], _function, 1); } 
+		else							 { script_execute(_function[0]); }
+		
+		// 
+		object_set_state(state_close_options_animation);
 	}
 	
 	/// @description
@@ -1010,8 +1073,47 @@ function str_textbox(_index) : str_base(_index) constructor {
 	/// @description 
 	///	
 	///	
+	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_close_options_animation = function(_delta){
+		var _animFinished = false;
+		with(optionMenu){
+			// Update the values that are involved in the animation.
+			x		    += (TBOXMENU_XSTART - x) * _delta * 0.1;
+			alpha		-= _delta * 0.075;
+			
+			// 
+			if (alpha <= 0.0 && x > VIEWPORT_HEIGHT){
+				flags			= flags & ~MENU_FLAG_ACTIVE;
+				x				= TBOXMENU_XSTART;
+				alpha			= 0.0;
+				_animFinished	= true;
+			}
+		}
 		
+		if (_animFinished){
+			object_set_state(state_default);
+			close_current_textbox(); // Treat the finished animation the same as pressing the advance input.
+			flags = flags & ~TBOX_FLAG_OPTIONS_ACTIVE;
+			// TODO -- Update Visible Control Information to Remove Menu Up/Down Inputs.
+		}
+	}
+	
+	/// @description 
+	/// 
+	/// 
+	/// @param {Real}	index	The index for the textbox that will be opened next.
+	set_next_index = function(_index){
+		nextIndex = _index;
+		show_debug_message("nextIndex has been set to {0}.", nextIndex);
+	}
+	
+	/// @description 
+	///	
+	///	
+	///	@param {Real}	flagID		The position of the bit (Starting from 0 as the first) to get the value of.
+	/// @param {Bool}	flagState	The desired value to set the event's bit to (True = 1, False = 0).
+	set_event_flag = function(_flagID, _flagState){
+		event_set_flag(_flagID, _flagState);
 	}
 }
 

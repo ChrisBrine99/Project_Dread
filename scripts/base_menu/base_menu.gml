@@ -64,6 +64,10 @@
 #macro	MENU_FIRST_AUTOSCROLL_TIME		30.0
 #macro	MENU_AUTOSCROLL_TIME			10.0
 
+// A simple catchall to be used by the variables storing selected option indexes whenever they don't have
+// anything currently selected.
+#macro	MENU_OPTION_INVALID			   -1
+
 #endregion Macros for Base Menu Struct
 
 #region Base Menu Struct Definition
@@ -132,8 +136,8 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	// Stores the index of the option that is currently being highlighted, has been selected, and was selected
 	// but has been stored for later use within the menu, respectively.
 	curOption			= 0;
-	selOption			= -1;
-	auxSelOption		= -1;
+	selOption			= MENU_OPTION_INVALID;
+	auxSelOption		= MENU_OPTION_INVALID;
 	
 	// Determines how much of the menu is visible to the user at any given time. This region will be shifted
 	// as the cursor is moved relative to what the two variable below this group are set to.

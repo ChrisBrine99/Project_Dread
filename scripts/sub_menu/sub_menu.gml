@@ -58,7 +58,6 @@ function str_sub_menu(_index) : str_base_menu(_index) constructor{
 		visibleAreaW	= max(1, _visibleWidth);
 		visibleAreaH	= max(1, _visibleHeight);
 		
-		
 		// Loop through the existing option structs; replacing each one's previous oName value with the value
 		// found at the same index inside the _options array. Once the previous number of options is passed,
 		// new option structs will be created to store additional values.

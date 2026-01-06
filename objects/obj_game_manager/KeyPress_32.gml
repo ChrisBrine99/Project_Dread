@@ -6,9 +6,23 @@ with(TEXTBOX){
 		queue_new_text("One more textbox because why not."),
 		[
 			"TEST OPTION 1", 
-			"TEST OPTION 2"
+			"TEST OPTION 2",
+			"TEST OPTION 3",
+		],
+		[
+			[ // TEST OPTION 1
+				set_next_index, TBOX_INDEX_CLOSE
+			],
+			[ // TEST OPTION 2
+				set_next_index, 0
+			],
+			[ // TEXT OPTION 3
+				set_event_flag, 2, true,
+				set_event_flag, 3, true
+			]
 		]
 	);
+	queue_new_text("This is a test to see if the nextIndex value can be updated on-the-fly depending on player choice.");
 	activate_textbox();
 }
 
