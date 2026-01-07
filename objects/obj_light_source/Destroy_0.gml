@@ -1,3 +1,3 @@
 // Clear the light source from memory.
-if (!is_undefined(lightSource))
+if (lightSource != noone)
 	light_destroy(lightSource);

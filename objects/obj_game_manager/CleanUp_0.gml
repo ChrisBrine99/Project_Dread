@@ -10,8 +10,9 @@ ds_map_destroy(global.sInstances);
 var _length = 0; // Used by all array/data structure-based cleanup code, so it's initialized at the start.
 
 // Freeing any surfaces that might exist currently.
-if (surface_exists(global.worldSurface)) { surface_free(global.worldSurface); }
-if (surface_exists(global.lightSurface)) { surface_free(global.lightSurface); }
+if (surface_exists(global.worldSurface))	{ surface_free(global.worldSurface); }
+if (surface_exists(global.lightSurface))	{ surface_free(global.lightSurface); }
+if (surface_exists(global.shadowSurface))	{ surface_free(global.shadowSurface); }
 
 // Removes all item inventory structs as they aren't the standard structs that are automatically maintained by
 // the global.struct data structure. In very rare cases, the item inventory will not have been initialized 
@@ -80,24 +81,23 @@ ds_list_destroy(global.dynamicItemKeys);
 ds_list_clear(global.collectedItems);
 ds_list_destroy(global.collectedItems);
 
-// Clear the list of references from the light management list, and then destroy that list to deallocate the
-// memory associated with it. The actual deletion of the light struct instances is handled below alongside
-// all other structs that were alive at the game's close/end.
+// Clear out the references to structs found within these struct-specific lists. They will remain alive until
+// all structs have been destroyed. Once that occurs, these lists will be destroyed.
 ds_list_clear(global.lights);
-ds_list_destroy(global.lights);
-
-// Clear out the list of existing menu references and destroy said data structure. The references don't need
-// to be cleaned up since they'll be managed automatically by cleaning up the struct data structure below.
 ds_list_clear(global.menus);
-ds_list_destroy(global.menus);
 
-// Remove all existing struct instances from memory by deleting their references stores within the global struct
-// management list. Then, that list itself is destroyed to clear it from memory as well.
+// Remove all existing struct instances from memory by deleting their references stores within the global 
+// struct management list. Then, that list itself is destroyed to clear it from memory as well.
 _length	= ds_list_size(global.structs);
 for (var i = 0; i < _length; i++)
 	instance_destroy_struct(global.structs[| i]);
 ds_list_clear(global.structs);
 ds_list_destroy(global.structs);
+
+// After structs have been cleaned up, the lists that store specific struct instances will finaly be 
+// destroyed to avoid issues with clean up of various different objects.
+ds_list_destroy(global.menus);
+ds_list_destroy(global.lights);
 
 // Make sure the map that stores the type of struct is correctly cleared and deleted from memory as well.
 ds_map_clear(global.structType);

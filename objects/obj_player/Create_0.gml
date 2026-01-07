@@ -171,11 +171,11 @@
 event_inherited();
 
 // Set the flags that are initially toggled upon the player object's creation.
-flags			    = DENTT_FLAG_WORLD_COLLISION | ENTT_FLAG_OVERRIDE_DRAW | 
+flags			    = DENTT_FLAG_WORLD_COLLISION | ENTT_FLAG_SHADOW | ENTT_FLAG_OVERRIDE_DRAW | 
 						ENTT_FLAG_VISIBLE | ENTT_FLAG_ACTIVE;
 
-// Set the player's acceleration and maximum movement speeds (Running allows the player to temporarily exceed
-// this maximum until their stamina runs out).
+// Set the player's acceleration and maximum movement speeds (Running allows the player to temporarily 
+// exceed this maximum until their stamina runs out).
 accel				= PLYR_ACCEL_NORMAL;
 maxMoveSpeed		= PLYR_SPEED_NORMAL;
 
@@ -445,6 +445,7 @@ process_footstep_sound = function(){
 pause_player = function(){
 	if (curState == method_get_index(state_player_paused) || GAME_IS_CUTSCENE_ACTIVE)
 		return; // Don't pause the player again if they've been paused previously or a cutscene is active.
+	
 	object_set_state(state_player_paused);
 	image_index		= animLoopStart;
 	flags		    = flags & ~(PLYR_FLAG_MOVING | PLYR_FLAG_SPRINTING);
@@ -922,14 +923,14 @@ end_step_event = function(_delta){
 /// 
 /// 
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
-custom_draw_default = function(_delta){
+custom_draw_default = function(_delta){	
 	draw_sprite_ext(sprite_index, image_index, x, y, 
 			image_xscale, image_yscale, image_angle, image_blend, image_alpha);
-	/*var _interactX = x + lengthdir_x(8, direction);
+	var _interactX = x + lengthdir_x(8, direction);
 	var _interactY = y + lengthdir_y(8, direction) - 8;
 	draw_set_color(COLOR_TRUE_WHITE);
 	draw_set_alpha(1.0);
-	draw_sprite(spr_rectangle, 0, _interactX, _interactY);*/
+	draw_sprite(spr_rectangle, 0, _interactX, _interactY);
 }
 drawFunction = method_get_index(custom_draw_default);
 

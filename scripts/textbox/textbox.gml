@@ -151,6 +151,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 	// Stores the string that represents the name of the actor that is speaking in the current textbox. Can
 	// only be shown if the flag bit within the flags variable is set as well.
 	actorName			= "";
+	nextActorIndex		= TBOX_ACTOR_INVALID;
 	
 	// Stores the toggled and not toggled input flags from the previous frame so the input can be checked to
 	// see if it was pressed or not by the player.
@@ -516,13 +517,13 @@ function str_textbox(_index) : str_base(_index) constructor {
 		// Copy over all the data required from the text data contained at the index provided for this function
 		// within the textbox's current queue of text data.
 		var _textLength		= 0;
-		var _newActorIndex	= TBOX_ACTOR_INVALID;
+		var _nextActorIndex	= TBOX_ACTOR_INVALID;
 		var _nextIndex		= TBOX_INDEX_CLOSE;
 		var _colorData		= -1;
 		var _optionData		= -1;
 		with(_textData){
 			_textLength		= string_length(content) + 1;
-			_newActorIndex	= actorIndex;
+			_nextActorIndex	= actorIndex;
 			_nextIndex		= nextIndex;
 			_colorData		= colorData;
 			_optionData		= optionData;
@@ -530,7 +531,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 		
 		// Check to see if an actor swap will occur between the last textbox and this one. If so, begin
 		// the false closing animation. This can only be done if textIndex is a valid value.
-		if (textIndex >= 0 && textIndex < ds_list_size(textData) && textData[| textIndex].actorIndex != _newActorIndex)
+		if (textIndex >= 0 && textIndex < ds_list_size(textData) && textData[| textIndex].actorIndex != _nextActorIndex)
 			object_set_state(state_close_animation);
 		
 		// Set and reset all required properties for the textbox to display the required information.
@@ -538,7 +539,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 		textLength		= _textLength;
 		textIndex		= _index;
 		nextIndex		= _nextIndex;
-		actorName		= get_actor_name(_newActorIndex);
+		actorName		= get_actor_name(_nextActorIndex);
 		curChar			= 1;	// Reset these to their defaults so the typing animation can play again.
 		nextChar		= 1;
 		sndTypeTimer	= 0.0;
@@ -882,7 +883,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 				textIndex = 0;
 				return;
 			}
-			// Set the textbox to "reopen" itself for the new actor's dialogue.
+			// Set the textbox to "reopen" itself for the new actor's name shown.
 			object_set_state(state_open_animation);
 			return;
 		}

@@ -1,3 +1,17 @@
+// 
+if (surface_exists(global.shadowSurface)){
+	var _viewX = 0;
+	var _viewY = 0;
+	with(CAMERA){
+		_viewX = viewportX;
+		_viewY = viewportY;
+	}
+	
+	draw_set_alpha(0.5);
+	draw_surface(global.shadowSurface, _viewX, _viewY);
+	draw_set_alpha(1.0);
+}
+
 // Renders all Entities after they've been sorted by their y positions; the Entity's with smaller y positions 
 // (Higher on the screen due to GameMaker's coordinate system) being drawn first.
 var _delta	= global.deltaTime;

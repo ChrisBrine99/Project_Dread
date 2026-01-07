@@ -203,7 +203,7 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 		// Loop through the available surfaces and drawn them to the screen. Alongside the surfaces, the
 		// background for each will be drawn in real time out of simple rectangles. The X values need to only
 		// be calculated once, and the Y variables will be set on each iteration of the loop.
-		var _xOffset	= _viewX + textX + TBOX_TEXT_X_OFFSET;
+		var _xOffset	= _viewX + textX + TBOX_TEXT_XOFFSET;
 		var _bgX		= _xOffset - TBOXLOG_BG_XPADDING;
 		var _yOffset	= 0;
 		var _bgY		= 0;

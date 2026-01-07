@@ -19,7 +19,7 @@
 #macro	MENUITM_OPTIONS_X				20
 #macro	MENUITM_OPTIONS_Y				4
 #macro	MENUITM_OPTION_XSPACING			21
-#macro	MENUITM_OPTION_YSPACING_Y		21
+#macro	MENUITM_OPTION_YSPACING			21
 
 // Determines the maximum line width for an item's description string as well as the maximum number of lines
 // that can exist for display within the inventory's item section.
