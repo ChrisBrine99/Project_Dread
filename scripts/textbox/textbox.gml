@@ -48,20 +48,20 @@
 
 // Macros for the characteristics of the textbox's background texture that the text surface will be drawn onto.
 // They represent the width, height, and opacity/alpha value of said background, respectively.
-#macro	TBOX_BG_X_OFFSET				0
-#macro	TBOX_BG_Y_OFFSET				8
+#macro	TBOX_BG_XOFFSET				0
+#macro	TBOX_BG_YOFFSET				8
 #macro	TBOX_BG_WIDTH					TBOX_SURFACE_WIDTH + 20
 #macro	TBOX_BG_HEIGHT					42
 
 // The pixel offsets from the current x/y position of the textbox that the text contents will be rendered at.
 // The shadow for the text is offset one to the left and down to create a simple drop shadow effect on the text.
-#macro	TBOX_TEXT_X_OFFSET				10
-#macro	TBOX_TEXT_Y_OFFSET				16
+#macro	TBOX_TEXT_XOFFSET				10
+#macro	TBOX_TEXT_YOFFSET				16
 
 // Constants for the x and y position of the textbox's advance arrow indicator which appears when the current 
 // text to display has completely typed itself out onto the main textbox window.
-#macro	TBOX_ARROW_X_OFFSET				TBOX_BG_X_OFFSET + TBOX_BG_WIDTH - 14
-#macro	TBOX_ARROW_Y_OFFSET				TBOX_BG_Y_OFFSET + TBOX_BG_HEIGHT - 9
+#macro	TBOX_ARROW_XOFFSET				TBOX_BG_XOFFSET + TBOX_BG_WIDTH - 14
+#macro	TBOX_ARROW_YOFFSET				TBOX_BG_YOFFSET + TBOX_BG_HEIGHT - 9
 
 // Determines how many pixels the arrow's offset/timer will roughly move in 1/60th of a second.
 #macro	TBOX_ARROW_MOVE_SPEED			0.07
@@ -80,10 +80,10 @@
 #macro	TBOX_PUNCT_EXCLAIM_DELAY		0.075
 
 // Determines the position on the GUI the textbox will begin the opening animation at.
-#macro	TBOX_Y_START					VIEWPORT_HEIGHT + 30
+#macro	TBOX_YSTART					VIEWPORT_HEIGHT + 30
 
 // Determines the position on the GUI the textbox will rest at after its opening transition has completed.
-#macro	TBOX_Y_TARGET					VIEWPORT_HEIGHT - 64
+#macro	TBOX_YTARGET					VIEWPORT_HEIGHT - 64
 
 // Macros for the characteristics of the opening and closing animations; denoted as such by containing either
 // "OANIM" for opening, and "CANIM" for closing, respectively
@@ -196,9 +196,9 @@ function str_textbox(_index) : str_base(_index) constructor {
 
 		// Determine the starting position of the textbox. The x position will remain constant, but the y 
 		// value will change during the opening animation; going from the position set below to the value 
-		// found in the constant "TBOX_Y_TARGET".
+		// found in the constant "TBOX_YTARGET".
 		x = floor((VIEWPORT_WIDTH - TBOX_BG_WIDTH) / 2) - 20; // Offset by 20 to account for the space between the background and the GUI's size.  
-		y = VIEWPORT_HEIGHT + 30; // The same value as "TBOX_Y_START" but utilizing the fact the height was stored locally previously.
+		y = VIEWPORT_HEIGHT + 30; // The same value as "TBOX_YSTART" but utilizing the fact the height was stored locally previously.
 		
 		// Copy the x value of the text so the visible logs are in the same relative area horizontally on the
 		// game's screen. The value never changes hence why it is copied after initially being set.
@@ -340,13 +340,13 @@ function str_textbox(_index) : str_base(_index) constructor {
 		// behind the text being displayed, and an arrow that shows up once it is possible to advance to the
 		// next chunk of text or close the texxtbox.
 		draw_sprite_stretched_ext(spr_tbox_background, 0, 
-			x + _viewX + TBOX_BG_X_OFFSET, 
-			y + _viewY + TBOX_BG_Y_OFFSET, 
+			x + _viewX + TBOX_BG_XOFFSET, 
+			y + _viewY + TBOX_BG_YOFFSET, 
 			TBOX_BG_WIDTH, TBOX_BG_HEIGHT, COLOR_TRUE_WHITE, alpha
 		);
 
 		// Simply draw the currently rendered text onto the screen with this single draw call.
-		draw_surface_ext(textSurface, x + _viewX + TBOX_TEXT_X_OFFSET, y + _viewY + TBOX_TEXT_Y_OFFSET, 
+		draw_surface_ext(textSurface, x + _viewX + TBOX_TEXT_XOFFSET, y + _viewY + TBOX_TEXT_YOFFSET, 
 			1.0, 1.0, 0.0, COLOR_TRUE_WHITE, alpha);
 		
 		// Elements that will not be rendered until the textbox has finished typing out all the required
@@ -356,8 +356,8 @@ function str_textbox(_index) : str_base(_index) constructor {
 				// Display the advance indicator at the bottom-right of the textbox window relative to the 
 				// value of the offset timer/value with the fraction component removed. 
 				draw_sprite_ext(spr_tbox_advance_indicator, 0, 
-					x + _viewX + TBOX_ARROW_X_OFFSET, 
-					y + _viewY + TBOX_ARROW_Y_OFFSET + floor(advArrowOffset),
+					x + _viewX + TBOX_ARROW_XOFFSET, 
+					y + _viewY + TBOX_ARROW_YOFFSET + floor(advArrowOffset),
 					1.0, 1.0, 0.0, COLOR_TRUE_WHITE, alpha
 				);
 			} else{
@@ -844,9 +844,9 @@ function str_textbox(_index) : str_base(_index) constructor {
 	state_open_animation = function(_delta){
 		// Give the player control over the textbox by shifting into its default state function. This state 
 		// is also responsible for "typing" the characters onto the textbox until they're all shown.
-		if (alpha == 1.0 && y <= TBOX_Y_TARGET){
+		if (alpha == 1.0 && y <= TBOX_YTARGET){
 			object_set_state(state_default);
-			y = TBOX_Y_TARGET;
+			y = TBOX_YTARGET;
 			return;
 		}
 		
@@ -860,10 +860,10 @@ function str_textbox(_index) : str_base(_index) constructor {
 		// Move the y position from where it is initially set below the visible portion of the screen to the
 		// desired position set by this opening animation. Snap it to the target position is the distance
 		// between the current value and target is small enough.
-		if (y != TBOX_Y_TARGET){
-			y += (TBOX_Y_TARGET - y) * TBOX_OANIM_MOVE_SPEED * _delta;
-			if (point_distance(0, y, 0, TBOX_Y_TARGET) <= ceil(_delta))
-				y = TBOX_Y_TARGET;
+		if (y != TBOX_YTARGET){
+			y += (TBOX_YTARGET - y) * TBOX_OANIM_MOVE_SPEED * _delta;
+			if (point_distance(0, y, 0, TBOX_YTARGET) <= ceil(_delta))
+				y = TBOX_YTARGET;
 		}
 	}
 	
@@ -876,7 +876,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 	state_close_animation = function(_delta){
 		// Repeat the opening animation or deactivate the textbox depending on the current value of nextIndex.
 		if (alpha == 0.0){
-			y = TBOX_Y_START; // Reset the y position so the textbox opens properly next time.
+			y = TBOX_YSTART; // Reset the y position so the textbox opens properly next time.
 			if (textIndex < 0 || textIndex >= ds_list_size(textData)){ // Closes the textbox.
 				deactivate_textbox();
 				textIndex = 0;

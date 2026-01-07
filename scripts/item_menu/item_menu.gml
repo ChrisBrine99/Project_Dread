@@ -18,8 +18,8 @@
 // in VERY slightly faster execution.
 #macro	MENUITM_OPTIONS_X				20
 #macro	MENUITM_OPTIONS_Y				4
-#macro	MENUITM_OPTION_SPACING_X		21
-#macro	MENUITM_OPTION_SPACING_Y		21
+#macro	MENUITM_OPTION_XSPACING			21
+#macro	MENUITM_OPTION_YSPACING_Y		21
 
 // Determines the maximum line width for an item's description string as well as the maximum number of lines
 // that can exist for display within the inventory's item section.
@@ -130,7 +130,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		// player's item inventory. Using that number, the base and option parameters are both initialized.
 		initialize_params(0, 14, true, true, MENUITM_WIDTH, MENUITM_WIDTH, MENUITM_HEIGHT);
 		initialize_option_params(MENUITM_OPTIONS_X, MENUITM_OPTIONS_Y, 
-			MENUITM_OPTION_SPACING_X, MENUITM_OPTION_SPACING_Y, fa_left, fa_top, true);
+			MENUITM_OPTION_XSPACING, MENUITM_OPTION_YSPACING, fa_left, fa_top, true);
 		
 		// Create a temporary list that will store the slot indexes that any of the player's equipment are
 		// found within the item inventory. These will be used to see what needs to have an "E" on their slot
@@ -555,8 +555,8 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			flags = flags | MENUITM_FLAG_OPTIONS_OPEN;
 			
 			// Calculate the offset for the item's options menu and its height for the background UI.
-			itemOptionsMenuX = MENUITM_OPTIONS_X + ((curOption % width)		 * MENUITM_OPTION_SPACING_X) + MENUITM_OPTION_SPACING_X;
-			itemOptionsMenuY = MENUITM_OPTIONS_Y + (floor(curOption / width) * MENUITM_OPTION_SPACING_Y);
+			itemOptionsMenuX = MENUITM_OPTIONS_X + ((curOption % width)		 * MENUITM_OPTION_XSPACING) + MENUITM_OPTION_XSPACING;
+			itemOptionsMenuY = MENUITM_OPTIONS_Y + (floor(curOption / width) * MENUITM_OPTION_YSPACING);
 			itemOptionsMenuHeight = (array_length(_options) * _ySpacing) + 8;
 			return;
 		}

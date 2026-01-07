@@ -157,7 +157,7 @@
 
 // The vertical offset for the point that will be checked to determine the current floor material beneath
 // the player which will set what footstep sound should be played when one is required.
-#macro	PLYR_FLOOR_CHECK_OFFSET_Y		2
+#macro	PLYR_FLOOR_CHECK_YOFFSET		2
 
 // Macros that determine which frames in the player's walking/running animation will trigger a step sound.
 #macro	PLYR_FIRST_STEP_INDEX			1
@@ -420,7 +420,7 @@ process_footstep_sound = function(){
 	// tile index value that is returned by the tilemap_get function.
 	var _snd	= -1;
 	var _cellX	= floor(x / TILE_WIDTH);
-	var _cellY	= floor((y - PLYR_FLOOR_CHECK_OFFSET_Y) / TILE_HEIGHT);
+	var _cellY	= floor((y - PLYR_FLOOR_CHECK_YOFFSET) / TILE_HEIGHT);
 	switch(tilemap_get(floorMaterials, _cellX, _cellY)){
 		default:
 		case TILE_INDEX_FLOOR_TILE:		_snd = snd_player_step_tile;		break;
