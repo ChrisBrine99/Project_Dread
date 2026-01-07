@@ -46,7 +46,8 @@
 #macro	ICONUI_DRAW_UP					12
 #macro	ICONUI_DRAW_DOWN				13
 
-// 
+// Determines what the current icons being displayed are. When set to ICON_TYPE_UNSET, the control manager
+// will know to load the required group in for the current control method being used by the player.
 #macro	ICONUI_TYPE_UNSET				0
 #macro	ICONUI_TYPE_KEYBOARD			1
 #macro	ICONUI_TYPE_GAMEPAD				2
@@ -353,7 +354,7 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 			iconType		: ICONUI_TYPE_UNSET,
 			
 			/// @description 
-			///	Calcualtes the position on the GUI layer for all control icons/descriptors found in the 
+			///	Calculates the position on the GUI layer for all control icons/descriptors found in the 
 			///	control group determined by the function's single parameter. The way these positions are 
 			/// calculated differ slightly depending on the direction of drawing the content of the group 
 			/// relative to its anchor point.
@@ -372,7 +373,6 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 				var _sprHeight		= 0;
 				var _strWidth		= 0;
 				var _width			= 0;
-				var _addedPixel		= int64(_gamepadActive);
 				var _xOffset		= xPos;
 				var _yOffset		= yPos;
 				var _drawDirection	= drawDirection;
@@ -395,7 +395,7 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 						// descriptor's y offset will always be two pixels lower on the screen than the icon 
 						// since that looks best.
 						iconX		= _xOffset;
-						iconY		= _yOffset + _addedPixel;
+						iconY		= _yOffset + _gamepadActive;
 						descriptorX	= _xOffset;
 						descriptorY	= _yOffset + 2;
 				

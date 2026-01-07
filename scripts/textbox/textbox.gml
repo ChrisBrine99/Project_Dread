@@ -166,7 +166,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 	
 	// Counts down until the value goes below zero. When that happens, the counter is reset and the sound is
 	// played alongside the textbox's typing animation.
-	sndCharTypeTimer	= 0.0;
+	sndTypeTimer		= 0.0;
 	
 	// Variables that allow the textbox to reference the current color data for the text that is being typed
 	// onto the textbox; allowing each individual character to be a unique color compared to the default white.
@@ -181,7 +181,8 @@ function str_textbox(_index) : str_base(_index) constructor {
 	// Stores a reference to the control icon group that displays input information for the textbox.
 	tboxCtrlGroup		= REF_INVALID;
 
-	// 
+	// Stores a reference to the menu that allows the player to choose an option provided by the textbox.
+	// The second value is a reference to those options and what they execute when selected.
 	optionMenu			= noone;
 	optionDataRef		= REF_INVALID;
 
@@ -359,12 +360,6 @@ function str_textbox(_index) : str_base(_index) constructor {
 					y + _viewY + TBOX_ARROW_Y_OFFSET + floor(advArrowOffset),
 					1.0, 1.0, 0.0, COLOR_TRUE_WHITE, alpha
 				);
-			
-				// Increment the value until it reaches 2.0 or higher, and then reduce it by two to bring it 
-				// back to zero; allowing the arrow to bob up and down rhythmically on screen.
-				advArrowOffset += TBOX_ARROW_MOVE_SPEED * _delta;
-				if (advArrowOffset > TBOX_ARROW_OFFSET_THRESHOLD)
-					advArrowOffset -= TBOX_ARROW_OFFSET_THRESHOLD;
 			} else{
 				// When the textbox has options associated with it, the menu responsible for those options 
 				// will be drawn instead of the advancement indicator.
@@ -470,10 +465,8 @@ function str_textbox(_index) : str_base(_index) constructor {
 		flags		    = flags & ~TBOX_FLAG_ACTIVE;
 		global.flags    = global.flags & ~GAME_FLAG_TEXTBOX_OPEN;
 		
-		// 
+		// Destroy the struct to remove it from memory as it is no longer needed when the textbox is destroyed.
 		instance_destroy_menu_struct(optionMenu);
-		optionMenu		= noone;
-		optionDataRef	= REF_INVALID;
 		
 		if (!TBOX_CAN_WIPE_DATA) // Prevent deleting any text information if the flag isn't toggled.
 			return;
@@ -535,18 +528,12 @@ function str_textbox(_index) : str_base(_index) constructor {
 			_optionData		= optionData;
 		}
 		
-		// 
-		if (textIndex != TBOX_INDEX_CLOSE){
-			// 
-			var _prevTextData = textData[| textIndex];
-			with(TEXTBOX_LOG) { queue_new_text(_prevTextData); }
-			
-			// 
-			var _prevActorIndex	= textData[| textIndex].actorIndex;
-			if (_prevActorIndex != _newActorIndex)
-				object_set_state(state_close_animation);
-		}
-			
+		// Check to see if an actor swap will occur between the last textbox and this one. If so, begin
+		// the false closing animation. This can only be done if textIndex is a valid value.
+		if (textIndex >= 0 && textIndex < ds_list_size(textData) && textData[| textIndex].actorIndex != _newActorIndex)
+			object_set_state(state_close_animation);
+		
+		// Set and reset all required properties for the textbox to display the required information.
 		flags		    = (flags | TBOX_FLAG_CLEAR_SURFACE) & ~(TBOX_FLAG_SHOW_NAME | TBOX_FLAG_HAS_OPTIONS);
 		textLength		= _textLength;
 		textIndex		= _index;
@@ -554,7 +541,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 		actorName		= get_actor_name(_newActorIndex);
 		curChar			= 1;	// Reset these to their defaults so the typing animation can play again.
 		nextChar		= 1;
-		sndScrollTimer	= 0.0;
+		sndTypeTimer	= 0.0;
 		charX			= 0;
 		charY			= 0;
 		colorDataRef	= _colorData;	// Overwrite the previous ds_list reference with either -1 or the new textbox's color list.
@@ -719,12 +706,23 @@ function str_textbox(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
+	/// A function that causes the current textbox to close. From here, it can go through two paths: opening
+	/// a new textbox if the nextIndex value is a valid value, or closing the textbox down if that value is
+	/// currently something invalid.
 	/// 
-	/// 
-	close_current_textbox = function(){	
+	close_current_textbox = function(){
+		// Grab a reference to the data that was previously shown to the player so it can be logged, but
+		// only if the textIndex isn't an invalid value.
+		var _size = ds_list_size(textData);
+		if (textIndex >= 0 && textIndex < _size){
+			var _prevTextData = textData[| textIndex];
+			with(TEXTBOX_LOG)
+				queue_new_text(_prevTextData);
+		}
+		
 		// Close the textbox if the next index is less than 0, equal to the current index, or outside
 		// of the valid bounds of textbox data indices.
-		if (nextIndex < 0 && nextIndex == textIndex || nextIndex >= ds_list_size(textData)){
+		if (nextIndex < 0 && nextIndex == textIndex || nextIndex >= _size){
 			object_set_state(state_close_animation);
 			textIndex = TBOX_INDEX_CLOSE;
 			return;
@@ -750,15 +748,16 @@ function str_textbox(_index) : str_base(_index) constructor {
 			return;
 		}
 		
-		// 
+		// Take this branch while the textbox is still displaying characters onto the screen with its typing
+		// animation. Once this is completed, the code below this branch will be executed.
 		if (nextChar < textLength){
 			// Calculate the "amount" of change during the previous frame and this one. This will then be used 
 			// to increment the character typing sound's timer and the character typing animation "timer" that 
 			// goes alongside said sound.
 			var _amount = nextCharDelay * _delta;
-			sndCharTypeTimer -= _amount;
-			if (sndCharTypeTimer <= 0.0){ // Play the sound and reset its playback timer.
-				sndCharTypeTimer += TBOX_SND_TYPE_PLAY_INTERVAL;
+			sndTypeTimer -= _amount;
+			if (sndTypeTimer <= 0.0){ // Play the sound and reset its playback timer.
+				sndTypeTimer += TBOX_SND_TYPE_PLAY_INTERVAL;
 				sound_effect_play_ext(snd_textbox_type, STNG_AUDIO_MENU_SOUNDS, TBOX_SND_TYPE_GAIN, 1.0, 0, true, false,
 					TBOX_SND_TYPE_GAIN_RANGE, TBOX_SND_TYPE_PITCH_RANGE);
 			}
@@ -773,13 +772,22 @@ function str_textbox(_index) : str_base(_index) constructor {
 			}
 			return;
 		}
+		
+		// Increment the value until it reaches 2.0 or higher, and then reduce it by two to bring it back 
+		// to zero; allowing the arrow to bob up and down rhythmically on screen.
+		advArrowOffset += TBOX_ARROW_MOVE_SPEED * _delta;
+		if (advArrowOffset > TBOX_ARROW_OFFSET_THRESHOLD)
+			advArrowOffset -= TBOX_ARROW_OFFSET_THRESHOLD;
 
-		// 
+		// When a textbox contains a list of options that it needs to present to the player. It will take
+		// this branch and activate the textbox option menu which shifts the textbox into a new state that
+		// processes the selected option from that list.
 		if (TBOX_HAS_OPTIONS){
 			object_set_state(state_open_options_animation);
 			flags = flags | TBOX_FLAG_OPTIONS_ACTIVE;
 			
-			// 
+			// Get the maximum width out of the available options. This will be used to determine the width
+			// of the content for the option menu's background. Otherwise, the dimensions would be off.
 			draw_set_font(fnt_small); // Set for accurate string width calculation.
 			var _length		= ds_list_size(optionDataRef);
 			var _options	= array_create(_length, "");
@@ -792,7 +800,10 @@ function str_textbox(_index) : str_base(_index) constructor {
 					_maxWidth = _oWidth;
 			}
 			
-			// 
+			// If the menu already exists, this with statement will execute. It replaces the options that 
+			// were previously found in the menu, set and clear the necessary flags, update the dimensions
+			// of the menu's background, and set the menu's position to where it needs to be for its opening
+			// animation to funciton properly.
 			var _yy = y;
 			with(optionMenu){
 				replace_options(_options, 1, 1, _length);
@@ -803,14 +814,15 @@ function str_textbox(_index) : str_base(_index) constructor {
 				y				= _yy - contentHeight;
 			}
 			
-			// 
+			// When the menu doesn't exist, this branch will be executed. It's a simplified version of the
+			// code found directly above as no options exist when the menu is created.
 			if (optionMenu == noone){
 				optionMenu = create_sub_menu(str_textbox_options_menu, noone, TBOXMENU_XSTART, y, _options, 1, 1, _length);
 				with(optionMenu){
 					flags			= flags & ~MENUSUB_FLAG_CAN_CLOSE;
 					contentWidth	= _maxWidth;
 					contentHeight	= optionSpacingY * _length;
-					y			   -= contentHeight; 
+					y			   -= contentHeight;
 				}
 			}
 			return;
@@ -979,7 +991,9 @@ function str_textbox(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	/// 
+	/// State that the textbox will execute so long as the option menu is being navigated by the player.
+	/// Once they select an option, that value is used to determine what needs to be done based on the
+	/// list of functions to execute upon a given option being selected.
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_option_menu = function(_delta){
@@ -998,7 +1012,8 @@ function str_textbox(_index) : str_base(_index) constructor {
 			return;
 		}
 		
-		// 
+		// Grab the value of the selected option. So long as it isn't the same value as "curOption" the menu
+		// is still being navigated by the player. Otherwise, the player has selected an option.
 		var _selOption = MENU_OPTION_INVALID;
 		with(optionMenu){
 			if (selOption == curOption){
@@ -1007,21 +1022,29 @@ function str_textbox(_index) : str_base(_index) constructor {
 			}
 		}
 		
-		// 
+		// Don't execute the remainder of this state until an option has been selected.
 		if (_selOption == MENU_OPTION_INVALID)
 			return;
 		
-		// 
+		// First, check to see if there is a list of tasks that needs to be executed due to the option that
+		// was selected. If no data exists, nothing needs to be done and the textbox can simply close the
+		// option menu window and continue execution as normal.
 		var _selectParams = optionDataRef[| _selOption].selectParams;
 		if (array_length(_selectParams) == 0){
 			object_set_state(state_close_options_animation);
 			return;
 		}
 		
+		// Loop through all functions that need to be executed by the selected option. The first parameter
+		// should always be a function, so that is the first value placed into the _function array. Then,
+		// a loop is executed until no more data remains in the _selectParams array.
 		var _function	= array_create(1, _selectParams[0]);
 		var _length		= array_length(_selectParams);
 		var _index		= 1;
 		do{
+			// If the current value being checked isn't a parameter, the function that was previously found
+			// will be executed alongside all the non-function data that was found in between the two functions,
+			// as those are considered the argument parameters for the previous function.
 			if (is_method(_selectParams[_index])){
 				if (array_length(_function) > 1) { script_execute_ext(_function[0], _function, 1); }
 				else							 { script_execute(_function[0]); }
@@ -1031,11 +1054,12 @@ function str_textbox(_index) : str_base(_index) constructor {
 			_index++;
 		} until(_index == _length);
 		
-		// 
+		// Make sure to execute any remaining data within the _function array if there is any data.
 		if (array_length(_function) > 1) { script_execute_ext(_function[0], _function, 1); } 
 		else							 { script_execute(_function[0]); }
 		
-		// 
+		// Finally, close the textbox option menu so the textbox can go back to displaying the data it has
+		// been given for the current run of the textbox.
 		object_set_state(state_close_options_animation);
 	}
 	
@@ -1071,7 +1095,9 @@ function str_textbox(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	///	
+	///	State that plays the closing animation for the textbox option menu, which is a reversed version of
+	/// its opening animation. Once the menu is invisible and off-screen, the animation will be considered
+	/// complete and the textbox is returned to its default state.
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_close_options_animation = function(_delta){
@@ -1081,7 +1107,8 @@ function str_textbox(_index) : str_base(_index) constructor {
 			x		    += (TBOXMENU_XSTART - x) * _delta * 0.1;
 			alpha		-= _delta * 0.075;
 			
-			// 
+			// Check if the required values have hit their targets. If so, the menu is set to inactive, and
+			// the _animFinished value is set to true so the textbox can do what it requires.
 			if (alpha <= 0.0 && x > VIEWPORT_HEIGHT){
 				flags			= flags & ~MENU_FLAG_ACTIVE;
 				x				= TBOXMENU_XSTART;
@@ -1099,7 +1126,9 @@ function str_textbox(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	/// 
+	/// A function that is meant to be used by options presented by the textbox to the player when they are
+	/// selected. It simply sets the index for the next textbox to display from the current list of textbox
+	/// data.
 	/// 
 	/// @param {Real}	index	The index for the textbox that will be opened next.
 	set_next_index = function(_index){
@@ -1108,7 +1137,9 @@ function str_textbox(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	///	
+	///	A function that is meant to be used by options presented by the textbox to the player when they are
+	/// selected. It simply wraps the global 'event_set_flag' function into a method that can be called by
+	/// the textbox through the system it uses to parse functions from parameters.
 	///	
 	///	@param {Real}	flagID		The position of the bit (Starting from 0 as the first) to get the value of.
 	/// @param {Bool}	flagState	The desired value to set the event's bit to (True = 1, False = 0).
