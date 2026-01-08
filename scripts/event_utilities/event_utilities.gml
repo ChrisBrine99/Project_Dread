@@ -3,6 +3,9 @@
 #macro	EVENT_BUFFER_SIZE_BYTES			64
 #macro	EVENT_BUFFER_SIZE_BITS			8 * EVENT_BUFFER_SIZE_BYTES
 
+// A list of macros for each event flag bit that the game currently utilizes.
+#macro	EVENT_ID_INVALID			   -1
+
 // A global variable that will store a buffer of bits for various aspects of the game; from locks on doors to
 // cutscenes, and so on. These values can either be set or cleared to cause these unique events to happen or
 // be removed from the game.
@@ -25,9 +28,9 @@ function event_set_flag(_flagID, _flagState){
 	var _bitField	= buffer_peek(global.eventFlags, _byteOffset, buffer_u8);
 	var _bitOffset	= _flagID % 8; // Determine offset within the byte for the bit we need.
 	
-	var _bitFieldString = "";
-	for (var i = 0; i < 8; i++) { _bitFieldString += string(real(bool(_bitField & (1 << i)))); }
-	show_debug_message("Setting bit {0} from bit field {1} to {2}.", _flagID, _bitFieldString, _flagState);
+	// var _bitFieldString = "";
+	// for (var i = 0; i < 8; i++) { _bitFieldString += string(real(bool(_bitField & (1 << i)))); }
+	// show_debug_message("Setting bit {0} from bit field {1} to {2}.", _flagID, _bitFieldString, _flagState);
 	
 	// Finally, clear the bit if "_flagState" is false, or set it if "_flagState" is true by performing bitwise 
 	// math on the byte that was retrieved from the event flag buffer relative to the id bit's offset.

@@ -21,6 +21,7 @@ global.structType	= ds_map_create();
 // ALL STRUCTS INHERITING FROM "str_base" SHOULD HAVE A VALUE SET HERE FOR THEIR CLASSIFICATION!!!
 ds_map_add(global.structType, str_base,					STRUCT_TYPE_CT_SINGLETON);
 ds_map_add(global.structType, str_camera,				STRUCT_TYPE_CT_SINGLETON);
+ds_map_add(global.structType, str_cutscene_manager,		STRUCT_TYPE_CT_SINGLETON);
 ds_map_add(global.structType, str_control_ui_manager,	STRUCT_TYPE_CT_SINGLETON);
 ds_map_add(global.structType, str_textbox,				STRUCT_TYPE_CT_SINGLETON);
 ds_map_add(global.structType, str_textbox_log,			STRUCT_TYPE_CT_SINGLETON);

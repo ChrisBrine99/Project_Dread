@@ -2,22 +2,20 @@
 
 // Values for the bits that are used within the player object only. These values shouldn't overwrite occupied
 // flags found in obj_dynamic_entity and any general entity flags; as doing so will cause unintended results.
-#macro	PLYR_FLAG_MOVING				0x00000001
-#macro	PLYR_FLAG_SPRINTING				0x00000002
-#macro	PLYR_FLAG_BLEEDING				0x00000004
-#macro	PLYR_FLAG_CRIPPLED				0x00000008
-#macro	PLYR_FLAG_POISONED				0x00000010
-#macro	PLYR_FLAG_FLASHLIGHT			0x00000020
-#macro	PLYR_FLAG_UP_POISON_DAMAGE		0x00000040
-#macro	PLYR_FLAG_PLAY_STEP_SOUND		0x00000080
-#macro	PLYR_FLAG_RELOADING				0x00000100
-#macro	PLYR_FLAG_SPRINT_TOGGLE			0x00400000
-#macro	PLYR_FLAG_AIM_TOGGLE			0x00800000
-// Bits 0x01000000 and above are used by inherited flags.
+#macro	PLYR_FLAG_SPRINTING				0x00000001
+#macro	PLYR_FLAG_BLEEDING				0x00000002
+#macro	PLYR_FLAG_CRIPPLED				0x00000004
+#macro	PLYR_FLAG_POISONED				0x00000008
+#macro	PLYR_FLAG_FLASHLIGHT			0x00000010
+#macro	PLYR_FLAG_UP_POISON_DAMAGE		0x00000020
+#macro	PLYR_FLAG_PLAY_STEP_SOUND		0x00000040
+#macro	PLYR_FLAG_RELOADING				0x00000080
+#macro	PLYR_FLAG_SPRINT_TOGGLE			0x00200000
+#macro	PLYR_FLAG_AIM_TOGGLE			0x00400000
+// Bits 0x00800000 and above are used by inherited flags.
 
 // Checks for the state of all flag bits that are exclusive to the player.
-#macro	PLYR_IS_MOVING					((flags & PLYR_FLAG_MOVING)				!= 0)
-#macro	PLYR_IS_SPRINTING				((flags & PLYR_FLAG_SPRINTING)			!= 0 && (flags & PLYR_FLAG_MOVING) != 0)
+#macro	PLYR_IS_SPRINTING				((flags & PLYR_FLAG_SPRINTING)			!= 0 && (flags & DENTT_FLAG_MOVING) != 0)
 #macro	PLYR_IS_BLEEDING				((flags & PLYR_FLAG_BLEEDING)			!= 0)
 #macro	PLYR_IS_CRIPPLED				((flags & PLYR_FLAG_CRIPPLED)			!= 0)
 #macro	PLYR_IS_POISONED				((flags & PLYR_FLAG_POISONED)			!= 0)
@@ -447,7 +445,7 @@ pause_player = function(){
 		return; // Don't pause the player again if they've been paused previously or a cutscene is active.
 	object_set_state(state_player_paused);
 	image_index		= animLoopStart;
-	flags		    = flags & ~(PLYR_FLAG_MOVING | PLYR_FLAG_SPRINTING);
+	flags		    = flags & ~(DENTT_FLAG_MOVING | PLYR_FLAG_SPRINTING);
 	animCurFrame	= 0.0;
 	moveSpeed		= 0.0;
 }
@@ -966,16 +964,16 @@ state_default = function(_delta){
 	// Updating the current direction of the player and also accelerating/decelerating them depending on the
 	// movement vector.
 	if (moveDirectionX != 0.0 || moveDirectionY != 0.0){ // Handling acceleration
-		if (!PLYR_IS_MOVING){
-			flags		 = flags | PLYR_FLAG_MOVING | PLYR_FLAG_PLAY_STEP_SOUND;
+		if (!DENTT_IS_MOVING){
+			flags		 = flags | DENTT_FLAG_MOVING | PLYR_FLAG_PLAY_STEP_SOUND;
 			animCurFrame = 1.0; // Ensures the player's animation starts on their first step frame immediately.
 		}
 		moveSpeed	   += accel * _delta;
 		direction		= point_direction(0.0, 0.0, moveDirectionX, moveDirectionY);
 		
-		// Dynamically calculate the limit for the player's movement speed based on if they're currently using
-		// the primary or secondary analog sticks on a gamepad. If they aren't using either stick (Or are using
-		// the keyboard for input) the maximum movement speed isn't altered by this logic.
+		// Dynamically calculate the limit for the player's movement speed based on if they're currently 
+		// using the primary or secondary analog sticks on a gamepad. If they aren't using either stick (Or 
+		// are using the keyboard for input) the maximum movement speed isn't altered by this logic.
 		var _maxMoveSpeed = maxMoveSpeed;
 		if (PINPUT_USING_LEFT_STICK){ // This is considered the primary stick, so it has priority.
 			var _movePercent	= point_distance(0.0, 0.0, padStickInputLH, padStickInputLV);
@@ -991,7 +989,7 @@ state_default = function(_delta){
 	} else if (moveSpeed > 0.0){ // Handling deceleration
 		moveSpeed		   -= accel * _delta;
 		if (moveSpeed <= 0.0){
-			flags		    = flags & ~(PLYR_FLAG_MOVING | PLYR_FLAG_SPRINTING);
+			flags		    = flags & ~(DENTT_FLAG_MOVING | PLYR_FLAG_SPRINTING);
 			image_index		= animLoopStart;
 			accel			= PLYR_ACCEL_NORMAL;
 			maxMoveSpeed	= PLYR_SPEED_NORMAL;
@@ -1005,7 +1003,7 @@ state_default = function(_delta){
 	// interactable checks to see if the player's point of interaction is within the item's valid interaction
 	// radius. If so, the player will be able to press the interact input to perform the interaction with the
 	// item.
-	var _isMoving = PLYR_IS_MOVING;
+	var _isMoving = DENTT_IS_MOVING;
 	if (_isMoving || interactableID == noone){
 		var _interactX	= x + lengthdir_x(8, direction); // Calculate the interaction point based on facing direction.
 		var _interactY	= y + lengthdir_y(8, direction) - 8;
@@ -1045,7 +1043,7 @@ state_default = function(_delta){
 	// weapon readied state and this state exits early as well.
 	if (PINPUT_READY_WEAPON_PRESSED && equipment.weapon != INV_EMPTY_SLOT){
 		object_set_state(state_player_weapon_ready);
-		flags		    = flags & ~(PLYR_FLAG_MOVING | PLYR_FLAG_SPRINTING);
+		flags		    = flags & ~(DENTT_FLAG_MOVING | PLYR_FLAG_SPRINTING);
 		image_index		= animLoopStart;
 		accel			= PLYR_ACCEL_NORMAL;
 		maxMoveSpeed	= PLYR_SPEED_NORMAL;
@@ -1085,6 +1083,10 @@ state_default = function(_delta){
 		}
 	}
 	
+	// 
+	var _prevX = x;
+	var _prevY = y;
+	
 	// Update the position of the player and handle collision against the world. Then, depending on the value
 	// returned, reset the animation back to the player's idle stance or animate them as they move.
 	var _xMove			= lengthdir_x(moveSpeed, direction);
@@ -1098,6 +1100,11 @@ state_default = function(_delta){
 		flags		    = flags & ~PLYR_FLAG_SPRINTING;
 		accel			= PLYR_ACCEL_NORMAL;
 		maxMoveSpeed	= PLYR_SPEED_NORMAL;
+	}
+	
+	// 
+	if (collision_line(_prevX, _prevY, x, y, obj_cutscene_collider, false, true)){
+		
 	}
 
 	// Finally, process the player's movement animation and handle their footstep sound logic which requires

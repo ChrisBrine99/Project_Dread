@@ -15,7 +15,7 @@ textboxMessage	= "Hmm... If I use this I should be able to hold more on me at th
 
 // The only value that is needed here is a value that ties it to a bit within the event flag buffer. When set,
 // this flag will prevent the expansion in question from spawning in again for the player to pick up.
-flagID = ID_INVALID;
+flagID = EVENT_ID_INVALID;
 
 #endregion Variable Initializations
 

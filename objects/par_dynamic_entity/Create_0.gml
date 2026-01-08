@@ -7,11 +7,13 @@ visible			= false;
 
 // Bits for flags that are exclusive to dynamic entities, but are shared between all of them. Bits not shown
 // here are occupied if their value is higher than the highest value bit defined here.
+#macro	DENTT_FLAG_MOVING				0x00800000
 #macro	DENTT_FLAG_WORLD_COLLISION		0x01000000
 
 // Checks against the bits that are exclusive to a dynamic entity and its children that determine what aspects
 // of the Entity are enabled or disabled for said children of this object.
-#macro	DENTT_COLLIDES_WITH_WORLD		((flags & DENTT_FLAG_WORLD_COLLISION) != 0)
+#macro	DENTT_IS_MOVING					((flags & DENTT_FLAG_MOVING)			!= 0)
+#macro	DENTT_COLLIDES_WITH_WORLD		((flags & DENTT_FLAG_WORLD_COLLISION)	!= 0)
 
 #endregion Dynamic Entity Specific Flags
 
@@ -165,4 +167,4 @@ end_step_event = function(_delta){
 		lightSource.light_set_position(x + lightX, y + lightY);
 }
 
-#endregion Event Function Definitions
+#endregion Event-Life Function Definitions

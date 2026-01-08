@@ -24,6 +24,7 @@ var _playerInstance		= instance_create_depth(200, 200, 30, obj_player);
 // is done for all struct instances that are also singletons that exist from game start to game end.
 ds_map_add(global.sInstances, obj_game_manager,			_gManagerInstance);
 ds_map_add(global.sInstances, obj_player,				_playerInstance);
+ds_map_add(global.sInstances, str_cutscene_manager,		new str_cutscene_manager(str_cutscene_manager));
 ds_map_add(global.sInstances, str_control_ui_manager,	new str_control_ui_manager(str_control_ui_manager));
 ds_map_add(global.sInstances, str_camera,				new str_camera(str_camera));
 ds_map_add(global.sInstances, str_textbox,				new str_textbox(str_textbox));

@@ -1104,7 +1104,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 	/// @param {Real}	index	The index for the textbox that will be opened next.
 	set_next_index = function(_index){
 		nextIndex = _index;
-		show_debug_message("nextIndex has been set to {0}.", nextIndex);
+		// show_debug_message("nextIndex has been set to {0}.", nextIndex);
 	}
 	
 	/// @description 

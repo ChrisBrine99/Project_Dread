@@ -40,6 +40,14 @@ with(SCREEN_FADE){
 	script_execute(curState, _delta);
 }
 
+// Call the cutscene manager's step event if a cutscene is currently being executed. If one isn't currently
+// executing, the step event call is ignored and this event continues onward to the code below.
+with(CUTSCENE_MANAGER){
+	if (!SCENE_IS_ACTIVE)
+		break;
+	step_event(_delta);
+}
+
 // Update the camera after all dynamic entities have been updated to ensure that it has accurate position
 // coordinates to use when positioning itself with its followed object (If it has one).
 with(CAMERA)	{ step_event(_delta); }
