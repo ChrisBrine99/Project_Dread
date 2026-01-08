@@ -14,12 +14,6 @@ curState		= 0;
 nextState		= 0;
 lastState		= 0;
 
-// Stores a reference to a light source struct that will be placed at a given offset relative to the Entity's
-// current position. The offset on the x and y axes are stored in the two other values below.
-lightSource		= noone;
-lightX			= 0;
-lightY			= 0;
-
 // If required, the entity may utilize its own drawing function to replace the standard one. Having this set
 // to 0 will cause the entity to fallback to said standard drawing function.
 drawFunction	= 0;
@@ -30,5 +24,18 @@ animSpeed		= 0.0;
 animFps			= 0.0;
 animLength		= 0;
 animLoopStart	= 0;
+
+// 
+shadowFunction	= 0;
+shadowX			= 0;
+shadowY			= 0;
+shadowWidth		= 0;
+shadowHeight	= 0;
+
+// Stores a reference to a light source struct that will be placed at a given offset relative to the Entity's
+// current position. The offset on the x and y axes are stored in the two other values below.
+lightSource		= noone;
+lightX			= 0;
+lightY			= 0;
 
 #endregion Variable Initializations

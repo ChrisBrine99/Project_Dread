@@ -145,6 +145,14 @@
 #macro	PLYR_ACCPEN_MAX_VALUE			1.75
 #macro	PLYR_ACCPEN_DECAY_AMOUNT		0.01
 
+// Values for the characteristics of the player's shadow (Aside from how it is a drawn as that is a function
+// and not a seemingly random number at first glance like these are). They determine the offset and size of
+// the shadow that is drawn.
+#macro	PLYR_SHADOW_XOFFSET				0
+#macro	PLYR_SHADOW_YOFFSET			   -1
+#macro	PLYR_SHADOW_WIDTH				7
+#macro	PLYR_SHADOW_HEIGHT				3
+
 // Macros for the values/properties applied to the player's ambient light source whenever they're in the world
 // without a flashlight or with their equipped flashlight turned off.
 #macro	PLYR_AMBLIGHT_XOFFSET			0
@@ -169,13 +177,17 @@
 event_inherited();
 
 // Set the flags that are initially toggled upon the player object's creation.
-flags			    = DENTT_FLAG_WORLD_COLLISION | ENTT_FLAG_SHADOW | ENTT_FLAG_OVERRIDE_DRAW | 
+flags			    = DENTT_FLAG_WORLD_COLLISION | ENTT_FLAG_OVERRIDE_DRAW | 
 						ENTT_FLAG_VISIBLE | ENTT_FLAG_ACTIVE;
 
 // Set the player's acceleration and maximum movement speeds (Running allows the player to temporarily 
 // exceed this maximum until their stamina runs out).
 accel				= PLYR_ACCEL_NORMAL;
 maxMoveSpeed		= PLYR_SPEED_NORMAL;
+
+// 
+entity_add_shadow(entity_draw_shadow_circle, PLYR_SHADOW_XOFFSET, PLYR_SHADOW_YOFFSET,
+	PLYR_SHADOW_WIDTH, PLYR_SHADOW_HEIGHT);
 
 // Create a very dim ambient light that will illuminate the player's face when in complete darkness.
 entity_add_basic_light(PLYR_AMBLIGHT_XOFFSET, PLYR_AMBLIGHT_YOFFSET, 

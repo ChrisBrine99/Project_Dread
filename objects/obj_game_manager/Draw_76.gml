@@ -43,10 +43,9 @@ with(par_dynamic_entity){
 	
 	// Finally, if the dynamic entity has a shadow, it will be drawn below this check. If there isn't a 
 	// shadow to display, the loop will simply move onto the next dynamic entity and skip the code below.
-	if (!ENTT_HAS_SHADOW)
+	if (!ENTT_HAS_SHADOW || shadowFunction = 0)
 		continue;
-	// TODO -- Replace with a call to a function that renders an entity's shadow.
-	draw_ellipse(x - 6 - _viewX, y - 5 - _viewY, x + 5 - _viewX, y + 2 - _viewY, false);
+	script_execute(shadowFunction, x + shadowX - _viewX, y + shadowY - _viewY);
 }
 numDynamicDrawn = _index;
 
@@ -65,16 +64,16 @@ with(par_static_entity){
 	
 	// Finally, a static entity will perform the same check to see if a shadow should be drawn for the entity
 	// in question like is done above for dynamic entities. The loop skips the code if it doesn't have one.
-	if (!ENTT_HAS_SHADOW)
+	if (!ENTT_HAS_SHADOW || shadowFunction = 0)
 		continue;
-	// TODO -- Add call to function that is responsible for displaying the entity's shadow.
+	script_execute(shadowFunction, x + shadowX - _viewX, y + shadowY - _viewY);
 }
 numStaticDrawn = _index - numDynamicDrawn;
 
 // If required, use the room's wall tiles to mask any shadows that would normally overlap them. This avoids
 // issues where a shadow pokes through the top of a ceiling tile onto the wall below it.
 if (maskLayerID != -1){
-	gpu_set_blendmode_ext_sepalpha(bm_zero, bm_zero, bm_zero, bm_zero);
+	gpu_set_blendmode_ext(bm_zero, bm_zero);
 	draw_tilemap(maskLayerID, -_viewX, -_viewY);
 	gpu_set_blendmode(bm_normal);
 }

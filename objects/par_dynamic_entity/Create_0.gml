@@ -32,12 +32,6 @@ lastState		= 0;
 // to 0 will cause the entity to fallback to said standard drawing function.
 drawFunction	= 0;
 
-// Stores a reference to a light source struct that will be placed at a given offset relative to the Entity's
-// current position. The offset on the x and y axes are stored in the two other values below.
-lightSource		= noone;
-lightX			= 0;
-lightY			= 0;
-
 // Variables for the entity's custom animation implementation, which will utilize the sprite's speed set within
 // the editor as well as a target animation frame rate of 60 fps to provide a frame-independent animation system.
 animSpeed		= 0.0;
@@ -62,6 +56,21 @@ maxMoveSpeed	= 0.0;
 // the flag toggled, an invincible Entity will not be destroyed.
 curHitpoints	= 0;
 maxHitpoints	= 0;
+
+// Variables that are used to draw the entity's shadow if it has one. In order, they store: the function to
+// draw the shadow, the offsets of the shadow's position relative to the entity's, and the width and height
+// of the shadow.
+shadowFunction	= 0;
+shadowX			= 0;
+shadowY			= 0;
+shadowWidth		= 0;
+shadowHeight	= 0;
+
+// Stores a reference to a light source struct that will be placed at a given offset relative to the Entity's
+// current position. The offset on the x and y axes are stored in the two other values below.
+lightSource		= noone;
+lightX			= 0;
+lightY			= 0;
 
 #endregion Variable Initializations
 

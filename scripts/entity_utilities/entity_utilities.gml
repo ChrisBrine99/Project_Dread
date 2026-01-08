@@ -48,6 +48,30 @@ function entity_draw_event(_delta){
 
 #endregion Shared Event Functions Between Entity Types
 
+#region Shared Utility Functions Between Entity Types
+
+/// @description 
+///	A general function for rendering an entity's shadow as a circle. Note that this circle's horizontal
+/// radius is equal to the value found in "shadowWidth", and its vertical radius is the value found in
+/// "shadowHeight".
+///	
+///	@param {Real}	x	The x position of the entity and its shadow's horizontal offset from said position.
+/// @param {Real}	y	The y position of the entity and its shadow's vertical offset from said position.
+function entity_draw_shadow_circle(_x, _y){
+	draw_ellipse(_x - shadowWidth, _y - shadowHeight, _x + shadowWidth - 1, _y + shadowHeight - 1, false);
+}
+
+/// @description 
+///	A general function for rendering an entity's shadow as a square or rectangle.
+///	
+///	@param {Real}	x	The x position of the entity and its shadow's horizontal offset from said position.
+/// @param {Real}	y	The y position of the entity and its shadow's vertical offset from said position.
+function entity_draw_shadow_square(_x, _y){
+	draw_sprite_ext(spr_rectangle, 0, _x, _y, shadowWidth, shadowHeight, 0.0, COLOR_BLACK, 1.0);
+}
+
+#endregion Shared Utility Functions Between Entity Types
+
 #region Shared Miscellaneous Functions Between Entity Types
 
 /// @description 
@@ -67,6 +91,27 @@ function entity_set_sprite(_sprite, _speed = 1.0, _start = 0, _loopStart = 0){
 		animLoopStart	= clamp(_loopStart, 0, animLength - 1);
 	}
 	animSpeed = _speed;
+}
+
+/// @description 
+///	Adds a shadow to the entity while also allowing the way that shadow will drawn and its properties to be
+/// set at the same time as the flag that enables shadow rendering to begin with.
+///	
+///	@param {Function}	function	Script or method to call when the shadow is being drawn.
+/// @param {Real}		x			Offset of the shadow relative to the entity's x position.
+/// @param {Real}		y			Offset of the shadow relative to the entity's y position.
+/// @param {Real}		width		Size of the shadoe along the x axis.
+/// @param {Real}		height		Size of the shadow along the y axis.
+function entity_add_shadow(_function, _x, _y, _width, _height){
+	if (ENTT_HAS_SHADOW || !script_exists(_function))
+		return;
+		
+	flags			= flags | ENTT_FLAG_SHADOW;
+	shadowFunction	= _function;
+	shadowX			= _x;
+	shadowY			= _y;
+	shadowWidth		= _width;
+	shadowHeight	= _height;
 }
 
 /// @description 
