@@ -62,6 +62,12 @@ if (_layerCollision != -1)
 var _layerFloorMaterials = layer_get_id("Tiles_Floor_Materials");
 if (_layerFloorMaterials != -1)
 	layer_set_visible(_layerFloorMaterials, false);
+	
+// Attempt to get and store the ID for the tilemap containing all the walls within the new room.
+maskLayerID	= -1; // Reset the value of the mask layer since a new room has loaded.
+var _maskLayerID = layer_get_id("Tiles_Wall_Lower");
+if (_maskLayerID != -1)
+	maskLayerID = layer_tilemap_get_id(_maskLayerID);
 
 // Finally, get the ID for the floor material tile layer if the room has one, and assign the ID so the player
 // can utilize it to handle their step sound effect logiic when required.

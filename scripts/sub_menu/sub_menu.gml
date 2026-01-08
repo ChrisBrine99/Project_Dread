@@ -10,7 +10,7 @@
 
 // Since sub menu instances default to a vertical orientation with a width of one option per row, this value
 // is used to determine the spacing needed for said default orientation.
-#macro	MENUSUB_OPTION_SPACING_Y		9
+#macro	MENUSUB_OPTION_YSPACING			9
 
 #endregion Sub Menu Macro Definitions
 
@@ -134,7 +134,7 @@ function create_sub_menu(_menuToCreate, _parentMenu, _x, _y, _options, _width = 
 	var _submenuRef = instance_create_menu_struct(_menuToCreate);
 	with(_submenuRef){
 		initialize_params(_x, _y, false, false, _width, _visibleWidth, _visibleHeight);
-		initialize_option_params(0, 0, 0, MENUSUB_OPTION_SPACING_Y); // Default menu orientation is vertical.
+		initialize_option_params(0, 0, 0, MENUSUB_OPTION_YSPACING); // Default menu orientation is vertical.
 		flags		= flags | MENUSUB_FLAG_CAN_CLOSE;
 		prevMenu	= _parentMenu;
 		font		= _font;

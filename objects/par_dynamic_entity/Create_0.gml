@@ -34,7 +34,7 @@ drawFunction	= 0;
 
 // Stores a reference to a light source struct that will be placed at a given offset relative to the Entity's
 // current position. The offset on the x and y axes are stored in the two other values below.
-lightSource		= undefined;
+lightSource		= noone;
 lightX			= 0;
 lightY			= 0;
 
@@ -163,8 +163,8 @@ end_step_event = function(_delta){
 		curState = nextState;
 	}
 	
-	if (lightSource != noone) // Update the posiiton of the light source in case the entity moved.
+	if (lightSource != noone) // Update the position of the light source in case the entity moved.
 		lightSource.light_set_position(x + lightX, y + lightY);
 }
 
-#endregion Event-Life Function Definitions
+#endregion Event-Like Function Definitions

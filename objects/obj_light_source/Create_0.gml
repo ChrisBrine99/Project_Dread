@@ -1,1 +1,1 @@
-lightSource = undefined;
+lightSource = noone;

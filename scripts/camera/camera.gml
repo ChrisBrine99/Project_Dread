@@ -48,6 +48,11 @@ function str_camera(_index) : str_base(_index) constructor {
 	viewportHeight	= 0;
 	followedObject	= noone;
 	
+	// 
+	shakeStrength	= 0.0;
+	shakeDuration	= 0.0;
+	curShakePower	= 0.0;
+	
 	/// @description 
 	///	The camera struct's create event. It simply assigns the dimensions for the viewport, and assigns an 
 	/// object to start following (The player object is the default).
@@ -111,19 +116,37 @@ function str_camera(_index) : str_base(_index) constructor {
 	///	Called at the end of the step events for all instances. It is responsible for setting the viewport to
 	/// the coordinate calculated during the camera's step event (If an object is being followed). The camera's
 	/// position is actual the center of the viewport instead of the top-left to make camera movement easier.
-	///	
-	end_step_event = function(){
+	///
+	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
+	end_step_event = function(_delta){
 		// Offset the viewport coordinates such that the viewport is centered on the camera's position.
 		var _viewX = x - floor(viewportWidth / 2);
 		var _viewY = y - floor(viewportHeight / 2);
 		
-		if (CAM_ARE_BOUNDS_LOCKED){ // Camera is bound; clamp the view coords to not go outside the room.
+		// Set the camera's viewport position within the room relative to the calculated position above and
+		// whether or not the viewport is bound to stay within the room's dimensions. If bound, the values
+		// are clamped. Otherwise, they are unchanged.
+		if (CAM_ARE_BOUNDS_LOCKED){
 			camera_set_view_pos(cameraID, 
 				clamp(_viewX, 0, room_width - viewportWidth), 
 				clamp(_viewY, 0, room_height - viewportHeight)
 			);
-		} else{ // Camera isn't bound to the room's dimensions; simply update the position with no clamping.
+		} else{
 			camera_set_view_pos(cameraID, _viewX, _viewY);
+		}
+		
+		// Apply the camera's shaking effect if one is currently active using the locally calculated
+		// coordinates _viewX and _viewY. This way the camera doesn't have any important values overwritten.
+		if (curShakePower > 0.0){
+			var _shakePower		= ceil(curShakePower);
+			var _shakeOffsetX	= irandom_range(-_shakePower, _shakePower);
+			var _shakeOffsetY	= irandom_range(-_shakePower, _shakePower);
+			camera_set_view_pos(cameraID, _viewX + _shakeOffsetX, _viewY + _shakeOffsetY);
+			
+			// Slowly lower the intensity of the shaking until it hits a value of or below zero.
+			curShakePower -= (shakeStrength / shakeDuration) * _delta;
+			if (curShakePower < 0.0)
+				curShakePower = 0.0;
 		}
 		
 		// Finally, update the viewport position variables to match the updated values.
@@ -230,6 +253,19 @@ function str_camera(_index) : str_base(_index) constructor {
 			x = followedObject.x;
 			y = followedObject.y;
 		}
+	}
+	
+	/// @description 
+	///	
+	///	
+	/// @param {Real}	power		Relative intensity of the camera's shaking.
+	/// @param {Real}	duration	The total number of units (60 units = 1 second) that the shake should last for.
+	camera_apply_shake = function(_power, _duration){
+		if (curShakePower > _power)
+			return; // Don't overwrite a shake with a weaker version
+		shakeStrength = _power;
+		shakeDuration = _duration;
+		curShakePower = _power;
 	}
 }
 

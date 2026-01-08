@@ -193,6 +193,10 @@ global.sInstances = ds_map_create();
 // nothing will be rendered.
 global.worldSurface		= -1;
 
+// 
+global.shadowSurface	= -1;
+maskLayerID				= -1;
+
 // Variables for allowing frame-independent movement as well as two values that track the application's total
 // uptime and current playtime, respectively. Fraction values for both are stored seperately as values between
 // 0 and the game's target FPS value.

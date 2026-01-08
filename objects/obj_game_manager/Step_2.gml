@@ -11,10 +11,10 @@ if (uptimeFraction >= GAME_TARGET_FPS){
 if (GAME_IS_PAUSED)
 	return; // Prevent anything from updating while the game is considered paused.
 
-with(CAMERA) { end_step_event(); }	// Updates the camera viewport's coordinates.
+var _delta = global.deltaTime;
+with(CAMERA) { end_step_event(_delta); }	// Updates the camera viewport's coordinates.
 
 // Update all currently existing dynamic entities within the room so long as they are also currently active.
-var _delta = global.deltaTime;
 with(par_dynamic_entity){
 	if (!ENTT_IS_ACTIVE)
 		continue;
