@@ -110,6 +110,13 @@ buffer_delete(global.eventFlags);
 // the screen to the bottom in order.
 ds_grid_destroy(global.sortOrder);
 
+// Clean up the list that is a temporary storage for the states of entities prior to being paused whenever
+// they are paused. Primarily used during cutscenes so states can be used for things like moving entities.
+_length = ds_list_size(global.pausedEntities);
+for (var i = 0; i < _length; i++)
+	delete global.pausedEntities[| i];
+ds_list_destroy(global.pausedEntities);
+
 // Delete any structs that exist globally as the game manager bares responsibility for cleaning them up.
 delete global.settings;
 delete global.colorFadeShader;

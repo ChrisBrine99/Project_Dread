@@ -79,31 +79,31 @@ function instance_destroy_struct(_structRef){
 
 /// @description 
 /// Finds the struct with the matching ID from within the global list of structs. If the id wasn't found, the 
-///	function will return "undefined". Otherwise, it will return the struct's reference.
+///	function will return "noone". Otherwise, it will return the struct's reference.
 ///	
 /// @param {Real}	id		The unique value given upon creation for the desired struct.
 function instance_find_struct(_id){
-	var _structRef	= undefined;
+	var _structRef	= noone;
 	var _start		= 0;
 	var _end		= ds_list_size(global.structs) - 1;
-	var _middle		= floor(_end / 2);
+	var _middle		= _end >> 1;
 	
 	// UNIQUE CASE: only one struct exists; check it to see if the id matches and return its reference if so.
-	// Otheriwse, it will return the default value of "undefined".
+	// Otheriwse, it will return the default value of "noone".
 	if (_end == 0){
 		_structRef = global.structs[| 0];
 		if (_structRef.structID == _id) 
 			return _structRef;
-		return undefined;
-	} else if (_end == -1){ // UNIQUE CASE: no struct instances exist; always return undefined.
-		return undefined;
+		return noone;
+	} else if (_end == -1){ // UNIQUE CASE: no struct instances exist; always return "noone".
+		return noone;
 	}
 	
 	while (_start != _end){
 		_structRef = global.structs[| _middle];
 		if (_structRef.structID < _id){
 			_start	= _middle;		// Cut off bottom half; search remainder of instances.
-			_middle = floor((_end + _start) / 2);
+			_middle = (_end + _start) >> 1;
 			if (_start == _middle)	// Fix for potential endless looping; ensures the next interation is the last.
 				_middle = _end;
 			continue;
@@ -111,7 +111,7 @@ function instance_find_struct(_id){
 		
 		if (_structRef.structID > _id){
 			_end	= _middle;		// Cut off top half; search remainder of instances.
-			_middle = floor((_end + _start) / 2);
+			_middle = (_end + _start) >> 1;
 			if (_end == _middle)	// Fix for potential endless looping; ensures the next interation is the last.
 				_middle = _start;
 			continue;
@@ -120,7 +120,7 @@ function instance_find_struct(_id){
 		return _structRef;
 	}
 	
-	return undefined;
+	return noone;
 }
 
 /// @description 

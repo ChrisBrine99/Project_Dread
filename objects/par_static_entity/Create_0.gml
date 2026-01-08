@@ -25,7 +25,9 @@ animFps			= 0.0;
 animLength		= 0;
 animLoopStart	= 0;
 
-// 
+// Variables that are used to draw the entity's shadow if it has one. In order, they store: the function to
+// draw the shadow, the offsets of the shadow's position relative to the entity's, and the width and height
+// of the shadow.
 shadowFunction	= 0;
 shadowX			= 0;
 shadowY			= 0;

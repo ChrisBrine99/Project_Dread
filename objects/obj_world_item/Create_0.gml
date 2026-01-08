@@ -20,9 +20,9 @@
 // Inherit all functions and variables from the parent object and its parent objects. Then, toggle the item
 // to be visible and active so it will be rendered, and adjust the interaction position.
 event_inherited();
-flags			= ENTT_FLAG_VISIBLE | ENTT_FLAG_ACTIVE;
-interactX	   += 8;	// The origin of the sprites is (0, 0), so offset the interaction origin to the middle of it.
-interactY	   += 8;
+flags = ENTT_FLAG_VISIBLE | ENTT_FLAG_ACTIVE;
+interactX += 8;	// The origin of the sprites is (0, 0), so offset the interaction origin to the middle of it.
+interactY += 8;
 
 // Adjust the two default message variables to be more specific to an item that the player can pick up.
 interactMessage = "Pick Up Item";

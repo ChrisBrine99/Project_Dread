@@ -562,7 +562,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 	///	@param {String}	text		The text to format and enqueue for the textbox to display when ready.
 	/// @param {Real}	actorIndex	(Optional) If set to a value greater than 0, the actor's name relative to the index will be shown.
 	///	@param {Real}	nextIndex	(Optional) Determines which textbox out of the current data is after this one.
-	queue_new_text = function(_text, _actorIndex = 0, _nextIndex = -1){
+	queue_new_text = function(_text, _actorIndex = TBOX_ACTOR_INVALID, _nextIndex = -1){
 		if (_text == "") // Don't attempt to add empty text to the queue.
 			return noone;
 			

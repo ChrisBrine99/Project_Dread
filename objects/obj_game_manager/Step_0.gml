@@ -44,10 +44,14 @@ with(SCREEN_FADE){
 // executing, the step event call is ignored and this event continues onward to the code below.
 with(CUTSCENE_MANAGER){
 	if (!SCENE_IS_ACTIVE)
-		break;
+		return; // Use return to prevent the camera's step event from being executed.
 	step_event(_delta);
 }
 
 // Update the camera after all dynamic entities have been updated to ensure that it has accurate position
 // coordinates to use when positioning itself with its followed object (If it has one).
-with(CAMERA)	{ step_event(_delta); }
+with(CAMERA){
+	if (followedObject == noone)
+		return; // Don't allow the camera to update itself if it isn't following an object.
+	step_event(_delta); 
+}

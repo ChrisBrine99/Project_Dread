@@ -87,12 +87,6 @@ function str_camera(_index) : str_base(_index) constructor {
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	step_event = function(_delta){
-		// The camera is manually controlled during cutscenes, so the functions within the cutscene manager
-		// for moving the camera around will have to be used to move the camera as required. Not having an
-		// object to follow will also mean the camera will not run its step event.
-		if (GAME_IS_CUTSCENE_ACTIVE || followedObject == noone)
-			return;
-		
 		// Move towards the target object if one is assigned by the camera isn't "following" it yet. In this
 		// context, "following" means that the camera is centered upon the followed object.
 		if (!CAM_IS_FOLLOWING_OBJECT){
@@ -187,6 +181,26 @@ function str_camera(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
+	///	Moves the camera towards a given position smoothly. It will decelerate as it gets closer to its
+	/// target position; returning true once it has reached that destination. Otherwise, it returns false.
+	///	
+	///	@param {Real}	x		Target position along the current room's x axis.
+	/// @param {Real}	y		Target position along the current room's y axis.
+	///	@param {Real}	speed	Determines how fast the camera will move towards the object in question.
+	///	@param {Real}	delta	The difference in time between the execution of this frame and the last.
+	move_towards_position = function(_x, _y, _speed, _delta){
+		_speed *= _delta; // Apply delta time to the speed value.
+		x	   += (_x - x) * _speed;
+		y	   += (_y - y) * _speed;
+		if (point_distance(x, y, _x, _y) <= _speed){
+			x = _x;
+			y = _y;
+			return true;
+		}
+		return false;
+	}
+	
+	/// @description 
 	///	Moves the camera towards a given object's coordinates within the room. The speed at which the camera
 	/// moves towards said coordinates is relative to the difference between them and the camera's current
 	/// position. So, it will smoothly decelerate as the camera gets closer to its target.
@@ -202,22 +216,11 @@ function str_camera(_index) : str_base(_index) constructor {
 			_objectY = y;
 		}
 		
-		// Don't bother with any calculations below if the camera is already at its target coordinates.
-		if (x == _objectX && y == _objectY)
-			return;
-		
-		_speed *= _delta; // Apply delta time to the speed value.
-		x	   += (_objectX - x) * _speed;
-		y	   += (_objectY - y) * _speed;
-		if (point_distance(x, y, _objectX, _objectY) <= ceil(_speed)){
-			x = _objectX;
-			y = _objectY;
-			
-			// Toggle the flag that allows the standard camera movement to start executing if the object being
-			// moved towards was in fact the object the camera has been assigned to follow.
-			if (_object == followedObject)
-				flags = flags | CAM_FLAG_FOLLOWING_OBJECT;
-		}
+		// Call the general function for smoothly moving the camera to a given position. Once that function
+		// returns true it means the camera has reached its destination, and the flag for enabling the camera
+		// to follow the object in question is set if it is the object it is currently set to follow.
+		if (move_towards_position(_objectX, _objectY, _speed, _delta) && _object == followedObject)
+			flags = flags | CAM_FLAG_FOLLOWING_OBJECT;
 	}
 	
 	/// @description 

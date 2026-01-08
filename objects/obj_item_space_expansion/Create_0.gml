@@ -3,9 +3,9 @@
 // Inherit all functions and variables from the parent object and its parent objects. Then, toggle the item
 // to be visible and active so it will be rendered, and adjust the interaction position.
 event_inherited();
-flags			= ENTT_FLAG_VISIBLE | ENTT_FLAG_ACTIVE;
-interactX	   += 8;	// The origin of the sprites is (0, 0), so offset the interaction origin to the middle of it.
-interactY	   += 8;
+flags = ENTT_FLAG_VISIBLE | ENTT_FLAG_ACTIVE;
+interactX += 8;	// The origin of the sprites is (0, 0), so offset the interaction origin to the middle of it.
+interactY += 8;
 
 // Adjust the default message to match what the world item object's interaction prompt says since this is
 // technically an item as well; it just immediately has its effect applied to the player's item inventory
