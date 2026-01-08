@@ -31,8 +31,8 @@ draw_set_color(COLOR_BLACK); // All shadows are drawn completely black at full o
 // shadows will have their shadow drawn onto the shadow surface.
 var _index = 0;
 with(par_dynamic_entity){
-	if (!ENTT_IS_VISIBLE || x < _viewX + sprite_width || x > _viewW - sprite_width ||
-			y < _viewY + sprite_height || y > _viewH - sprite_height)
+	if (!ENTT_IS_VISIBLE || x < _viewX - sprite_width || x > _viewW + sprite_width ||
+			y < _viewY - sprite_height || y > _viewH + sprite_height)
 		continue;
 	
 	// Add the required data from the entity to the sorting order grid, and increment _index to move onto
@@ -53,8 +53,8 @@ numDynamicDrawn = _index;
 // After all active and visible dynamic entities have been added to the rendering ds_grid, all static entities
 // will be looped through to check if they're active and on-screen.
 with(par_static_entity){
-	if (!ENTT_IS_VISIBLE || x < _viewX + sprite_width || x > _viewW - sprite_width ||
-			y < _viewY + sprite_height || y > _viewH - sprite_height)
+	if (!ENTT_IS_VISIBLE || x < _viewX - sprite_width || x > _viewW + sprite_width ||
+			y < _viewY - sprite_height || y > _viewH + sprite_height)
 		continue;
 	
 	// Much like above, the required details for the entity are copied over into the sorting grid and the

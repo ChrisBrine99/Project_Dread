@@ -49,9 +49,16 @@ function str_camera(_index) : str_base(_index) constructor {
 	followedObject	= noone;
 	
 	// 
-	shakeStrength	= 0.0;
-	shakeDuration	= 0.0;
-	curShakePower	= 0.0;
+	screenShake	= {
+		strength		: 0.0,
+		duration		: 0.0,
+		
+		curStrength		: 0.0,
+		xOffset			: 0.0,
+		yOffset			: 0.0,
+		
+		waitTimer		: 0.0
+	}
 	
 	/// @description 
 	///	The camera struct's create event. It simply assigns the dimensions for the viewport, and assigns an 
@@ -71,7 +78,7 @@ function str_camera(_index) : str_base(_index) constructor {
 	///
 	destroy_event = function(){
 		camera_destroy(cameraID);
-		cameraID = -1;
+		delete screenShake;
 	}
 	
 	/// @description 
@@ -134,19 +141,25 @@ function str_camera(_index) : str_base(_index) constructor {
 		} else{
 			camera_set_view_pos(cameraID, _viewX, _viewY);
 		}
-		
-		// Apply the camera's shaking effect if one is currently active using the locally calculated
-		// coordinates _viewX and _viewY. This way the camera doesn't have any important values overwritten.
-		if (curShakePower > 0.0){
-			var _shakePower		= ceil(curShakePower);
-			var _shakeOffsetX	= irandom_range(-_shakePower, _shakePower);
-			var _shakeOffsetY	= irandom_range(-_shakePower, _shakePower);
-			camera_set_view_pos(cameraID, _viewX + _shakeOffsetX, _viewY + _shakeOffsetY);
+
+		// 
+		var _cameraID = cameraID;
+		with(screenShake){
+			if (curStrength <= 0.0)
+				continue;
 			
-			// Slowly lower the intensity of the shaking until it hits a value of or below zero.
-			curShakePower -= (shakeStrength / shakeDuration) * _delta;
-			if (curShakePower < 0.0)
-				curShakePower = 0.0;
+			// 
+			waitTimer += (display_get_frequency() / GAME_TARGET_FPS) * _delta;
+			if (waitTimer >= 1.0){
+				var _strength	= ceil(curStrength);
+				xOffset			= irandom_range(-_strength, _strength);
+				yOffset			= irandom_range(-_strength, _strength);
+				waitTimer	   -= 1.0;
+			}
+			
+			// 
+			camera_set_view_pos(_cameraID, _viewX + xOffset, _viewY + yOffset); 
+			curStrength -= (strength / duration) * _delta;
 		}
 		
 		// Finally, update the viewport position variables to match the updated values.
@@ -258,14 +271,16 @@ function str_camera(_index) : str_base(_index) constructor {
 	/// @description 
 	///	
 	///	
-	/// @param {Real}	power		Relative intensity of the camera's shaking.
+	/// @param {Real}	strength	Relative intensity of the camera's shaking.
 	/// @param {Real}	duration	The total number of units (60 units = 1 second) that the shake should last for.
-	camera_apply_shake = function(_power, _duration){
-		if (curShakePower > _power)
-			return; // Don't overwrite a shake with a weaker version
-		shakeStrength = _power;
-		shakeDuration = _duration;
-		curShakePower = _power;
+	camera_apply_shake = function(_strength, _duration){
+		with(screenShake){
+			if (curStrength > _strength)
+				return; // Don't overwrite an already occuring shake with a weaker one.
+			strength	= _strength;
+			duration	= max(1.0, _duration);
+			curStrength	= _strength;
+		}
 	}
 }
 
