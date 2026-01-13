@@ -48,8 +48,8 @@
 
 // Macros for the characteristics of the textbox's background texture that the text surface will be drawn onto.
 // They represent the width, height, and opacity/alpha value of said background, respectively.
-#macro	TBOX_BG_XOFFSET				0
-#macro	TBOX_BG_YOFFSET				8
+#macro	TBOX_BG_XOFFSET					0
+#macro	TBOX_BG_YOFFSET					8
 #macro	TBOX_BG_WIDTH					TBOX_SURFACE_WIDTH + 20
 #macro	TBOX_BG_HEIGHT					42
 
@@ -68,6 +68,7 @@
 
 // Determines the opacity levels for the text as well as its drop shadow.
 #macro	TBOX_TEXT_ALPHA					1.0
+#macro	TBOX_TEXT_SHADOW_ALPHA			0.75
 
 // Determines how much additional time is applied to the "wait" timer during the textbox's text typing process
 // whenever a given punctuation character has been hit.
@@ -161,8 +162,8 @@ function str_textbox(_index) : str_base(_index) constructor {
 	// text surface when performing the "typing" animation.
 	curChar				= 1;
 	nextChar			= 1;
-	charX				= 0;
-	charY				= 0;
+	xCurChar			= 0;
+	yCurChar			= 0;
 	nextCharDelay		= TBOX_PUNCT_NONE;
 	
 	// Counts down until the value goes below zero. When that happens, the counter is reset and the sound is
@@ -236,10 +237,10 @@ function str_textbox(_index) : str_base(_index) constructor {
 	///	Called to render the textbox and its current contents whenever the textbox struct is currently showing
 	/// information that has been queued up for the player to see.
 	///	
-	///	@param {Real}	viewX		X position of the viewport within the current room.
-	/// @parma {Real}	viewY		Y position of the viewport within the current room.
+	///	@param {Real}	xView		Position of the viewport within the current room along its x axis.
+	/// @param {Real}	yView		Position of the viewport within the current room along its y axis.
 	///	@param {Real}	delta		The difference in time between the execution of this frame and the last.
-	draw_gui_event = function(_viewX, _viewY, _delta){
+	draw_gui_event = function(_xView, _yView, _delta){
 		// Ensures that the surface will be valid should it randomly be flushed from memory by the GPU. Then,
 		// the previous surface's contents are copied from their buffer onto the newly formed surface.
 		if (!surface_exists(textSurface)){
@@ -259,8 +260,8 @@ function str_textbox(_index) : str_base(_index) constructor {
 		// Adding new characters to the text surface of the current textbox whenever the value of curChar (The
 		// value that represents how many characters have been drawn) is less than _nextChar and the textbox
 		// is currently considered active. Otherwise, this block of code is skipped.
-		var _nextCharIndex = floor(nextChar);
-		if (TBOX_IS_ACTIVE && curChar < _nextCharIndex){
+		var _nextChar = floor(nextChar);
+		if (TBOX_IS_ACTIVE && curChar < _nextChar){
 			surface_set_target(textSurface);
 			
 			// Reset the punctuation delay so the next group of characters isn't also added to the surface with
@@ -277,38 +278,37 @@ function str_textbox(_index) : str_base(_index) constructor {
 			
 			// Grab a reference to the current textbox's contents and then begin adding characters to the text
 			// surface one at a time until the value of curChar matches that of _nextChar.
-			var _curText		= textData[| textIndex].content;
-			var _curCharIndex	= curChar;
-			var _charColorIndex	= charColorIndex;
+			var _content		= textData[| textIndex].content;
 			var _curChar		= "";
-			var _colorData		= -1;
-			var _curColor		= COLOR_WHITE;
-			while(curChar < _nextCharIndex){
-				_curChar		= string_char_at(_curText, curChar);
-				_curCharIndex	= curChar; // Store for later use.
+			var _curCharColor	= COLOR_WHITE;
+			var _charIndex		= curChar;
+			var _colorIndex		= charColorIndex;
+			while(curChar < _nextChar){
+				_curChar		= string_char_at(_content, curChar);
+				_charIndex	= curChar; // Store for later use.
 				
 				// Check if any unique colors should be used for the text currently being added to the screen.
 				// This entire chunk of code is ignored if the textbox doesn't have any additional color data
 				// associated with it.
 				if (colorDataRef != -1 && charColorIndex < totalColors){
 					with(colorDataRef[| charColorIndex]){
-						if (_curCharIndex >= endIndex){ // The final index is hit; reset to color white and move to the next potential color.
-							_curColor = COLOR_WHITE;
-							_charColorIndex++; 
-						} else if (_curCharIndex >= startIndex){ // Apply the desired color for the region of text.
-							_curColor = colorCode;
+						if (_charIndex >= endIndex){ // The final index is hit; reset to color white and move to the next potential color.
+							_curCharColor = COLOR_WHITE;
+							_colorIndex++; 
+						} else if (_charIndex >= startIndex){ // Apply the desired color for the region of text.
+							_curCharColor = colorCode;
 						}
 					}
-					charColorIndex = _charColorIndex;
+					charColorIndex = _colorIndex;
 				}
 				curChar++; // Only increment after the color code index has been checked.
 				
 				// Space character found; offset the x character by how wide the space character is within the
 				// font being used, and then move onto the next character if punctuation isn't found.
 				if (_curChar == CHAR_SPACE){
-					charX += string_width(CHAR_SPACE);
+					xCurChar += string_width(CHAR_SPACE);
 					// Get the previous character to see if it is punctuation and exit the loop if so.
-					if (check_for_punctuation(_curText, _curCharIndex - 1))
+					if (check_for_punctuation(_content, _charIndex - 1))
 						break;
 					continue;
 				}
@@ -317,18 +317,18 @@ function str_textbox(_index) : str_base(_index) constructor {
 				// to create a new line of text on the surface instead of writing on top of the previous one.
 				// The loop exits early if valid punctuation was found before this character.
 				if (_curChar == CHAR_NEWLINE){
-					charX	= 0;
-					charY  += string_height("M");
+					xCurChar	= 0;
+					yCurChar   += string_height("M");
 					// Get the previous character to see if it is punctuation and exit the loop if so.
-					if (check_for_punctuation(_curText, _curCharIndex - 1))
+					if (check_for_punctuation(_content, _charIndex - 1))
 						break;
 					continue;
 				}
 				
 				// Once the proper coordinates have been set as required, the character is drawn and the width
 				// of the drawn character is added to properly offset the next character in the string.
-				draw_text_shadow(charX, charY, _curChar, _curColor, TBOX_TEXT_ALPHA, COLOR_GRAY);
-				charX += string_width(_curChar);
+				draw_text_color(xCurChar, yCurChar, _curChar, _curCharColor, _curCharColor, _curCharColor, _curCharColor, TBOX_TEXT_ALPHA);
+				xCurChar += string_width(_curChar);
 			}
 			
 			// Finally, the surface target is reset to that of the application surface, and the current contents 
@@ -341,31 +341,36 @@ function str_textbox(_index) : str_base(_index) constructor {
 		// behind the text being displayed, and an arrow that shows up once it is possible to advance to the
 		// next chunk of text or close the texxtbox.
 		draw_sprite_stretched_ext(spr_tbox_background, 0, 
-			x + _viewX + TBOX_BG_XOFFSET, 
-			y + _viewY + TBOX_BG_YOFFSET, 
+			x + _xView + TBOX_BG_XOFFSET, 
+			y + _yView + TBOX_BG_YOFFSET, 
 			TBOX_BG_WIDTH, TBOX_BG_HEIGHT, COLOR_TRUE_WHITE, alpha
 		);
 
-		// Simply draw the currently rendered text onto the screen with this single draw call.
-		draw_surface_ext(textSurface, x + _viewX + TBOX_TEXT_XOFFSET, y + _viewY + TBOX_TEXT_YOFFSET, 
-			1.0, 1.0, 0.0, COLOR_TRUE_WHITE, alpha);
+		// Simply draw the currently rendered text onto the screen twice; once forthe text as it appears on
+		// the surface, and another behind it that will be translucent and darker in color for a shadow.
+		var _xText		 = x + _xView + TBOX_TEXT_XOFFSET;
+		var _yText		 = y + _yView + TBOX_TEXT_YOFFSET;
+		var _shadowAlpha = alpha * TBOX_TEXT_SHADOW_ALPHA;
+		draw_surface_ext(textSurface, _xText + 1, _yText + 1, 1.0, 1.0, 0.0, COLOR_DARK_GRAY, _shadowAlpha);
+		draw_surface_ext(textSurface, _xText, _yText, 1.0, 1.0, 0.0, COLOR_TRUE_WHITE, alpha);
 		
 		// Elements that will not be rendered until the textbox has finished typing out all the required
 		// characters for the textbox onto the screen.
+		var _alpha = alpha;
 		if (curChar == textLength){
 			if (!TBOX_HAS_OPTIONS){
 				// Display the advance indicator at the bottom-right of the textbox window relative to the 
 				// value of the offset timer/value with the fraction component removed. 
 				draw_sprite_ext(spr_tbox_advance_indicator, 0, 
-					x + _viewX + TBOX_ARROW_XOFFSET, 
-					y + _viewY + TBOX_ARROW_YOFFSET + floor(advArrowOffset),
+					x + _xView + TBOX_ARROW_XOFFSET, 
+					y + _yView + TBOX_ARROW_YOFFSET + floor(advArrowOffset),
 					1.0, 1.0, 0.0, COLOR_TRUE_WHITE, alpha
 				);
 			} else{
 				// When the textbox has options associated with it, the menu responsible for those options 
 				// will be drawn instead of the advancement indicator.
 				with(optionMenu)
-					draw_gui_event(x + _viewX, y + _viewY, COLOR_DARK_GRAY);
+					draw_gui_event(x + _xView, y + _yView, COLOR_DARK_GRAY, _shadowAlpha);
 			}
 		}
 		
@@ -374,11 +379,10 @@ function str_textbox(_index) : str_base(_index) constructor {
 			// Draw a black background with a nice alpha gradient applied to it. This will be found behind the 
 			// control information for the textbox, but in front of all elements; causing the textbox to slide in
 			// from behind this element during its opening animation.
-			var _alpha = alpha;
 			with(global.colorFadeShader){
 				activate_shader(COLOR_BLACK);
 				draw_circle_ext(
-					_viewX + (VIEWPORT_WIDTH / 2), _viewY + VIEWPORT_HEIGHT, 
+					_xView + (VIEWPORT_WIDTH / 2), _yView + VIEWPORT_HEIGHT, 
 					300.0, 30.0, 
 					COLOR_WHITE, COLOR_BLACK, 
 					_alpha
@@ -396,8 +400,8 @@ function str_textbox(_index) : str_base(_index) constructor {
 			// are set to match the default color for text within the textbox.
 			var _tboxCtrlGroup = tboxCtrlGroup;
 			with(CONTROL_UI_MANAGER)
-				draw_control_group(_tboxCtrlGroup, _viewX, _viewY, _alpha, 
-					COLOR_WHITE, COLOR_DARK_GRAY, _alpha); 
+				draw_control_group(_tboxCtrlGroup, _xView, _yView, _alpha, 
+					COLOR_WHITE, COLOR_DARK_GRAY, _alpha, _shadowAlpha); 
 		
 		#endregion Rendering Control UI to Screen
 	}
@@ -543,8 +547,8 @@ function str_textbox(_index) : str_base(_index) constructor {
 		curChar			= 1;	// Reset these to their defaults so the typing animation can play again.
 		nextChar		= 1;
 		sndTypeTimer	= 0.0;
-		charX			= 0;
-		charY			= 0;
+		xCurChar		= 0;
+		yCurChar		= 0;
 		colorDataRef	= _colorData;	// Overwrite the previous ds_list reference with either -1 or the new textbox's color list.
 		totalColors		= (colorDataRef == -1) ? 0 : ds_list_size(colorDataRef);
 		charColorIndex	= 0;
@@ -669,15 +673,15 @@ function str_textbox(_index) : str_base(_index) constructor {
 	/// is applied relative to the punctuation character it happens to be, and it not the standard delay will
 	/// be applied between this and the next character appearing within the textbox.
 	///
-	///	@param {String}		curText		The text that is referenced during the punctuation check.
+	///	@param {String}		content		The text that is referenced during the punctuation check.
 	/// @param {Real}		index		Position within the string to check for a punctuation character.
-	check_for_punctuation = function(_curText, _index){
+	check_for_punctuation = function(_content, _index){
 		// Ignore this function is the first character in the text is a space or newline character.
 		if (_index == 0 || _index > textLength) 
 			return false;
 		
 		// Get the previous character and see if it is considered punctuation.
-		var _char = string_char_at(_curText, _index);
+		var _char = string_char_at(_content, _index);
 		if (is_punctuation(_char)){ // Apply delay to next character if punctuation was found.
 			nextCharDelay = determine_punctuation_delay(_char);
 			return true;

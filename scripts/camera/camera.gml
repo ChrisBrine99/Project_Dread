@@ -48,15 +48,22 @@ function str_camera(_index) : str_base(_index) constructor {
 	viewportHeight	= 0;
 	followedObject	= noone;
 	
-	// 
+	// A struct that stores all the properties related to the camera's shaking effect.
 	screenShake	= {
+		// Strength of the shake and the length it should last.
 		strength		: 0.0,
 		duration		: 0.0,
 		
+		// Current strength of the shake relative to how long it is executing; and the offset from that 
+		// shake while it isn't updating to a new value.
 		curStrength		: 0.0,
 		xOffset			: 0.0,
 		yOffset			: 0.0,
 		
+		// A timer that increments until it hits the required value to update the shake effect to choose
+		// a new position. Without this, my laptop had no issues with the shake effect running at like 1000
+		// FPS, but on my computer the 5070 was so fast it was causing the screen to go ballistic during
+		// the effect; this variable to slow the shake effect down fixed the issue.
 		waitTimer		: 0.0
 	}
 	
@@ -136,13 +143,15 @@ function str_camera(_index) : str_base(_index) constructor {
 			camera_set_view_pos(cameraID, _viewX, _viewY);
 		}
 
-		// 
+		// Update the shake effect if one is currently active.
 		var _cameraID = cameraID;
 		with(screenShake){
 			if (curStrength <= 0.0)
 				continue;
 			
-			// 
+			// Increment this timer by the freqency of the active monitor against the game's internal FPS
+			// target (60) to ensure the offset values caused by the screen shake are only updated once
+			// every monitor frame at the most.
 			waitTimer += (display_get_frequency() / GAME_TARGET_FPS) * _delta;
 			if (waitTimer >= 1.0){
 				var _strength	= ceil(curStrength);
@@ -151,7 +160,8 @@ function str_camera(_index) : str_base(_index) constructor {
 				waitTimer	   -= 1.0;
 			}
 			
-			// 
+			// Set the position of the viewport (Not the camera itself) based on the calcualted offset 
+			// values. Then, slowly reduce the strength of the shake relative to how long it should last.
 			camera_set_view_pos(_cameraID, _viewX + xOffset, _viewY + yOffset); 
 			curStrength -= (strength / duration) * _delta;
 		}
@@ -273,7 +283,9 @@ function str_camera(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	///	
+	///	Applies an effect that causes the camera's viewport to shake around rapidly for a given amount of
+	/// time. If the strength value provided is less than the current strength of a previous shake, the new
+	/// value and its duration is ignored.
 	///	
 	/// @param {Real}	strength	Relative intensity of the camera's shaking.
 	/// @param {Real}	duration	The total number of units (60 units = 1 second) that the shake should last for.

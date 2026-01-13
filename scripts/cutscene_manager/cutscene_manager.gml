@@ -1,14 +1,16 @@
 #region Cutscene Manager Macro Definitions
 
-// 
+// Values for the bits that are utilized within the cutscne manager's "flags" variable. Outside of these, 
+// the value 0x80000000 is used by the parent struct (str_base) to determine if the struct is persistent
+// between rooms or not.
 #macro	SCENE_FLAG_ACTIVE				0x00000001
 #macro	SCENE_FLAG_TEXTBOX_OPEN			0x00000002
 
-// 
+// Defines to check if each respective flag is currently set (1) or cleared (0).
 #macro	SCENE_IS_ACTIVE					((flags & SCENE_FLAG_ACTIVE)		!= 0)
 #macro	SCENE_IS_TEXTBOX_OPEN			((flags & SCENE_FLAG_TEXTBOX_OPEN)	!= 0)
 
-// 
+// References to the functions that will perform a given action within a currently executing scene.
 #macro	SCENE_CONCURRENT_ACTIONS		CUTSCENE_MANAGER.cutscene_queue_concurrent_actions
 #macro	SCENE_WAIT						CUTSCENE_MANAGER.cutscene_wait
 #macro	SCENE_WAIT_TEXTBOX				CUTSCENE_MANAGER.cutscene_wait_for_textbox
@@ -30,22 +32,30 @@
 function str_cutscene_manager(_index) : str_base(_index) constructor {
 	flags		= STR_FLAG_PERSISTENT;
 	
-	// 
+	// The main values for the cutscene manager's functionality. The first value keeps track of what action
+	// is being executed by the current scene. The second stores the complete list of actions to perform.
+	// Finally, the last value simply stores the current size of the queue.
 	actionIndex	= 0;
 	actionQueue = ds_list_create();
 	queueSize	= 0;
 	
-	// 
+	// Stores a list of concurrently executing actions within the cutscene. They will execute alongside the
+	// current action being processed within the queue, and will remove themselves from this list when
+	// completed.
 	ccActions	= ds_list_create();
 	
-	// 
+	// Stores the delta for the frame that was passed into the cutscene manager's step event. This is needed
+	// since the action functions themselves don't all need this value in order to execute, and having to
+	// constantly pass it in would be a waste.
 	curDelta	= 0.0;
 	
-	// 
+	// Various variables that can used by actions to perform certain actions (Ex. incrementing a value until
+	// it hits or exceeds the requirement, etc.).
 	waitTimer	= 0.0;
 	
 	/// @description 
-	///	
+	///	The cutscene manager struct's destroy event. It will clean up anything that isn't automatically 
+	/// cleaned up by GameMaker when this struct is destroyed/out of scope.
 	///	
 	destroy_event = function(){
 		ds_list_destroy(actionQueue);
@@ -53,7 +63,9 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description
-	///	
+	///	Called every frame that the cutscene manager struct exists (Which should be the entirety of the game)
+	/// AND is currently executing a scene. It will execute the current action as well as any concurrent
+	/// actions that are currently active.
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	step_event = function(_delta){

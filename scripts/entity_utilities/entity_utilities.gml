@@ -18,14 +18,15 @@
 #macro	ENTT_PAUSES_FOR_CUTSCENE		((flags & ENTT_FLAG_PAUSE_FOR_CUTSCENE)	!= 0)
 #macro	ENTT_OVERRIDES_DRAW_EVENT		((flags & ENTT_FLAG_OVERRIDE_DRAW)		!= 0)
 #macro	ENTT_DID_ANIMATION_END			((flags & ENTT_FLAG_ANIMATION_END)		!= 0)
-#macro	ENTT_IS_ACTIVE					((flags & (ENTT_FLAG_ACTIVE	| ENTT_FLAG_DESTROYED))	!= 0)
-#macro	ENTT_IS_VISIBLE					((flags & (ENTT_FLAG_VISIBLE | ENTT_FLAG_ACTIVE))	!= 0)
+#macro	ENTT_IS_ACTIVE					((flags & ENTT_FLAG_ACTIVE				!= 0) && (flags & ENTT_FLAG_DESTROYED) == 0)
+#macro	ENTT_IS_VISIBLE					((flags & (ENTT_FLAG_VISIBLE | ENTT_FLAG_ACTIVE))	== ENTT_FLAG_VISIBLE | ENTT_FLAG_ACTIVE)
 #macro	ENTT_IS_DESTROYED				((flags & ENTT_FLAG_DESTROYED			!= 0) && (flags & ENTT_FLAG_INVINCIBLE)	== 0)
 
 #endregion Shared Macros Between Entity Types
 
 #region Shared Global Variables Entities Utilize
 
+// 
 global.pausedEntities = ds_list_create();
 
 #endregion Shared Global Variables Entities Utilize

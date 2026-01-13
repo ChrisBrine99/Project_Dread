@@ -2,8 +2,9 @@
 
 // A unique flag for interactable objects that determines whether or not the player can interact with them
 // whenever they're currently set as the player's tracked interactable and they press the interact input.
-#macro	INTR_FLAG_INTERACT				0x01000000
+#macro	INTR_FLAG_INTERACT				0x00800000
 #macro	INTR_CAN_PLAYER_INTERACT		((flags & INTR_FLAG_INTERACT) != 0)
+// Bits 0x01000000 and up are all used by inherited flag properties.
 
 // Determines how many pixels there are between the rightmost column of pixels on the icon sprite and the
 // leftmost portion of the interaction string.

@@ -138,16 +138,16 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 	///	Called to render the textbox log and its currently visible contents whenever the textbox log struct is 
 	/// currently showing the information it contains.
 	///	
-	///	@param {Real}	viewX		X position of the viewport within the current room.
-	/// @parma {Real}	viewY		Y position of the viewport within the current room.
+	///	@param {Real}	xView		Position of the viewport within the current room along its x axis.
+	/// @parma {Real}	yView		Position of the viewport within the current room along its y axis.
 	///	@param {Real}	delta		The difference in time between the execution of this frame and the last.
-	draw_gui_event = function(_viewX, _viewY, _delta){
+	draw_gui_event = function(_xView, _yView, _delta){
 		#region Drawing Main Background for Textbox Log
 		
 			draw_sprite_ext( // Single rectangle to cover entire screen.
 				spr_rectangle,
 				0,		// Unused
-				_viewX, _viewY, 
+				_xView, _yView, 
 				VIEWPORT_WIDTH, VIEWPORT_HEIGHT, 
 				0.0,	// Unused
 				COLOR_BLACK, 0.75 * alpha
@@ -165,18 +165,18 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 		// of both the scrollbar and the background (Background is one pixel down), and the other for the offset
 		// of the bar relative to that topmost position. Finally, the height is set and also adjusted when there
 		// are enough elements within the log to require scrollbar movement.
-		var _scrollbarX		= _viewX + VIEWPORT_WIDTH - 9;
-		var _scrollbarY1	= _viewY + 15;
-		var _scrollbarY2	= 0;
-		var _scrollbarH		= 145;
+		var _xScrollbar		= _xView + VIEWPORT_WIDTH - 9;
+		var _yScrollbarTop	= _yView + 15;
+		var _yScrollbarBot	= 0;
+		var _hScrollbar		= 145;
 		
 		// Once the log has grown large enough, the scrollbar will need to be sized and positioned accordingly.
 		// So, the maximum possible value that "curOffset" can be (This is two below the actual log size) will
-		// be the denominator in the calculations for size (_scrollbarH) and position (_scrollbarY2).
+		// be the denominator in the calculations for size (_hScrollbar) and position (_yScrollbarBot).
 		if (logSize > TBOXLOG_MAXIMUM_VISIBLE){
 			var _curOffsetMax	= (logSize - TBOXLOG_MAXIMUM_VISIBLE) + 1; // Without the + 1 the values will all be off by one element's amount.
-			_scrollbarY2		= (145 * ((curOffset - (TBOXLOG_MAXIMUM_VISIBLE - 1)) / _curOffsetMax));
-			_scrollbarH			= 145 / _curOffsetMax; // Shrink the scrollbar as more elements are added to the log.
+			_yScrollbarBot		= (145 * ((curOffset - (TBOXLOG_MAXIMUM_VISIBLE - 1)) / _curOffsetMax));
+			_hScrollbar			= 145 / _curOffsetMax; // Shrink the scrollbar as more elements are added to the log.
 		}
 		
 		#region Drawing Scrollbar on Left Edge of Textbox Log
@@ -184,7 +184,7 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 			draw_sprite_ext( // Background for Scrollbar
 				spr_rectangle,
 				0,		// Unused
-				_scrollbarX + 1, _scrollbarY1 + 1, 
+				_xScrollbar + 1, _yScrollbarTop + 1, 
 				2, 143,
 				0.0,	// Unused
 				COLOR_DARK_GRAY, alpha
@@ -192,8 +192,8 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 			draw_sprite_ext( // The Scrollbar itself
 				spr_rectangle,
 				0,		// Unused
-				_scrollbarX, _scrollbarY1 + _scrollbarY2,
-				4, _scrollbarH,
+				_xScrollbar, _yScrollbarTop + _yScrollbarBot,
+				4, _hScrollbar,
 				0.0,	// Unused
 				COLOR_WHITE, alpha
 			);
@@ -203,10 +203,10 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 		// Loop through the available surfaces and drawn them to the screen. Alongside the surfaces, the
 		// background for each will be drawn in real time out of simple rectangles. The X values need to only
 		// be calculated once, and the Y variables will be set on each iteration of the loop.
-		var _xOffset	= _viewX + textX + TBOX_TEXT_XOFFSET;
-		var _bgX		= _xOffset - TBOXLOG_BG_XPADDING;
+		var _xOffset	= _xView + textX + TBOX_TEXT_XOFFSET;
+		var _xBack		= _xOffset - TBOXLOG_BG_XPADDING;
 		var _yOffset	= 0;
-		var _bgY		= 0;
+		var _yBack		= 0;
 		for (var i = 0; i < TBOXLOG_MAXIMUM_VISIBLE; i++){
 			if (!surface_exists(textSurfaces[i])){
 				textSurfaces[i] = surface_create(TBOX_SURFACE_WIDTH, TBOX_SURFACE_HEIGHT);
@@ -220,15 +220,15 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 		
 			// Set the values for the y positions of the surface that will draw the text that is logged, and
 			// the background behind that text, respectively.
-			_yOffset	= _viewY + 25 + ((TBOXLOG_MAXIMUM_VISIBLE - 1 - i) * 50);
-			_bgY		= _yOffset - TBOXLOG_BG_YPADDING;
+			_yOffset	= _yView + 25 + ((TBOXLOG_MAXIMUM_VISIBLE - 1 - i) * 50);
+			_yBack		= _yOffset - TBOXLOG_BG_YPADDING;
 		
 		#region Drawing Background for Visible Log Text
 		
 				draw_sprite_ext( // Left edge of outline
 					spr_rectangle, 
 					0,		// Unused
-					_bgX - 1, _bgY,
+					_xBack - 1, _yBack,
 					1, TBOX_SURFACE_HEIGHT + 8, 
 					0.0,	// Unused
 					COLOR_DARK_GRAY, alpha
@@ -236,7 +236,7 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 				draw_sprite_ext( // Right edge of outline
 					spr_rectangle, 
 					0,		// Unused
-					_bgX + TBOX_SURFACE_WIDTH + 8, _bgY, 
+					_xBack + TBOX_SURFACE_WIDTH + 8, _yBack, 
 					1, TBOX_SURFACE_HEIGHT + 8, 
 					0.0,	// Unused
 					COLOR_DARK_GRAY, alpha
@@ -244,7 +244,7 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 				draw_sprite_ext( // Top edge of outline
 					spr_rectangle, 
 					0,		// Unused
-					_bgX - 1, _bgY - 1, 
+					_xBack - 1, _yBack - 1, 
 					TBOX_SURFACE_WIDTH + 10, 1, 
 					0.0,	// Unused
 					COLOR_DARK_GRAY, alpha
@@ -252,7 +252,7 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 				draw_sprite_ext( // Bottom edge of the outline
 					spr_rectangle,
 					0,		// Unused
-					_bgX - 1, _bgY + TBOX_SURFACE_HEIGHT + 8, 
+					_xBack - 1, _yBack + TBOX_SURFACE_HEIGHT + 8, 
 					TBOX_SURFACE_WIDTH + 10, 1, 
 					0.0,	// Unused
 					COLOR_DARK_GRAY, alpha
@@ -260,7 +260,7 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 				draw_sprite_ext( // Rectangle streteched to fill the outlined area
 					spr_rectangle, 
 					0,		// Unused
-					_bgX, _bgY, 
+					_xBack, _yBack, 
 					TBOX_SURFACE_WIDTH + 8, TBOX_SURFACE_HEIGHT + 8, 
 					0.0,	// Unused
 					COLOR_VERY_DARK_BLUE, 0.6 * alpha
@@ -269,7 +269,10 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 		#endregion Drawing Background for Visible Log Text
 		
 			// After constructing the background, display the message contents of this respective log on top
-			// of that background.
+			// of that background by drawing the surface twice; once for the text itself, and another for its
+			// drop shadow below.
+			draw_surface_ext(textSurfaces[i], _xOffset + 1, _yOffset + 1, 1.0, 1.0, 0.0, 
+				COLOR_DARK_GRAY, alpha * TBOX_TEXT_SHADOW_ALPHA);
 			draw_surface_ext(textSurfaces[i], _xOffset, _yOffset, 1.0, 1.0, 0.0, COLOR_TRUE_WHITE, alpha);
 		}
 		
@@ -279,8 +282,8 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 		var _inputCtrlGroup		= inputCtrlGroup;
 		with(CONTROL_UI_MANAGER){
 			if (_logSize > TBOXLOG_MAXIMUM_VISIBLE) // Only show movement inputs when the history can be scrolled up or down.
-				draw_control_group(_movementCtrlGroup, _viewX, _viewY, 1.0, COLOR_WHITE, COLOR_DARK_GRAY, 1.0); 
-			draw_control_group(_inputCtrlGroup, _viewX, _viewY, 1.0, COLOR_WHITE, COLOR_DARK_GRAY, 1.0); 
+				draw_control_group(_movementCtrlGroup, _xView, _yView, 1.0, COLOR_WHITE, COLOR_DARK_GRAY, 1.0); 
+			draw_control_group(_inputCtrlGroup, _xView, _yView, 1.0, COLOR_WHITE, COLOR_DARK_GRAY, 1.0); 
 		}
 		
 		// Exit the event here if the log doesn't need to re-render the visible text, as all the code from
@@ -301,15 +304,15 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 		// in the textbox struct is rendered onto its surface for storing the current textbox's contents. The
 		// main difference here is the process here is instantaneous instead of playing out a typing animation
 		// to display the text.
-		var _charX			= 0;
-		var _charY			= 0;
-		var _textLength		= 0;
+		var _xCurChar		= 0;
+		var _yCurChar		= 0;
 		var _curChar		= "";
-		var _curColor		= COLOR_WHITE;
-		var _curColorIndex	= 0;
-		var _numColors		= 0;
-		var _curCharIndex	= 1;
+		var _curCharColor	= COLOR_WHITE;
+		var _textLength		= 0;
+		var _textHeight		= string_height("M"); // All use same font, so height will not change between them.
 		var _isMultiColor	= true;
+		var _charIndex		= 1;
+		var _colorIndex		= 0;
 		for (var i = 0; i < TBOXLOG_MAXIMUM_VISIBLE; i++){
 			// Set the correct surface within the array and instantly clear whatever it previously contained.
 			surface_set_target(textSurfaces[i]);
@@ -318,39 +321,38 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 			with(textData[| curOffset - i]){
 				_textLength		= string_length(content);
 				_isMultiColor	= (colorData != -1);
-				_numColors		= _isMultiColor ? ds_list_size(colorData) : 0;
-				
+
 				// Loop through all characters within the text that is logged; drawing each character to the
 				// screen one-by-one to allow for multi-colored text.
-				while(_curCharIndex <= _textLength){
-					_curChar = string_char_at(content, _curCharIndex);
+				while(_charIndex <= _textLength){
+					_curChar = string_char_at(content, _charIndex);
 					
 					// When the text content contains multiple colors, it will applied to the relevant region
 					// of text as needed until all of the text has been rendered to the surface.
 					if (_isMultiColor){
-						with(colorData[| _curColorIndex]){
-							if (_curCharIndex >= endIndex){ // The final index is hit; reset to color white and move to the next potential color.
-								_curColor = COLOR_WHITE;
-								_curColorIndex++; 
-							} else if (_curCharIndex >= startIndex){ // Apply the desired color for the region of text.
-								_curColor = colorCode;
+						with(colorData[| _colorIndex]){
+							if (_charIndex >= endIndex){ // The final index is hit; reset to color white and move to the next potential color.
+								_curCharColor = COLOR_WHITE;
+								_colorIndex++; 
+							} else if (_charIndex >= startIndex){ // Apply the desired color for the region of text.
+								_curCharColor = colorCode;
 							}
 						}
 					}
-					_curCharIndex++;
+					_charIndex++;
 					
 					// A newline character will ignore the automatic newline process done for the textbox and
 					// the log, and will simply move onto the next line instantly.
 					if (_curChar == CHAR_NEWLINE){
-						_charX	= 0;
-						_charY  += string_height("M");
+						_xCurChar	= 0;
+						_yCurChar  += _textHeight;
 						continue;
 					}
 					
 					// Once the proper coordinates have been set as required, the character is drawn and the 
 					// width of said character is added to properly offset the next character in the string.
-					draw_text_shadow(_charX, _charY, _curChar, _curColor, TBOX_TEXT_ALPHA, COLOR_GRAY);
-					_charX += string_width(_curChar);
+					draw_text_shadow(_xCurChar, _yCurChar, _curChar, _curCharColor, TBOX_TEXT_ALPHA, COLOR_GRAY);
+					_xCurChar += string_width(_curChar);
 				}
 			}
 			
@@ -360,10 +362,10 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 			
 			// Reset all values used in the loop for rendering the characters, and either exit the event if
 			// this is the final surface to render to or loop over the process again for the next surface.
-			_charX			= 0;
-			_charY			= 0;
-			_curCharIndex	= 1;
-			_curColorIndex	= 0;
+			_xCurChar		= 0;
+			_yCurChar		= 0;
+			_charIndex		= 1;
+			_colorIndex		= 0;
 		}
 	}
 	

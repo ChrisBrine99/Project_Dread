@@ -43,7 +43,7 @@ with(par_dynamic_entity){
 	
 	// Finally, if the dynamic entity has a shadow, it will be drawn below this check. If there isn't a 
 	// shadow to display, the loop will simply move onto the next dynamic entity and skip the code below.
-	if (!ENTT_HAS_SHADOW || shadowFunction = 0)
+	if (!ENTT_HAS_SHADOW || shadowFunction == 0)
 		continue;
 	script_execute(shadowFunction, x + shadowX - _viewX, y + shadowY - _viewY);
 }
@@ -64,7 +64,7 @@ with(par_static_entity){
 	
 	// Finally, a static entity will perform the same check to see if a shadow should be drawn for the entity
 	// in question like is done above for dynamic entities. The loop skips the code if it doesn't have one.
-	if (!ENTT_HAS_SHADOW || shadowFunction = 0)
+	if (!ENTT_HAS_SHADOW || shadowFunction == 0)
 		continue;
 	script_execute(shadowFunction, x + shadowX - _viewX, y + shadowY - _viewY);
 }
