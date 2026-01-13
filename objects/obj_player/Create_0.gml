@@ -10,9 +10,9 @@
 #macro	PLYR_FLAG_UP_POISON_DAMAGE		0x00000020
 #macro	PLYR_FLAG_PLAY_STEP_SOUND		0x00000040
 #macro	PLYR_FLAG_RELOADING				0x00000080
-#macro	PLYR_FLAG_SPRINT_TOGGLE			0x00200000
-#macro	PLYR_FLAG_AIM_TOGGLE			0x00400000
-// Bits 0x00800000 and above are used by inherited flags.
+#macro	PLYR_FLAG_SPRINT_TOGGLE			0x00100000
+#macro	PLYR_FLAG_AIM_TOGGLE			0x00200000
+// Bits 0x00400000 and above are used by inherited flags.
 
 // Checks for the state of all flag bits that are exclusive to the player.
 #macro	PLYR_IS_SPRINTING				((flags & PLYR_FLAG_SPRINTING)			!= 0 && (flags & DENTT_FLAG_MOVING) != 0)
@@ -177,7 +177,7 @@
 event_inherited();
 
 // Set the flags that are initially toggled upon the player object's creation.
-flags			    = DENTT_FLAG_WORLD_COLLISION | ENTT_FLAG_OVERRIDE_DRAW | 
+flags			    = DENTT_FLAG_WORLD_COLLISION | ENTT_FLAG_PAUSE_FOR_CUTSCENE | ENTT_FLAG_OVERRIDE_DRAW |
 						ENTT_FLAG_VISIBLE | ENTT_FLAG_ACTIVE;
 
 // Set the player's acceleration and maximum movement speeds (Running allows the player to temporarily 
@@ -1097,8 +1097,8 @@ state_default = function(_delta){
 	}
 	
 	// 
-	var _prevX = x;
-	var _prevY = y;
+	var _xPrev = x;
+	var _yPrev = y;
 	
 	// Update the position of the player and handle collision against the world. Then, depending on the value
 	// returned, reset the animation back to the player's idle stance or animate them as they move.
@@ -1116,8 +1116,18 @@ state_default = function(_delta){
 	}
 	
 	// 
-	if (collision_line(_prevX, _prevY, x, y, obj_cutscene_collider, false, true)){
+	with(collision_line(_xPrev, _yPrev, x + _xMove, y + _yMove, obj_cutscene_collider, false, true)){
+		var _actionQueue = actionQueue;
+		with(CUTSCENE_MANAGER)
+			start_action_queue(_actionQueue);
+		// instance_destroy(self);
 		
+		// 
+		with(PLAYER){
+			flags = flags & ~PLYR_FLAG_SPRINTING;
+			animCurFrame = 0.0;
+			return;
+		}
 	}
 
 	// Finally, process the player's movement animation and handle their footstep sound logic which requires

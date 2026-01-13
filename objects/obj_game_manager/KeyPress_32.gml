@@ -1,4 +1,4 @@
-with(CAMERA) { camera_apply_shake(random_range(1.5, 7.0), random_range(15.0, 150.0)); }
+// with(CAMERA) { camera_apply_shake(random_range(1.5, 7.0), random_range(15.0, 150.0)); }
 
 /*with(TEXTBOX){
 	queue_new_text("This is a test to see if the textbox can still function when it is formatting or parsing text on-the-fly as required.");

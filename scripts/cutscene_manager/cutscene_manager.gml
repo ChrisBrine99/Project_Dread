@@ -8,6 +8,20 @@
 #macro	SCENE_IS_ACTIVE					((flags & SCENE_FLAG_ACTIVE)		!= 0)
 #macro	SCENE_IS_TEXTBOX_OPEN			((flags & SCENE_FLAG_TEXTBOX_OPEN)	!= 0)
 
+// 
+#macro	SCENE_CONCURRENT_ACTIONS		CUTSCENE_MANAGER.cutscene_queue_concurrent_actions
+#macro	SCENE_WAIT						CUTSCENE_MANAGER.cutscene_wait
+#macro	SCENE_WAIT_TEXTBOX				CUTSCENE_MANAGER.cutscene_wait_for_textbox
+#macro	SCENE_WAIT_CONCURRENT			CUTSCENE_MANAGER.cutscene_wait_for_concurrent_actions
+#macro	SCENE_SNAP_CAMERA				CUTSCENE_MANAGER.cutscene_snap_camera_to_position
+#macro	SCENE_MOVE_CAMERA				CUTSCENE_MANAGER.cutscene_move_camera_to_position
+#macro	SCENE_QUEUE_TEXTBOX				CUTSCENE_MANAGER.cutscene_queue_new_text
+#macro	SCENE_QUEUE_TEXTBOX_EXT			CUTSCENE_MANAGER.cutscene_queue_new_text_ext
+#macro	SCENE_ACTIVATE_TEXTBOX			CUTSCENE_MANAGER.cutscene_activate_textbox
+#macro	SCENE_SNAP_OBJECT				CUTSCENE_MANAGER.cutscene_snap_object_to_position
+#macro	SCENE_DESTROY_OBJECT			CUTSCENE_MANAGER.cutscene_destroy_object
+#macro	SCENE_MOVE_ENTITY				CUTSCENE_MANAGER.cutscene_move_entity_to_position
+
 #endregion Cutscene Manager Macro Definitions
 
 #region Cutscene Manager Struct Definition
@@ -22,6 +36,9 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 	queueSize	= 0;
 	
 	// 
+	ccActions	= ds_list_create();
+	
+	// 
 	curDelta	= 0.0;
 	
 	// 
@@ -31,8 +48,8 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 	///	
 	///	
 	destroy_event = function(){
-		ds_list_clear(actionQueue);
 		ds_list_destroy(actionQueue);
+		ds_list_destroy(ccActions);
 	}
 	
 	/// @description
@@ -44,6 +61,18 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 		curDelta		= _delta; // Copy delta into a cutscene struct variable so it can be referenced as needed.
 		if (script_execute_ext(_curAction[0], _curAction, 1))
 			end_action();
+			
+		// After executing the main action for the scene, execute all the currently active concurrent actions.
+		// Once completed, the action will be deleted from the list.
+		var _length = ds_list_size(ccActions);
+		for (var i = 0; i < _length; i++){
+			_curAction = ccActions[| i];
+			if (script_execute_ext(_curAction[0], _curAction, 1)){
+				ds_list_delete(ccActions, i);
+				_length--;	// Subtract both by one to account for deleted list element.
+				i--;
+			}
+		}
 	}
 	
 	/// @description
@@ -57,11 +86,25 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 		var _size = ds_list_size(_actionQueue);
 		if (SCENE_IS_ACTIVE || _size == 0)
 			return;
-			
-		flags		= flags | SCENE_FLAG_ACTIVE;
-		queueSize	= _size;
+		
+		global.flags	= global.flags | GAME_FLAG_CUTSCENE_ACTIVE;
+		flags			= flags | SCENE_FLAG_ACTIVE;
+		queueSize		= _size;
+		actionIndex		= 0;
 		
 		ds_list_copy(actionQueue, _actionQueue);
+		
+		// 
+		with(par_dynamic_entity){
+			if (!ENTT_PAUSES_FOR_CUTSCENE)
+				continue;
+			entity_pause(id);
+		}
+		with(par_static_entity){
+			if (!ENTT_PAUSES_FOR_CUTSCENE)
+				continue;
+			entity_pause(id);
+		}
 	}
 	
 	/// @description
@@ -74,9 +117,21 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 		if (actionIndex == queueSize){
 			flags = flags & ~SCENE_FLAG_ACTIVE;
 			ds_list_clear(actionQueue);
+			entity_unpause_all();
 		}
 		
 		waitTimer = 0.0;
+	}
+	
+	/// @description 
+	///	
+	///	
+	/// @param {Array<Array<Any>>}	actionQueue		The list of actions that will all be executed concurrently.
+	cutscene_queue_concurrent_actions = function(_actionQueue){
+		var _length = array_length(_actionQueue);
+		for (var i = 0; i < _length; i++)
+			ds_list_add(ccActions, _actionQueue[i]);
+		return true;
 	}
 	
 	/// @description
@@ -85,6 +140,32 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 	///	
 	///	@param {Real}	duration	How long the period of waiting will last in units (1 second = 60 units).
 	cutscene_wait = function(_duration){
+		waitTimer += curDelta;
+		return (waitTimer >= _duration);
+	}
+	
+	/// @description 
+	///	
+	///	
+	///	@param {Real}	duration	How long the period of waiting will last in units (1 second = 60 units).
+	cutscene_wait_for_textbox = function(_duration){
+		with(TEXTBOX) {
+			if (TBOX_IS_ACTIVE)
+				return;
+		}
+		
+		waitTimer += curDelta;
+		return (waitTimer >= _duration);
+	}
+	
+	/// @description 
+	///	
+	///	
+	///	@param {Real}	duration	How long the period of waiting will last in units (1 second = 60 units).
+	cutscene_wait_for_concurrent_actions = function(_duration){
+		if (ds_list_size(ccActions) > 0)
+			return false;
+			
 		waitTimer += curDelta;
 		return (waitTimer >= _duration);
 	}
@@ -109,10 +190,10 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 	///	
 	///	@param {Real}	x			Target position along the current room's x axis.
 	/// @param {Real}	y			Target position along the current room's y axis.
-	///	@param {Real}	moveSpeed	How fast the camera will move towards the target coordinates.
-	cutscene_move_camera_to_position = function(_x, _y, _moveSpeed){
+	///	@param {Real}	speed		How fast the camera will move towards the target coordinates.
+	cutscene_move_camera_to_position = function(_x, _y, _speed){
 		var _curDelta = curDelta;
-		with(CAMERA) { return move_towards_position(_x, _y, _moveSpeed, _curDelta); }
+		with(CAMERA) { return move_towards_position(_x, _y, _speed, _curDelta); }
 		return true; // If this line is somehow reached there are BIG problems.
 	}
 	
@@ -184,13 +265,13 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 	///	
 	///	
 	///	@param {Id.Instance}	id			The ID for the entity that will be moved.
-	/// @param {Real}			targetX		Target position along the current room's x axis.
-	/// @param {Real}			targetY		Target position along the current room's y axis.
-	/// @param {Real}			moveSpeed	(Optional) How fast the entity will move relative to its current max speed.
-	cutscene_move_entity_to_position = function(_id, _targetX, _targetY, _moveSpeed = 1.0){
-		var _positionReached = false;
-		
-		return _positionReached;
+	/// @param {Real}			xTarget		Target position along the current room's x axis.
+	/// @param {Real}			yTarget		Target position along the current room's y axis.
+	/// @param {Real}			speed		(Optional) How fast the entity will move relative to its current max speed.
+	cutscene_move_entity_to_position = function(_id, _xTarget, _yTarget, _speed = 1.0){
+		var _curDelta = curDelta;
+		with(_id) { return move_to_position(_curDelta, _xTarget, _yTarget, _speed); }
+		return true;
 	}
 }
 

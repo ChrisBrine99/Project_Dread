@@ -7,8 +7,8 @@ visible			= false;
 
 // Bits for flags that are exclusive to dynamic entities, but are shared between all of them. Bits not shown
 // here are occupied if their value is higher than the highest value bit defined here.
-#macro	DENTT_FLAG_MOVING				0x00800000
-#macro	DENTT_FLAG_WORLD_COLLISION		0x01000000
+#macro	DENTT_FLAG_MOVING				0x00400000
+#macro	DENTT_FLAG_WORLD_COLLISION		0x00800000
 
 // Checks against the bits that are exclusive to a dynamic entity and its children that determine what aspects
 // of the Entity are enabled or disabled for said children of this object.
@@ -141,6 +141,28 @@ process_world_collision = function(_xMove, _yMove){
 	}
 	
 	return _collision;
+}
+
+/// @description 
+///	
+///	
+/// @param {Real}	delta		The difference in time between the execution of this frame and the last.
+/// @param {Real}	xTarget		Position along the current room's x-axis to move towards.
+/// @param {Real}	yTarget		Position along the current room's y-axis to move towards.
+/// @param {Real}	speed		How fast the entity should move relative to its actual movement speed (1.0 = no change).
+move_to_position = function(_delta, _xTarget, _yTarget, _speed = 1.0){
+	var _maxMoveSpeed = maxMoveSpeed * _speed;
+	moveSpeed += accel * _delta;
+	if (moveSpeed > _maxMoveSpeed)
+		moveSpeed = _maxMoveSpeed;
+		
+	direction = point_direction(0, 0, _xTarget - x, _yTarget - y);
+	if (update_position(lengthdir_x(moveSpeed, direction), lengthdir_y(moveSpeed, direction), _delta)){
+		moveSpeed = 0.0;
+		return true;
+	}
+	
+	return (point_distance(x, y, _xTarget, _yTarget) <= _maxMoveSpeed);
 }
 
 /// @description 

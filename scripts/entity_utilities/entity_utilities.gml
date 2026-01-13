@@ -15,7 +15,7 @@
 // Macros for the code required to check the state of a given flag or flag(s) that are required for certain
 // events or code to trigger within a given entity. They simple condense those checks down to a single term.
 #macro	ENTT_HAS_SHADOW					((flags & ENTT_FLAG_SHADOW)				!= 0)
-#macro	ENTT_PAUSES_FOR_CUTSCNE			((flags & ENTT_FLAG_PAUSE_FOR_CUTSCENE)	!= 0)
+#macro	ENTT_PAUSES_FOR_CUTSCENE		((flags & ENTT_FLAG_PAUSE_FOR_CUTSCENE)	!= 0)
 #macro	ENTT_OVERRIDES_DRAW_EVENT		((flags & ENTT_FLAG_OVERRIDE_DRAW)		!= 0)
 #macro	ENTT_DID_ANIMATION_END			((flags & ENTT_FLAG_ANIMATION_END)		!= 0)
 #macro	ENTT_IS_ACTIVE					((flags & (ENTT_FLAG_ACTIVE	| ENTT_FLAG_DESTROYED))	!= 0)
@@ -72,6 +72,11 @@ function entity_pause(_id){
 		_curState		= curState;
 		_nextState		= nextState;
 		_lastState		= lastState;
+		
+		// Clear the state values so the Entity is now paused.
+		curState		= STATE_NONE;
+		nextState		= STATE_NONE;
+		lastState		= STATE_NONE;
 	}
 	
 	// Create the small struct that will store the state information for the paused entity until they can
@@ -164,6 +169,29 @@ function entity_unpause(_id){
 		ds_list_delete(global.pausedEntities, _index);
 		break;
 	}
+}
+
+/// @description 
+///	
+///	
+function entity_unpause_all(){
+	var _curState	= STATE_NONE;
+	var _nextState	= STATE_NONE;
+	var _lastState	= STATE_NONE;
+	var _length		= ds_list_size(global.pausedEntities);
+	for (var i = 0; i < _length; i++){
+		with(global.pausedEntities[| i]){
+			_curState	= curState;
+			_nextState	= nextState;
+			_lastState	= lastState;
+			with(entityID){ // Return the stored state values to the previously paused entity.
+				curState	= _curState;
+				nextState	= _nextState;
+				lastState	= _lastState;
+			}
+		}
+	}
+	ds_list_clear(global.pausedEntities);
 }
 
 /// @description 

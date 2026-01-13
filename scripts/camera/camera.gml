@@ -189,9 +189,9 @@ function str_camera(_index) : str_base(_index) constructor {
 	///	@param {Real}	speed	Determines how fast the camera will move towards the object in question.
 	///	@param {Real}	delta	The difference in time between the execution of this frame and the last.
 	move_towards_position = function(_x, _y, _speed, _delta){
-		_speed *= _delta; // Apply delta time to the speed value.
-		x	   += (_x - x) * _speed;
-		y	   += (_y - y) * _speed;
+		var _dSpeed = _speed * _delta; // Apply delta time to the speed value.
+		x		   += (_x - x) * _dSpeed;
+		y		   += (_y - y) * _dSpeed;
 		if (point_distance(x, y, _x, _y) <= _speed){
 			x = _x;
 			y = _y;
@@ -219,8 +219,9 @@ function str_camera(_index) : str_base(_index) constructor {
 		// Call the general function for smoothly moving the camera to a given position. Once that function
 		// returns true it means the camera has reached its destination, and the flag for enabling the camera
 		// to follow the object in question is set if it is the object it is currently set to follow.
-		if (move_towards_position(_objectX, _objectY, _speed, _delta) && _object == followedObject)
+		if (move_towards_position(_objectX, _objectY, _speed, _delta) && _object == followedObject){
 			flags = flags | CAM_FLAG_FOLLOWING_OBJECT;
+		}
 	}
 	
 	/// @description 
