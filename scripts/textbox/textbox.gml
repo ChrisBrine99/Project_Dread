@@ -4,22 +4,18 @@
 // by it to achieve some sort of state-based functionality outside of the standard step event state machine.
 #macro	TBOX_INFLAG_ADVANCE				0x00000001
 #macro	TBOX_INFLAG_TEXT_LOG			0x00000002
-#macro	TBOX_INFLAG_LOG_UP				0x00000004
-#macro	TBOX_INFLAG_LOG_DOWN			0x00000008
-#macro	TBOX_FLAG_ACTIVE				0x00000010
-#macro	TBOX_FLAG_WIPE_DATA				0x00000020
-#macro	TBOX_FLAG_CLEAR_SURFACE			0x00000040
-#macro	TBOX_FLAG_SHOW_NAME				0x00000080
-#macro	TBOX_FLAG_LOG_ACTIVE			0x00000100
-#macro	TBOX_FLAG_HAS_OPTIONS			0x00000200
-#macro	TBOX_FLAG_OPTIONS_ACTIVE		0x00000400
+#macro	TBOX_FLAG_ACTIVE				0x00000004
+#macro	TBOX_FLAG_WIPE_DATA				0x00000008
+#macro	TBOX_FLAG_CLEAR_SURFACE			0x00000010
+#macro	TBOX_FLAG_SHOW_NAME				0x00000020
+#macro	TBOX_FLAG_LOG_ACTIVE			0x00000040
+#macro	TBOX_FLAG_HAS_OPTIONS			0x00000080
+#macro	TBOX_FLAG_OPTIONS_ACTIVE		0x00000100
 
 // Macros that condense the checks required for specific states that the textbox must be in for it to process
 // certain aspects of the data it is displaying the user, if it is allowed to do that currently to begin with.
 #macro	TBOX_WAS_ADVANCE_PRESSED		((flags & TBOX_INFLAG_ADVANCE)		!= 0 && (prevInputFlags & TBOX_INFLAG_ADVANCE)		== 0)
 #macro	TBOX_WAS_TEXT_LOG_PRESSED		((flags & TBOX_INFLAG_TEXT_LOG)		!= 0 && (prevInputFlags & TBOX_INFLAG_TEXT_LOG)		== 0)
-#macro	TBOX_WAS_LOG_UP_PRESSED			((flags & TBOX_INFLAG_LOG_UP)		!= 0 && (prevInputFlags & TBOX_INFLAG_LOG_UP)		== 0)
-#macro	TBOX_WAS_LOG_DOWN_PRESSED		((flags & TBOX_INFLAG_LOG_DOWN)		!= 0 && (prevInputFlags & TBOX_INFLAG_LOG_DOWN)		== 0)
 #macro	TBOX_IS_ACTIVE					((flags & TBOX_FLAG_ACTIVE)			!= 0)
 #macro	TBOX_CAN_WIPE_DATA				((flags & TBOX_FLAG_WIPE_DATA)		!= 0)
 #macro	TBOX_SHOULD_CLEAR_SURFACE		((flags & TBOX_FLAG_CLEAR_SURFACE)	!= 0)
@@ -409,12 +405,12 @@ function str_textbox(_index) : str_base(_index) constructor {
 	/// @description 
 	/// Captures the user's input for the current frame. Instead of storing the current input flags in their
 	/// own dedicated variable, they're placed within the default "flags" variable since there is plenty of
-	/// room for the four user inputs required for the textbox and its log to function. The previous frame's 
-	/// inputs are still stored in the standard "prevInputFlags" variable.
+	/// room for the four user inputs required for the textbox to function. The previous frame's inputs are 
+	/// still stored in the standard "prevInputFlags" variable.
 	/// 
 	process_input = function(){
-		prevInputFlags	= flags &  (TBOX_INFLAG_ADVANCE | TBOX_INFLAG_TEXT_LOG | TBOX_INFLAG_LOG_UP | TBOX_INFLAG_LOG_DOWN);
-		flags		    = flags & ~(TBOX_INFLAG_ADVANCE | TBOX_INFLAG_TEXT_LOG | TBOX_INFLAG_LOG_UP | TBOX_INFLAG_LOG_DOWN);
+		prevInputFlags	= flags &  (TBOX_INFLAG_ADVANCE | TBOX_INFLAG_TEXT_LOG);
+		flags		    = flags & ~(TBOX_INFLAG_ADVANCE | TBOX_INFLAG_TEXT_LOG);
 		
 		if (GAME_IS_GAMEPAD_ACTIVE){
 			flags = flags | (MENU_PAD_TBOX_ADVANCE		); // Offset based on position of the bit within the variable.
@@ -472,6 +468,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 		
 		// Destroy the struct to remove it from memory as it is no longer needed when the textbox is destroyed.
 		instance_destroy_menu_struct(optionMenu);
+		optionMenu = noone;
 		
 		if (!TBOX_CAN_WIPE_DATA) // Prevent deleting any text information if the flag isn't toggled.
 			return;
@@ -749,7 +746,8 @@ function str_textbox(_index) : str_base(_index) constructor {
 		// certain parts of the textbox from rendering while it is open.
 		if (TBOX_WAS_TEXT_LOG_PRESSED){
 			object_set_state(state_open_log_animation);
-			flags = flags | TBOX_FLAG_LOG_ACTIVE;
+			flags			= flags & ~(TBOX_INFLAG_TEXT_LOG | TBOX_INFLAG_ADVANCE) | TBOX_FLAG_LOG_ACTIVE;
+			prevInputFlags	= 0;
 			return;
 		}
 		
@@ -899,50 +897,22 @@ function str_textbox(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	/// Handles input processing logic for the textbox log. These inputs include shifting up and down through
-	/// the log's contents, and the input that causes the log to close.
+	/// 
 	/// 
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_view_log = function(_delta){
-		process_input();
-		
-		// With the highest priority, pressing the textbox log's activation input will cause the log to being
-		// its closing process; with this state exiting before any other input can be processed.
-		if (TBOX_WAS_TEXT_LOG_PRESSED){
-			object_set_state(state_close_log_animation);
-			return;
-		}
-		
-		// Determine the movement direction for the textbox log by subtracting the flag bit values for the
-		// textbox log up/down inputs. This results in either a -1, 0, or +1 to be calculated; resulting in
-		// movement up (-1), down (+1), or nothing (0).
-		var _moveDirection = TBOX_WAS_LOG_DOWN_PRESSED - TBOX_WAS_LOG_UP_PRESSED;
-		if (_moveDirection == 0)
-			return;
-		
+		var _isClosing = false;
 		with(TEXTBOX_LOG){
-			// If there aren't enough pieces of logged text, there is no input required since the entire log
-			// can be shown at once, so the logic below is skipped.
-			if (logSize <= TBOXLOG_MAXIMUM_VISIBLE)
-				return;
-			
-			// Shifting the textbox log up and down relative to the input calculated in the code above this.
-			// When any movement is detected, a re-render is triggered for the log's surfaces, but a re-render
-			// isn't triggered if the value for "curOffset" isn't changed by the detected movement.
-			var _curOffset = curOffset;
-			if (_moveDirection == MENU_MOVEMENT_UP && curOffset >= TBOXLOG_MAXIMUM_VISIBLE - 1){ 
-				curOffset--;
-				if (curOffset == TBOXLOG_MAXIMUM_VISIBLE - 2)
-					curOffset = logSize - 1;
-			} else if (_moveDirection == MENU_MOVEMENT_DOWN && curOffset < logSize){
-				curOffset++;
-				if (curOffset == logSize)
-					curOffset = TBOXLOG_MAXIMUM_VISIBLE - 1;
+			_isClosing = TBOXLOG_IS_CLOSING; 
+			if (_isClosing){
+				flags = flags & ~TBOXLOG_FLAG_CLOSING;
+				break;
 			}
-			
-			if (_curOffset != curOffset)
-				flags = flags | TBOXLOG_FLAG_RENDER;
+			step_event(_delta);
 		}
+		
+		if (_isClosing)
+			object_set_state(state_close_log_animation);
 	}
 	
 	/// @description 

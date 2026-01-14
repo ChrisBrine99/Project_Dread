@@ -6,15 +6,15 @@ ds_grid_resize(global.sortOrder, 2, _count);
 // Grab the camera's viewport position and size so it can be used to cull all off-screen entities. The width
 // and height values are offset by the x and y position of the viewport so it doesn't need to be done on a
 // per-entity basis.
-var _viewX = 0;
-var _viewY = 0;
-var _viewW = 0;
-var _viewH = 0;
+var _xView = 0;
+var _yView = 0;
+var _wView = 0;
+var _hView = 0;
 with(CAMERA){
-	_viewX = viewportX;
-	_viewY = viewportY;
-	_viewW = _viewX + viewportWidth;
-	_viewH = _viewY + viewportHeight;
+	_xView = viewportX;
+	_yView = viewportY;
+	_wView = _xView + viewportWidth;
+	_hView = _yView + viewportHeight;
 }
 
 // Since all entities are looped through in this event, it makes sense to drawn their shadows here as well
@@ -31,8 +31,8 @@ draw_set_color(COLOR_BLACK); // All shadows are drawn completely black at full o
 // shadows will have their shadow drawn onto the shadow surface.
 var _index = 0;
 with(par_dynamic_entity){
-	if (!ENTT_IS_VISIBLE || x < _viewX - sprite_width || x > _viewW + sprite_width ||
-			y < _viewY - sprite_height || y > _viewH + sprite_height)
+	if (!ENTT_IS_VISIBLE || x < _xView - sprite_width || x > _wView + sprite_width ||
+			y < _yView - sprite_height || y > _hView + sprite_height)
 		continue;
 	
 	// Add the required data from the entity to the sorting order grid, and increment _index to move onto
@@ -45,15 +45,15 @@ with(par_dynamic_entity){
 	// shadow to display, the loop will simply move onto the next dynamic entity and skip the code below.
 	if (!ENTT_HAS_SHADOW || shadowFunction == 0)
 		continue;
-	script_execute(shadowFunction, x + shadowX - _viewX, y + shadowY - _viewY);
+	script_execute(shadowFunction, x + xShadow - _xView, y + yShadow - _yView);
 }
 numDynamicDrawn = _index;
 
 // After all active and visible dynamic entities have been added to the rendering ds_grid, all static entities
 // will be looped through to check if they're active and on-screen.
 with(par_static_entity){
-	if (!ENTT_IS_VISIBLE || x < _viewX - sprite_width || x > _viewW + sprite_width ||
-			y < _viewY - sprite_height || y > _viewH + sprite_height)
+	if (!ENTT_IS_VISIBLE || x < _xView - sprite_width || x > _wView + sprite_width ||
+			y < _yView - sprite_height || y > _hView + sprite_height)
 		continue;
 	
 	// Much like above, the required details for the entity are copied over into the sorting grid and the
@@ -66,7 +66,7 @@ with(par_static_entity){
 	// in question like is done above for dynamic entities. The loop skips the code if it doesn't have one.
 	if (!ENTT_HAS_SHADOW || shadowFunction == 0)
 		continue;
-	script_execute(shadowFunction, x + shadowX - _viewX, y + shadowY - _viewY);
+	script_execute(shadowFunction, x + xShadow - _xView, y + yShadow - _yView);
 }
 numStaticDrawn = _index - numDynamicDrawn;
 
@@ -74,7 +74,7 @@ numStaticDrawn = _index - numDynamicDrawn;
 // issues where a shadow pokes through the top of a ceiling tile onto the wall below it.
 if (maskLayerID != -1){
 	gpu_set_blendmode_ext(bm_zero, bm_zero);
-	draw_tilemap(maskLayerID, -_viewX, -_viewY);
+	draw_tilemap(maskLayerID, -_xView, -_yView);
 	gpu_set_blendmode(bm_normal);
 }
 surface_reset_target();

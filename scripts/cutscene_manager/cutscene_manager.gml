@@ -99,23 +99,25 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 		if (SCENE_IS_ACTIVE || _size == 0)
 			return;
 		
+		// Set flags and reset necessary values before the execution of the cutscene begins. The list
+		// containing all actions for the scene is copied over as well.
 		global.flags	= global.flags | GAME_FLAG_CUTSCENE_ACTIVE;
 		flags			= flags | SCENE_FLAG_ACTIVE;
 		queueSize		= _size;
 		actionIndex		= 0;
-		
 		ds_list_copy(actionQueue, _actionQueue);
 		
-		// 
+		// Finally, pause all entities that are flagged to be paused by cutscene. If not, they will continue
+		// executing whatever they were before the scene as normal.
 		with(par_dynamic_entity){
 			if (!ENTT_PAUSES_FOR_CUTSCENE)
 				continue;
-			entity_pause(id);
+			entity_pause(id, curState, nextState, lastState);
 		}
 		with(par_static_entity){
 			if (!ENTT_PAUSES_FOR_CUTSCENE)
 				continue;
-			entity_pause(id);
+			entity_pause(id, curState, nextState, lastState);
 		}
 	}
 	
@@ -127,7 +129,8 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 	end_action = function(){
 		actionIndex++;
 		if (actionIndex == queueSize){
-			flags = flags & ~SCENE_FLAG_ACTIVE;
+			global.flags	= global.flags & ~GAME_FLAG_CUTSCENE_ACTIVE;
+			flags			= flags & ~SCENE_FLAG_ACTIVE;
 			ds_list_clear(actionQueue);
 			entity_unpause_all();
 		}
@@ -136,7 +139,9 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	///	
+	///	A function that allows a cutscene to queue up a given number of actions that will all be executed
+	/// at the same time; removing themselves one by one as they complete their respective actions. Keep in
+	/// mind these will execute at the same time as any non-concurrent action that the scene is also executing.
 	///	
 	/// @param {Array<Array<Any>>}	actionQueue		The list of actions that will all be executed concurrently.
 	cutscene_queue_concurrent_actions = function(_actionQueue){
@@ -157,7 +162,8 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	///	
+	///	A version of the basic "cutscene_wait" function with added functionality that makes the action wait 
+	/// until the textbox is closed before actually beginning the "wait" duration.
 	///	
 	///	@param {Real}	duration	How long the period of waiting will last in units (1 second = 60 units).
 	cutscene_wait_for_textbox = function(_duration){
@@ -171,7 +177,8 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	///	
+	///	A version of the "cutscene_wait" function with added functionality that makes the action wait until
+	/// all currently active concurrent actions have completed. After that, the "wait" duration begins.
 	///	
 	///	@param {Real}	duration	How long the period of waiting will last in units (1 second = 60 units).
 	cutscene_wait_for_concurrent_actions = function(_duration){

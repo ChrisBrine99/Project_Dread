@@ -1,14 +1,15 @@
-// 
+// Render entity shadows so long as the surface exists. Otherwise, shadows will be skipped for the frame and
+// their surface will be recreated/redrawn in the next frame's pre-draw event.
 if (surface_exists(global.shadowSurface)){
-	var _viewX = 0;
-	var _viewY = 0;
+	var _xView = 0;
+	var _yView = 0;
 	with(CAMERA){
-		_viewX = viewportX;
-		_viewY = viewportY;
+		_xView = viewportX;
+		_yView = viewportY;
 	}
 	
 	draw_set_alpha(0.5);
-	draw_surface(global.shadowSurface, _viewX, _viewY);
+	draw_surface(global.shadowSurface, _xView, _yView);
 	draw_set_alpha(1.0);
 }
 

@@ -1,5 +1,7 @@
 // The delta time value is always calculated regardless of the game's current state flags.
 global.deltaTime = delta_time / 1000000.0 * GAME_TARGET_FPS;
+if (global.deltaTime > GAME_MAX_DELTA)
+	global.deltaTime = GAME_MAX_DELTA;
 
 // Update the application's current uptime regardless of the game's current state flags.
 uptimeFraction += global.deltaTime;

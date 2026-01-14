@@ -26,7 +26,8 @@
 
 #region Shared Global Variables Entities Utilize
 
-// 
+// A list containing state information for any entities that are currently paused. In this context, "paused"
+// means all of their state variables are set to STATE_NONE (0).
 global.pausedEntities = ds_list_create();
 
 #endregion Shared Global Variables Entities Utilize
@@ -60,32 +61,26 @@ function entity_draw_event(_delta){
 #region Shared Utility Functions Between Entity Types
 
 /// @description 
+///	Prepares an entity for being paused by copying over its state values and storing them; clearing them from
+/// the variables within the entity that were previously storing these values, respectively. Note that this
+/// function should only be called within children of par_dynamic_entity or par_static_entity. Failing to do
+/// so will cause the game to crash.
 ///	
-///	
-///	@param {Id.Instance}	id	Instance ID for the entity that will be paused.
-function entity_pause(_id){
-	var _isPersistent	= false;
-	var _curState		= STATE_NONE;
-	var _nextState		= STATE_NONE;
-	var _lastState		= STATE_NONE;
-	with(_id){ // Copy the required values into the local variables.
-		_isPersistent	= persistent;
-		_curState		= curState;
-		_nextState		= nextState;
-		_lastState		= lastState;
-		
-		// Clear the state values so the Entity is now paused.
-		curState		= STATE_NONE;
-		nextState		= STATE_NONE;
-		lastState		= STATE_NONE;
-	}
+///	@param {Id.Instance}	id				Instance ID for the entity that will be paused.
+/// @param {Real}			curState		Index of the state method that was currently being executed by the entity.
+/// @param {Real}			nextState		Index for the state method the entity should switch to on the next frame.
+/// @param {Real}			lastState		Index for the immediate previous state the entity was executing.
+function entity_pause(_id, _curState, _nextState, _lastState){
+	// Clear the state values so the Entity is now paused.
+	curState		= STATE_NONE;
+	nextState		= STATE_NONE;
+	lastState		= STATE_NONE;
 	
 	// Create the small struct that will store the state information for the paused entity until they can
 	// be unpaused once again. Persistence is also stored so the data isn't removed during room transitions
 	// if it represents the state of a persistent entity.
 	ds_list_add(global.pausedEntities, {
 		entityID		: _id, 
-		isPersistent	: _isPersistent,
 		curState		: _curState,
 		nextState		: _nextState,
 		lastState		: _lastState
@@ -93,7 +88,9 @@ function entity_pause(_id){
 }
 
 /// @description 
-/// 
+/// Unpauses an entity that is found within the list of paused entities. If a matching ID cannot be found,
+/// nothing is done. Otherwise, the entity has its state values returned to it and the list will delete the
+/// values it passed along from itself.
 ///	
 ///	@param {Id.Instance}	id	Instance ID for the entity that will be paused.
 function entity_unpause(_id){
@@ -173,7 +170,8 @@ function entity_unpause(_id){
 }
 
 /// @description 
-///	
+///	Loops through the list of all currently paused entities and returns their state data back to them. The
+/// list for storing previous state data of said entities is then completely cleared.
 ///	
 function entity_unpause_all(){
 	var _curState	= STATE_NONE;
@@ -197,13 +195,13 @@ function entity_unpause_all(){
 
 /// @description 
 ///	A general function for rendering an entity's shadow as a circle. Note that this circle's horizontal
-/// radius is equal to the value found in "shadowWidth", and its vertical radius is the value found in
-/// "shadowHeight".
+/// radius is equal to the value found in "widthShadow", and its vertical radius is the value found in
+/// "heightShadow".
 ///	
 ///	@param {Real}	x	The x position of the entity and its shadow's horizontal offset from said position.
 /// @param {Real}	y	The y position of the entity and its shadow's vertical offset from said position.
 function entity_draw_shadow_circle(_x, _y){
-	draw_ellipse(_x - shadowWidth, _y - shadowHeight, _x + shadowWidth - 1, _y + shadowHeight - 1, false);
+	draw_ellipse(_x - widthShadow, _y - heightShadow, _x + widthShadow - 1, _y + heightShadow - 1, false);
 }
 
 /// @description 
@@ -212,7 +210,7 @@ function entity_draw_shadow_circle(_x, _y){
 ///	@param {Real}	x	The x position of the entity and its shadow's horizontal offset from said position.
 /// @param {Real}	y	The y position of the entity and its shadow's vertical offset from said position.
 function entity_draw_shadow_square(_x, _y){
-	draw_sprite_ext(spr_rectangle, 0, _x, _y, shadowWidth, shadowHeight, 0.0, COLOR_BLACK, 1.0);
+	draw_sprite_ext(spr_rectangle, 0, _x, _y, widthShadow, heightShadow, 0.0, COLOR_BLACK, 1.0);
 }
 
 #endregion Shared Utility Functions Between Entity Types
@@ -253,10 +251,10 @@ function entity_add_shadow(_function, _x, _y, _width, _height){
 		
 	flags			= flags | ENTT_FLAG_SHADOW;
 	shadowFunction	= _function;
-	shadowX			= _x;
-	shadowY			= _y;
-	shadowWidth		= _width;
-	shadowHeight	= _height;
+	xShadow			= _x;
+	yShadow			= _y;
+	widthShadow		= _width;
+	heightShadow	= _height;
 }
 
 /// @description 
@@ -272,12 +270,12 @@ function entity_add_shadow(_function, _x, _y, _width, _height){
 /// @param {Real}	flags		(Optional) Determines which substate bits to toggle on for the light.
 function entity_add_basic_light(_x, _y, _radius, _color = COLOR_TRUE_WHITE, _strength = 1.0, _lifetime = 0.0, _flags = LGHT_FLAG_ACTIVE){
 	// Don't attempt to create a light source if a reference already occupies the storage variable.
-	if (lightSource)
+	if (lightRef)
 		return;
 	
-	lightSource = light_basic_create(x + _x, y + _y, _radius, _color, _strength, _lifetime, _flags);
-	lightX		= _x;
-	lightY		= _y;
+	lightRef = light_basic_create(x + _x, y + _y, _radius, _color, _strength, _lifetime, _flags);
+	xLight	 = _x;
+	yLight	 = _y;
 }
 
 #endregion Shared Miscellaneous Functions Between Entity Types

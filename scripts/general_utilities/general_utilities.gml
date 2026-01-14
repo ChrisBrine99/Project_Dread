@@ -162,9 +162,14 @@
 
 #region General Macros
 
-// The value that equates to one second of real-time in the game's units. An exmaple would be an entity with
+// The value that equates to one second of real-time in the game's units. An example would be an entity with
 // a speed value of 1.0 would move roughly 60 pixels per second.
 #macro	GAME_TARGET_FPS					60.0
+
+// The maximum possible delta that the game can have; equivalent to roughly 15 frames per second. Anything
+// lower than that will have the game slow down to prevent any glitches or bugs because of a massive delta
+// value.
+#macro	GAME_MAX_DELTA					4.0
 
 // A catchall for some ID that is considered invalid (Ex. item IDs, data structure IDs, etc.).
 #macro	ID_INVALID					   -16

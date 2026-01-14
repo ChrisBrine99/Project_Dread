@@ -2,13 +2,21 @@
 
 // Bits that are utilized within the textbox log's "flags" variable to enable different aspect of the struct
 // and disable them as required.
-#macro	TBOXLOG_FLAG_RENDER				0x00000001
-#macro	TBOXLOG_FLAG_ACTIVE				0x00000002
+#macro	TBOXLOG_INFLAG_UP				0x00000001
+#macro	TBOXLOG_INFLAG_DOWN				0x00000002
+#macro	TBOXLOG_INFLAG_CLOSE			0x00000004
+#macro	TBOXLOG_FLAG_RENDER				0x00000008
+#macro	TBOXLOG_FLAG_ACTIVE				0x00000010
+#macro	TBOXLOG_FLAG_CLOSING			0x00000020
 
 // Macros that condense the code needed to check if each flag bit used by the textbox log's into a neat value
 // that can be auto-completed by GameMaker to simply the typing required.
+#macro	TBOXLOG_MOVE_UP_HELD			((flags & TBOXLOG_INFLAG_UP)		!= 0 && (prevInputFlags & TBOXLOG_INFLAG_UP)	!= 0)
+#macro	TBOXLOG_MOVE_DOWN_HELD			((flags & TBOXLOG_INFLAG_DOWN)		!= 0 && (prevInputFlags & TBOXLOG_INFLAG_DOWN)	!= 0)
+#macro	TBOXLOG_WAS_CLOSE_RELEASED		((flags & TBOXLOG_INFLAG_CLOSE)		== 0 && (prevInputFlags & TBOXLOG_INFLAG_CLOSE)	!= 0)
 #macro	TBOXLOG_SHOULD_RENDER			((flags & TBOXLOG_FLAG_RENDER)		!= 0)
 #macro	TBOXLOG_IS_ACTIVE				((flags & TBOXLOG_FLAG_ACTIVE)		!= 0)
+#macro	TBOXLOG_IS_CLOSING				((flags & TBOXLOG_FLAG_CLOSING)		!= 0)
 
 // Values that determine how many pieces of text the log can hold at any given time and how many of those
 // pieces of data will be shown to the player at a single time when they view the log.
@@ -38,6 +46,10 @@
 /// @param {Function}	index	The value of "str_textbox_log" as determined by GameMaker during runtime.
 function str_textbox_log(_index) : str_base(_index) constructor {
 	flags				= STR_FLAG_PERSISTENT;
+	
+	// 
+	prevInputFlags		= 0;
+	moveTimer			= 0.0;
 	
 	// Determines the overall transparency level for every graphics element of the textbox log.
 	alpha				= 0.0;
@@ -135,6 +147,59 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
+	///	Despite being called "step_event", this function is not called on every frame within the obj_game_manager
+	/// step event. Instead, it is called within the functions of objects or structs that are monitoring 
+	/// this struct's closing flag to see when they should return function to themselves/play any animations
+	///	they perform when the log is closed.
+	///
+	///	@param {Real}	delta		The difference in time between the execution of this frame and the last.
+	step_event = function(_delta){
+		process_input();
+		
+		// Pressing the return input will reset the necessary variables and set the flag that signals to
+		// other objects that the log can now be closed without issue.
+		if (TBOXLOG_WAS_CLOSE_RELEASED){
+			flags			= flags & ~(TBOXLOG_INFLAG_UP | TBOXLOG_INFLAG_DOWN) | TBOXLOG_FLAG_CLOSING;
+			prevInputFlags	= 0;
+			moveTimer		= 0.0;
+			return;
+		}
+		
+		// Determine the movement direction for the textbox log by subtracting the flag bit values for the
+		// textbox log up/down inputs. This results in either a -1, 0, or +1 to be calculated; resulting in
+		// movement up (-1), down (+1), or nothing (0).
+		var _moveDirection = TBOXLOG_MOVE_DOWN_HELD - TBOXLOG_MOVE_UP_HELD;
+		if (_moveDirection == 0 || logSize <= TBOXLOG_MAXIMUM_VISIBLE){
+			moveTimer = 0.0;
+			return;
+		}
+			
+		// A simplified version of the menu input autoscrolling that simply resets to a constant values as
+		// the user holds one of the two movement inputs down to navigate around the current log contents.
+		moveTimer -= _delta;
+		if (moveTimer > 0.0)
+			return;
+		moveTimer += 15.0;
+		
+		// Determine whether to move the user up the log to older messages, or down the log to newer ones
+		// relative to the direction of input they are currently pressing/holding. Each direction will wrap
+		// to the top or bottom once they hit those points.
+		if (_moveDirection == MENU_MOVEMENT_UP && curOffset >= TBOXLOG_MAXIMUM_VISIBLE - 1){ 
+			curOffset--;
+			if (curOffset == TBOXLOG_MAXIMUM_VISIBLE - 2)
+				curOffset = logSize - 1;
+		} else if (_moveDirection == MENU_MOVEMENT_DOWN && curOffset < logSize){
+			curOffset++;
+			if (curOffset == logSize)
+				curOffset = TBOXLOG_MAXIMUM_VISIBLE - 1;
+		}
+		
+		// After updating the position within the textbox log, set the flag that is responsible for rendering
+		// the newly visible contents.
+		flags = flags | TBOXLOG_FLAG_RENDER;
+	}
+	
+	/// @description 
 	///	Called to render the textbox log and its currently visible contents whenever the textbox log struct is 
 	/// currently showing the information it contains.
 	///	
@@ -154,10 +219,6 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 			);
 				
 		#endregion Drawing Main Background for Textbox Log
-		
-		// Don't bother rendering anything other than the main background if the log is empty.
-		if (logSize == 0)
-			return;
 		
 		// Come local values that are used by the scrollbar and its background element. The X value is basically
 		// shared between the two (The background for the bar is one pixel to the left), but the Y values will
@@ -409,6 +470,27 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 			curOffset--;
 			logSize--;
 		}
+	}
+	
+	/// @description 
+	/// Checks the state of the inputs that are utilized by the textbox log. The previous frame's inputs are
+	/// stored in a "prevInputFlags" variable as standard across objects that utilize inputs, but the current
+	/// frame's inputs are stored in the "flags" variable since there is plenty of room within it.
+	/// 
+	process_input = function(){
+		prevInputFlags	= flags &  (TBOXLOG_INFLAG_UP | TBOXLOG_INFLAG_DOWN | TBOXLOG_INFLAG_CLOSE);
+		flags			= flags & ~(TBOXLOG_INFLAG_UP | TBOXLOG_INFLAG_DOWN | TBOXLOG_INFLAG_CLOSE);
+		
+		if (GAME_IS_GAMEPAD_ACTIVE){
+			flags = flags | (MENU_PAD_UP				); // Offset based on position of the bit within the variable.
+			flags = flags | (MENU_PAD_DOWN			<< 1);
+			flags = flags | (MENU_PAD_RETURN		<< 2);
+			return;
+		}
+		
+		flags = flags | (MENU_KEY_UP				); // Offset based on position of the bit within the variable.
+		flags = flags | (MENU_KEY_DOWN			<< 1);
+		flags = flags | (MENU_KEY_RETURN		<< 2);
 	}
 }
 

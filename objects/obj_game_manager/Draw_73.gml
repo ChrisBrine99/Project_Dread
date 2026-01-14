@@ -2,16 +2,16 @@
 // and structures to avoid having to constantly get the same values over and over again.
 var _minAlpha		= gpu_get_alphatestref() / 255.0;
 var _delta			= global.deltaTime;
-var _viewX			= 0;
-var _viewY			= 0;
+var _xView			= 0;
+var _yView			= 0;
 
 // Scope into the camera struct in order to reference the viewport dimensions which are used for setting the
 // size of the surface that all light sources will be drawn onto.
 with(CAMERA){
 	// Store the viewport's current x and y values once so each light can reference it without having to 
 	// constantly grab it from the camera again and again on a light-by-light basis.
-	_viewX	= viewportX;
-	_viewY	= viewportY;
+	_xView	= viewportX;
+	_yView	= viewportY;
 	
 	// Exit from updating the current lighting if the game is completely paused. The surface will still be
 	// drawn below, but no updates are made to it until the game is unpaused once more. 
@@ -52,10 +52,10 @@ with(CAMERA){
 		with(_light){
 			// Skip rendering the light source if it isn't currently active, the strength value is too low, or
 			// the position/radius of the light is outside of the viewport's current bounds.
-			if (!LGHT_IS_ACTIVE || strength <= _minAlpha || x + radius < _viewX || y + radius < _viewY 
+			if (!LGHT_IS_ACTIVE || strength <= _minAlpha || x + radius < _xView || y + radius < _yView 
 					|| x - radius > _viewW || y - radius > _viewH)
 				continue;
-			draw_event(_viewX, _viewY, _delta);
+			draw_event(_xView, _yView, _delta);
 			
 			if (LGHT_IS_DESTROYED){ // Remove lights that are destroyed.
 				ds_list_delete(global.lights, _index);
@@ -80,7 +80,7 @@ shader_set_uniform_f(uLightBrightness, -0.55);
 shader_set_uniform_f(uLightSaturation,	0.26);
 shader_set_uniform_f(uLightContrast,	0.19);
 texture_set_stage(uLightTexture,		global.lightTexture);
-draw_surface(global.worldSurface, _viewX, _viewY);
+draw_surface(global.worldSurface, _xView, _yView);
 shader_reset();
 
 #region Debug Element Rendering Code
@@ -114,7 +114,7 @@ with(PLAYER){
 	with(interactableID){
 		if (!ENTT_IS_VISIBLE || !INTR_CAN_PLAYER_INTERACT)
 			break;
-		draw_gui_event(_viewX, _viewY);
+		draw_gui_event(_xView, _yView);
 	}
 }
 
@@ -126,7 +126,7 @@ for (var i = 0; i < _length; i++){
 	with(global.menus[| i]){
 		if (alpha <= _minAlpha || !MENU_IS_VISIBLE)
 			continue;
-		draw_gui_event(x + _viewX, y + _viewY);
+		draw_gui_event(x + _xView, y + _yView);
 	}
 }
 
@@ -135,7 +135,7 @@ for (var i = 0; i < _length; i++){
 with(TEXTBOX){
 	if (alpha <= _minAlpha || y >= VIEWPORT_HEIGHT)
 		break;
-	draw_gui_event(_viewX, _viewY, _delta);
+	draw_gui_event(_xView, _yView, _delta);
 	
 	// Since the textbox log should never be accessible to the player outside of when the textbox is active,
 	// the call to the textbox log struct's draw_gui event is within the scope of the textbox. This prevents
@@ -144,7 +144,7 @@ with(TEXTBOX){
 	with(TEXTBOX_LOG){
 		if (alpha <= _minAlpha)
 			break;
-		draw_gui_event(_viewX, _viewY, _delta);
+		draw_gui_event(_xView, _yView, _delta);
 	}
 }
 
@@ -157,6 +157,7 @@ with(SCREEN_FADE){
 	var _color = fadeColor;
 	var _alpha = alpha;
 	with(CAMERA){ // Jump into the camera's scope so the viewport's values can be utilized.
-		draw_sprite_ext(spr_rectangle, 0, viewportX, viewportY, viewportWidth, viewportHeight, 0, _color, _alpha);
+		draw_sprite_ext(spr_rectangle, 0, viewportX, viewportY, 
+			viewportWidth, viewportHeight, 0, _color, _alpha);
 	}
 }

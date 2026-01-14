@@ -61,16 +61,16 @@ maxHitpoints	= 0;
 // draw the shadow, the offsets of the shadow's position relative to the entity's, and the width and height
 // of the shadow.
 shadowFunction	= 0;
-shadowX			= 0;
-shadowY			= 0;
-shadowWidth		= 0;
-shadowHeight	= 0;
+xShadow			= 0;
+yShadow			= 0;
+widthShadow		= 0;
+heightShadow	= 0;
 
 // Stores a reference to a light source struct that will be placed at a given offset relative to the Entity's
 // current position. The offset on the x and y axes are stored in the two other values below.
-lightSource		= noone;
-lightX			= 0;
-lightY			= 0;
+lightRef		= noone;
+xLight			= 0;
+yLight			= 0;
 
 #endregion Variable Initializations
 
@@ -162,7 +162,7 @@ move_to_position = function(_delta, _xTarget, _yTarget, _speed = 1.0){
 		return true;
 	}
 	
-	return (point_distance(x, y, _xTarget, _yTarget) <= _maxMoveSpeed);
+	return (point_distance(x, y, _xTarget, _yTarget) <= _maxMoveSpeed * _delta);
 }
 
 /// @description 
@@ -194,8 +194,8 @@ end_step_event = function(_delta){
 		curState = nextState;
 	}
 	
-	if (lightSource != noone) // Update the position of the light source in case the entity moved.
-		lightSource.light_set_position(x + lightX, y + lightY);
+	if (lightRef != noone) // Update the position of the light source in case the entity moved.
+		lightRef.light_set_position(x + xLight, y + yLight);
 }
 
 #endregion Event-Like Function Definitions
