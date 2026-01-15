@@ -64,3 +64,13 @@ function object_set_state(_state){
 	curState	= 0;		// Temporarily set to 0 in case the state was changed before it could execute for the frame.
 	nextState	= _index;
 }
+
+/// @description 
+///	
+///	
+function object_update_state(){
+	if (curState != nextState){
+		lastState = curState;
+		curState = nextState;
+	}
+}

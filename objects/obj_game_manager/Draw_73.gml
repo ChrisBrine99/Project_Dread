@@ -136,18 +136,14 @@ with(TEXTBOX){
 	if (alpha <= _minAlpha || y >= VIEWPORT_HEIGHT)
 		break;
 	draw_gui_event(_xView, _yView, _delta);
-	
-	// Since the textbox log should never be accessible to the player outside of when the textbox is active,
-	// the call to the textbox log struct's draw_gui event is within the scope of the textbox. This prevents
-	// an unnecessary jump to said struct during this event when trying to see if it can render when it does
-	// not need to be.
-	with(TEXTBOX_LOG){
-		if (alpha <= _minAlpha)
-			break;
-		draw_gui_event(_xView, _yView, _delta);
-	}
 }
 
+// 
+with(TEXTBOX_LOG){
+	if (alpha <= _minAlpha)
+		break;
+	draw_gui_event(_xView, _yView, _delta);
+}
 
 // Draw the screen fade onto the screen after all UI elements have been rendered onto the application surface.
 with(SCREEN_FADE){

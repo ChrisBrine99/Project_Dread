@@ -14,8 +14,8 @@
 
 // Macros that condense the checks required for specific states that the textbox must be in for it to process
 // certain aspects of the data it is displaying the user, if it is allowed to do that currently to begin with.
-#macro	TBOX_WAS_ADVANCE_PRESSED		((flags & TBOX_INFLAG_ADVANCE)		!= 0 && (prevInputFlags & TBOX_INFLAG_ADVANCE)		== 0)
-#macro	TBOX_WAS_TEXT_LOG_PRESSED		((flags & TBOX_INFLAG_TEXT_LOG)		!= 0 && (prevInputFlags & TBOX_INFLAG_TEXT_LOG)		== 0)
+#macro	TBOX_WAS_ADVANCE_RELEASED		((flags & TBOX_INFLAG_ADVANCE)		== 0 && (prevInputFlags & TBOX_INFLAG_ADVANCE)		!= 0)
+#macro	TBOX_WAS_TEXT_LOG_RELEASED		((flags & TBOX_INFLAG_TEXT_LOG)		== 0 && (prevInputFlags & TBOX_INFLAG_TEXT_LOG)		!= 0)
 #macro	TBOX_IS_ACTIVE					((flags & TBOX_FLAG_ACTIVE)			!= 0)
 #macro	TBOX_CAN_WIPE_DATA				((flags & TBOX_FLAG_WIPE_DATA)		!= 0)
 #macro	TBOX_SHOULD_CLEAR_SURFACE		((flags & TBOX_FLAG_CLEAR_SURFACE)	!= 0)
@@ -422,8 +422,6 @@ function str_textbox(_index) : str_base(_index) constructor {
 		
 		flags = flags | (MENU_KEY_TBOX_ADVANCE		); // Offset based on position of the bit within the variable.
 		flags = flags | (MENU_KEY_TBOX_LOG		<< 1);
-		flags = flags | (MENU_KEY_UP			<< 2);
-		flags = flags | (MENU_KEY_DOWN			<< 3);
 	}
 	
 	/// @description 
@@ -744,10 +742,15 @@ function str_textbox(_index) : str_base(_index) constructor {
 		// When the text log input is pressed, the process for opening that log is set to execute from the
 		// next frame onward. The flag that tells the textbox if the log is open or not is set to prevent
 		// certain parts of the textbox from rendering while it is open.
-		if (TBOX_WAS_TEXT_LOG_PRESSED){
+		if (TBOX_WAS_TEXT_LOG_RELEASED && !GAME_IS_CUTSCENE_ACTIVE){
 			object_set_state(state_open_log_animation);
 			flags			= flags & ~(TBOX_INFLAG_TEXT_LOG | TBOX_INFLAG_ADVANCE) | TBOX_FLAG_LOG_ACTIVE;
 			prevInputFlags	= 0;
+			
+			with(TEXTBOX_LOG){ // Start the textbox log's opening animation and activate it.
+				object_set_state(state_open_animation);
+				flags = flags | TBOXLOG_FLAG_ACTIVE;
+			}
 			return;
 		}
 		
@@ -769,7 +772,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 			// of the text being shown (Or the player pressed the advance input during the process), the text
 			// will be completely visible and will no longer need this value to count up.
 			nextChar += _amount;
-			if (TBOX_WAS_ADVANCE_PRESSED || nextChar > textLength){
+			if (TBOX_WAS_ADVANCE_RELEASED || nextChar > textLength){
 				nextChar		= textLength;
 				nextCharDelay	= TBOX_PUNCT_NONE;
 			}
@@ -834,7 +837,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 		// Under normal circumstances, the advance input will be what moves the textbox to the next piece
 		// of data within its queue to display to the player. This can only occur once all the text for the
 		// current textbox has been shown to them.
-		if (TBOX_WAS_ADVANCE_PRESSED)
+		if (TBOX_WAS_ADVANCE_RELEASED)
 			close_current_textbox();
 	}
 	
@@ -902,57 +905,34 @@ function str_textbox(_index) : str_base(_index) constructor {
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_view_log = function(_delta){
 		var _isClosing = false;
-		with(TEXTBOX_LOG){
+		with(TEXTBOX_LOG)
 			_isClosing = TBOXLOG_IS_CLOSING; 
-			if (_isClosing){
-				flags = flags & ~TBOXLOG_FLAG_CLOSING;
-				break;
-			}
-			step_event(_delta);
-		}
 		
 		if (_isClosing)
 			object_set_state(state_close_log_animation);
 	}
 	
 	/// @description 
-	/// State that handles the simple fading animation that is used when opening the textbox log. Once the log
-	/// has an alpha value of 1.0, the log will be completely closed, and the textbox itself will recind control
-	/// so that the textbox log can begin taking input from the user (Which is actually done through the textbox's
-	/// "state_view_log" state). 
+	/// 
 	/// 
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_open_log_animation = function(_delta){
 		var _animFinished = false;
-		with(TEXTBOX_LOG){
-			alpha += _delta * 0.1;
-			if (alpha >= 1.0){
-				flags			= flags | TBOXLOG_FLAG_ACTIVE;
-				alpha			= 1.0;
-				_animFinished	= true;
-			}
-		}
+		with(TEXTBOX_LOG)
+			_animFinished = (alpha == 1.0);
 		
 		if (_animFinished)
 			object_set_state(state_view_log);
 	}
 	
 	/// @descripiton 
-	///	State that handles the simple fading animation that is used when closing the textbox log. Once the log
-	/// has an alpha value of 0.0, the log will be completely closed, and the textbox itself will reset to its
-	/// default state to enable interaction with it once again.
+	///	
 	/// 
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_close_log_animation = function(_delta){
 		var _animFinished = false;
-		with(TEXTBOX_LOG){
-			alpha -= _delta * 0.1;
-			if (alpha <= 0.0){
-				flags			= flags & ~TBOXLOG_FLAG_ACTIVE;
-				alpha			= 0.0;
-				_animFinished	= true;
-			}
-		}
+		with(TEXTBOX_LOG)
+			_animFinished = (alpha == 0.0);
 		
 		if (_animFinished){
 			if (!TBOX_IS_OPTIONS_ACTIVE){ // Option menu not open; return to normal textbox function.
@@ -977,9 +957,9 @@ function str_textbox(_index) : str_base(_index) constructor {
 		// When the text log input is pressed, the process for opening that log is set to execute from the
 		// next frame onward. The flag that tells the textbox if the log is open or not is set to prevent
 		// certain parts of the textbox from rendering while it is open.
-		if (TBOX_WAS_TEXT_LOG_PRESSED){
+		if (TBOX_WAS_TEXT_LOG_RELEASED){
 			object_set_state(state_open_log_animation);
-			flags = flags | TBOX_FLAG_LOG_ACTIVE;
+			flags= flags & ~(TBOX_INFLAG_TEXT_LOG | TBOX_INFLAG_ADVANCE) | TBOX_FLAG_LOG_ACTIVE;
 			
 			// Make sure to deactivate the option menu so the cursor cannot be interacted with while the log
 			// is open.

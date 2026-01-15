@@ -3,12 +3,15 @@
 // Values for the bits that are utilized within the cutscne manager's "flags" variable. Outside of these, 
 // the value 0x80000000 is used by the parent struct (str_base) to determine if the struct is persistent
 // between rooms or not.
-#macro	SCENE_FLAG_ACTIVE				0x00000001
-#macro	SCENE_FLAG_TEXTBOX_OPEN			0x00000002
+#macro	SCENE_INFLAG_LOG				0x00000001
+#macro	SCENE_PREV_INFLAG_LOG			0x00000002
+#macro	SCENE_FLAG_ACTIVE				0x00000004
+#macro	SCENE_FLAG_TEXTBOX_OPEN			0x00000008
 
 // Defines to check if each respective flag is currently set (1) or cleared (0).
-#macro	SCENE_IS_ACTIVE					((flags & SCENE_FLAG_ACTIVE)		!= 0)
-#macro	SCENE_IS_TEXTBOX_OPEN			((flags & SCENE_FLAG_TEXTBOX_OPEN)	!= 0)
+#macro	SCENE_WAS_LOG_RELEASED			((flags & (SCENE_INFLAG_LOG | SCENE_PREV_INFLAG_LOG))	== SCENE_PREV_INFLAG_LOG)
+#macro	SCENE_IS_ACTIVE					((flags & SCENE_FLAG_ACTIVE)							!= 0)
+#macro	SCENE_IS_TEXTBOX_OPEN			((flags & SCENE_FLAG_TEXTBOX_OPEN)						!= 0)
 
 // References to the functions that will perform a given action within a currently executing scene.
 #macro	SCENE_CONCURRENT_ACTIONS		CUTSCENE_MANAGER.cutscene_queue_concurrent_actions
@@ -31,6 +34,11 @@
 /// @param {Function}	index	The value of "str_cutscene_manager" as determined by GameMaker during runtime.
 function str_cutscene_manager(_index) : str_base(_index) constructor {
 	flags		= STR_FLAG_PERSISTENT;
+	
+	// 
+	curState	= STATE_NONE;
+	nextState	= STATE_NONE;
+	lastState	= STATE_NONE;
 	
 	// The main values for the cutscene manager's functionality. The first value keeps track of what action
 	// is being executed by the current scene. The second stores the complete list of actions to perform.
@@ -62,13 +70,35 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 		ds_list_destroy(ccActions);
 	}
 	
-	/// @description
-	///	Called every frame that the cutscene manager struct exists (Which should be the entirety of the game)
-	/// AND is currently executing a scene. It will execute the current action as well as any concurrent
-	/// actions that are currently active.
+	/// @description 
+	///	
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
-	step_event = function(_delta){
+	state_default = function(_delta){
+		// 
+		process_input();
+		if (SCENE_WAS_LOG_RELEASED){
+			object_set_state(state_open_log_animation);
+			flags = flags & ~(SCENE_INFLAG_LOG | SCENE_PREV_INFLAG_LOG);
+			
+			with(TEXTBOX_LOG){ // Start the textbox log's opening animation and activate it.
+				object_set_state(state_open_animation);
+				flags = flags | TBOXLOG_FLAG_ACTIVE;
+			}
+			
+			// 
+			if (!GAME_IS_TEXTBOX_OPEN)
+				return;
+			
+			// 
+			with(TEXTBOX){
+				object_set_state(state_open_log_animation);
+				flags			= flags & ~(TBOX_INFLAG_TEXT_LOG | TBOX_INFLAG_ADVANCE) | TBOX_FLAG_LOG_ACTIVE;
+				prevInputFlags	= 0;
+			}
+			return;
+		}
+		
 		var _curAction	= actionQueue[| actionIndex];
 		curDelta		= _delta; // Copy delta into a cutscene struct variable so it can be referenced as needed.
 		if (script_execute_ext(_curAction[0], _curAction, 1))
@@ -86,6 +116,61 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 			}
 		}
 	}
+
+	/// @description 
+	/// 
+	/// 
+	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
+	state_view_log = function(_delta){
+		var _isClosing = false;
+		with(TEXTBOX_LOG)
+			_isClosing = TBOXLOG_IS_CLOSING; 
+		
+		if (_isClosing)
+			object_set_state(state_default);
+	}
+	
+	/// @description 
+	/// 
+	/// 
+	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
+	state_open_log_animation = function(_delta){
+		var _animFinished = false;
+		with(TEXTBOX_LOG)
+			_animFinished = (alpha == 1.0);
+		
+		if (_animFinished)
+			object_set_state(state_view_log);
+	}
+	
+	/// @description 
+	/// 
+	/// 
+	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
+	state_close_log_animation = function(_delta){
+		var _animFinished = false;
+		with(TEXTBOX_LOG)
+			_animFinished = (alpha == 0.0);
+		
+		if (_animFinished)
+			object_set_state(state_default);
+	}
+	
+	/// @description 
+	///	
+	///	
+	process_input = function(){
+		var _inputFlag	= (flags & SCENE_INFLAG_LOG) != 0;
+		flags			=  flags & ~SCENE_INFLAG_LOG;
+		flags			=  flags | (_inputFlag << 1);
+		
+		if (GAME_IS_GAMEPAD_ACTIVE){
+			flags = flags | MENU_PAD_TBOX_LOG;
+			return;
+		}
+		
+		flags = flags | MENU_KEY_TBOX_LOG;
+	}
 	
 	/// @description
 	///	Allows a cutscene that has been queued up to begin execution. Does nothing if another cutscene is
@@ -101,6 +186,7 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 		
 		// Set flags and reset necessary values before the execution of the cutscene begins. The list
 		// containing all actions for the scene is copied over as well.
+		object_set_state(state_default);
 		global.flags	= global.flags | GAME_FLAG_CUTSCENE_ACTIVE;
 		flags			= flags | SCENE_FLAG_ACTIVE;
 		queueSize		= _size;
@@ -129,6 +215,7 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 	end_action = function(){
 		actionIndex++;
 		if (actionIndex == queueSize){
+			object_set_state(STATE_NONE);
 			global.flags	= global.flags & ~GAME_FLAG_CUTSCENE_ACTIVE;
 			flags			= flags & ~SCENE_FLAG_ACTIVE;
 			ds_list_clear(actionQueue);

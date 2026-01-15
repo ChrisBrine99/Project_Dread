@@ -1,10 +1,11 @@
 // The delta time value is always calculated regardless of the game's current state flags.
 global.deltaTime = delta_time / 1000000.0 * GAME_TARGET_FPS;
-if (global.deltaTime > GAME_MAX_DELTA)
+if (global.deltaTime > GAME_MAX_DELTA) // Limit to 6.0 to prevent glitchy physics at low frame rates.
 	global.deltaTime = GAME_MAX_DELTA;
 
 // Update the application's current uptime regardless of the game's current state flags.
-uptimeFraction += global.deltaTime;
+var _delta = global.deltaTime;
+uptimeFraction += _delta;
 if (uptimeFraction >= GAME_TARGET_FPS){
 	global.totalUptime++;
 	uptimeFraction -= GAME_TARGET_FPS;
@@ -13,44 +14,36 @@ if (uptimeFraction >= GAME_TARGET_FPS){
 if (GAME_IS_PAUSED)
 	return; // Prevent anything from updating while the game is considered paused.
 
-var _delta = global.deltaTime;
-with(CAMERA) { end_step_event(_delta); }	// Updates the camera viewport's coordinates.
+// Updates the camera viewport's coordinates before any other end step event is called.
+with(CAMERA) { end_step_event(_delta); }
 
-// Update all currently existing dynamic entities within the room so long as they are also currently active.
+// Update all currently existing dynamic and static entities within the room so long as they are also 
+// currently active.
 with(par_dynamic_entity){
 	if (!ENTT_IS_ACTIVE)
 		continue;
 	end_step_event(_delta);
+}
+with(par_static_entity){
+	if (!ENTT_IS_ACTIVE)
+		continue;
+	object_update_state(); // TODO -- Replace with unique end_step_event function call like above.
 }
 
 // Loop through all currently active menu struct instances; updating their current state to whatever was set
 // in their "nextState" variable so a proper state switch doesn't occur in the middle of updating.
 var _length = ds_list_size(global.menus);
 for (var i = 0; i < _length; i++){
-	with(global.menus[| i]){
-		if (curState != nextState){
-			lastState = curState;
-			curState = nextState;
-		}
-	}
+	with(global.menus[| i])
+		object_update_state();
 }
 
-// Update the current state function for the textbox to match the value stored in the "nextState" variable at
-// the end of the step event, so state changes don't occur in the middle of a frame.
-with(TEXTBOX){
-	if (curState != nextState){
-		lastState = curState;
-		curState = nextState;
-	}
-}
-
-// Perform the same thing that occurs to the textbox and its state values within the Screen Fade struct.
-with(SCREEN_FADE){
-	if (curState != nextState){
-		lastState = curState;
-		curState = nextState;
-	}
-}
+// Perform code similar to the loop above does for existing menu objects, but for singleton objects that
+// utilize state machines but don't need full end_step events like dynamic and static entities do.
+with(TEXTBOX)			{ object_update_state(); }
+with(TEXTBOX_LOG)		{ object_update_state(); }
+with(SCREEN_FADE)		{ object_update_state(); }
+with(CUTSCENE_MANAGER)	{ object_update_state(); }
 
 // Update the in-game playtime whenever its flag is toggled.
 if (GAME_IS_PLAYTIME_ACTIVE){

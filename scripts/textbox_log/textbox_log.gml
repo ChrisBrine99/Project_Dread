@@ -48,6 +48,11 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 	flags				= STR_FLAG_PERSISTENT;
 	
 	// 
+	curState			= STATE_NONE;
+	nextState			= STATE_NONE;
+	lastState			= STATE_NONE;
+	
+	// 
 	prevInputFlags		= 0;
 	moveTimer			= 0.0;
 	
@@ -144,59 +149,6 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 		}
 		ds_list_clear(textData);
 		ds_list_destroy(textData);
-	}
-	
-	/// @description 
-	///	Despite being called "step_event", this function is not called on every frame within the obj_game_manager
-	/// step event. Instead, it is called within the functions of objects or structs that are monitoring 
-	/// this struct's closing flag to see when they should return function to themselves/play any animations
-	///	they perform when the log is closed.
-	///
-	///	@param {Real}	delta		The difference in time between the execution of this frame and the last.
-	step_event = function(_delta){
-		process_input();
-		
-		// Pressing the return input will reset the necessary variables and set the flag that signals to
-		// other objects that the log can now be closed without issue.
-		if (TBOXLOG_WAS_CLOSE_RELEASED){
-			flags			= flags & ~(TBOXLOG_INFLAG_UP | TBOXLOG_INFLAG_DOWN) | TBOXLOG_FLAG_CLOSING;
-			prevInputFlags	= 0;
-			moveTimer		= 0.0;
-			return;
-		}
-		
-		// Determine the movement direction for the textbox log by subtracting the flag bit values for the
-		// textbox log up/down inputs. This results in either a -1, 0, or +1 to be calculated; resulting in
-		// movement up (-1), down (+1), or nothing (0).
-		var _moveDirection = TBOXLOG_MOVE_DOWN_HELD - TBOXLOG_MOVE_UP_HELD;
-		if (_moveDirection == 0 || logSize <= TBOXLOG_MAXIMUM_VISIBLE){
-			moveTimer = 0.0;
-			return;
-		}
-			
-		// A simplified version of the menu input autoscrolling that simply resets to a constant values as
-		// the user holds one of the two movement inputs down to navigate around the current log contents.
-		moveTimer -= _delta;
-		if (moveTimer > 0.0)
-			return;
-		moveTimer += 15.0;
-		
-		// Determine whether to move the user up the log to older messages, or down the log to newer ones
-		// relative to the direction of input they are currently pressing/holding. Each direction will wrap
-		// to the top or bottom once they hit those points.
-		if (_moveDirection == MENU_MOVEMENT_UP && curOffset >= TBOXLOG_MAXIMUM_VISIBLE - 1){ 
-			curOffset--;
-			if (curOffset == TBOXLOG_MAXIMUM_VISIBLE - 2)
-				curOffset = logSize - 1;
-		} else if (_moveDirection == MENU_MOVEMENT_DOWN && curOffset < logSize){
-			curOffset++;
-			if (curOffset == logSize)
-				curOffset = TBOXLOG_MAXIMUM_VISIBLE - 1;
-		}
-		
-		// After updating the position within the textbox log, set the flag that is responsible for rendering
-		// the newly visible contents.
-		flags = flags | TBOXLOG_FLAG_RENDER;
 	}
 	
 	/// @description 
@@ -482,15 +434,91 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 		flags			= flags & ~(TBOXLOG_INFLAG_UP | TBOXLOG_INFLAG_DOWN | TBOXLOG_INFLAG_CLOSE);
 		
 		if (GAME_IS_GAMEPAD_ACTIVE){
-			flags = flags | (MENU_PAD_UP				); // Offset based on position of the bit within the variable.
-			flags = flags | (MENU_PAD_DOWN			<< 1);
-			flags = flags | (MENU_PAD_RETURN		<< 2);
+			flags = flags | (MENU_PAD_UP			); // Offset based on position of the bit within the variable.
+			flags = flags | (MENU_PAD_DOWN		<< 1);
+			flags = flags | (MENU_PAD_RETURN	<< 2);
 			return;
 		}
 		
-		flags = flags | (MENU_KEY_UP				); // Offset based on position of the bit within the variable.
-		flags = flags | (MENU_KEY_DOWN			<< 1);
-		flags = flags | (MENU_KEY_RETURN		<< 2);
+		flags = flags | (MENU_KEY_UP			); // Offset based on position of the bit within the variable.
+		flags = flags | (MENU_KEY_DOWN		<< 1);
+		flags = flags | (MENU_KEY_RETURN	<< 2);
+	}
+	
+	/// @description 
+	///	
+	///
+	///	@param {Real}	delta		The difference in time between the execution of this frame and the last.
+	state_default = function(_delta){
+		process_input();
+		
+		// Pressing the return input will reset the necessary variables and set the flag that signals to
+		// other objects that the log can now be closed without issue.
+		if (TBOXLOG_WAS_CLOSE_RELEASED){
+			object_set_state(state_close_animation);
+			flags			= flags & ~(TBOXLOG_INFLAG_UP | TBOXLOG_INFLAG_DOWN) | TBOXLOG_FLAG_CLOSING;
+			prevInputFlags	= 0;
+			moveTimer		= 0.0;
+			return;
+		}
+		
+		// Determine the movement direction for the textbox log by subtracting the flag bit values for the
+		// textbox log up/down inputs. This results in either a -1, 0, or +1 to be calculated; resulting in
+		// movement up (-1), down (+1), or nothing (0).
+		var _moveDirection = TBOXLOG_MOVE_DOWN_HELD - TBOXLOG_MOVE_UP_HELD;
+		if (_moveDirection == 0 || logSize <= TBOXLOG_MAXIMUM_VISIBLE){
+			moveTimer = 0.0;
+			return;
+		}
+			
+		// A simplified version of the menu input autoscrolling that simply resets to a constant values as
+		// the user holds one of the two movement inputs down to navigate around the current log contents.
+		moveTimer -= _delta;
+		if (moveTimer > 0.0)
+			return;
+		moveTimer += 15.0;
+		
+		// Determine whether to move the user up the log to older messages, or down the log to newer ones
+		// relative to the direction of input they are currently pressing/holding. Each direction will wrap
+		// to the top or bottom once they hit those points.
+		if (_moveDirection == MENU_MOVEMENT_UP && curOffset >= TBOXLOG_MAXIMUM_VISIBLE - 1){ 
+			curOffset--;
+			if (curOffset == TBOXLOG_MAXIMUM_VISIBLE - 2)
+				curOffset = logSize - 1;
+		} else if (_moveDirection == MENU_MOVEMENT_DOWN && curOffset < logSize){
+			curOffset++;
+			if (curOffset == logSize)
+				curOffset = TBOXLOG_MAXIMUM_VISIBLE - 1;
+		}
+		
+		// After updating the position within the textbox log, set the flag that is responsible for rendering
+		// the newly visible contents.
+		flags = flags | TBOXLOG_FLAG_RENDER;
+	}
+	
+	/// @description 
+	///
+	///
+	///	@param {Real}	delta		The difference in time between the execution of this frame and the last.
+	state_open_animation = function(_delta){
+		alpha += 0.1 * _delta;
+		if (alpha > 1.0){
+			object_set_state(state_default);
+			alpha = 1.0;
+		}
+	}
+	
+	/// @description
+	///	
+	///	
+	///	@param {Real}	delta		The difference in time between the execution of this frame and the last.
+	state_close_animation = function(_delta){
+		alpha -= 0.1 * _delta;
+		if (alpha < 0.0){
+			object_set_state(STATE_NONE);
+			flags = flags & ~(TBOXLOG_FLAG_ACTIVE | TBOXLOG_FLAG_CLOSING);
+			alpha = 0.0;
+		}
 	}
 }
 
