@@ -124,6 +124,7 @@
     {"id":{"name":"shd_color_fade","path":"shaders/shd_color_fade/shd_color_fade.yy",},},
     {"id":{"name":"shd_lighting","path":"shaders/shd_lighting/shd_lighting.yy",},},
     {"id":{"name":"shd_retro_effects","path":"shaders/shd_retro_effects/shd_retro_effects.yy",},},
+    {"id":{"name":"shd_screen_blur","path":"shaders/shd_screen_blur/shd_screen_blur.yy",},},
     {"id":{"name":"snd_player_step_grass","path":"sounds/snd_player_step_grass/snd_player_step_grass.yy",},},
     {"id":{"name":"snd_player_step_tile","path":"sounds/snd_player_step_tile/snd_player_step_tile.yy",},},
     {"id":{"name":"snd_player_step_water","path":"sounds/snd_player_step_water/snd_player_step_water.yy",},},

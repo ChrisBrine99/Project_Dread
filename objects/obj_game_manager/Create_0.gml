@@ -20,8 +20,8 @@
 #macro	GAME_FLAG_CUTSCENE_ACTIVE		0x40000000
 #macro	GAME_FLAG_PAUSED				0x80000000
 
-// Macros that allow the state of a given flag within global.flags to be checked; returning either a 0 AKA "false"
-// or the value of the flag itself which is non-zero AKA "true".
+// Macros that allow the state of a given flag within global.flags to be checked; returning either a 0 AKA 
+// "false" or the value of the flag itself which is non-zero AKA "true".
 #macro	GAME_IS_CMBTDIFF_FORGIVING		((global.flags & GAME_FLAG_CMBTDIFF_FORGIVING)	!= 0)
 #macro	GAME_IS_CMBTDIFF_STANDARD		((global.flags & GAME_FLAG_CMBTDIFF_STANDARD)	!= 0)
 #macro	GAME_IS_CMBTDIFF_PUNISHING		((global.flags & GAME_FLAG_CMBTDIFF_PUNISHING)	!= 0)
@@ -50,8 +50,8 @@
 #macro	TEXTBOX_LOG						global.sInstances[? str_textbox_log]
 #macro	SCREEN_FADE						global.sInstances[? str_screen_fade]
 
-// Macros for referencing the instance IDs of all runtime singletons. These will return "noone" if no instance
-// exists for these special singleton types.
+// Macros for referencing the instance IDs of all runtime singletons. These will return "noone" if no 
+// instance exists for these special singleton types.
 #macro	MENU_INVENTORY					global.sInstances[? str_inventory_menu]
 #macro	MENU_ITEMS						global.sInstances[? str_item_menu]
 #macro	MENU_NOTES						global.sInstances[? str_note_menu]
@@ -138,9 +138,9 @@
 #macro	STNG_IS_SPRINT_INPUT_TOGGLE		((global.settings.flags & STNG_FLAG_SPRINT_TOGGLE)	!= 0)
 #macro	STNG_IS_VIBRATION_ACTIVE		((global.settings.flags & STNG_FLAG_VIBRATION)		!= 0)
 
-// Macros for the index values within the global.setting struct volume array. They each correspond to a group 
-// of sounds that can have their volume adjusted independently of the other values (As well as the main master
-// volume value at index 0).
+// Macros for the index values within the global.setting struct volume array. They each correspond to a 
+// group of sounds that can have their volume adjusted independently of the other values (As well as the
+// main master volume value at index 0).
 #macro	STNG_AUDIO_MASTER				0
 #macro	STNG_AUDIO_GAME_SOUNDS			1
 #macro	STNG_AUDIO_MENU_SOUNDS			2
@@ -148,9 +148,9 @@
 #macro	STNG_AUDIO_AMBIENCE				4
 #macro	TOTAL_VOLUME_OPTIONS			5
 
-// Macros for the index values within the global.settings struct input binding array. There are two values for
-// each input: the keyboard binding, and the gamepad binding. So, each macro is an even number and is incremented
-// in order to get the input's gamepad equivalent.
+// Macros for the index values within the global.settings struct input binding array. There are two values 
+// for each input: the keyboard binding, and the gamepad binding. So, each macro is an even number and is 
+// incremented in order to get the input's gamepad equivalent.
 #macro	STNG_INPUT_GAME_RIGHT			0
 #macro	STNG_INPUT_GAME_LEFT			2
 #macro	STNG_INPUT_GAME_UP				4
@@ -182,15 +182,16 @@
 
 #region Game Manager Global and Local Variable Initializations
 
-// The map that manages the instance IDs and references to all existing special objects within the game. These
-// objects are "special" in that only one instance may exist of any of them during runtime, and attempts to create
-// multiples instances of them will fail when utilizing the proper creation functions. They also cannot be deleted
-// during runtime and attempts to do so will also fail when utilizing the proper deletion functions.
+// The map that manages the instance IDs and references to all existing special objects within the game. 
+// These objects are "special" in that only one instance may exist of any of them during runtime, and 
+// attempts to create multiples instances of them will fail when utilizing the proper creation functions. 
+// They also cannot be deleted during runtime and attempts to do so will also fail when utilizing the proper 
+// deletion functions.
 global.sInstances		= ds_map_create();
 
-// Stores a copy of the application surface for any post-processing effects that require the application surface
-// that occur outside of the draw GUI events. Otherwise, it will draw itself to itself which makes no sense and
-// nothing will be rendered.
+// Stores a copy of the application surface for any post-processing effects that require the application 
+// surface that occur outside of the draw GUI events. Otherwise, it will draw itself to itself which makes 
+// no sense and nothing will be rendered.
 global.worldSurface		= -1;
 
 // Surface that contains the shadows casted by entities onto the floor beneath them. The mask layer will
@@ -199,25 +200,26 @@ global.worldSurface		= -1;
 global.shadowSurface	= -1;
 maskLayerID				= -1;
 
-// Variables for allowing frame-independent movement as well as two values that track the application's total
-// uptime and current playtime, respectively. Fraction values for both are stored seperately as values between
-// 0 and the game's target FPS value.
+// Variables for allowing frame-independent movement as well as two values that track the application's 
+// total uptime and current playtime, respectively. Fraction values for both are stored seperately as values
+// between 0 and the game's target FPS value.
 global.deltaTime		= 0.0;
 global.totalPlaytime	= 0;
 global.totalUptime		= 0;
 playtimeFraction		= 0.0;
 uptimeFraction			= 0.0;
 
-// A variable containing various flags that affect the game on a global scale. This includes things like gamepad
-// input activity, game states, and so on.
+// A variable containing various flags that affect the game on a global scale. This includes things like 
+// gamepad input activity, game states, and so on.
 global.flags			= GAME_FLAG_PAUSED;
 
-// A grid storing the id values for all existing static and dynamic entities within the current room alongside
-// their current y positions. Those y positions will be used to sort their drawn from top to bottom on the screen.
+// A grid storing the id values for all existing static and dynamic entities within the current room 
+// alongside their current y positions. Those y positions will be used to sort their drawn from top to 
+// bottom on the screen.
 global.sortOrder		= ds_grid_create(2, 0);
 
-// Struct containings all of the various settings for the game that can be altered by the player. These altered
-// values will be saved from "settings.ini" and loaded from there as well on all subsequent start-ups.
+// Struct containings all of the various settings for the game that can be altered by the player. These 
+// altered values will be saved from "settings.ini" and loaded from there as well on all subsequent start-ups.
 global.settings			= {
 	// --- Holds Flags Used in All Settting Groups --- //
 	flags				: STNG_FLAG_QUANTIZATION | STNG_FLAG_DITHERING | STNG_FLAG_SCANLINES |
@@ -310,9 +312,9 @@ global.settings			= {
 
 // Struct containing information and functionality regarding the color fade shader effect.
 global.colorFadeShader = {
-	// Stores the color being used for the shader's effect in both hexidecimal and individual RGB format. This
-	// allows the hex value to check if a color update should occur to prevent constantly having to convert a
-	// color if that color is already being used with the shader.
+	// Stores the color being used for the shader's effect in both hexidecimal and individual RGB format. 
+	// This allows the hex value to check if a color update should occur to prevent constantly having to
+	// convert a color if that color is already being used with the shader.
 	curColorHex			: COLOR_BLACK,
 	curColorRGB			: [0.0, 0.0, 0.0],
 	
@@ -366,8 +368,15 @@ uLightSaturation		= shader_get_uniform(shd_lighting,			"saturation");
 uLightContrast			= shader_get_uniform(shd_lighting,			"contrast");
 uLightTexture			= shader_get_sampler_index(shd_lighting,	"lightTex");
 
+// Uniforms for the screen blurring shader that will allow the properties of the shader to be altered as
+// needed to achieve the desired effect (Note that UI elements will not be affected by the blur).
+uTexelSize				= shader_get_uniform(shd_screen_blur,		"texelSize");
+uBlurDirection			= shader_get_uniform(shd_screen_blur,		"blurDirection");
+uBlurSteps				= shader_get_uniform(shd_screen_blur,		"blurSteps");
+uSigma					= shader_get_uniform(shd_screen_blur,		"sigma");
+
 // Uniforms for the shader that is responsible for applying the quantization, dithering, and scanline effects
-// onto the game's image (Note that UI elements don't have these effect applied onto them).
+// onto the game's image.
 uScanlineFactor			= shader_get_uniform(shd_retro_effects,		"scanlineFactor");
 uQuantizeLevel			= shader_get_uniform(shd_retro_effects,		"quantizeLevel");
 uDitherMatrix			= shader_get_uniform(shd_retro_effects,		"ditherMatrix");

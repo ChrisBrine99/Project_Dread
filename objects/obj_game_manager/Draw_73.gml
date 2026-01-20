@@ -87,6 +87,23 @@ texture_set_stage(uLightTexture,		global.lightTexture);
 draw_surface(global.worldSurface, _xView, _yView);
 shader_reset();
 
+// 
+shader_set(shd_screen_blur);
+shader_set_uniform_f(uTexelSize, 1 / _wView, 1 / _hView);
+shader_set_uniform_f(uBlurSteps, 3);
+shader_set_uniform_f(uSigma, 0.25);
+
+// 
+shader_set_uniform_f(uBlurDirection, 1.0, 0.0);
+surface_set_target(global.worldSurface);
+draw_surface(application_surface, 0, 0);
+surface_reset_target();
+
+// 
+shader_set_uniform_f(uBlurDirection, 0.0, 1.0);
+draw_surface(global.worldSurface, _xView, _yView);
+shader_reset();
+
 #region Debug Element Rendering Code
 
 var _length = ds_list_size(debugLines);
