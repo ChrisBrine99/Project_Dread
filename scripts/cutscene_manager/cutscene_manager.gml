@@ -7,17 +7,20 @@
 #macro	SCENE_PREV_INFLAG_LOG			0x00000002
 #macro	SCENE_FLAG_ACTIVE				0x00000004
 #macro	SCENE_FLAG_TEXTBOX_OPEN			0x00000008
+#macro	SCENE_FLAG_ACTION_FIRST_CALL	0x00000010
 
 // Defines to check if each respective flag is currently set (1) or cleared (0).
 #macro	SCENE_WAS_LOG_RELEASED			((flags & (SCENE_INFLAG_LOG | SCENE_PREV_INFLAG_LOG))	== SCENE_PREV_INFLAG_LOG)
 #macro	SCENE_IS_ACTIVE					((flags & SCENE_FLAG_ACTIVE)							!= 0)
 #macro	SCENE_IS_TEXTBOX_OPEN			((flags & SCENE_FLAG_TEXTBOX_OPEN)						!= 0)
+#macro	SCENE_IS_ACTION_FIRST_CALL		((flags & SCENE_FLAG_ACTION_FIRST_CALL)					!= 0)
 
 // References to the functions that will perform a given action within a currently executing scene.
 #macro	SCENE_CONCURRENT_ACTIONS		CUTSCENE_MANAGER.cutscene_queue_concurrent_actions
 #macro	SCENE_WAIT						CUTSCENE_MANAGER.cutscene_wait
 #macro	SCENE_WAIT_TEXTBOX				CUTSCENE_MANAGER.cutscene_wait_for_textbox
 #macro	SCENE_WAIT_CONCURRENT			CUTSCENE_MANAGER.cutscene_wait_for_concurrent_actions
+#macro	SCENE_SET_EVENT_FLAG			CUTSCENE_MANAGER.cutscene_set_event_flag
 #macro	SCENE_SNAP_CAMERA				CUTSCENE_MANAGER.cutscene_snap_camera_to_position
 #macro	SCENE_MOVE_CAMERA				CUTSCENE_MANAGER.cutscene_move_camera_to_position
 #macro	SCENE_QUEUE_TEXTBOX				CUTSCENE_MANAGER.cutscene_queue_new_text
@@ -35,7 +38,7 @@
 function str_cutscene_manager(_index) : str_base(_index) constructor {
 	flags		= STR_FLAG_PERSISTENT;
 	
-	// 
+	// Variables for storing the cutscene manager's current, next, and last states, respectively.
 	curState	= STATE_NONE;
 	nextState	= STATE_NONE;
 	lastState	= STATE_NONE;
@@ -71,11 +74,13 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	///	
+	///	The cutscene manager's default state. It executes the current action for the scene, checks to see if
+	/// the log needs to be opened, and so on. 
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_default = function(_delta){
-		// 
+		// Handle updating the cutscene's input flag, and then check if that input was pressed and released
+		// at this current point in time. If so, the cutscene will pause so the log can open for viewing.
 		process_input();
 		if (SCENE_WAS_LOG_RELEASED){
 			object_set_state(state_open_log_animation);
@@ -86,11 +91,12 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 				flags = flags | TBOXLOG_FLAG_ACTIVE;
 			}
 			
-			// 
+			// Don't bother with the code below if the textbox isn't currently open.
 			if (!GAME_IS_TEXTBOX_OPEN)
 				return;
 			
-			// 
+			// Make sure the textbox also moves onto its state for waiting on the log's opening animation if
+			// it is currently open and active within the current scene.
 			with(TEXTBOX){
 				object_set_state(state_open_log_animation);
 				flags			= flags & ~(TBOX_INFLAG_TEXT_LOG | TBOX_INFLAG_ADVANCE) | TBOX_FLAG_LOG_ACTIVE;
@@ -118,20 +124,23 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 	}
 
 	/// @description 
-	/// 
+	/// State that is executed whenever the player is currently viewing the conversation/textbox log. The state
+	/// is exited once the player triggers the closure of the log.
 	/// 
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_view_log = function(_delta){
 		var _isClosing = false;
 		with(TEXTBOX_LOG)
-			_isClosing = TBOXLOG_IS_CLOSING; 
+			_isClosing = TBOXLOG_IS_CLOSING;
 		
 		if (_isClosing)
-			object_set_state(state_default);
+			object_set_state(state_close_log_animation);
 	}
 	
 	/// @description 
-	/// 
+	/// State that executes when the cutscene is waiting for the textbox's log to complete its opening 
+	/// animation. Once that animation has completed, the cutscene manager will remain paused until the player
+	///	chooses to close the log and continue the current scene's execution.
 	/// 
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_open_log_animation = function(_delta){
@@ -144,7 +153,9 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	/// 
+	/// State that executes when the cutscene is waiting for the textbox's log to complete its closing
+	/// animation. Once that animation has completed, the cutscene manager returns to executing the remainder
+	/// of its action queue.
 	/// 
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_close_log_animation = function(_delta){
@@ -157,7 +168,10 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	///	
+	///	Handles getting the current state of the input used by the cutscene manager. It stores the current
+	/// and previous state of this bit in the "flags" variable (THe 1st and 2nd bits, respectively) since it 
+	/// would be a waste to store them into two separate variables like the input management in the player
+	/// object, for example
 	///	
 	process_input = function(){
 		var _inputFlag	= (flags & SCENE_INFLAG_LOG) != 0;
@@ -222,7 +236,8 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 			entity_unpause_all();
 		}
 		
-		waitTimer = 0.0;
+		flags		= flags & ~SCENE_FLAG_ACTION_FIRST_CALL;
+		waitTimer	= 0.0;
 	}
 	
 	/// @description 
@@ -274,6 +289,16 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 			
 		waitTimer += curDelta;
 		return (waitTimer >= _duration);
+	}
+	
+	/// @description 
+	///	Function that sets a given event flag to the desired state within a cutscene.
+	///	
+	///	@param {Real}	flagID		The position of the bit (Starting from 0 as the first) to get the value of.
+	/// @param {Bool}	flagState	The desired value to set the event's bit to (True = 1, False = 0).
+	cutscene_set_event_flag = function(_flagID, _flagState){
+		event_set_flag(_flagID, _flagState);
+		return true;
 	}
 	
 	/// @description 
@@ -368,7 +393,8 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	///	
+	///	A function that causes an entity to move from one position to another over the course of however long
+	/// it takes the entity to reach the target position in question.
 	///	
 	///	@param {Id.Instance}	id			The ID for the entity that will be moved.
 	/// @param {Real}			xTarget		Target position along the current room's x axis.

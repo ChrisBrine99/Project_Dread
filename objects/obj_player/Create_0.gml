@@ -476,10 +476,10 @@ handle_light_toggle_input = function(){
 		flags  = flags & ~PLYR_FLAG_FLASHLIGHT;
 		lightX = PLYR_AMBLIGHT_XOFFSET;
 		lightY = PLYR_AMBLIGHT_YOFFSET;
-		lightSource.light_set_properties(PLYR_AMBLIGHT_RADIUS, PLYR_AMBLIGHT_COLOR, PLYR_AMBLIGHT_STRENGTH);
+		lightRef.light_set_properties(PLYR_AMBLIGHT_RADIUS, PLYR_AMBLIGHT_COLOR, PLYR_AMBLIGHT_STRENGTH);
 	} else{ // Turning on the flashlight; using the properties of the equipped flashlight.
 		flags  = flags |  PLYR_FLAG_FLASHLIGHT;
-		var _light = lightSource;
+		var _light = lightRef;
 		with(equipment){ // Jump into the equipment struct so the light's parameters can be applied.
 			_light.light_set_properties(
 				lightParamRef[EQUP_PARAM_LIGHT_RADIUS], 
@@ -663,7 +663,7 @@ equip_flashlight = function(_itemStructRef, _itemSlot){
 	// signifies the light's state, and apply the parameters of the player's ambient light to be that of
 	// the equipped light's parameters.
 	flags = flags | PLYR_FLAG_FLASHLIGHT;
-	lightSource.light_set_properties(
+	lightRef.light_set_properties(
 		_paramRef[EQUP_PARAM_LIGHT_RADIUS],
 		_paramRef[EQUP_PARAM_LIGHT_COLOR], 
 		_paramRef[EQUP_PARAM_LIGHT_STRENGTH]
@@ -677,7 +677,7 @@ unequip_flashlight = function(){
 	// Clear the flag that signifies the flashlight is currently on, and restore the player's default
 	// ambient light source characteristics.
 	flags = flags & ~PLYR_FLAG_FLASHLIGHT;
-	lightSource.light_set_properties(PLYR_AMBLIGHT_RADIUS, PLYR_AMBLIGHT_COLOR, PLYR_AMBLIGHT_STRENGTH);
+	lightRef.light_set_properties(PLYR_AMBLIGHT_RADIUS, PLYR_AMBLIGHT_COLOR, PLYR_AMBLIGHT_STRENGTH);
 	
 	// Reset the light value so it is no longer a valid slot in the inventory and reset the reference value
 	// that points towards its parameters for whenever the light is active.
@@ -1096,7 +1096,9 @@ state_default = function(_delta){
 		}
 	}
 	
-	// 
+	// Store the previous position of the player so a line collision can be performed between it and the new
+	// position they are at after movement/collision has been executed. Used for handling cutscene trigger
+	// collisions at the end of this state.
 	var _xPrev = x;
 	var _yPrev = y;
 	
@@ -1115,18 +1117,22 @@ state_default = function(_delta){
 		maxMoveSpeed	= PLYR_SPEED_NORMAL;
 	}
 	
-	// 
+	// Check if a cutscene collider was walked into during the current frame. If so, the scene it has will be
+	// queued up and executed immediately upon this collision.
 	with(collision_line(_xPrev, _yPrev, x + _xMove, y + _yMove, obj_cutscene_collider, false, true)){
 		var _actionQueue = actionQueue;
 		with(CUTSCENE_MANAGER)
 			start_action_queue(_actionQueue);
-		// instance_destroy(self);
 		
-		// 
+		// Check if the collider needs to destroy itself upon activation of its scene. If so, destroy the
+		// object now that its scene information has been copied into the cutscene manager.
+		if (CUTCOL_DESTROY_ON_COLLIDE)
+			instance_destroy(self);
+		
+		// Revert the player to their standing sprite now that control has been taken away.
 		with(PLAYER){
 			flags = flags & ~PLYR_FLAG_SPRINTING;
 			animCurFrame = 0.0;
-			return;
 		}
 	}
 
