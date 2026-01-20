@@ -23,12 +23,20 @@
 #macro	SCENE_SET_EVENT_FLAG			CUTSCENE_MANAGER.cutscene_set_event_flag
 #macro	SCENE_SNAP_CAMERA				CUTSCENE_MANAGER.cutscene_snap_camera_to_position
 #macro	SCENE_MOVE_CAMERA				CUTSCENE_MANAGER.cutscene_move_camera_to_position
+#macro	SCENE_MOVE_CAMERA_PATH			CUTSCENE_MANAGER.cutscene_move_camera_along_path
+#macro	SCENE_CAMERA_FOLLOW_OBJECT		CUTSCENE_MANAGER.cutscene_camera_set_followed_object
 #macro	SCENE_QUEUE_TEXTBOX				CUTSCENE_MANAGER.cutscene_queue_new_text
 #macro	SCENE_QUEUE_TEXTBOX_EXT			CUTSCENE_MANAGER.cutscene_queue_new_text_ext
 #macro	SCENE_ACTIVATE_TEXTBOX			CUTSCENE_MANAGER.cutscene_activate_textbox
 #macro	SCENE_SNAP_OBJECT				CUTSCENE_MANAGER.cutscene_snap_object_to_position
 #macro	SCENE_DESTROY_OBJECT			CUTSCENE_MANAGER.cutscene_destroy_object
 #macro	SCENE_MOVE_ENTITY				CUTSCENE_MANAGER.cutscene_move_entity_to_position
+#macro	SCENE_MOVE_ENTITY_PATH			CUTSCENE_MANAGER.cutscene_move_entity_along_path
+
+// 
+#macro	SCENE_WAIT_TIMER_INDEX			0
+#macro	SCENE_CAMERA_TIMER_INDEX		1
+#macro	SCENE_TOTAL_TIMERS				2
 
 #endregion Cutscene Manager Macro Definitions
 
@@ -36,33 +44,34 @@
 
 /// @param {Function}	index	The value of "str_cutscene_manager" as determined by GameMaker during runtime.
 function str_cutscene_manager(_index) : str_base(_index) constructor {
-	flags		= STR_FLAG_PERSISTENT;
+	flags				= STR_FLAG_PERSISTENT;
 	
 	// Variables for storing the cutscene manager's current, next, and last states, respectively.
-	curState	= STATE_NONE;
-	nextState	= STATE_NONE;
-	lastState	= STATE_NONE;
+	curState			= STATE_NONE;
+	nextState			= STATE_NONE;
+	lastState			= STATE_NONE;
 	
 	// The main values for the cutscene manager's functionality. The first value keeps track of what action
 	// is being executed by the current scene. The second stores the complete list of actions to perform.
 	// Finally, the last value simply stores the current size of the queue.
-	actionIndex	= 0;
-	actionQueue = ds_list_create();
-	queueSize	= 0;
+	actionIndex			= 0;
+	actionQueue			= ds_list_create();
+	queueSize			= 0;
 	
 	// Stores a list of concurrently executing actions within the cutscene. They will execute alongside the
 	// current action being processed within the queue, and will remove themselves from this list when
 	// completed.
-	ccActions	= ds_list_create();
+	ccActions			= ds_list_create();
 	
 	// Stores the delta for the frame that was passed into the cutscene manager's step event. This is needed
 	// since the action functions themselves don't all need this value in order to execute, and having to
 	// constantly pass it in would be a waste.
-	curDelta	= 0.0;
+	curDelta			= 0.0;
 	
 	// Various variables that can used by actions to perform certain actions (Ex. incrementing a value until
 	// it hits or exceeds the requirement, etc.).
-	waitTimer	= 0.0;
+	timers				= array_create(SCENE_TOTAL_TIMERS, 0.0);
+	prevFollowedObject	= noone;
 	
 	/// @description 
 	///	The cutscene manager struct's destroy event. It will clean up anything that isn't automatically 
@@ -207,6 +216,16 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 		actionIndex		= 0;
 		ds_list_copy(actionQueue, _actionQueue);
 		
+		// Store the id for the object that the camera was previously following since the camera can be set
+		// to follow other objects or move around as required throughout a scene Then remove that object from
+		// being the one the camera follows.
+		var _followedObject = noone;
+		with(CAMERA){ 
+			_followedObject = followedObject; 
+			followedObject	= noone;
+		}
+		prevFollowedObject = _followedObject;
+		
 		// Finally, pause all entities that are flagged to be paused by cutscene. If not, they will continue
 		// executing whatever they were before the scene as normal.
 		with(par_dynamic_entity){
@@ -234,10 +253,14 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 			flags			= flags & ~SCENE_FLAG_ACTIVE;
 			ds_list_clear(actionQueue);
 			entity_unpause_all();
+			
+			// Make sure the camera has its followed object reassigned after the scene is completed.
+			var _prevFollowedObject = prevFollowedObject;
+			with(CAMERA) { camera_set_followed_object(_prevFollowedObject, false); }
 		}
 		
 		flags		= flags & ~SCENE_FLAG_ACTION_FIRST_CALL;
-		waitTimer	= 0.0;
+		timers		= array_create(SCENE_TOTAL_TIMERS, 0.0);
 	}
 	
 	/// @description 
@@ -259,8 +282,8 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 	///	
 	///	@param {Real}	duration	How long the period of waiting will last in units (1 second = 60 units).
 	cutscene_wait = function(_duration){
-		waitTimer += curDelta;
-		return (waitTimer >= _duration);
+		timers[SCENE_WAIT_TIMER_INDEX] += curDelta;
+		return (timers[SCENE_WAIT_TIMER_INDEX] >= _duration);
 	}
 	
 	/// @description 
@@ -274,8 +297,8 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 				return;
 		}
 		
-		waitTimer += curDelta;
-		return (waitTimer >= _duration);
+		timers[SCENE_WAIT_TIMER_INDEX] += curDelta;
+		return (timers[SCENE_WAIT_TIMER_INDEX] >= _duration);
 	}
 	
 	/// @description 
@@ -287,8 +310,8 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 		if (ds_list_size(ccActions) > 0)
 			return false;
 			
-		waitTimer += curDelta;
-		return (waitTimer >= _duration);
+		timers[SCENE_WAIT_TIMER_INDEX] += curDelta;
+		return (timers[SCENE_WAIT_TIMER_INDEX] >= _duration);
 	}
 	
 	/// @description 
@@ -321,11 +344,45 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 	///	
 	///	@param {Real}	x			Target position along the current room's x axis.
 	/// @param {Real}	y			Target position along the current room's y axis.
-	///	@param {Real}	speed		How fast the camera will move towards the target coordinates.
-	cutscene_move_camera_to_position = function(_x, _y, _speed){
+	///	@param {Real}	speed		(Optional) How fast the camera will move towards the target coordinates.
+	cutscene_move_camera_to_position = function(_x, _y, _speed = 0.25){
 		var _curDelta = curDelta;
 		with(CAMERA) { return move_towards_position(_x, _y, _speed, _curDelta); }
 		return true; // If this line is somehow reached there are BIG problems.
+	}
+	
+	/// @description 
+	///	
+	///	
+	///	@param {Array<Real>}	path	The list of x/y coordinates that the camera will move between.
+	/// @param {Real}			speed	How fast the camera will move along the points in the path.
+	cutscene_move_camera_along_path = function(_path, _speed = 1.0){
+		var _curDelta = curDelta;
+		with(CAMERA){
+			// The path index has hit or exceeded the number of points along the path; return true so the
+			// action completes itself and the scene can move along.
+			var _pathIndex = pathIndex * 2;
+			if (_pathIndex >= array_length(_path)){
+				pathIndex = 0;
+				return true;
+			}
+			
+			// 
+			if (move_towards_position_linear(_path[_pathIndex], _path[_pathIndex + 1], _speed, _curDelta))
+				pathIndex++;
+			return false;
+		}
+		return true;
+	}
+	
+	/// @description 
+	///	
+	///	
+	///	@param {Id.Instance}	id				The unique id value for the object the camera will begin following.
+	/// @param {Bool}			snapToPosition	When true, the camera will immediately center itself onto the followed object's position.
+	cutscene_camera_set_followed_object = function(_id, _snapToPosition){
+		with(CAMERA) { camera_set_followed_object(_id, _snapToPosition); }
+		return true;
 	}
 	
 	/// @description 
@@ -403,6 +460,35 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 	cutscene_move_entity_to_position = function(_id, _xTarget, _yTarget, _speed = 1.0){
 		var _curDelta = curDelta;
 		with(_id) { return move_to_position(_curDelta, _xTarget, _yTarget, _speed); }
+		return true;
+	}
+	
+	/// @description 
+	///	An extension of the standard cutscene_move_entity_to_position function that allows a list of points
+	/// to be used as a path that the entity will follow. The action is ended when the entity has hit the
+	/// final target position in that list.
+	///	
+	///	@param {Id.Instance}	id		The ID for the entity that will be moved.
+	/// @param {Array<Real>}	path	A list of x/y coordinates that the Entity will move to in order.
+	/// @param {Real}			speed	(Optional) How fast the entity will move relative to its current max speed.
+	cutscene_move_entity_along_path = function(_id, _path, _speed = 1.0){
+		var _curDelta = curDelta;
+		with(_id){
+			// The path index has hit or exceeded the number of points along the path; return true so the
+			// action completes itself and the scene can move along.
+			var _pathIndex = pathIndex * 2;
+			if (_pathIndex >= array_length(_path)){
+				pathIndex = 0;
+				return true;
+			}
+			
+			// Use the standard move_to_position function alongside the current target position within the
+			// path the Entity is currently on. If that target is hit, the Entity moves onto the next path
+			// point and repeats the process.
+			if (move_to_position(_curDelta, _path[_pathIndex], _path[_pathIndex + 1], _speed))
+				pathIndex++;
+			return false;
+		}
 		return true;
 	}
 }

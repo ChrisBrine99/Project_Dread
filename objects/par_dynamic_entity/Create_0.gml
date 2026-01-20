@@ -72,6 +72,10 @@ lightRef		= noone;
 xLight			= 0;
 yLight			= 0;
 
+// FOR CUTSCENES ONLY!!! Allows an entity to keep track of where they are along a list of positions in a path
+// they are following in a cutscene.
+pathIndex		= 0;
+
 #endregion Variable Initializations
 
 #region Utility Function Definitions

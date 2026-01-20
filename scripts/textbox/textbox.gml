@@ -77,7 +77,7 @@
 #macro	TBOX_PUNCT_EXCLAIM_DELAY		0.075
 
 // Determines the position on the GUI the textbox will begin the opening animation at.
-#macro	TBOX_YSTART					VIEWPORT_HEIGHT + 30
+#macro	TBOX_YSTART						VIEWPORT_HEIGHT + 30
 
 // Determines the position on the GUI the textbox will rest at after its opening transition has completed.
 #macro	TBOX_YTARGET					VIEWPORT_HEIGHT - 64

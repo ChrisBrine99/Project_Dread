@@ -11,10 +11,10 @@ var _yView = 0;
 var _wView = 0;
 var _hView = 0;
 with(CAMERA){
-	_xView = viewportX;
-	_yView = viewportY;
-	_wView = _xView + viewportWidth;
-	_hView = _yView + viewportHeight;
+	_xView = xViewport;
+	_yView = yViewport;
+	_wView = _xView + wViewport;
+	_hView = _yView + hViewport;
 }
 
 // Since all entities are looped through in this event, it makes sense to drawn their shadows here as well

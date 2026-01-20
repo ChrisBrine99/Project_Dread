@@ -15,7 +15,7 @@ shader_set_uniform_f_array(uDitherMatrix, [
 // Get the size of the application surface which is equal to the viewport's current dimensions. This is used to
 // apply the dither effect across the pixels of the output image.
 var _uViewportSize = uViewportSize;
-with(CAMERA) { shader_set_uniform_f(_uViewportSize, viewportWidth, viewportHeight); }
+with(CAMERA) { shader_set_uniform_f(_uViewportSize, wViewport, hViewport); }
 
 // Transfer over each flag that the shader will use to determine if each of the three effects are currently set
 // to active by the player. They are passed in as integers since GameMaker doesn't have a "uniform_b" variant for

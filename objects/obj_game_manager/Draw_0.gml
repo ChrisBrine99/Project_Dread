@@ -4,8 +4,8 @@ if (surface_exists(global.shadowSurface)){
 	var _xView = 0;
 	var _yView = 0;
 	with(CAMERA){
-		_xView = viewportX;
-		_yView = viewportY;
+		_xView = xViewport;
+		_yView = yViewport;
 	}
 	
 	draw_set_alpha(0.5);

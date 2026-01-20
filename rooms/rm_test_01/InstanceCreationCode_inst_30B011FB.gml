@@ -1,3 +1,5 @@
+flags = CUTCOL_FLAG_NEVER_DESTROY;
+
 var _setNextIndex = TEXTBOX.set_next_index;
 var _setEventFlag = TEXTBOX.set_event_flag;
 var _queueTextbox = SCENE_QUEUE_TEXTBOX;
@@ -26,10 +28,23 @@ ds_list_add(actionQueue,
 				]
 			]
 		],
-		[SCENE_MOVE_ENTITY, PLAYER, 200, 150, 1.0],
+		[SCENE_MOVE_ENTITY_PATH, PLAYER, [
+				200, 150,
+				300, 180,
+				240, 120,
+				200, 150
+			]
+		],
+		[SCENE_CAMERA_FOLLOW_OBJECT, PLAYER, false]
+		// [SCENE_MOVE_CAMERA_PATH, [
+		// 		200, 150,
+		// 		300, 180,
+		// 		240, 120,
+		// 		200, 150
+		// 	]
+		// ]
 	]],
 	[SCENE_ACTIVATE_TEXTBOX],
-	[SCENE_WAIT_CONCURRENT, 20.0],
-	[SCENE_MOVE_CAMERA, 200, 150, 0.25],
+	[SCENE_WAIT_CONCURRENT, 0.0],
 	[SCENE_WAIT_TEXTBOX, 20.0]
 );

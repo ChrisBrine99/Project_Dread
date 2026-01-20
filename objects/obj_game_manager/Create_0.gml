@@ -10,7 +10,7 @@
 #macro	GAME_FLAG_PUZZDIFF_FORGIVING	0x00000020	// Puzzle difficulty flags
 #macro	GAME_FLAG_PUZZDIFF_STANDARD		0x00000040
 #macro	GAME_FLAG_PUZZDIFF_PUNISHING	0x00000080
-#macro	GAME_FLAG_PLAYTIME_ACTIVE		0x00800000	// Other impotant flags
+#macro	GAME_FLAG_PLAYTIME_ACTIVE		0x00800000	// Other important flags
 #macro	GAME_FLAG_TRANSITION_ACTIVE		0x01000000
 #macro	GAME_FLAG_ROOM_WARP				0x02000000
 #macro	GAME_FLAG_TEXTBOX_OPEN			0x04000000
@@ -379,8 +379,8 @@ uScanlinesActive		= shader_get_uniform(shd_retro_effects,		"scanlinesActive");
 // Stores the current offset for the screen-wide noise effect. This allows the game to pause the effect if it
 // is ever required since without these variables the draw call would constantly be setting new random numbers
 // for each offset between 0 and 63.
-noiseOffsetX			= 0;
-noiseOffsetY			= 0;
+xNoiseOffset			= 0;
+yNoiseOffset			= 0;
 
 // Variables for storing data regarding a room transition. The first value is simply the index for the room
 // that should be loaded next. The second is a map containing the instances that should move to the next room.

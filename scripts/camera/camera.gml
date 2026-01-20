@@ -36,17 +36,24 @@ function str_camera(_index) : str_base(_index) constructor {
 	x				= 0;
 	y				= 0;
 	
+	// 
+	xFraction		= 0.0;
+	yFraction		= 0.0;
+	
 	// Create the camera instance, set its position such that the camera's position is as close to the center
 	// of the screen as possible, and set its view size to match that of the viewport dimensions above.
 	cameraID		= camera_create();
 	
 	// Variables that keep track of various characteristics of the camera's viewport. It stores the positional
 	// data and current size of the viewport, as well as the instance ID for the object the camera is following.
-	viewportX		= 0;
-	viewportY		= 0;
-	viewportWidth	= 0;
-	viewportHeight	= 0;
+	xViewport		= 0;
+	yViewport		= 0;
+	wViewport		= 0;
+	hViewport		= 0;
 	followedObject	= noone;
+	
+	// 
+	pathIndex		= 0;
 	
 	// A struct that stores all the properties related to the camera's shaking effect.
 	screenShake	= {
@@ -128,16 +135,16 @@ function str_camera(_index) : str_base(_index) constructor {
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	end_step_event = function(_delta){
 		// Offset the viewport coordinates such that the viewport is centered on the camera's position.
-		var _viewX = x - floor(viewportWidth / 2);
-		var _viewY = y - floor(viewportHeight / 2);
+		var _viewX = x - floor(wViewport / 2);
+		var _viewY = y - floor(hViewport / 2);
 		
 		// Set the camera's viewport position within the room relative to the calculated position above and
 		// whether or not the viewport is bound to stay within the room's dimensions. If bound, the values
 		// are clamped. Otherwise, they are unchanged.
 		if (CAM_ARE_BOUNDS_LOCKED){
 			camera_set_view_pos(cameraID, 
-				clamp(_viewX, 0, room_width - viewportWidth), 
-				clamp(_viewY, 0, room_height - viewportHeight)
+				clamp(_viewX, 0, room_width - wViewport), 
+				clamp(_viewY, 0, room_height - hViewport)
 			);
 		} else{
 			camera_set_view_pos(cameraID, _viewX, _viewY);
@@ -167,8 +174,8 @@ function str_camera(_index) : str_base(_index) constructor {
 		}
 		
 		// Finally, update the viewport position variables to match the updated values.
-		viewportX = camera_get_view_x(cameraID);
-		viewportY = camera_get_view_y(cameraID);
+		xViewport = camera_get_view_x(cameraID);
+		yViewport = camera_get_view_y(cameraID);
 	}
 	
 	/// @description 
@@ -191,6 +198,40 @@ function str_camera(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
+	///	
+	///	
+	///	@param {Real}	x		Target position along the current room's x axis.
+	/// @param {Real}	y		Target position along the current room's y axis.
+	///	@param {Real}	speed	Determines how fast the camera will move towards the object in question.
+	///	@param {Real}	delta	The difference in time between the execution of this frame and the last.
+	move_towards_position_linear = function(_x, _y, _speed, _delta){
+		var _dSpeed		= _speed * _delta;
+		var _direction	= point_direction(x, y, _x, _y);
+		
+		// 
+		var _xSpeed	= lengthdir_x(_dSpeed, _direction);
+		x		   += _xSpeed + xFraction;
+		xFraction	= x - (floor(abs(x)) * sign(x));
+		x		   -= xFraction;
+		
+		// 
+		var _ySpeed	= lengthdir_y(_dSpeed, _direction);
+		y		   += _ySpeed + yFraction;
+		yFraction	= y - (floor(abs(y)) * sign(y));
+		y		   -= yFraction;
+		
+		// 
+		if (point_distance(x, y, _x, _y) <= _dSpeed){
+			x			= _x;
+			y			= _y;
+			xFraction	= 0.0;
+			yFraction	= 0.0;
+			return true;
+		}
+		return false;
+	}
+	
+	/// @description 
 	///	Moves the camera towards a given position smoothly. It will decelerate as it gets closer to its
 	/// target position; returning true once it has reached that destination. Otherwise, it returns false.
 	///	
@@ -198,7 +239,7 @@ function str_camera(_index) : str_base(_index) constructor {
 	/// @param {Real}	y		Target position along the current room's y axis.
 	///	@param {Real}	speed	Determines how fast the camera will move towards the object in question.
 	///	@param {Real}	delta	The difference in time between the execution of this frame and the last.
-	move_towards_position = function(_x, _y, _speed, _delta){
+	move_towards_position_smooth = function(_x, _y, _speed, _delta){
 		var _dSpeed = _speed * _delta; // Apply delta time to the speed value.
 		x		   += (_x - x) * _dSpeed;
 		y		   += (_y - y) * _dSpeed;
@@ -229,9 +270,8 @@ function str_camera(_index) : str_base(_index) constructor {
 		// Call the general function for smoothly moving the camera to a given position. Once that function
 		// returns true it means the camera has reached its destination, and the flag for enabling the camera
 		// to follow the object in question is set if it is the object it is currently set to follow.
-		if (move_towards_position(_objectX, _objectY, _speed, _delta) && _object == followedObject){
+		if (move_towards_position_smooth(_objectX, _objectY, _speed, _delta) && _object == followedObject)
 			flags = flags | CAM_FLAG_FOLLOWING_OBJECT;
-		}
 	}
 	
 	/// @description 
@@ -244,10 +284,10 @@ function str_camera(_index) : str_base(_index) constructor {
 	camera_set_viewport = function(_width, _height){
 		// If the camera hasn't been initialized for whatever reason OR the argument parameters match the current
 		// dimensions of the viewport--do not execute this function.
-		if (cameraID == -1 || (viewportWidth == _width && viewportHeight == _height))
+		if (cameraID == -1 || (wViewport == _width && hViewport == _height))
 			return;
-		viewportWidth	= _width;
-		viewportHeight	= _height;
+		wViewport	= _width;
+		hViewport	= _height;
 		
 		// Update the camera viewport, and the application surface/gui surface to match it.
 		camera_set_view_size(cameraID, _width, _height);
@@ -255,9 +295,9 @@ function str_camera(_index) : str_base(_index) constructor {
 		display_set_gui_size(_width, _height);
 		
 		// Finally, update the window size and positioning if the game isn't set to be full-screen.
-		var _scale		= global.settings.windowScale;
-		_width			= _width	* _scale;	// Update "_width" and "_height" variables to apply scaling to them.
-		_height			= _height	* _scale;
+		var _scale	= global.settings.windowScale;
+		_width		= _width	* _scale;	// Update "_width" and "_height" variables to apply scaling to them.
+		_height		= _height	* _scale;
 		window_set_size(_width, _height);
 		window_set_position(
 			floor((display_get_width() - _width) / 2), 

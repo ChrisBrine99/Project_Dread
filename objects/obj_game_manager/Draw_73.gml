@@ -1,17 +1,21 @@
 // Create a few local variables that will be used and referenced throughout the event by different instances
 // and structures to avoid having to constantly get the same values over and over again.
-var _minAlpha		= gpu_get_alphatestref() / 255.0;
-var _delta			= global.deltaTime;
-var _xView			= 0;
-var _yView			= 0;
+var _minAlpha	= gpu_get_alphatestref() / 255.0;
+var _delta		= global.deltaTime;
+var _xView		= 0;
+var _yView		= 0;
+var _wView		= 0;
+var _hView		= 0;
 
 // Scope into the camera struct in order to reference the viewport dimensions which are used for setting the
 // size of the surface that all light sources will be drawn onto.
 with(CAMERA){
-	// Store the viewport's current x and y values once so each light can reference it without having to 
-	// constantly grab it from the camera again and again on a light-by-light basis.
-	_xView	= viewportX;
-	_yView	= viewportY;
+	// Store the viewport's current x/y and width/height values once so each light can reference it without 
+	// having to constantly grab it from the camera again and again on an per-object/struct basis.
+	_xView	= xViewport;
+	_yView	= yViewport;
+	_wView	= wViewport;
+	_hView	= hViewport;
 	
 	// Exit from updating the current lighting if the game is completely paused. The surface will still be
 	// drawn below, but no updates are made to it until the game is unpaused once more. 
@@ -22,7 +26,7 @@ with(CAMERA){
 	// for a potential flushing by the GPU here and a new surface is created if that happens to be the case.
 	// Then, the unaltered application surface is drawn to it.
 	if (!surface_exists(global.worldSurface))
-		global.worldSurface = surface_create(viewportWidth, viewportHeight);
+		global.worldSurface = surface_create(wViewport, hViewport);
 	surface_set_target(global.worldSurface);
 	draw_surface(application_surface, 0, 0);
 	surface_reset_target();
@@ -31,7 +35,7 @@ with(CAMERA){
 	// surface will be created, and a reference to its texture ID will be stored so the lighting shader can 
 	// utilize it.
 	if (!surface_exists(global.lightSurface)){
-		global.lightSurface = surface_create(viewportWidth, viewportHeight);
+		global.lightSurface = surface_create(wViewport, hViewport);
 		global.lightTexture	= surface_get_texture(global.lightSurface);
 	}
 		
@@ -43,9 +47,9 @@ with(CAMERA){
 	
 	// Loop through all existing light sources and render them if they are on screen.
 	var _length	= ds_list_size(global.lights);
-	var _wView	= viewportX + viewportWidth;
-	var _hView	= viewportY + viewportHeight;
 	var _light	= noone;
+	var _wViewX	= _xView + _wView;
+	var _hViewY = _yView + _hView;
 	var _index	= 0;
 	while (_index < _length){
 		_light = ds_list_find_value(global.lights, _index);
@@ -53,7 +57,7 @@ with(CAMERA){
 			// Skip rendering the light source if it isn't currently active, the strength value is too low, or
 			// the position/radius of the light is outside of the viewport's current bounds.
 			if (!LGHT_IS_ACTIVE || strength <= _minAlpha || x + radius < _xView || y + radius < _yView 
-					|| x - radius > _wView || y - radius > _hView)
+					|| x - radius > _wViewX || y - radius > _hViewY)
 				continue;
 			draw_event(_xView, _yView, _delta);
 			
@@ -150,10 +154,5 @@ with(SCREEN_FADE){
 	if (!FADE_IS_ACTIVE || alpha < _minAlpha)
 		break; // Skip over rendering the screen fade it its alpha isn't high enough or it is inactive.
 	
-	var _color = fadeColor;
-	var _alpha = alpha;
-	with(CAMERA){ // Jump into the camera's scope so the viewport's values can be utilized.
-		draw_sprite_ext(spr_rectangle, 0, viewportX, viewportY, 
-			viewportWidth, viewportHeight, 0, _color, _alpha);
-	}
+	draw_sprite_ext(spr_rectangle, 0, _xView, _yView, _wView, _hView, 0.0, color, alpha);
 }
