@@ -186,14 +186,16 @@
 // objects are "special" in that only one instance may exist of any of them during runtime, and attempts to create
 // multiples instances of them will fail when utilizing the proper creation functions. They also cannot be deleted
 // during runtime and attempts to do so will also fail when utilizing the proper deletion functions.
-global.sInstances = ds_map_create();
+global.sInstances		= ds_map_create();
 
 // Stores a copy of the application surface for any post-processing effects that require the application surface
 // that occur outside of the draw GUI events. Otherwise, it will draw itself to itself which makes no sense and
 // nothing will be rendered.
 global.worldSurface		= -1;
 
-// 
+// Surface that contains the shadows casted by entities onto the floor beneath them. The mask layer will
+// store an ID for the tile layer of all walls in the room which will be used to mask out any shadows that
+// might cast onto these walls if their shape doesn't match the entity's collision bounds.
 global.shadowSurface	= -1;
 maskLayerID				= -1;
 
@@ -438,17 +440,17 @@ numStaticDrawn	= 0;
 /// for the lifetime set in the final parameter (60 units = 1 second of real-time). Useful for showing hitscan
 /// collision lines and such.
 ///	
-///	@param {Real}	startX
-/// @param {Real}	startY
-/// @param {Real}	endX
-/// @param {Real}	endY
-/// @param {Real}	lifetime
-add_debug_line = function(_startX, _startY, _endX, _endY, _lifetime){
+///	@param {Real}	xStart		Origin of the line along the current room's x axis.
+/// @param {Real}	yStart		Origin of the line along the current room's y axis.
+/// @param {Real}	xEnd		Endpoint of the line along the current room's x axis.
+/// @param {Real}	yEnd		Endpoint of the line along the current room's y axis.
+/// @param {Real}	lifetime	How long the line will be displayed for in units.
+add_debug_line = function(_xStart, _yStart, _xEnd, _yEnd, _lifetime){
 	ds_list_add(debugLines, {
-		startX		: _startX,
-		startY		: _startY,
-		endX		: _endX,
-		endY		: _endY,
+		xStart		: _xStart,
+		yStart		: _yStart,
+		xEnd		: _xEnd,
+		yEnd		: _yEnd,
 		curLifetime	: _lifetime,
 		lifetime	: max(_lifetime, 1),
 	});

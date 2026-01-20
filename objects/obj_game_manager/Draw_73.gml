@@ -43,8 +43,8 @@ with(CAMERA){
 	
 	// Loop through all existing light sources and render them if they are on screen.
 	var _length	= ds_list_size(global.lights);
-	var _viewW	= viewportX + viewportWidth;
-	var _viewH	= viewportY + viewportHeight;
+	var _wView	= viewportX + viewportWidth;
+	var _hView	= viewportY + viewportHeight;
 	var _light	= noone;
 	var _index	= 0;
 	while (_index < _length){
@@ -53,7 +53,7 @@ with(CAMERA){
 			// Skip rendering the light source if it isn't currently active, the strength value is too low, or
 			// the position/radius of the light is outside of the viewport's current bounds.
 			if (!LGHT_IS_ACTIVE || strength <= _minAlpha || x + radius < _xView || y + radius < _yView 
-					|| x - radius > _viewW || y - radius > _viewH)
+					|| x - radius > _wView || y - radius > _hView)
 				continue;
 			draw_event(_xView, _yView, _delta);
 			
@@ -92,7 +92,7 @@ if (_length > 0){
 	for (var i = 0; i < _length; i++){
 		with(debugLines[| i]){
 			draw_set_alpha(1.0 * curLifetime / lifetime);
-			draw_line(startX, startY, endX, endY);
+			draw_line(xStart, yStart, xEnd, yEnd);
 		
 			curLifetime -= _delta;
 			if (curLifetime <= 0.0){

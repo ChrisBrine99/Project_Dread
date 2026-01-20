@@ -5,15 +5,18 @@
 #macro	TBOXLOG_INFLAG_UP				0x00000001
 #macro	TBOXLOG_INFLAG_DOWN				0x00000002
 #macro	TBOXLOG_INFLAG_CLOSE			0x00000004
-#macro	TBOXLOG_FLAG_RENDER				0x00000008
-#macro	TBOXLOG_FLAG_ACTIVE				0x00000010
-#macro	TBOXLOG_FLAG_CLOSING			0x00000020
+#macro	TBOXLOG_PREV_INFLAG_UP			0x00000008
+#macro	TBOXLOG_PREV_INFLAG_DOWN		0x00000010
+#macro	TBOXLOG_PREV_INFLAG_CLOSE		0x00000020
+#macro	TBOXLOG_FLAG_RENDER				0x00000040
+#macro	TBOXLOG_FLAG_ACTIVE				0x00000080
+#macro	TBOXLOG_FLAG_CLOSING			0x00000100
 
 // Macros that condense the code needed to check if each flag bit used by the textbox log's into a neat value
 // that can be auto-completed by GameMaker to simply the typing required.
-#macro	TBOXLOG_MOVE_UP_HELD			((flags & TBOXLOG_INFLAG_UP)		!= 0 && (prevInputFlags & TBOXLOG_INFLAG_UP)	!= 0)
-#macro	TBOXLOG_MOVE_DOWN_HELD			((flags & TBOXLOG_INFLAG_DOWN)		!= 0 && (prevInputFlags & TBOXLOG_INFLAG_DOWN)	!= 0)
-#macro	TBOXLOG_WAS_CLOSE_RELEASED		((flags & TBOXLOG_INFLAG_CLOSE)		== 0 && (prevInputFlags & TBOXLOG_INFLAG_CLOSE)	!= 0)
+#macro	TBOXLOG_MOVE_UP_HELD			((flags & TBOXLOG_INFLAG_UP)		!= 0 && (flags & TBOXLOG_PREV_INFLAG_UP)	!= 0)
+#macro	TBOXLOG_MOVE_DOWN_HELD			((flags & TBOXLOG_INFLAG_DOWN)		!= 0 && (flags & TBOXLOG_PREV_INFLAG_DOWN)	!= 0)
+#macro	TBOXLOG_WAS_CLOSE_RELEASED		((flags & TBOXLOG_INFLAG_CLOSE)		== 0 && (flags & TBOXLOG_PREV_INFLAG_CLOSE)	!= 0)
 #macro	TBOXLOG_SHOULD_RENDER			((flags & TBOXLOG_FLAG_RENDER)		!= 0)
 #macro	TBOXLOG_IS_ACTIVE				((flags & TBOXLOG_FLAG_ACTIVE)		!= 0)
 #macro	TBOXLOG_IS_CLOSING				((flags & TBOXLOG_FLAG_CLOSING)		!= 0)
@@ -47,13 +50,14 @@
 function str_textbox_log(_index) : str_base(_index) constructor {
 	flags				= STR_FLAG_PERSISTENT;
 	
-	// 
+	// Variables that store the current, next, and last state executed by the textbox log, respectively. Note
+	// that curState and nextState will be the same value when a state doesn't need to change. A difference
+	// will cause the state to change at the end of the current step event execution.
 	curState			= STATE_NONE;
 	nextState			= STATE_NONE;
 	lastState			= STATE_NONE;
 	
 	// 
-	prevInputFlags		= 0;
 	moveTimer			= 0.0;
 	
 	// Determines the overall transparency level for every graphics element of the textbox log.
@@ -310,6 +314,7 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 		// altered if needed; not the text contained on it.
 		draw_set_font(fnt_small);
 		draw_set_alpha(1.0);
+		draw_set_color(COLOR_WHITE);
 		draw_set_halign(fa_left);
 		draw_set_valign(fa_top);
 		
@@ -320,7 +325,6 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 		var _xCurChar		= 0;
 		var _yCurChar		= 0;
 		var _curChar		= "";
-		var _curCharColor	= COLOR_WHITE;
 		var _textLength		= 0;
 		var _textHeight		= string_height("M"); // All use same font, so height will not change between them.
 		var _isMultiColor	= true;
@@ -345,10 +349,10 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 					if (_isMultiColor){
 						with(colorData[| _colorIndex]){
 							if (_charIndex >= endIndex){ // The final index is hit; reset to color white and move to the next potential color.
-								_curCharColor = COLOR_WHITE;
+								draw_set_color(COLOR_WHITE);
 								_colorIndex++; 
 							} else if (_charIndex >= startIndex){ // Apply the desired color for the region of text.
-								_curCharColor = colorCode;
+								draw_set_color(colorCode);
 							}
 						}
 					}
@@ -364,7 +368,7 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 					
 					// Once the proper coordinates have been set as required, the character is drawn and the 
 					// width of said character is added to properly offset the next character in the string.
-					draw_text_shadow(_xCurChar, _yCurChar, _curChar, _curCharColor, TBOX_TEXT_ALPHA, COLOR_GRAY);
+					draw_text(_xCurChar, _yCurChar, _curChar);
 					_xCurChar += string_width(_curChar);
 				}
 			}
@@ -430,8 +434,12 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 	/// frame's inputs are stored in the "flags" variable since there is plenty of room within it.
 	/// 
 	process_input = function(){
-		prevInputFlags	= flags &  (TBOXLOG_INFLAG_UP | TBOXLOG_INFLAG_DOWN | TBOXLOG_INFLAG_CLOSE);
-		flags			= flags & ~(TBOXLOG_INFLAG_UP | TBOXLOG_INFLAG_DOWN | TBOXLOG_INFLAG_CLOSE);
+		// Store the state of the input flags; clear those and the previous input flags; then set the inputs
+		// for the previous frame to what was grabbed before all the input flags were cleared.
+		var _inputFlags = flags &  (TBOXLOG_INFLAG_UP | TBOXLOG_INFLAG_DOWN | TBOXLOG_INFLAG_CLOSE);
+		flags			= flags & ~(TBOXLOG_INFLAG_UP | TBOXLOG_INFLAG_DOWN | TBOXLOG_INFLAG_CLOSE | 
+							TBOXLOG_PREV_INFLAG_UP | TBOXLOG_PREV_INFLAG_DOWN | TBOXLOG_PREV_INFLAG_CLOSE);
+		flags			= flags |  (_inputFlags << 3); // Left shift by three to properly place them in the variable.
 		
 		if (GAME_IS_GAMEPAD_ACTIVE){
 			flags = flags | (MENU_PAD_UP			); // Offset based on position of the bit within the variable.
