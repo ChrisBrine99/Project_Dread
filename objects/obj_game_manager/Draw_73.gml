@@ -6,16 +6,20 @@ var _xView		= 0;
 var _yView		= 0;
 var _wView		= 0;
 var _hView		= 0;
+var _wTexel		= 0;
+var _hTexel		= 0;
 
 // Scope into the camera struct in order to reference the viewport dimensions which are used for setting the
 // size of the surface that all light sources will be drawn onto.
 with(CAMERA){
-	// Store the viewport's current x/y and width/height values once so each light can reference it without 
-	// having to constantly grab it from the camera again and again on an per-object/struct basis.
+	// Store the viewport's current x/y, width/height, and texel size values once so each light can reference 
+	// it without having to constantly grab it from the camera again and again on an per-object/struct basis.
 	_xView	= xViewport;
 	_yView	= yViewport;
 	_wView	= wViewport;
 	_hView	= hViewport;
+	_wTexel	= wTexel;
+	_hTexel	= hTexel;
 	
 	// Exit from updating the current lighting if the game is completely paused. The surface will still be
 	// drawn below, but no updates are made to it until the game is unpaused once more. 
@@ -42,7 +46,7 @@ with(CAMERA){
 	// Begin drawing the on-screen light sources to a separate surface. The lights will then "punch holes" into
 	// this surface through an additive blending mode as they are drawn.
 	surface_set_target(global.lightSurface);
-	draw_clear(c_black); // Clear the surface to be completely empty.
+	draw_clear(COLOR_BLACK);
 	gpu_set_blendmode(bm_add);
 	
 	// Loop through all existing light sources and render them if they are on screen.
@@ -88,21 +92,23 @@ draw_surface(global.worldSurface, _xView, _yView);
 shader_reset();
 
 // 
-shader_set(shd_screen_blur);
-shader_set_uniform_f(uTexelSize, 1 / _wView, 1 / _hView);
-shader_set_uniform_f(uBlurSteps, 3);
-shader_set_uniform_f(uSigma, 0.25);
+if (curBlurSigma > 0.0){
+	shader_set(shd_screen_blur);
+	shader_set_uniform_f(uTexelSize, _wTexel, _hTexel);
+	shader_set_uniform_f(uBlurSteps, 3.0);
+	shader_set_uniform_f(uSigma, curBlurSigma);
 
-// 
-shader_set_uniform_f(uBlurDirection, 1.0, 0.0);
-surface_set_target(global.worldSurface);
-draw_surface(application_surface, 0, 0);
-surface_reset_target();
+	// 
+	shader_set_uniform_f(uBlurDirection, 1.0, 0.0);
+	surface_set_target(global.worldSurface);
+	draw_surface(application_surface, 0, 0);
+	surface_reset_target();
 
-// 
-shader_set_uniform_f(uBlurDirection, 0.0, 1.0);
-draw_surface(global.worldSurface, _xView, _yView);
-shader_reset();
+	// 
+	shader_set_uniform_f(uBlurDirection, 0.0, 1.0);
+	draw_surface(global.worldSurface, _xView, _yView);
+	shader_reset();
+}
 
 #region Debug Element Rendering Code
 

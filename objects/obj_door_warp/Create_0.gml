@@ -19,6 +19,10 @@
 // player is able to interact with it (Locked doors won't display this indicator).
 #macro	DOOR_ARROW_MOVE_SPEED			0.03
 
+// Determines how fast the screen will fade into the warp's screen fade and out of it during the warp process.
+#macro	DOOR_WARP_FADE_IN_SPEED			0.02
+#macro	DOOR_WARP_FADE_OUT_SPEED		0.02
+
 #endregion Macro Initializations
 
 #region Variable Initializations
@@ -85,7 +89,8 @@ on_player_interact = function(_delta){
 		// Finally, initialize the screen fading effect that is used in tandem with the room warp logic. It is
 		// toggled to manually activating its fade out so it doesn't begin fading out until AFTER the target
 		// room has completely loaded in.
-		with(SCREEN_FADE) { activate_screen_fade(0.08, 0.04, COLOR_BLACK, true); }
+		with(SCREEN_FADE)
+			activate_screen_fade(DOOR_WARP_FADE_IN_SPEED, DOOR_WARP_FADE_OUT_SPEED, COLOR_BLACK, true);
 		return;
 	}
 	

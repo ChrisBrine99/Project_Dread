@@ -36,7 +36,8 @@ function str_camera(_index) : str_base(_index) constructor {
 	x				= 0;
 	y				= 0;
 	
-	// 
+	// Stores the fractional components for the camera's current position. Primarily useful during movement
+	// that isn't relying on the position of a followed object.
 	xFraction		= 0.0;
 	yFraction		= 0.0;
 	
@@ -52,7 +53,13 @@ function str_camera(_index) : str_base(_index) constructor {
 	hViewport		= 0;
 	followedObject	= noone;
 	
-	// 
+	// Stores the size of a texel on the camera's viewport, which is the size of the pixel when the screen's
+	// dimensions are normalized to be between 0.0 and 1.0.
+	wTexel			= 0.0;
+	hTexel			= 0.0;
+	
+	// Stores which point on the provided path the camera is currently targeting when following a path in a
+	// given cutscene. Other than that it is unused.
 	pathIndex		= 0;
 	
 	// A struct that stores all the properties related to the camera's shaking effect.
@@ -288,6 +295,8 @@ function str_camera(_index) : str_base(_index) constructor {
 			return;
 		wViewport	= _width;
 		hViewport	= _height;
+		wTexel		= 1.0 / _width;
+		hTexel		= 1.0 / _height;
 		
 		// Update the camera viewport, and the application surface/gui surface to match it.
 		camera_set_view_size(cameraID, _width, _height);

@@ -32,11 +32,16 @@
 #macro	SCENE_DESTROY_OBJECT			CUTSCENE_MANAGER.cutscene_destroy_object
 #macro	SCENE_MOVE_ENTITY				CUTSCENE_MANAGER.cutscene_move_entity_to_position
 #macro	SCENE_MOVE_ENTITY_PATH			CUTSCENE_MANAGER.cutscene_move_entity_along_path
+#macro	SCENE_INVOKE_SCREEN_FADE		CUTSCENE_MANAGER.cutscene_invoke_screen_fade
+#macro	SCENE_END_SCREEN_FADE			CUTSCENE_MANAGER.cutscene_end_screen_fade
 
-// 
+// Positions within the "timers" array that the respective macro's timer will be located. The final value is
+// the sum of how many timers currently exist that the cutscene manager utilizes.
 #macro	SCENE_WAIT_TIMER_INDEX			0
-#macro	SCENE_CAMERA_TIMER_INDEX		1
-#macro	SCENE_TOTAL_TIMERS				2
+#macro	SCENE_CONWAIT_TIMER_INDEX		1
+#macro	SCENE_TBOX_TIMER_INDEX			2
+#macro	SCENE_FADE_TIMER_INDEX			3
+#macro	SCENE_TOTAL_TIMERS				4
 
 #endregion Cutscene Manager Macro Definitions
 
@@ -259,8 +264,8 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 			with(CAMERA) { camera_set_followed_object(_prevFollowedObject, false); }
 		}
 		
-		flags		= flags & ~SCENE_FLAG_ACTION_FIRST_CALL;
-		timers		= array_create(SCENE_TOTAL_TIMERS, 0.0);
+		flags	= flags & ~SCENE_FLAG_ACTION_FIRST_CALL;
+		timers	= array_create(SCENE_TOTAL_TIMERS, 0.0);
 	}
 	
 	/// @description 
@@ -292,13 +297,11 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 	///	
 	///	@param {Real}	duration	How long the period of waiting will last in units (1 second = 60 units).
 	cutscene_wait_for_textbox = function(_duration){
-		with(TEXTBOX) {
-			if (TBOX_IS_ACTIVE)
-				return;
-		}
+		with(TEXTBOX)
+			return !TBOX_IS_ACTIVE;
 		
-		timers[SCENE_WAIT_TIMER_INDEX] += curDelta;
-		return (timers[SCENE_WAIT_TIMER_INDEX] >= _duration);
+		timers[SCENE_TBOX_TIMER_INDEX] += curDelta;
+		return (timers[SCENE_TBOX_TIMER_INDEX] >= _duration);
 	}
 	
 	/// @description 
@@ -310,8 +313,8 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 		if (ds_list_size(ccActions) > 0)
 			return false;
 			
-		timers[SCENE_WAIT_TIMER_INDEX] += curDelta;
-		return (timers[SCENE_WAIT_TIMER_INDEX] >= _duration);
+		timers[SCENE_CONWAIT_TIMER_INDEX] += curDelta;
+		return (timers[SCENE_CONWAIT_TIMER_INDEX] >= _duration);
 	}
 	
 	/// @description 
@@ -352,7 +355,7 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	///	
+	///	Moves the camera linearly along a path of points at a specified speed.
 	///	
 	///	@param {Array<Real>}	path	The list of x/y coordinates that the camera will move between.
 	/// @param {Real}			speed	How fast the camera will move along the points in the path.
@@ -367,7 +370,8 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 				return true;
 			}
 			
-			// 
+			// Call the camera's linear movement function as it moves toward each point in the path. Once the
+			// fuction returns true, the point has been met and the next one can be targeted.
 			if (move_towards_position_linear(_path[_pathIndex], _path[_pathIndex + 1], _speed, _curDelta))
 				pathIndex++;
 			return false;
@@ -376,7 +380,7 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	///	
+	///	Allows the camera to have an object set for it to follow during the currently executing scene.
 	///	
 	///	@param {Id.Instance}	id				The unique id value for the object the camera will begin following.
 	/// @param {Bool}			snapToPosition	When true, the camera will immediately center itself onto the followed object's position.
@@ -432,9 +436,6 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 			x = _x;
 			y = _y;
 		}
-		
-		// Always return true so the cutscene doesn't get softlocked on this action if an invalid id was
-		// passed into this action's id parameter.
 		return true;
 	}
 	
@@ -489,6 +490,35 @@ function str_cutscene_manager(_index) : str_base(_index) constructor {
 				pathIndex++;
 			return false;
 		}
+		return true;
+	}
+	
+	/// @description 
+	///	An action function that allows a cutscene to cause a screen fade to occur. The speed of the fading in
+	/// and out can be set as needed, as well as the color for the screen to fade into. Note that this fade is
+	/// always manually ended by the "cutscene_end_screen_fade" action.
+	///	
+	///	@param {Real}	inSpeed			How fast the screen will fade completely into the desired color.
+	/// @param {Real}	outSpeed		How fast the screen will fade from the desired color back to the current viewport contents.
+	/// @param {Real}	color			Determines the color that will completely fill the screen once the fade is fully opaque.
+	cutscene_invoke_screen_fade = function(_inSpeed, _outSpeed, _color){
+		with(SCREEN_FADE)
+			activate_screen_fade(_inSpeed, _outSpeed, _color, true);
+		return true;
+	}
+	
+	/// @description 
+	///	A function that causes the screen to begin fading back out from whatever color was chosen back into
+	/// the game's current viewport.
+	///	
+	/// @param {Real}	delay	How long to delay the screen fade out in units (60 = one real-world second).
+	cutscene_end_screen_fade = function(_delay){
+		timers[SCENE_FADE_TIMER_INDEX] += curDelta;
+		if (timers[SCENE_FADE_TIMER_INDEX] < _delay)
+			return false;
+		
+		with(SCREEN_FADE)
+			flags = flags | FADE_FLAG_ALLOW_FADE_OUT;
 		return true;
 	}
 }

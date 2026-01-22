@@ -4,11 +4,13 @@ if (GAME_IS_PAUSED)
 // Ensures that objects will be automatically destroyed if their destroyed flag is toggled and they aren't set to
 // be invincible. Otherwise, they will remain active despite the flag to signal their destruction being set.
 with(par_dynamic_entity){
-	if (ENTT_IS_DESTROYED) { instance_destroy_object(id); }
+	if (ENTT_IS_DESTROYED) 
+		instance_destroy_object(id);
 }
 
 with(par_static_entity){
-	if (ENTT_IS_DESTROYED) { instance_destroy_object(id); }
+	if (ENTT_IS_DESTROYED) 
+		instance_destroy_object(id);
 }
 
 // Check to see if a room warp is currently occurring. If not, the code below this check will be ignored. If so,
@@ -20,12 +22,13 @@ if (!GAME_IS_ROOM_WARP_OCCURRING)
 // transition and when to end the room warping event.
 var _fadeAlpha = 0.0;
 with(SCREEN_FADE) { _fadeAlpha = alpha; }
+global.blurSigma = WARP_BLUR_SIGMA * _fadeAlpha;
 
 // Check when to end the room transition process. This can only happen if the current room matches the target.
 // Otherwise, the game will ignore this branch even if the screen fade's alpha level is zero.
 if (_fadeAlpha == 0.0 && room == targetRoom){
-	global.flags    = global.flags & ~GAME_FLAG_ROOM_WARP;
-	targetRoom		= undefined;
+	global.flags		= global.flags & ~GAME_FLAG_ROOM_WARP;
+	targetRoom			= undefined;
 	return;
 }
 

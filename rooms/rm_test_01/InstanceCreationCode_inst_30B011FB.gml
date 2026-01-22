@@ -28,7 +28,8 @@ ds_list_add(actionQueue,
 				]
 			]
 		],
-		[SCENE_MOVE_ENTITY_PATH, PLAYER, [
+		[SCENE_MOVE_ENTITY_PATH, 
+			PLAYER, [
 				200, 150,
 				300, 180,
 				240, 120,
@@ -36,15 +37,10 @@ ds_list_add(actionQueue,
 			]
 		],
 		[SCENE_CAMERA_FOLLOW_OBJECT, PLAYER, false]
-		// [SCENE_MOVE_CAMERA_PATH, [
-		// 		200, 150,
-		// 		300, 180,
-		// 		240, 120,
-		// 		200, 150
-		// 	]
-		// ]
 	]],
 	[SCENE_ACTIVATE_TEXTBOX],
+	[SCENE_WAIT_TEXTBOX, 0.0],
+	[SCENE_INVOKE_SCREEN_FADE, 0.025, 0.025, COLOR_BLACK],
 	[SCENE_WAIT_CONCURRENT, 0.0],
-	[SCENE_WAIT_TEXTBOX, 20.0]
+	[SCENE_END_SCREEN_FADE, 5.0]
 );

@@ -178,6 +178,13 @@
 #macro	STNG_INPUT_MAP_MENU				48
 #macro	STNG_INPUT_PAUSE_MENU			50
 
+// Determines how fast the blur will increment or decrement to its current target value.
+#macro	BLUR_TRANSITION_SPEED			0.025
+
+// When warping, this is the maximum level that the sigma will be set to. It's actual value during the process
+// is tied to the current opacity of the screen fade effect, which is between 0.0 and 1.0.
+#macro	WARP_BLUR_SIGMA					0.25
+
 #endregion General Macro Initializations
 
 #region Game Manager Global and Local Variable Initializations
@@ -374,6 +381,12 @@ uTexelSize				= shader_get_uniform(shd_screen_blur,		"texelSize");
 uBlurDirection			= shader_get_uniform(shd_screen_blur,		"blurDirection");
 uBlurSteps				= shader_get_uniform(shd_screen_blur,		"blurSteps");
 uSigma					= shader_get_uniform(shd_screen_blur,		"sigma");
+
+// Two variables that handle the game's blurring effect. The first value is the target, and the second is what
+// the current blurring intensity that is being utilized. When the blur sigma is zero, the shader is not in use.
+global.blurSigma		= 0.0;
+curBlurSigma			= 0.0;
+
 
 // Uniforms for the shader that is responsible for applying the quantization, dithering, and scanline effects
 // onto the game's image.

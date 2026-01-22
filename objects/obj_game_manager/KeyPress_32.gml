@@ -1,3 +1,5 @@
+global.blurSigma = (global.blurSigma == 0.0) ? 0.25 : 0.0;
+
 // with(CAMERA) { camera_apply_shake(random_range(1.5, 7.0), random_range(15.0, 150.0)); }
 
 /*with(TEXTBOX){

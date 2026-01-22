@@ -62,8 +62,7 @@ function str_screen_fade(_index) : str_base(_index) constructor {
 		else				{ flags = flags |  FADE_FLAG_ALLOW_FADE_OUT; }
 		
 		// Finally, let the game itself know a transition effect is occur so entities and objects can process
-		// themselves accordingly. On top of that, set the player to their transition effect state until this
-		// global flag is cleared once again.
+		// themselves accordingly.
 		global.flags = global.flags | GAME_FLAG_TRANSITION_ACTIVE;
 	}
 	
@@ -72,14 +71,24 @@ function str_screen_fade(_index) : str_base(_index) constructor {
 	/// Once it reaches full opacity (Alpha is 1.0 or higher), the screen fade will either begin fading out or
 	/// waiting for the flag that allows the screen to begin fading out if a manual fade was chosen.
 	///
-	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
+	///	@param {Real}	delta		The difference in time between the execution of this frame and the last.
 	state_fade_in = function(_delta){
 		alpha += inSpeed * _delta;
 		if (alpha >= 1.0){ // Screen has successfully faded itself to the desired color.
 			alpha = 1.0;
-			if (FADE_CAN_FADE_OUT)
-				object_set_state(state_fade_out);
+			object_set_state(state_fade_wait);
 		}
+	}
+	
+	/// @description 
+	///	A function that will either immediately invoke the screen fade's fade out state OR wait until it is
+	/// allowed to so by the ALLOW_FADE_OUT flag being set by another struct/object.
+	///	
+	///	@param {Real}	delta		The difference in time between the execution of this frame and the last.
+	state_fade_wait = function(_delta){
+		if (!FADE_CAN_FADE_OUT)
+			return;
+		object_set_state(state_fade_out);
 	}
 	
 	/// @description 
@@ -87,7 +96,7 @@ function str_screen_fade(_index) : str_base(_index) constructor {
 	/// on the viewport prior to the screen's fade effect beginning. Once it reaches complete transparency,
 	/// the screen fade will end and the game will return back to the state it was in prior to the fade effect.
 	///	
-	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
+	///	@param {Real}	delta		The difference in time between the execution of this frame and the last.
 	state_fade_out = function(_delta){
 		alpha -= outSpeed * _delta;
 		if (alpha <= 0.0){ // Screen has faded out; reset back to game's pre-screen fade state.
