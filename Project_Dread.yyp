@@ -71,7 +71,7 @@
   "isEcma":false,
   "LibraryEmitters":[],
   "MetaData":{
-    "IDEVersion":"2024.14.2.213",
+    "IDEVersion":"2024.14.3.217",
   },
   "name":"Project_Dread",
   "resources":[
@@ -152,7 +152,9 @@
     {"id":{"name":"spr_noise","path":"sprites/spr_noise/spr_noise.yy",},},
     {"id":{"name":"spr_pad_ps_icons","path":"sprites/spr_pad_ps_icons/spr_pad_ps_icons.yy",},},
     {"id":{"name":"spr_pad_xbox_icons","path":"sprites/spr_pad_xbox_icons/spr_pad_xbox_icons.yy",},},
-    {"id":{"name":"spr_player_unarmed","path":"sprites/spr_player_unarmed/spr_player_unarmed.yy",},},
+    {"id":{"name":"spr_player_large_gun","path":"sprites/spr_player_large_gun/spr_player_large_gun.yy",},},
+    {"id":{"name":"spr_player_unarmed_sprint","path":"sprites/spr_player_unarmed_sprint/spr_player_unarmed_sprint.yy",},},
+    {"id":{"name":"spr_player_unarmed_walk","path":"sprites/spr_player_unarmed_walk/spr_player_unarmed_walk.yy",},},
     {"id":{"name":"spr_rectangle","path":"sprites/spr_rectangle/spr_rectangle.yy",},},
     {"id":{"name":"spr_solid_collider","path":"sprites/spr_solid_collider/spr_solid_collider.yy",},},
     {"id":{"name":"spr_table_small1","path":"sprites/spr_table_small1/spr_table_small1.yy",},},

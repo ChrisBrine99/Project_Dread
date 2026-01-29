@@ -195,7 +195,7 @@ entity_add_basic_light(PLYR_AMBLIGHT_XOFFSET, PLYR_AMBLIGHT_YOFFSET,
 		STR_FLAG_PERSISTENT | LGHT_FLAG_ACTIVE);
 
 // Set the starting sprite for the player.
-entity_set_sprite(spr_player_unarmed);
+entity_set_sprite(spr_player_unarmed_walk);
 animSpeed			= 0.0; // Pauses the inherited animation system so the one below can be utilized instead.
 
 // To prevent repeating the same frame twice for each direction (An extra 4 redundant sprites), the player 
@@ -203,7 +203,7 @@ animSpeed			= 0.0; // Pauses the inherited animation system so the one below can
 // the value found at each index within "animFrames" and "animCurFrame" will store what "image_index" was 
 // originally required to.
 animFrames			= [0, 1, 0, 2];
-animLength			= array_length(animFrames);
+animFrameCount		= array_length(animFrames);
 animCurFrame		= 0.0;
 
 // Assign the player's starting and maximum hitpoints to be 100 units so whole percentage values are always
@@ -396,10 +396,13 @@ determine_movement_vector = function(){
 /// 
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 process_movement_animation = function(_delta){
+	if (PLYR_IS_SPRINTING)  { entity_set_sprite(spr_player_unarmed_sprint); }
+	else					{ entity_set_sprite(spr_player_unarmed_walk); }
+	
 	animLoopStart = PLYR_MOVE_ANIM_LENGTH * round(direction / PLYR_ANIM_DIRECTION_DELTA);
-	animCurFrame += _delta * (moveSpeed / PLYR_SPEED_NORMAL) * (animFps / GAME_TARGET_FPS);
-	if (animCurFrame >= animLength) // Loop back to the start of the animation.
-		animCurFrame -= animLength;
+	animCurFrame += _delta * (animFps / GAME_TARGET_FPS);
+	if (animCurFrame >= animFrameCount) // Loop back to the start of the animation.
+		animCurFrame -= animFrameCount;
 	image_index = floor(animFrames[animCurFrame] + animLoopStart);
 }
 
@@ -1002,6 +1005,7 @@ state_default = function(_delta){
 	} else if (moveSpeed > 0.0){ // Handling deceleration
 		moveSpeed		   -= accel * _delta;
 		if (moveSpeed <= 0.0){
+			entity_set_sprite(spr_player_unarmed_walk);
 			flags		    = flags & ~(DENTT_FLAG_MOVING | PLYR_FLAG_SPRINTING);
 			image_index		= animLoopStart;
 			accel			= PLYR_ACCEL_NORMAL;
@@ -1045,7 +1049,8 @@ state_default = function(_delta){
 		// Remove the reference to the interactable since it isn't required during the interaction process.
 		// Then, exit the state early so collision with the world and opening the inventory/pause menu are
 		// prevented if those inputs were hit at the same time as the interaction input was.
-		if (!_isMoving){ 
+		if (!_isMoving){
+			entity_set_sprite(spr_player_unarmed_walk);
 			interactableID = noone;
 			return;
 		}

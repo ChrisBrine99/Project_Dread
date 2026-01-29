@@ -35,8 +35,8 @@
   "solid":false,
   "spriteId":null,
   "spriteMaskId":{
-    "name":"spr_player_unarmed",
-    "path":"sprites/spr_player_unarmed/spr_player_unarmed.yy",
+    "name":"spr_player_unarmed_walk",
+    "path":"sprites/spr_player_unarmed_walk/spr_player_unarmed_walk.yy",
   },
   "visible":false,
 }
