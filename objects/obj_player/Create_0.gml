@@ -85,17 +85,20 @@
 // Macros for the player's default acceleration and maximum speeds. When crippled, these act as the "slow"
 // sprinting speed when their stamina is completely depleted.
 #macro	PLYR_ACCEL_NORMAL				0.15
-#macro	PLYR_SPEED_NORMAL				1.05
+#macro	PLYR_SPEED_NORMAL				0.90
+#macro	PLYR_ANIMSPD_NORMAL				1.00
 
 // Macros for the player's acceleration and maximum speed when sprinting. These values are only utilized when
 // the player has available stamina and isn't crippled.
-#macro	PLYR_ACCEL_SPRINT_FAST			0.35
-#macro	PLYR_SPEED_SPRINT_FAST			1.75
+#macro	PLYR_ACCEL_SPRINT_FAST			0.30
+#macro	PLYR_SPEED_SPRINT_FAST			1.80
+#macro	PLYR_ANIMSPD_SPRINT_FAST		1.05
 
 // Macros for the player's acceleration and maximum speed when sprinting without stamina. When crippled, these
 // act as the "fast" sprinting speed should the player still have stamina remaining.
-#macro	PLYR_ACCEL_SPRINT_SLOW			0.20
-#macro	PLYR_SPEED_SPRINT_SLOW			1.40
+#macro	PLYR_ACCEL_SPRINT_SLOW			0.22
+#macro	PLYR_SPEED_SPRINT_SLOW			1.32
+#macro	PLYR_ANIMSPD_SPRINT_SLOW		0.85
 
 // Determines the minimum percentage of movement can occur when using a gamepad's analog stick relative to the
 // player's current maximum movement speed.
@@ -117,14 +120,14 @@
 #macro	PLYR_TOTAL_TIMERS				6
 
 // Macros that determine the speed at which various interval-based actions will occur for the player.
-#macro	PLYR_STAMINA_LOSS_RATE			2.0
-#macro	PLYR_STAMINA_REGEN_RATE			5.0
+#macro	PLYR_STAMINA_LOSS_RATE			3.0
+#macro	PLYR_STAMINA_REGEN_RATE			5.5
 #macro	PLYR_BLEEDING_DAMAGE_RATE		300.0
 #macro	PLYR_POISON_DAMAGE_RATE			600.0
 
 // Determines the additional time added to the player's stamina regeneration timer for the interval of time
 // between the player releasing the run button and their stamina beginning its regeneration.
-#macro	PLYR_STAMINA_PAUSE_FACTOR		10.0
+#macro	PLYR_STAMINA_PAUSE_FACTOR		8.0
 
 // Determines how much of a penalty is applied to the player's initial break before their stamina regenerates
 // if their stamina is completely depleted while running.
@@ -396,11 +399,16 @@ determine_movement_vector = function(){
 /// 
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 process_movement_animation = function(_delta){
-	if (PLYR_IS_SPRINTING)  { entity_set_sprite(spr_player_unarmed_sprint); }
-	else					{ entity_set_sprite(spr_player_unarmed_walk); }
+	var _animSpeed = PLYR_ANIMSPD_NORMAL;
+	if (PLYR_IS_SPRINTING){
+		_animSpeed = (curStamina == 0) ? PLYR_ANIMSPD_SPRINT_SLOW : PLYR_ANIMSPD_SPRINT_FAST;
+		entity_set_sprite(spr_player_unarmed_sprint);
+	} else{ 
+		entity_set_sprite(spr_player_unarmed_walk); 
+	}
 	
 	animLoopStart = PLYR_MOVE_ANIM_LENGTH * round(direction / PLYR_ANIM_DIRECTION_DELTA);
-	animCurFrame += _delta * (animFps / GAME_TARGET_FPS);
+	animCurFrame += _delta * _animSpeed * (animFps / GAME_TARGET_FPS);
 	if (animCurFrame >= animFrameCount) // Loop back to the start of the animation.
 		animCurFrame -= animFrameCount;
 	image_index = floor(animFrames[animCurFrame] + animLoopStart);

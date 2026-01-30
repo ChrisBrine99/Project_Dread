@@ -25,7 +25,7 @@ with(PLAYER){
 	for (var i = 0; i < PLYR_TOTAL_TIMERS; i++)
 		draw_text_shadow(315, 23 + (i * 10), string("{0}: {1}", i, timers[i]));
 		
-	draw_text_shadow(315, 83, string(animCurFrame) + ", " + string(animLength));
+	draw_text_shadow(315, 83, string(curStamina) + "/" + string(maxStamina));
 		
 	with(equipment){
 		if (weapon == INV_EMPTY_SLOT)
