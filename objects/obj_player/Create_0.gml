@@ -121,7 +121,7 @@
 
 // Macros that determine the speed at which various interval-based actions will occur for the player.
 #macro	PLYR_STAMINA_LOSS_RATE			3.0
-#macro	PLYR_STAMINA_REGEN_RATE			5.5
+#macro	PLYR_STAMINA_REGEN_RATE			6.0
 #macro	PLYR_BLEEDING_DAMAGE_RATE		300.0
 #macro	PLYR_POISON_DAMAGE_RATE			600.0
 
@@ -970,7 +970,8 @@ state_initialize = function(_delta){
 	if (STNG_IS_AIM_INPUT_TOGGLE)	 { flags = flags | PLYR_FLAG_AIM_TOGGLE; }
 	
 	item_inventory_add("Flashlight", 1, 0);
-	item_inventory_add(ITEM_SUBMACHINE_GUN, 20, 20);
+	item_inventory_add(ITEM_SUBMACHINE_GUN, 20, 20, AMMOINDEX_SMG_POOR);
+	item_inventory_add(ITEM_SMG_AMMO_POOR, 30);
 	
 	object_set_state(state_default);
 }

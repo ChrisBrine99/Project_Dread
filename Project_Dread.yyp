@@ -66,6 +66,7 @@
   ],
   "ForcedPrefabProjectReferences":[],
   "IncludedFiles":[
+    {"$GMIncludedFile":"","%Name":"items_OLD.dat","CopyToMask":-1,"filePath":"datafiles","name":"items_OLD.dat","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
     {"$GMIncludedFile":"","%Name":"items.dat","CopyToMask":-1,"filePath":"datafiles","name":"items.dat","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
   ],
   "isEcma":false,

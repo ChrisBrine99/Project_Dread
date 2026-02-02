@@ -199,11 +199,14 @@ function load_item(_section, _itemKey, _itemIndex, _data){
 	// deleting the struct once it is no longer needed). Also add that reference to a list at the position
 	// that matches the id value of the item.
 	var _itemID			= real(_itemIndex);
+	var _itemInfo		= _data[? KEY_INFO];
+	if (is_undefined(_itemInfo) || _itemInfo == "") // If no description exists a default will be created.
+		_itemInfo		= "ITEM ID " + string(_itemID) + " HAS NO DESCRIPTION";
 	var _itemStructRef	= {
 		typeID		:   ITEM_TYPE_INVALID,
 		itemName	:	_itemKey,
 		itemID		:	_itemID,
-		itemInfo	:	"",
+		itemInfo	:	string_split_lines(_itemInfo, fnt_small, MENUITM_OPTION_INFO_MAX_WIDTH, MENUITM_OPTION_INFO_MAX_LINES),
 		stackLimit	:	0,
 		flags		:	0,
 	};
@@ -243,8 +246,6 @@ function load_item(_section, _itemKey, _itemIndex, _data){
 		case KEY_WEAPONS: // Parse through the data of a weapon item.
 			with(_itemStructRef){
 				typeID		= ITEM_TYPE_WEAPON;
-				itemInfo	= string_split_lines(_data[? KEY_INFO], fnt_small, 
-								MENUITM_OPTION_INFO_MAX_WIDTH, MENUITM_OPTION_INFO_MAX_LINES);
 				stackLimit	= _data[? KEY_STACK];
 				
 				// Begin adding parameters that are unique to a weapon type item (Some are also the same as 
@@ -348,12 +349,13 @@ function load_item(_section, _itemKey, _itemIndex, _data){
 				durability	= _data[? KEY_DURABILITY];
 				equipType	= equipment_get_type_index(_data[? KEY_TYPE]);
 				
-				// 
+				// Don't bother parsing out equip parameters if the item in question has none.
 				var _paramList	 = _data[? KEY_EQUIP_PARAMS];
 				var _totalParams = ds_list_size(_paramList);
-				if (_totalParams == 0) { break; }
+				if (_totalParams == 0) 
+					break;
 				
-				// 
+				// Create the array within the item struct that will store the data used when equipping it.
 				equipParams = array_create(_totalParams, -1);
 				for (var i = 0; i < _totalParams; i++)
 					equipParams[i] = _paramList[| i];

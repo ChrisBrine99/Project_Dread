@@ -72,6 +72,52 @@
 #macro	ITEMINV_MAX_SIZE_NIGHTMARE		12
 #macro	ITEMINV_MAX_SIZE_ONELIFE		10
 
+// Prevents using the actual index in the code which doesn't explain which ammo type is being chosen for all
+// "handgun" based weapons that utilize ammunition.
+#macro	AMMOINDEX_HANDGUN_NORMAL		0
+#macro	AMMOINDEX_HANDGUN_GOOD			1
+#macro	AMMOINDEX_HANDGUN_POOR			2
+
+// Prevents using the actual index in the code which doesn't explain which ammo type is being chosen for all
+// "shotgun" based weapons that utilize ammunition.
+#macro	AMMOINDEX_SHOTGUN_NORMAL		0
+#macro	AMMOINDEX_SHOTGUN_GOOD			1
+#macro	AMMOINDEX_SHOTGUN_POOR			2
+
+// Prevents using the actual index in the code which doesn't explain which ammo type is being chosen for all
+// "rifle" based weapons that utilize ammunition.
+#macro	AMMOINDEX_RIFLE_NORMAL			0
+#macro	AMMOINDEX_RIFLE_GOOD			1
+#macro	AMMOINDEX_RIFLE_POOR			2
+
+// Prevents using the actual index in the code which doesn't explain which ammo type is being chosen for all
+// "submachine gun" based weapons that utilize ammunition.
+#macro	AMMOINDEX_SMG_NORMAL			0
+#macro	AMMOINDEX_SMG_GOOD				1
+#macro	AMMOINDEX_SMG_POOR				2
+
+// Prevents using the actual index in the code which doesn't explain which ammo type is being chosen for all
+// "magnum" based weapons that utilize ammunition.
+#macro	AMMOINDEX_MAGNUM_NORMAL			0
+#macro	AMMOINDEX_MAGNUM_GOOD			1
+#macro	AMMOINDEX_MAGNUM_POOR			2
+
+// Prevents using the actual index in the code which doesn't explain which ammo type is being chosen for all
+// "grenade launcher" based weapons that utilize ammunition.
+#macro	AMMOINDEX_GSHELL_EXPLOSIVE		0
+#macro	AMMOINDEX_GSHELL_FRAGMENT		1
+#macro	AMMOINDEX_GSHELL_FROST			2
+#macro	AMMOINDEX_GSHELL_NAPALM			3
+#macro	AMMOINDEX_GSHELL_EXPLOSIVE_POOR	4
+#macro	AMMOINDEX_GSHELL_FRAGMENT_POOR	5
+
+// Prevents using the actual index in the code which doesn't explain which ammo type is being chosen for all
+// "chainsaw" based weapons that utilize ammunition.
+#macro	AMMOINDEX_CSAW_CRUDE_NORMAL		0
+#macro	AMMOINDEX_CSAW_REFINED_NORMAL	1
+#macro	AMMOINDEX_CSAW_REFINED_GOOD		2
+#macro	AMMOINDEX_CSAW_CRUDE_POOR		3
+
 #endregion Macros Utilized Primarily by the Inventory System
 
 #region Item Name/Key Value Macros
@@ -292,7 +338,8 @@ function item_inventory_add(_item, _amount, _durability = 0, _ammoIndex = 0){
 		if (global.itemIDs[_itemID].typeID == ITEM_TYPE_WEAPON)
 			return -1;
 		
-		// 
+		// The amount couldn't be added into a single inventory slot. So, what can fit is added, and the
+		// remaining quantity will be placed in another slot(s) as needed.
 		with(_invItem){
 			if (_amount > _stackLimit){
 				_amount -= _stackLimit;
