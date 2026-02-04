@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"fog",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"fog",
+  "parent":{
+    "name":"Weather",
+    "path":"folders/Scripts/Structs/Weather.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

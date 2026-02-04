@@ -4,6 +4,7 @@ with(CAMERA)				{ destroy_event(); }	delete CAMERA;
 with(TEXTBOX)				{ destroy_event(); }	delete TEXTBOX;
 with(TEXTBOX_LOG)			{ destroy_event(); }	delete TEXTBOX_LOG;
 with(CONTROL_UI_MANAGER)	{ destroy_event(); }	delete CONTROL_UI_MANAGER;
+with(FOG)					{ destroy_event(); }	delete FOG;
 													delete SCREEN_FADE;
 ds_map_destroy(global.sInstances);
 

@@ -1,3 +1,7 @@
+// Draw the fog right before the lighting is applied to ensure it is rendered above all other elements in the
+// current room. Otherwise, the ceiling tiles and any layers above that will not have the fog affect them.
+with(FOG) { draw_end_event(); }
+
 // Create a few local variables that will be used and referenced throughout the event by different instances
 // and structures to avoid having to constantly get the same values over and over again.
 var _minAlpha	= gpu_get_alphatestref() / 255.0;
@@ -6,8 +10,8 @@ var _xView		= 0;
 var _yView		= 0;
 var _wView		= 0;
 var _hView		= 0;
-var _wTexel		= 0;
-var _hTexel		= 0;
+var _wTexel		= 0.0;
+var _hTexel		= 0.0;
 
 // Scope into the camera struct in order to reference the viewport dimensions which are used for setting the
 // size of the surface that all light sources will be drawn onto.
@@ -92,7 +96,7 @@ draw_surface(global.worldSurface, _xView, _yView);
 shader_reset();
 
 // 
-if (curBlurSigma > 0.0){
+/*if (curBlurSigma > 0.0){
 	shader_set(shd_screen_blur);
 	shader_set_uniform_f(uTexelSize, _wTexel, _hTexel);
 	shader_set_uniform_f(uBlurSteps, 3.0);
@@ -108,7 +112,7 @@ if (curBlurSigma > 0.0){
 	shader_set_uniform_f(uBlurDirection, 0.0, 1.0);
 	draw_surface(global.worldSurface, _xView, _yView);
 	shader_reset();
-}
+}*/
 
 #region Debug Element Rendering Code
 

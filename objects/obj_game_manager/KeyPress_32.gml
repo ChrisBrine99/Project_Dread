@@ -1,3 +1,12 @@
+with(FOG){
+	add_layer(
+		random_range(-0.5, 0.5),	// X Speed
+		random_range(-0.5, 0.5),	// Y Speed
+		random_range(0.3, 1.0),		// Opacity
+		random_range(1.0, 3.0)		// Scaling
+	);
+}
+
 // global.blurSigma = (global.blurSigma == 0.0) ? 0.25 : 0.0;
 
 // with(CAMERA) { camera_apply_shake(random_range(1.5, 7.0), random_range(15.0, 150.0)); }

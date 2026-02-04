@@ -22,13 +22,12 @@ if (!GAME_IS_ROOM_WARP_OCCURRING)
 // transition and when to end the room warping event.
 var _fadeAlpha = 0.0;
 with(SCREEN_FADE) { _fadeAlpha = alpha; }
-global.blurSigma = WARP_BLUR_SIGMA * _fadeAlpha;
 
 // Check when to end the room transition process. This can only happen if the current room matches the target.
 // Otherwise, the game will ignore this branch even if the screen fade's alpha level is zero.
 if (_fadeAlpha == 0.0 && room == targetRoom){
-	global.flags		= global.flags & ~GAME_FLAG_ROOM_WARP;
-	targetRoom			= undefined;
+	global.flags	= global.flags & ~GAME_FLAG_ROOM_WARP;
+	targetRoom		= undefined;
 	return;
 }
 

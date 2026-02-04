@@ -49,6 +49,7 @@
 #macro	TEXTBOX							global.sInstances[? str_textbox]
 #macro	TEXTBOX_LOG						global.sInstances[? str_textbox_log]
 #macro	SCREEN_FADE						global.sInstances[? str_screen_fade]
+#macro	FOG								global.sInstances[? str_fog]
 
 // Macros for referencing the instance IDs of all runtime singletons. These will return "noone" if no 
 // instance exists for these special singleton types.
@@ -386,7 +387,6 @@ uSigma					= shader_get_uniform(shd_screen_blur,		"sigma");
 // the current blurring intensity that is being utilized. When the blur sigma is zero, the shader is not in use.
 global.blurSigma		= 0.0;
 curBlurSigma			= 0.0;
-
 
 // Uniforms for the shader that is responsible for applying the quantization, dithering, and scanline effects
 // onto the game's image.

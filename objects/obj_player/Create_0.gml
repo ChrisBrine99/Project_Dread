@@ -84,20 +84,20 @@
 
 // Macros for the player's default acceleration and maximum speeds. When crippled, these act as the "slow"
 // sprinting speed when their stamina is completely depleted.
-#macro	PLYR_ACCEL_NORMAL				0.15
+#macro	PLYR_ACCEL_NORMAL				0.10
 #macro	PLYR_SPEED_NORMAL				0.90
 #macro	PLYR_ANIMSPD_NORMAL				1.00
 
 // Macros for the player's acceleration and maximum speed when sprinting. These values are only utilized when
 // the player has available stamina and isn't crippled.
-#macro	PLYR_ACCEL_SPRINT_FAST			0.30
+#macro	PLYR_ACCEL_SPRINT_FAST			0.09
 #macro	PLYR_SPEED_SPRINT_FAST			1.80
 #macro	PLYR_ANIMSPD_SPRINT_FAST		1.05
 
 // Macros for the player's acceleration and maximum speed when sprinting without stamina. When crippled, these
 // act as the "fast" sprinting speed should the player still have stamina remaining.
-#macro	PLYR_ACCEL_SPRINT_SLOW			0.22
-#macro	PLYR_SPEED_SPRINT_SLOW			1.32
+#macro	PLYR_ACCEL_SPRINT_SLOW			0.08
+#macro	PLYR_SPEED_SPRINT_SLOW			1.30
 #macro	PLYR_ANIMSPD_SPRINT_SLOW		0.85
 
 // Determines the minimum percentage of movement can occur when using a gamepad's analog stick relative to the
@@ -228,8 +228,8 @@ padStickInputRV		= 0.0;
 
 // Determines the movement direction of the player character relative to the inputs that have been held or if
 // the left stick has been moved to a position outside its deadzone.
-moveDirectionX		= 0.0;
-moveDirectionY		= 0.0;
+xMoveDirection		= 0.0;
+yMoveDirection		= 0.0;
 
 // Stores the player's current and maximum stamina values, respectively.
 maxStamina			= 100;
@@ -373,7 +373,7 @@ process_player_input = function(){
 }
 
 /// @description
-/// Calcualtes the values for "moveDirectionX" and "moveDirectionY" based on if a keyboard is being used for
+/// Calcualtes the values for "xMoveDirection" and "yMoveDirection" based on if a keyboard is being used for
 /// input currently or a connected gamepad is being used. Using the joystick on the gamepad will alter the value
 /// so it can be any value between -1.0 and 1.0 for each axis, and the standard digital way returns either a
 /// -1, 0, or +1 based on current input flags.
@@ -381,14 +381,14 @@ process_player_input = function(){
 determine_movement_vector = function(){
 	var _isGamepadActive = GAME_IS_GAMEPAD_ACTIVE;
 	if (_isGamepadActive && PINPUT_USING_LEFT_STICK){ // Using the left stick for movement.
-		moveDirectionX = padStickInputLH;
-		moveDirectionY = padStickInputLV;
+		xMoveDirection = padStickInputLH;
+		yMoveDirection = padStickInputLV;
 	} else if (_isGamepadActive && PINPUT_USING_RIGHT_STICK){ // Using the right stick for movement.
-		moveDirectionX = padStickInputRH;
-		moveDirectionY = padStickInputRV;
+		xMoveDirection = padStickInputRH;
+		yMoveDirection = padStickInputRV;
 	} else{ // Uses the gamepad's d-pad or the relevant keyboard keys to return a value of -1, 0, or +1.
-		moveDirectionX = ((inputFlags & PINPUT_FLAG_MOVE_RIGHT) != 0) - ((inputFlags & PINPUT_FLAG_MOVE_LEFT)	!= 0);
-		moveDirectionY = ((inputFlags & PINPUT_FLAG_MOVE_DOWN)	!= 0) - ((inputFlags & PINPUT_FLAG_MOVE_UP)		!= 0);
+		xMoveDirection = ((inputFlags & PINPUT_FLAG_MOVE_RIGHT) != 0) - ((inputFlags & PINPUT_FLAG_MOVE_LEFT)	!= 0);
+		yMoveDirection = ((inputFlags & PINPUT_FLAG_MOVE_DOWN)	!= 0) - ((inputFlags & PINPUT_FLAG_MOVE_UP)		!= 0);
 	}
 }
 
@@ -403,8 +403,8 @@ process_movement_animation = function(_delta){
 	if (PLYR_IS_SPRINTING){
 		_animSpeed = (curStamina == 0) ? PLYR_ANIMSPD_SPRINT_SLOW : PLYR_ANIMSPD_SPRINT_FAST;
 		entity_set_sprite(spr_player_unarmed_sprint);
-	} else{ 
-		entity_set_sprite(spr_player_unarmed_walk); 
+	} else{
+		entity_set_sprite(spr_player_unarmed_walk);
 	}
 	
 	animLoopStart = PLYR_MOVE_ANIM_LENGTH * round(direction / PLYR_ANIM_DIRECTION_DELTA);
@@ -944,7 +944,7 @@ end_step_event = function(_delta){
 /// 
 /// 
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
-custom_draw_default = function(_delta){	
+custom_draw_default = function(_delta){
 	draw_sprite_ext(sprite_index, image_index, x, y, 
 			image_xscale, image_yscale, image_angle, image_blend, image_alpha);
 	var _interactX = x + lengthdir_x(8, direction);
@@ -988,13 +988,13 @@ state_default = function(_delta){
 	
 	// Updating the current direction of the player and also accelerating/decelerating them depending on the
 	// movement vector.
-	if (moveDirectionX != 0.0 || moveDirectionY != 0.0){ // Handling acceleration
+	if (xMoveDirection != 0.0 || yMoveDirection != 0.0){ // Handling acceleration
 		if (!DENTT_IS_MOVING){
 			flags		 = flags | DENTT_FLAG_MOVING | PLYR_FLAG_PLAY_STEP_SOUND;
 			animCurFrame = 1.0; // Ensures the player's animation starts on their first step frame immediately.
 		}
-		moveSpeed	   += accel * _delta;
-		direction		= point_direction(0.0, 0.0, moveDirectionX, moveDirectionY);
+		moveSpeed  += accel * _delta;
+		direction	= point_direction(0.0, 0.0, xMoveDirection, yMoveDirection);
 		
 		// Dynamically calculate the limit for the player's movement speed based on if they're currently 
 		// using the primary or secondary analog sticks on a gamepad. If they aren't using either stick (Or 
@@ -1012,7 +1012,7 @@ state_default = function(_delta){
 		if (moveSpeed > _maxMoveSpeed)
 			moveSpeed = _maxMoveSpeed;
 	} else if (moveSpeed > 0.0){ // Handling deceleration
-		moveSpeed		   -= accel * _delta;
+		moveSpeed -= accel * _delta;
 		if (moveSpeed <= 0.0){
 			entity_set_sprite(spr_player_unarmed_walk);
 			flags		    = flags & ~(DENTT_FLAG_MOVING | PLYR_FLAG_SPRINTING);
@@ -1074,6 +1074,7 @@ state_default = function(_delta){
 		image_index		= animLoopStart;
 		accel			= PLYR_ACCEL_NORMAL;
 		maxMoveSpeed	= PLYR_SPEED_NORMAL;
+		animCurFrame	= 0.0;
 		moveSpeed		= 0.0;
 		return;
 	}
@@ -1145,8 +1146,9 @@ state_default = function(_delta){
 		
 		// Revert the player to their standing sprite now that control has been taken away.
 		with(PLAYER){
-			flags = flags & ~PLYR_FLAG_SPRINTING;
-			animCurFrame = 0.0;
+			flags			= flags & ~PLYR_FLAG_SPRINTING;
+			image_index		= animLoopStart;
+			animCurFrame	= 0.0;
 		}
 	}
 
@@ -1169,8 +1171,8 @@ state_player_weapon_ready = function(_delta){
 	
 	// If the movement vector in either direction is not zero, the currently facing direction will be updated;
 	// allowing the player to aim in their desired direction but not move during this state.
-	if (moveDirectionX != 0.0 || moveDirectionY != 0.0){
-		direction	= point_direction(0.0, 0.0, moveDirectionX, moveDirectionY);
+	if (xMoveDirection != 0.0 || yMoveDirection != 0.0){
+		direction	= point_direction(0.0, 0.0, xMoveDirection, yMoveDirection);
 		image_index	= PLYR_MOVE_ANIM_LENGTH * round(direction / PLYR_ANIM_DIRECTION_DELTA);
 	}
 	
@@ -1218,9 +1220,9 @@ state_player_weapon_ready = function(_delta){
 		if (weaponRemainingAmmo != -1)
 			weaponRemainingAmmo--;
 		
-		// Store the player's directional value truncated donw to one of four possible values, and store the
-		// current accuracy penalty value that will be applied to the accuracy of the fired bullet.
-		var _direction		 = floor(direction / 90) * 90;
+		// Store the player's directional value rounded to one of four possible values, and store the current 
+		// accuracy penalty value that will be applied to the accuracy of the fired bullet.
+		var _direction		 = round(direction / 90) * 90;
 		var _accuracyPenalty = curAccuracyPenalty;
 		
 		// Add to the current accuracy penalty's value whenever a firearm is used. This value isn't reflected
@@ -1254,7 +1256,7 @@ state_player_weapon_ready = function(_delta){
 			with(global.curItems[weapon]){
 				if (!_isMelee) { quantity--; }
 				
-				// On higher difficulties, durability will be reduced by one every time the wepaon is used.
+				// On higher difficulties, durability will be reduced by one every time the weapon is used.
 				if (global.flags & (GAME_FLAG_CMBTDIFF_PUNISHING | GAME_FLAG_CMBTDIFF_NIGHTMARE | GAME_FLAG_CMBTDIFF_ONELIFE) != 0)
 					durability--;
 			}

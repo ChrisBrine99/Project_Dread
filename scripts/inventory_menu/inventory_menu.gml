@@ -203,7 +203,7 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	/// contents will be offset from that point based on each of their unique position values.
 	///	
 	///	@param {Real}	xPos	The menu's current x position added with the viewport's current x position.
-	/// @param {Real}	yPos	The menu's current y position added with the viewport's current x position.
+	/// @param {Real}	yPos	The menu's current y position added with the viewport's current y position.
 	draw_gui_event = function(_xPos, _yPos){
 		// A local value that allows menu elements to slide off/on the bottom of the screen as other elements
 		// go off/on the otp of the screen alongside the menu y position during the opening/closing animation,

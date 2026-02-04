@@ -21,8 +21,8 @@ function str_note_menu(_index) : str_base_menu(_index) constructor {
 	/// to the game's GUI layer. Note that its position refers to the top-left of the menu itself, and its
 	/// contents will be offset from that point based on each of their unique position values.
 	///	
-	///	@param {Real}	xPos	The menu's current x position, rounded down.
-	/// @param {Real}	yPos	The menu's current y position, rounded down.
+	///	@param {Real}	xPos	The menu's current x position added with the viewport's current x position.
+	/// @param {Real}	yPos	The menu's current y position added with the viewport's current y position.
 	draw_gui_event = function(_xPos, _yPos){
 		draw_set_halign(fa_center);
 		draw_set_valign(fa_middle);

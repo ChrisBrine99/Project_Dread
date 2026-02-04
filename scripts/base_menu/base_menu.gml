@@ -185,8 +185,8 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	/// to the game's screen. The argument values should include the menu's current position on the screen as
 	/// well as the screen's current position within the room since they use room-space coordinates.
 	///	
-	///	@param {Real}	xPos	The menu's current x position, rounded down.
-	/// @param {Real}	yPos	The menu's current y position, rounded down.
+	///	@param {Real}	xPos	The menu's current x position added with the viewport's current x position.
+	/// @param {Real}	yPos	The menu's current y position added with the viewport's current y position.
 	draw_gui_event = function(_xPos, _yPos) {}
 	
 	/// @description

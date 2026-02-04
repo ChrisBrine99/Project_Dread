@@ -352,16 +352,16 @@ function str_textbox(_index) : str_base(_index) constructor {
 		
 		// Elements that will not be rendered until the textbox has finished typing out all the required
 		// characters for the textbox onto the screen.
-		var _alpha = alpha;
 		if (curChar == textLength){
 			if (!TBOX_HAS_OPTIONS){
 				// Display the advance indicator at the bottom-right of the textbox window relative to the 
 				// value of the offset timer/value with the fraction component removed. 
-				draw_sprite_ext(spr_tbox_advance_indicator, 0, 
-					x + _xView + TBOX_ARROW_XOFFSET, 
-					y + _yView + TBOX_ARROW_YOFFSET + floor(advArrowOffset),
-					1.0, 1.0, 0.0, COLOR_TRUE_WHITE, alpha
-				);
+				var _xIndicator = x + _xView + TBOX_ARROW_XOFFSET;
+				var _yIndicator = y + _yView + TBOX_ARROW_YOFFSET + floor(advArrowOffset);
+				draw_sprite_ext(spr_tbox_advance_indicator, 0, _xIndicator + 1, _yIndicator + 1,
+					1.0, 1.0, 0.0, COLOR_DARK_GRAY, _shadowAlpha);
+				draw_sprite_ext(spr_tbox_advance_indicator, 0, _xIndicator, _yIndicator,
+					1.0, 1.0, 0.0, COLOR_TRUE_WHITE, alpha);
 			} else{
 				// When the textbox has options associated with it, the menu responsible for those options 
 				// will be drawn instead of the advancement indicator.
@@ -375,6 +375,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 			// Draw a black background with a nice alpha gradient applied to it. This will be found behind the 
 			// control information for the textbox, but in front of all elements; causing the textbox to slide in
 			// from behind this element during its opening animation.
+			var _alpha = alpha;
 			with(global.colorFadeShader){
 				activate_shader(COLOR_BLACK);
 				draw_circle_ext(

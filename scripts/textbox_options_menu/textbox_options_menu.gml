@@ -30,8 +30,8 @@ function str_textbox_options_menu(_index) : str_sub_menu(_index) constructor {
 	///	Called during every frame that the menu exists for. It is responsible for rendering this menu's contents
 	/// to the game's screen.
 	///	
-	///	@param {Real}	xPos		The menu's current x position, rounded down.
-	/// @param {Real}	yPos		The menu's current y position, rounded down.
+	///	@param {Real}	xPos	The menu's current x position added with the viewport's current x position.
+	/// @param {Real}	yPos	The menu's current y position added with the viewport's current y position.
 	///	@param {Real}	shadowColor	Determines the color used for the option text's drop shadow.
 	/// @param {Real}	shadowAlpha	Determines the opacity of the option text's drop shadow.
 	draw_gui_event = function(_xPos, _yPos, _shadowColor = COLOR_BLACK, _shadowAlpha = 1.0){

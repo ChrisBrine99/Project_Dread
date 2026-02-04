@@ -10,7 +10,7 @@ if (instance_exists(obj_game_manager)){
 // set the rendering alpha test threshold so nearly invisible elements will be completely ignored in the
 // rendering pipeline.
 application_surface_draw_enable(false);
-gpu_set_alphatestref(10); // ~0.039
+gpu_set_alphatestref(1); // ~0.0039
 
 // Since the create event of "obj_game_manager" is where the variable global.sInstances is initialized, the
 // game manager must be created BEFORE it is added to that data structure. The same is done with the player and
@@ -30,6 +30,7 @@ ds_map_add(global.sInstances, str_camera,				new str_camera(str_camera));
 ds_map_add(global.sInstances, str_textbox,				new str_textbox(str_textbox));
 ds_map_add(global.sInstances, str_textbox_log,			new str_textbox_log(str_textbox));
 ds_map_add(global.sInstances, str_screen_fade,			new str_screen_fade(str_screen_fade));
+ds_map_add(global.sInstances, str_fog,					new str_fog(str_fog));
 // NOTE -- This is the only time the default ways of struct and object creation should be used!!!
 
 // Initialize what needs initialization above by manually calling its create event (If it wasn't a "compile-

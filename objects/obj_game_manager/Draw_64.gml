@@ -21,20 +21,28 @@ if (GAME_IS_MENU_OPEN || GAME_IS_TEXTBOX_OPEN){
 draw_set_halign(fa_right);
 
 with(PLAYER){
-	draw_text_shadow(315, 13, "--- Timers ---");
+	draw_text_shadow(315, 3, "--- Timers ---");
 	for (var i = 0; i < PLYR_TOTAL_TIMERS; i++)
-		draw_text_shadow(315, 23 + (i * 10), string("{0}: {1}", i, timers[i]));
-		
-	draw_text_shadow(315, 83, string(curStamina) + "/" + string(maxStamina));
+		draw_text_shadow(315, 13 + (i * 10), string("{0}: {1}", i, timers[i]));
 		
 	with(equipment){
 		if (weapon == INV_EMPTY_SLOT)
 			break;
 		
-		draw_text_shadow(315, 3, 
-			string("{0} (Count: {1})", 
-			global.itemIDs[weaponStatRef.ammoTypes[curAmmoIndex]].itemName,
-			ammoCount[curAmmoIndex])
+		with(global.curItems[weapon]){
+			draw_text_shadow(315, 13 + (10 * PLYR_TOTAL_TIMERS),
+				string("{0} ({1})",
+					itemName,
+					quantity
+				)
+			);
+		}
+		
+		draw_text_shadow(315, 23 + (10 * PLYR_TOTAL_TIMERS), 
+			string("{0} x{1}",
+				global.itemIDs[weaponStatRef.ammoTypes[curAmmoIndex]].itemName,
+				ammoCount[curAmmoIndex]
+			)
 		);
 	}
 }

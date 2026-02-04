@@ -55,7 +55,7 @@ if (GAME_IS_PLAYTIME_ACTIVE){
 }
 
 // Update the blur sigma to reach its current target value.
-if (curBlurSigma < global.blurSigma){
+/*if (curBlurSigma < global.blurSigma){
 	curBlurSigma += BLUR_TRANSITION_SPEED * _delta;
 	if (curBlurSigma > global.blurSigma)
 		curBlurSigma = global.blurSigma;
@@ -63,7 +63,7 @@ if (curBlurSigma < global.blurSigma){
 	curBlurSigma -= BLUR_TRANSITION_SPEED * _delta;
 	if (curBlurSigma < global.blurSigma)
 		curBlurSigma = global.blurSigma;
-}
+}*/
 
 // Don't bother with any input swapping logic if there isn't a gamepad to get input from.
 if (global.gamepadID == -1)

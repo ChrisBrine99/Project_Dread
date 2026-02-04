@@ -225,13 +225,17 @@ function entity_draw_shadow_square(_x, _y){
 /// @param {Real}			speed		(Optional) Animation speed relative to the value set within the sprite editor.
 /// @param {Real}			start		(Optional) Starting frame for the animation upon changing.
 /// @param {Real}			loopStart	(Optional) Frame to start at once the sprite is required to loop.
-function entity_set_sprite(_sprite, _speed = 1.0, _start = 0, _loopStart = 0){
+function entity_set_sprite(_sprite, _speed = 1.0, _start = -1, _loopStart = -1){
 	if (sprite_index != _sprite && sprite_exists(_sprite)){
 		sprite_index	= _sprite;
-		image_index		= _start;
 		animLength		= sprite_get_number(_sprite);
 		animFps			= sprite_get_speed(_sprite);
-		animLoopStart	= clamp(_loopStart, 0, animLength - 1);
+		
+		if (_start > 0) // Prevent the image index from being updated if no value was provided to replace the default.
+			image_index		= _start;
+			
+		if (_loopStart > 0) // Perform the same check as above to not overwrite the loop start when not necessary.
+			animLoopStart	= clamp(_loopStart, 0, animLength - 1);
 	}
 	animSpeed = _speed;
 }

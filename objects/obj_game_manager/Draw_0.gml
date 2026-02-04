@@ -8,9 +8,7 @@ if (surface_exists(global.shadowSurface)){
 		_yView = yViewport;
 	}
 	
-	draw_set_alpha(0.5);
-	draw_surface(global.shadowSurface, _xView, _yView);
-	draw_set_alpha(1.0);
+	draw_surface_ext(global.shadowSurface, _xView, _yView, 1.0, 1.0, 0.0, COLOR_TRUE_WHITE, 0.5);
 }
 
 // Renders all Entities after they've been sorted by their y positions; the Entity's with smaller y positions 

@@ -1,0 +1,1 @@
+curBlurSigma = 0.01;
