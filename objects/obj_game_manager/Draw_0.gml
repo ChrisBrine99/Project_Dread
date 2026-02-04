@@ -7,7 +7,6 @@ if (surface_exists(global.shadowSurface)){
 		_xView = xViewport;
 		_yView = yViewport;
 	}
-	
 	draw_surface_ext(global.shadowSurface, _xView, _yView, 1.0, 1.0, 0.0, COLOR_TRUE_WHITE, 0.5);
 }
 

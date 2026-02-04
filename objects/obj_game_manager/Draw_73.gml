@@ -3,38 +3,56 @@
 with(FOG) { draw_end_event(); }
 
 // Create a few local variables that will be used and referenced throughout the event by different instances
-// and structures to avoid having to constantly get the same values over and over again.
+// and structures to avoid having to constantly get the same values over and over again. 
 var _minAlpha	= gpu_get_alphatestref() / 255.0;
 var _delta		= global.deltaTime;
-var _xView		= 0;
+var _xView		= 0;		// All these zeroed values are set to variables found in the Camera struct.
 var _yView		= 0;
 var _wView		= 0;
 var _hView		= 0;
 var _wTexel		= 0.0;
 var _hTexel		= 0.0;
-
-// Scope into the camera struct in order to reference the viewport dimensions which are used for setting the
-// size of the surface that all light sources will be drawn onto.
 with(CAMERA){
-	// Store the viewport's current x/y, width/height, and texel size values once so each light can reference 
-	// it without having to constantly grab it from the camera again and again on an per-object/struct basis.
 	_xView	= xViewport;
 	_yView	= yViewport;
 	_wView	= wViewport;
 	_hView	= hViewport;
 	_wTexel	= wTexel;
 	_hTexel	= hTexel;
+}
+
+// Create the world surface here if it was previously flushed by the GPU or hasn't been initialized.
+if (!surface_exists(global.worldSurface))
+	global.worldSurface = surface_create(_wView, _hView);
+
+// Only spend time applying a blurring effect if the current "sigma" value is above zero. Otherwise, it is
+// bypassed and not applied onto the final application surface.
+if (curBlurSigma > 0.0){
+	shader_set(shd_screen_blur);
+	shader_set_uniform_f(uTexelSize, _wTexel, _hTexel);
+	shader_set_uniform_f(uBlurSteps, 3.0);
+	shader_set_uniform_f(uSigma, curBlurSigma);
+
+	// First pass: Blur the unaltered application surface horizontally and store that result into the world
+	// surface temporarily.
+	shader_set_uniform_f(uBlurDirection, 1.0, 0.0);
+	surface_set_target(global.worldSurface);
+	draw_surface(application_surface, 0, 0);
+	surface_reset_target();
 	
-	// Exit from updating the current lighting if the game is completely paused. The surface will still be
-	// drawn below, but no updates are made to it until the game is unpaused once more. 
-	if (GAME_IS_PAUSED)
-		break;
+	// Second pass: Blur the world surface vertically and draw the result onto the application surface so it
+	// is displayed to the player once the application surface is rendered onto the screen.
+	shader_set_uniform_f(uBlurDirection, 0.0, 1.0);
+	draw_surface(global.worldSurface, _xView, _yView);
+	shader_reset();
+}
 	
-	// Since the lighting system is the first post-processing effect to be drawn, the world surface is checked
-	// for a potential flushing by the GPU here and a new surface is created if that happens to be the case.
-	// Then, the unaltered application surface is drawn to it.
-	if (!surface_exists(global.worldSurface))
-		global.worldSurface = surface_create(wViewport, hViewport);
+// Only update the lighting surface if the game isn't currently paused. This means that whenever the flag for
+// pausing the game is set, the lighting surface isn't updated, and will simply be redrawn over and over again
+// until the game is unpaused once again.
+if (!GAME_IS_PAUSED){
+	// First, draw the current application surface to the world surface so it can be then drawn back onto the
+	// application surface when applying the lighting (Has to be done this way or else GameMaker shits itself).
 	surface_set_target(global.worldSurface);
 	draw_surface(application_surface, 0, 0);
 	surface_reset_target();
@@ -43,7 +61,7 @@ with(CAMERA){
 	// surface will be created, and a reference to its texture ID will be stored so the lighting shader can 
 	// utilize it.
 	if (!surface_exists(global.lightSurface)){
-		global.lightSurface = surface_create(wViewport, hViewport);
+		global.lightSurface = surface_create(_wView, _hView);
 		global.lightTexture	= surface_get_texture(global.lightSurface);
 	}
 		
@@ -94,25 +112,6 @@ shader_set_uniform_f(uLightContrast,	0.19);
 texture_set_stage(uLightTexture,		global.lightTexture);
 draw_surface(global.worldSurface, _xView, _yView);
 shader_reset();
-
-// 
-/*if (curBlurSigma > 0.0){
-	shader_set(shd_screen_blur);
-	shader_set_uniform_f(uTexelSize, _wTexel, _hTexel);
-	shader_set_uniform_f(uBlurSteps, 3.0);
-	shader_set_uniform_f(uSigma, curBlurSigma);
-
-	// 
-	shader_set_uniform_f(uBlurDirection, 1.0, 0.0);
-	surface_set_target(global.worldSurface);
-	draw_surface(application_surface, 0, 0);
-	surface_reset_target();
-
-	// 
-	shader_set_uniform_f(uBlurDirection, 0.0, 1.0);
-	draw_surface(global.worldSurface, _xView, _yView);
-	shader_reset();
-}*/
 
 #region Debug Element Rendering Code
 
@@ -169,7 +168,8 @@ with(TEXTBOX){
 	draw_gui_event(_xView, _yView, _delta);
 }
 
-// 
+// Render the textbox's log onto the screen after the textbox is drawn, but only if its alpha isn't below the
+// minimum threshold for opacity.
 with(TEXTBOX_LOG){
 	if (alpha <= _minAlpha)
 		break;
@@ -180,6 +180,5 @@ with(TEXTBOX_LOG){
 with(SCREEN_FADE){
 	if (!FADE_IS_ACTIVE || alpha < _minAlpha)
 		break; // Skip over rendering the screen fade it its alpha isn't high enough or it is inactive.
-	
 	draw_sprite_ext(spr_rectangle, 0, _xView, _yView, _wView, _hView, 0.0, color, alpha);
 }

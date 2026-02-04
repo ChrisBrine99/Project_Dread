@@ -55,6 +55,13 @@ if (GAME_IS_PLAYTIME_ACTIVE){
 }
 
 // Update the blur sigma to reach its current target value.
+if (curBlurSigma != global.blurSigma){
+	var _difference	= global.blurSigma - curBlurSigma;
+	curBlurSigma   += _difference * BLUR_TRANSITION_SPEED * _delta;
+	if (abs(_difference) <= _delta)
+		curBlurSigma = global.blurSigma;
+}
+
 /*if (curBlurSigma < global.blurSigma){
 	curBlurSigma += BLUR_TRANSITION_SPEED * _delta;
 	if (curBlurSigma > global.blurSigma)

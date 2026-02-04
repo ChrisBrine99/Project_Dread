@@ -20,7 +20,7 @@ void main(void){
 	// is calculated relative to the amount of "steps" the blur will sample. Finally, the total weight is the
 	// overall amount of sampling done on the fragment through the blurring process, which allows the final
 	// output to be normalized between 0.0 and 1.0.
-	vec4	_texColor		= texture2D(gm_BaseTexture, vTexcoord);
+	vec3	_texColor		= texture2D(gm_BaseTexture, vTexcoord).rgb;
 	float	_kernel			= 2.0 * blurSteps + 1.0;
 	float	_totalWeight	= 1.0;
 	
@@ -37,13 +37,14 @@ void main(void){
 		
 		// Sample the fragment towards -infinity on the axis being processed relative to the calculated weight.
 		_sample			= vTexcoord - offset * texelSize * blurDirection;
-		_texColor	   += texture2D(gm_BaseTexture, _sample) * _weight;
+		_texColor	   += texture2D(gm_BaseTexture, _sample).rgb * _weight;
 		
 		// Sample the fragment towards +infinity on the axis being processed relative to the calculated weight.
 		_sample			= vTexcoord + offset * texelSize * blurDirection;
-		_texColor	   += texture2D(gm_BaseTexture, _sample) * _weight;
+		_texColor	   += texture2D(gm_BaseTexture, _sample).rgb * _weight;
 	}
 	
-	// Finally, combined the vertex color with the determined fragment color.
-    gl_FragColor = vColour * _texColor / _totalWeight;
+	// Finally, combined the vertex color with the determined fragment color; converting that to a vec4 with an
+	// alpha of 1.0.
+    gl_FragColor = vColour * vec4(_texColor / _totalWeight, 1.0);
 }

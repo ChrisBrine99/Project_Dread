@@ -335,7 +335,7 @@ global.colorFadeShader = {
 	/// calling "shader_reset" at some point after calling this function is REQUIRED!!!
 	///	
 	/// @param {Real}	color	Determines the color that this shader effect will utilize.
-	activate_shader		: function(_color){
+	activate_shader	: function(_color){
 		if (shader_current() == shd_color_fade)
 			return;
 			
@@ -347,7 +347,7 @@ global.colorFadeShader = {
 	///	Sets the color that will be used for the shader's effect.
 	///	
 	/// @param {Real}	color	Determines the color that this shader effect will utilize.
-	set_effect_color	: function(_color){
+	set_effect_color : function(_color){
 		if (curColorHex == _color){
 			shader_set_uniform_f_array(uFadeColor, curColorRGB);
 			return; // Don't set a color if it matches the one that is currently in use.

@@ -10,7 +10,7 @@ uniform bool	quantizationActive;
 uniform bool	ditheringActive;
 uniform bool	scanlinesActive;
 
-void main(void) {
+void main(void) {	
 	// Since the alpha channel isn't required for the effects applied in the shader, only the RGB values of the
 	// texture and vertex color vector are sampled. Then, the value 1.0 is set for the output fragment's alpha.
 	vec3 _currentColor = vColor * texture2D(gm_BaseTexture, vTexcoord).rgb;
