@@ -10,7 +10,7 @@ if (instance_exists(obj_game_manager)){
 // set the rendering alpha test threshold so nearly invisible elements will be completely ignored in the
 // rendering pipeline.
 application_surface_draw_enable(false);
-gpu_set_alphatestref(1); // ~0.0039
+gpu_set_alphatestref(2); // ~0.0078
 
 // Since the create event of "obj_game_manager" is where the variable global.sInstances is initialized, the
 // game manager must be created BEFORE it is added to that data structure. The same is done with the player and

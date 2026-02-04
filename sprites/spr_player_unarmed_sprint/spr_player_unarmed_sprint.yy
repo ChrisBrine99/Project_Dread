@@ -93,7 +93,7 @@
               },"Disabled":false,"id":"5c7e5b1b-be1a-4c03-a5be-9e7f1a8b1d24","IsCreationKey":false,"Key":3.0,"Length":1.0,"resourceType":"Keyframe<SpriteFrameKeyframe>","resourceVersion":"2.0","Stretch":false,},
             {"$Keyframe<SpriteFrameKeyframe>":"","Channels":{
                 "0":{"$SpriteFrameKeyframe":"","Id":{"name":"5bebb112-0037-4440-898d-f915c67a7c95","path":"sprites/spr_player_unarmed_sprint/spr_player_unarmed_sprint.yy",},"resourceType":"SpriteFrameKeyframe","resourceVersion":"2.0",},
-              },"Disabled":false,"id":"746cbf89-8949-4d2a-a947-5fb09e9e7ae5","IsCreationKey":false,"Key":4.0,"Length":1.0,"resourceType":"Keyframe<SpriteFrameKeyframe>","resourceVersion":"2.0","Stretch":false,},
+              },"Disabled":false,"id":"1032162b-818b-4841-b831-46314ddc1b34","IsCreationKey":false,"Key":4.0,"Length":1.0,"resourceType":"Keyframe<SpriteFrameKeyframe>","resourceVersion":"2.0","Stretch":false,},
             {"$Keyframe<SpriteFrameKeyframe>":"","Channels":{
                 "0":{"$SpriteFrameKeyframe":"","Id":{"name":"aceee8f5-5bf0-41df-bf5a-167390c28523","path":"sprites/spr_player_unarmed_sprint/spr_player_unarmed_sprint.yy",},"resourceType":"SpriteFrameKeyframe","resourceVersion":"2.0",},
               },"Disabled":false,"id":"921698c6-9b3b-4e85-937b-3e08c12a8a29","IsCreationKey":false,"Key":5.0,"Length":1.0,"resourceType":"Keyframe<SpriteFrameKeyframe>","resourceVersion":"2.0","Stretch":false,},
