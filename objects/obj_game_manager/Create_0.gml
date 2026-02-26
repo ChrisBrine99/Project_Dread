@@ -480,6 +480,6 @@ add_debug_line = function(_xStart, _yStart, _xEnd, _yEnd, _lifetime){
 
 #endregion Debug Function Initializations
 
-load_item_data("items.dat");
+load_item_data("item_data.json5");
 item_inventory_initialize(GAME_FLAG_CMBTDIFF_STANDARD);
 show_debug_overlay(false);

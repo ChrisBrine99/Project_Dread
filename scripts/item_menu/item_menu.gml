@@ -790,12 +790,10 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_combine_item = function(_delta){
-		// show_debug_message("The item in slot {0} was combined the item in slot {1}.", auxSelOption, selOption);
-		
-		// 
 		var _firstItem	= invItemRefs[auxSelOption];
 		var _secondItem = invItemRefs[selOption];
 		
+		show_debug_message("The item in slot {0} was combined the item in slot {1}.", auxSelOption, selOption);
 		reset_to_default_state();
 	}
 	
