@@ -107,14 +107,18 @@ function load_json(_filename){
 #macro	KEY_CAN_DROP_FLAG				"Can_Drop"
 #macro	KEY_USE_FUNCTION				"Use_Func"
 
-// 
+// Macros for the keys that only appear within the Valid_Combos section of the unprocessed item data structure.
 #macro	KEY_FIRST_ITEM					"First"
 #macro	KEY_SECOND_ITEM					"Second"
 #macro	KEY_RESULT_ITEM					"Result"
 #macro	KEY_MIN_AMOUNT					"Min"
 #macro	KEY_MAX_AMOUNT					"Max"
 
-// 
+// Macro to explain what this character is doing within the JSON data for the item combo data.
+#macro	CDATA_VALUE_DELIM				"x"
+
+// Macros to explain what each index in the _splitStr variable represent during the process of parsing an item
+// ID and its quantity cost out of the combo data being loaded in.
 #macro	CDATA_INDEX_ITEM_ID				0
 #macro	CDATA_INDEX_ITEM_COST			1
 
@@ -148,7 +152,8 @@ function load_item_data(_filename){
 	global.itemData = ds_map_create();	// Stores the item data in structs; manages the references.
 	global.itemIDs	= array_create(0, ID_INVALID); // Stores an ID/reference pair for access via ID instead of name/key.
 	
-	// 
+	// Loop through all combo data before any items are loaded due to how this information is stored relative
+	// to the other sections in the JSON.
 	var _validCombos = ds_list_create();
 	var _firstItem	 = "";
 	var _firstCost	 = 1;
@@ -160,15 +165,17 @@ function load_item_data(_filename){
 	for (var i = 0; i < _length; i++){
 		_curData = _comboData[| i];
 		
-		// 
+		// Parse the first item's ID and its potential additional cost data. By default, the cost will be 1,
+		// but a unique valud may be parsed if the item ID is stored as a string instead of a number.
 		_firstItem = _curData[? KEY_FIRST_ITEM];
 		if (is_string(_firstItem)){
-			_splitStr = string_split(_firstItem, "x", false, 2);
+			_splitStr = string_split(_firstItem, CDATA_VALUE_DELIM, true, 2);
 			_firstItem = real(_splitStr[CDATA_INDEX_ITEM_ID]);
 			_firstCost = real(_splitStr[CDATA_INDEX_ITEM_COST]);
 		}
 		
-		// 
+		// Parse the second item's ID and its potential additional cost data in the same way that the first
+		// item has its information parsed.
 		_secondItem = _curData[? KEY_SECOND_ITEM];
 		if (is_string(_secondItem)){
 			_splitStr = string_split(_secondItem, "x", false, 2);
@@ -176,7 +183,8 @@ function load_item_data(_filename){
 			_secondCost = real(_splitStr[CDATA_INDEX_ITEM_COST]);
 		}
 		
-		// 
+		// Create a struct that stores the information about the combination and place said struct into the
+		// list that will be placed into the global item data structure after this loop is completed.
 		ds_list_add(_validCombos, {
 			firstItem	: _firstItem,
 			firstCost	: _firstCost,
@@ -187,28 +195,30 @@ function load_item_data(_filename){
 			maxAmount	: load_item_value(_curData[? KEY_MAX_AMOUNT], 1)
 		});
 		
-		// 
+		// Set these values back to 1 in case they were changed due to a unique cost in the combo being present
+		// on either item.
 		_firstCost	= 1;
 		_secondCost = 1;
 	}
 	ds_map_add(global.itemData, KEY_VALID_COMBOS, _validCombos);
 	
-	// 
+	// After the combo data is loaded, the remaining sections will have their information loaded into the
+	// structure as they all simply contain different items.
 	var _sectionContents = -1;
 	var _itemContents	 = -1;
 	var _curSection		 = ds_map_find_first(_itemData);
 	var _curItemID		 = "";
 	while(!is_undefined(_curSection)){
-		_sectionContents = _itemData[? _curSection];
-		if (is_undefined(_sectionContents)) // The section in question doesn't exist; exit main loop early.
-			break;
-			
 		// If the current section is the chunk that contains the game's combination data, skip over it so it
 		// isn't loaded using the logic below, as it is not compatible with it like the rest of the data is.
 		if (_curSection == KEY_VALID_COMBOS){
 			_curSection = ds_map_find_next(_itemData, _curSection);
 			continue;
 		}
+		
+		_sectionContents = _itemData[? _curSection];
+		if (is_undefined(_sectionContents)) // The section in question doesn't exist; exit main loop early.
+			break;
 		
 		// Find the first element in the section that is being parsed. Then, loop through that section until
 		// there are no more items in the sections to parse (The loop exits early if invalid data is found).

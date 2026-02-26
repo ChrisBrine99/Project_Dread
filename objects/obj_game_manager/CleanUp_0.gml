@@ -31,42 +31,34 @@ if (is_array(global.curItems)){
 // to zero so all those references are removed before they are cleaned up below.
 array_resize(global.itemIDs, 0);
 
-// Remove all item data from the game, and any data within a given item struct depending on its type. It will
-// also handle removing any internal containers within the main item struct itself (Ex. combo data is stored
-// within structs so they have to be removed as well as required).
-var _structRef	= undefined;
-var _itemName	= ds_map_find_first(global.itemData);
-while(!is_undefined(_itemName)){
-	_structRef = global.itemData[? _itemName];
-	show_debug_message("Deleted item {0} (structRef: {1})", _itemName, _structRef);
-	with(_structRef){
-		// Remove the containers for the input side of the item's combination data. This block of code is
-		// skipped over should there not be an array named validCombo within the current struct.
-		if (variable_struct_exists(_structRef, "validCombo") && is_array(validCombo)){
-			_length = array_length(validCombo);
-			for (var i = 0; i < _length; i++)
-				delete validCombo[i];
-		}
-		
-		// The same process as above occurs for the item's combination result data. This next block is also
-		// skipped for the same reason as above, but for the comboResult array variable.
-		if (variable_struct_exists(_structRef, "comboResult") && is_array(comboResult)){
-			_length = array_length(comboResult);
-			for (var i = 0; i < _length; i++)
-				delete comboResult[i];
-		}
+// Before looping through and deleting all item data, the combo recipes stored alongside those items will need
+// to be cleaned up and removed. So, that list is grabbed and each struct within it is deleted before the list
+// itself is destroyed and its ID is removed from the item data map.
+var _validCombos = global.itemData[? KEY_VALID_COMBOS];
+if (ds_exists(_validCombos, ds_type_list)){
+	_length = ds_list_size(_validCombos);
+	for (var i = 0; i < _length; i++){
+		show_debug_message("Deleting combo recipe {0} (structRef: {1})", i, _validCombos[| i]);
+		delete _validCombos[| i];
 	}
-	
-	global.itemData[? _itemName] = undefined; // Remove reference to the struct within the map.
-	_itemName					 = ds_map_find_next(global.itemData, _itemName);
-	delete _structRef;
+	ds_list_destroy(_validCombos);
+	ds_map_delete(global.itemData, KEY_VALID_COMBOS);
+}
+
+// Now that only items structs remain, the loop below will go through each element and delete the structs from
+// memory before the map itself is cleared and destroyed.
+var _key = ds_map_find_first(global.itemData);
+while(!is_undefined(_key)){
+	show_debug_message("Deleted item {0} (structRef: {1})", _key, global.itemData[? _key]);
+	delete global.itemData[? _key];
+	_key = ds_map_find_next(global.itemData, _key);
 }
 ds_map_clear(global.itemData);
 ds_map_destroy(global.itemData);
 
 // Loop through all world item structs that may currently exist. Then, clear and destroy the data structure
 // that was managing all those world items.
-var _key = ds_map_find_first(global.worldItems);
+_key = ds_map_find_first(global.worldItems);
 while(!is_undefined(_key)){
 	delete global.worldItems[? _key];
 	_key = ds_map_find_next(global.worldItems, _key);
