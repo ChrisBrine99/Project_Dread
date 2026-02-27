@@ -1,0 +1,1 @@
+set_item_params("test_item_04", ITEM_REVITALIFE, 1);

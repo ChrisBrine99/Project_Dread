@@ -177,6 +177,10 @@
 // Another catchall like above, but for references to objects/structs that are considered invalid.
 #macro	REF_INVALID					   -32
 
+// A catchall specifically for when a key item doesn't have a proper function assigned to it due to malformed
+// data being found within the item's data upon it being loaded.
+#macro	NO_FUNCTION					   -64
+
 // Macros for characters that are used throughout the games code for various purposes; from parsing data for 
 // items when they're loaded into the game, to punctuation pauses during the textbox's "typing" animation, and
 // so on.

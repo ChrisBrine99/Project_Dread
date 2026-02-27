@@ -103,6 +103,7 @@ function load_json(_filename){
 #macro	IDATA_STR_TYPE_AMULET			"amulet"
 
 // Macros for keys that only appear within the Key_Items section of the unprocessed item data structure.
+#macro	KEY_CAN_CLOSE_FLAG				"Can_Close"
 #macro	KEY_CAN_USE_FLAG				"Can_Use"
 #macro	KEY_CAN_DROP_FLAG				"Can_Drop"
 #macro	KEY_USE_FUNCTION				"Use_Func"
@@ -121,6 +122,11 @@ function load_json(_filename){
 // ID and its quantity cost out of the combo data being loaded in.
 #macro	CDATA_INDEX_ITEM_ID				0
 #macro	CDATA_INDEX_ITEM_COST			1
+
+// 
+#macro	FUNC_HITPOINT_UP				"hitpoint_up"
+#macro	FUNC_STAMINA_UP					"stamina_up"
+#macro	FUNC_SANITY_UP					"sanity_up"
 
 #endregion item Data Parsing Macros
 
@@ -151,6 +157,13 @@ function load_item_data(_filename){
 	}
 	global.itemData = ds_map_create();	// Stores the item data in structs; manages the references.
 	global.itemIDs	= array_create(0, ID_INVALID); // Stores an ID/reference pair for access via ID instead of name/key.
+	
+	// Create a map containing references to all the functions needed by the key items. Each of these values
+	// is paired with a key matching the string found in the key item data inside its "Use_Func" variable.
+	var _useFunctions = ds_map_create();
+	ds_map_add(_useFunctions, FUNC_HITPOINT_UP,		item_use_hitpoint_up);
+	ds_map_add(_useFunctions, FUNC_STAMINA_UP,		item_use_stamina_up);
+	ds_map_add(_useFunctions, FUNC_SANITY_UP,		item_use_sanity_up);
 	
 	// Loop through all combo data before any items are loaded due to how this information is stored relative
 	// to the other sections in the JSON.
@@ -230,13 +243,14 @@ function load_item_data(_filename){
 			
 			// Load the item into the correct format that the game expects; parsing out its combo data from a
 			// string into structs containing the requirements and outcomes for a combo.
-			load_item(_curSection, _itemContents[? KEY_NAME], _curItemID, _itemContents);
+			load_item(_curSection, _itemContents[? KEY_NAME], _curItemID, _itemContents, _useFunctions);
 			_curItemID = ds_map_find_next(_sectionContents, _curItemID); // Move onto the next item.
 		}
 		
 		_curSection = ds_map_find_next(_itemData, _curSection);
 	}
 	
+	ds_map_destroy(_useFunctions);
 	ds_map_destroy(_itemData);
 	show_debug_message(
 		"Processed and parsed all item data ({1} items and {2} combo recipes) in {0} microseconds.", 
@@ -252,11 +266,12 @@ function load_item_data(_filename){
 /// struct past what is provided by default, and will be treated different when interacted with by the player
 /// in their inventory depending on that parameter's determined numerical value.
 ///	
-/// @param {String}		section		The key that determines how the item's data will be considered when parsed.
-/// @param {String}		itemKey		What will be used to reference the item within the map; it is equal to the name of the item itself.
-/// @param {String}		itemIndex	The string numerical value that will be used for the item's index value.
-///	@param {Id.DsMap}	data		The raw contents of the item within the unprocessed data.
-function load_item(_section, _itemKey, _itemIndex, _data){
+/// @param {String}		section			The key that determines how the item's data will be considered when parsed.
+/// @param {String}		itemKey			What will be used to reference the item within the map; it is equal to the name of the item itself.
+/// @param {String}		itemIndex		The string numerical value that will be used for the item's index value.
+///	@param {Id.DsMap}	data			The raw contents of the item within the unprocessed data.
+/// @param {Id.DsMap}	useFunctions	Map that contains key/value pairs for functions that key items utilize.
+function load_item(_section, _itemKey, _itemIndex, _data, _useFunctions){
 	if (string_digits(_itemIndex) == "")
 		return; // Don't load the item if there isn't a proper ID that can be used for storing the item's data.
 		
@@ -383,7 +398,20 @@ function load_item(_section, _itemKey, _itemIndex, _data){
 			}
 			break;
 		case KEY_KEY_ITEMS: // Parse through the data of a key item.
-			with(_itemStructRef) { typeID = ITEM_TYPE_KEY_ITEM; }
+			with(_itemStructRef){ 
+				typeID		= ITEM_TYPE_KEY_ITEM;
+				
+				// Store the index to the function that will be called whenever the player uses this item.
+				var _key	= _data[? KEY_USE_FUNCTION];
+				useFunction	= load_item_value(_useFunctions[? _key], NO_FUNCTION);
+				
+				// Set the flag bits utilized by key-type items based on the values parsed through the item 
+				// data for the key item in question; offseting them to match the bit's position in the 
+				// variable's numerical value.
+				flags	    = (bool(_data[? KEY_CAN_CLOSE_FLAG])			) |
+							  (bool(_data[? KEY_CAN_USE_FLAG])		<<	 1	) |
+							  (bool(_data[? KEY_CAN_DROP_FLAG])		<<	 2	);
+			}
 			break;
 	}
 }

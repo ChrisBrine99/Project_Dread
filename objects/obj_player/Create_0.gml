@@ -82,6 +82,12 @@
 
 #region Misc. Macros
 
+// Macros that determine how high the player's internal values maximums can become before they no longer 
+// increased by the use of items.
+#macro	PLYR_MAX_POSSIBLE_HITPOINTS		150
+#macro	PLYR_MAX_POSSIBLE_STAMINA		250
+#macro	PLYR_MAX_POSSIBLE_SANITY		300
+
 // Macros for the player's default acceleration and maximum speeds. When crippled, these act as the "slow"
 // sprinting speed when their stamina is completely depleted.
 #macro	PLYR_ACCEL_NORMAL				0.10
@@ -214,6 +220,14 @@ animCurFrame		= 0.0;
 maxHitpoints		= 100;
 curHitpoints		= maxHitpoints;
 
+// Stores the player's current and maximum stamina values, respectively.
+maxStamina			= 100;
+curStamina			= maxStamina;
+
+// Stores the player's current and maximum sanity values, respectively.
+maxSanity			= 100;
+curSanity			= maxSanity;
+
 // Stores the inputs that were held versus not held for the current and last frame of gameplay. From this, 
 // checks to see if they've been pressed, held, or released can be performed quickly through bitwise math.
 inputFlags			= 0;
@@ -230,14 +244,6 @@ padStickInputRV		= 0.0;
 // the left stick has been moved to a position outside its deadzone.
 xMoveDirection		= 0.0;
 yMoveDirection		= 0.0;
-
-// Stores the player's current and maximum stamina values, respectively.
-maxStamina			= 100;
-curStamina			= maxStamina;
-
-// Stores the player's current and maximum sanity values, respectively.
-maxSanity			= 100;
-curSanity			= maxSanity;
 
 // Stores a collection of floating point values that act as timers for various interval-based things that can
 // occur to the player. For example, the damage intervals for bleeding and poison, as well as the stamina loss

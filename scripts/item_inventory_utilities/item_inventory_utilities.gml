@@ -50,6 +50,16 @@
 #macro	CNSM_GIVES_TMPIMU_BLEED			((flags & CNSM_FLAG_TMPIMU_BLEED)	!= 0)
 #macro	CNSM_GIVES_TMPIMU_CRIPPLE		((flags & CNSM_FLAG_TMPIMU_CRIPPLE)	!= 0)
 
+// Macros for the bit values of the flags that exist within every key item.
+#macro	KEYITM_FLAG_CAN_CLOSE			0x00000001
+#macro	KEYITM_FLAG_CAN_USE				0x00000002
+#macro	KEYITM_FLAG_CAN_DROP			0x00000004
+
+// Macros that represent the checks for specific bit states within the flags variable of a given key item.
+#macro	KEYITM_CAN_CLOSE_MENU			((flags & KEYITM_FLAG_CAN_CLOSE)	!= 0)
+#macro	KEYITM_CAN_BE_USED				((flags & KEYITM_FLAG_CAN_USE)		!= 0)
+#macro	KEYITM_CAN_BE_DROPPED			((flags & KEYITM_FLAG_CAN_DROP)		!= 0)
+
 // Macros that explain what each index in the equipParams array does when the item is considered a flashlight.
 #macro	EQUP_PARAM_LIGHT_RADIUS			0
 #macro	EQUP_PARAM_LIGHT_COLOR			1
@@ -188,6 +198,70 @@
 #macro	ITEM_CHEM_MIX_WM_PP				"Chemical Mix (WM+PP)"
 #macro	ITEM_CHEM_MIX_WM_CC				"Chemical Mix (WM+CC)"
 #macro	ITEM_CHEM_MIX_WM_DC				"Chemical Mix (WM+DC)"
+#macro	ITEM_CHEM_MIX_PM_WP				"Chemical Mix (PM+WP)"
+#macro	ITEM_CHEM_MIX_PM_PP				"Chemical Mix (PM+PP)"
+#macro	ITEM_CHEM_MIX_PM_CC				"Chemical Mix (PM+CC)"
+#macro	ITEM_CHEM_MIX_PM_DC				"Chemical Mix (PM+DC)"
+#macro	ITEM_CHEM_MIX_WP_CC				"Chemical Mix (WP+CC)"
+#macro	ITEM_CHEM_MIX_WP_DC				"Chemical Mix (WP+DC)"
+#macro	ITEM_CHEM_MIX_PP_CC				"Chemical Mix (PP+CC)"
+#macro	ITEM_CHEM_MIX_PP_DC				"Chemical Mix (PP+DC)"
+#macro	ITEM_FIRST_AID_KIT				"First Aid Kit"
+#macro	ITEM_ANTIPSYCHOSIS_PILLS		"Anti-Psychosis Pills"
+
+// --- Combinable Item Keys --- //
+#macro	ITEM_IMPURE_SULFUR				"Impure Sulfur"
+#macro	ITEM_IMPURE_CHARCOAL			"Impure Charcoal"
+#macro	ITEM_PURE_SULFER				"Pure Sulfur"
+#macro	ITEM_PURE_CHARCOAL				"Pure Charcoal"
+#macro	ITEM_DIRTY_WATER				"Dirty Water"
+#macro	ITEM_PURIFIED_WATER				"Purified Water"
+#macro	ITEM_HYDROXIDE					"Hydroxide"
+#macro	ITEM_CHLORIDE					"Chloride"
+#macro	ITEM_DIRTY_GUNPOWDER			"Dirty Gunpowder"
+#macro	ITEM_GUNPOWDER					"Gunpowder"
+#macro	ITEM_PURIFIED_GUNPOWDER			"Purified Gunpowder"
+#macro	ITEM_EXPLOSIVE_COMPOUND			"Explosive Compound"
+#macro	ITEM_EXOTHERMIC_COMPOUND		"Exothermic Compound"
+#macro	ITEM_ENDOTHERMIC_COMPOUND		"Endothermic Compound"
+#macro	ITEM_9MM_CASINGS				"9mm Casings"
+#macro	ITEM_12GAUGE_SHELLS				"12 Gauge Shells"
+#macro	ITEM_762MM_CASINGS				"7.62mm Casings"
+#macro	ITEM_40MM_SHELLS				"40mm Shells"
+#macro	ITEM_50_CASINGS					".50 Casings"
+#macro	ITEM_45_AUTO_CASINGS			".45 Auto Casings"
+#macro	ITEM_ALUMINUM_CAN				"Aluminum Can"
+#macro	ITEM_GLASS_BOTTLE				"Glass Bottle"
+#macro	ITEM_GOLDENROD					"Goldenrod"
+#macro	ITEM_GINGER_ROOT				"Ginger Root"
+#macro	ITEM_DANDELION					"Dandelion"
+
+// --- Equipable Item Keys --- //
+#macro	ITEM_FLASHLIGHT					"Flashlight"
+#macro	ITEM_FLASHLIGHT_PLUS			"Flashlight (+)"
+#macro	ITEM_UV_FLASHLIGHT				"UV Flashlight"
+#macro	ITEM_MULTI_LIGHT				"Multi-Light"
+#macro	ITEM_LIGHT_ARMOR				"Light Armor"
+#macro	ITEM_LIGHT_ARMOR_PLUS			"Light Armor (+)"
+#macro	ITEM_HEAVY_ARMOR				"Heavy Armor"
+#macro	ITEM_HEAVY_ARMOR_PLUS			"Heavy Armor (+)"
+#macro	ITEM_IMMUNITY_AMULET			"Immunity Amulet"
+#macro	ITEM_IRONSKIN_AMULET			"Iron Skin Amulet"
+#macro	ITEM_STRENGTH_AMULET			"Strength Amulet"
+#macro	ITEM_CALMING_AMULET				"Calming Amulet"
+#macro	ITEM_LUCKY_AMULET				"Lucky Amulet"
+#macro	ITEM_REFUND_AMULET				"Refund Amulet"
+#macro	ITEM_FORTIFIED_AMULET			"Fortified Amulet"
+#macro	ITEM_POWER_AMULET				"Power Amulet"
+#macro	ITEM_SILENTSTEP_AMULET			"Silent Step Amulet"
+
+// --- Key Item Keys --- //
+#macro	ITEM_REVITALIFE					"Revitalife"
+#macro	ITEM_ENERGY_BOOSTER				"Energy Booster"
+#macro	ITEM_MIND_BOOSTER				"Mind Booster"
+#macro	ITEM_UPGRADE_PARTS				"Upgrade Parts"
+#macro	ITEM_REPAIR_KIT					"Repair Kit"
+#macro	ITEM_CASSETTE_TAPE				"Cassette Tape"
 
 #endregion Item Name/Key Value Macros
 

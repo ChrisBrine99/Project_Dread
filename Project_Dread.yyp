@@ -110,6 +110,7 @@
     {"id":{"name":"inventory_menu","path":"scripts/inventory_menu/inventory_menu.yy",},},
     {"id":{"name":"item_inventory_utilities","path":"scripts/item_inventory_utilities/item_inventory_utilities.yy",},},
     {"id":{"name":"item_menu","path":"scripts/item_menu/item_menu.yy",},},
+    {"id":{"name":"item_use_utilities","path":"scripts/item_use_utilities/item_use_utilities.yy",},},
     {"id":{"name":"light_basic","path":"scripts/light_basic/light_basic.yy",},},
     {"id":{"name":"light_blink","path":"scripts/light_blink/light_blink.yy",},},
     {"id":{"name":"light_flicker","path":"scripts/light_flicker/light_flicker.yy",},},

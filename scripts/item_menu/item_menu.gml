@@ -510,22 +510,30 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 						MENUITM_OPTION_MOVE, 
 						MENUITM_OPTION_DROP
 					];
+					
+					// An item that would normally have the "Equip" option as the first in the list of 
+					// available options will have it changed to "Unequip" if the weapon happens to be 
+					// equipped to the player.
+					if (itemDataToRender[selOption].isEquipped)
+						_options[0] = MENUITM_OPTION_UNEQUIP;
+						
 					break;
 				case ITEM_TYPE_CONSUMABLE:
 				case ITEM_TYPE_KEY_ITEM:
-					_options = [
-						MENUITM_OPTION_USE,
+					_options = [ // These are the only two options available to every key item.
 						MENUITM_OPTION_COMBINE,
 						MENUITM_OPTION_MOVE,
-						MENUITM_OPTION_DROP
 					];
+					
+					// Add the "Use" and "Drop" options for key items here by checking if the flags for adding
+					// said options are set within the item's flag variable.
+					with(invItemRefs[selOption]){
+						if (KEYITM_CAN_BE_USED)		{ array_insert(_options, 0, MENUITM_OPTION_USE); }
+						if (KEYITM_CAN_BE_DROPPED)	{ array_push(_options, MENUITM_OPTION_DROP); }
+					}
+					
 					break;
 			}
-			
-			// An item that would normally have the "Equip" option as the first in the list of available options
-			// will have it changed to "Unequip" if the weapon happens to be equipped to the player.
-			if (_options[0] == MENUITM_OPTION_EQUIP && itemDataToRender[selOption].isEquipped)
-				_options[0] = MENUITM_OPTION_UNEQUIP;
 			
 			// If the struct already exists, replace the previous options and clear the bit that is normally
 			// set when the sub menu is closing. Finally, copy the vertical spacing between options like was
@@ -716,12 +724,34 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	}
 	
 	/// @description
-	///	
+	///	A single-frame state that attempts to use the select item and apply its effects to the player, game
+	/// world, area, etc.. The item's option window begins its closing animation after this.
 	///
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_use_item = function(_delta){
-		show_debug_message("The item in slot {0} was used.", selOption);
+		var _itemUsed	= false;
+		var _itemID		= ID_INVALID;
+		with(invItemRefs[selOption]){
+			_itemUsed	= (useFunction != NO_FUNCTION && script_exists(useFunction) 
+							&& script_execute(useFunction));
+			_itemID		= itemID;
+		}
 		object_set_state(state_close_item_options);
+
+		// Only proceed to delete the item if it was successfully used. Otherwise, close the item options menu
+		// as normal to return the inventory to its normal functionality.
+		if (!_itemUsed)
+			return;
+			
+		// Remove the item that was used from the inventory, but only clear the necessary data from the item
+		// menu if no more of that item exists in the slot it once occupied; as some usable items can have
+		// more than one instance of them per inventory slot (Ex. Cassette Tapes can stack up to 5 per slot).
+		item_inventory_remove(_itemID, 1);
+		if (global.curItems[selOption] == INV_EMPTY_SLOT){
+			invItemRefs[selOption]		= INV_EMPTY_SLOT;
+			itemDataToRender[selOption] = INV_EMPTY_SLOT;
+			delete itemDataToRender[selOption];
+		}
 	}
 	
 	/// @description 

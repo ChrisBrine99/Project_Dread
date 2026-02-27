@@ -1,0 +1,1 @@
+set_item_params("test_item_06", ITEM_CASSETTE_TAPE, 2);
