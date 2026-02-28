@@ -6,6 +6,7 @@ function str_fog(_index) : str_base(_index) constructor {
 	
 	// 
 	curLayers		= ds_list_create();
+	uPlayerPos		= shader_get_uniform(shd_fog_holepunch, "playerPos");
 	
 	/// @description 
 	///	The fog weather struct's destroy event. It will clean up anything that isn't automatically cleaned up 
@@ -33,6 +34,11 @@ function str_fog(_index) : str_base(_index) constructor {
 		var _sprWidth	= sprite_get_width(spr_fog);
 		var _sprHeight	= sprite_get_height(spr_fog);
 		var _delta		= global.deltaTime;
+		var _uPlayerPos	= uPlayerPos;
+		
+		// 
+		shader_set(shd_fog_holepunch);
+		with(PLAYER) { shader_set_uniform_f(_uPlayerPos, x, y - 12); }
 		
 		// 
 		for (var i = 0; i < _length; i++){
@@ -66,6 +72,7 @@ function str_fog(_index) : str_base(_index) constructor {
 				draw_sprite_tiled_ext(spr_fog, 0, x, y, scale, scale, COLOR_TRUE_WHITE, alpha);
 			}
 		}
+		shader_reset();
 	}
 	
 	/// @description 

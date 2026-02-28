@@ -1,5 +1,5 @@
 varying vec2	vTexcoord;
-varying vec4	vColour;
+varying vec4	vColor;
 
 uniform vec2	texelSize;
 uniform vec2	blurDirection;
@@ -46,5 +46,5 @@ void main(void){
 	
 	// Finally, combined the vertex color with the determined fragment color; converting that to a vec4 with an
 	// alpha of 1.0.
-    gl_FragColor = vColour * vec4(_texColor / _totalWeight, 1.0);
+    gl_FragColor = vColor * vec4(_texColor / _totalWeight, 1.0);
 }

@@ -127,6 +127,7 @@
     {"id":{"name":"textbox_options_menu","path":"scripts/textbox_options_menu/textbox_options_menu.yy",},},
     {"id":{"name":"textbox","path":"scripts/textbox/textbox.yy",},},
     {"id":{"name":"shd_color_fade","path":"shaders/shd_color_fade/shd_color_fade.yy",},},
+    {"id":{"name":"shd_fog_holepunch","path":"shaders/shd_fog_holepunch/shd_fog_holepunch.yy",},},
     {"id":{"name":"shd_lighting","path":"shaders/shd_lighting/shd_lighting.yy",},},
     {"id":{"name":"shd_retro_effects","path":"shaders/shd_retro_effects/shd_retro_effects.yy",},},
     {"id":{"name":"shd_screen_blur","path":"shaders/shd_screen_blur/shd_screen_blur.yy",},},
