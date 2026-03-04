@@ -4,10 +4,14 @@
 // unique to this menu.
 #macro	MENUITM_FLAG_MOVING_ITEM		0x00000001
 #macro	MENUITM_FLAG_OPTIONS_OPEN		0x00000002
+#macro	MENUITM_FLAG_CLOSE_ON_USE		0x00000004
+#macro	MENUITM_FLAG_OPEN_TEXTBOX		0x00000008
 
 // Macros for checking the state of the flags unique to the item menu.
 #macro	MENUITM_IS_MOVING_ITEM			((flags & MENUITM_FLAG_MOVING_ITEM)		!= 0)
 #macro	MENUITM_ARE_OPTIONS_OPEN		((flags & MENUITM_FLAG_OPTIONS_OPEN)	!= 0)
+#macro	MENUITM_SHOULD_CLOSE_ON_USE		((flags & MENUITM_FLAG_CLOSE_ON_USE)	!= 0)
+#macro	MENUITM_SHOULD_OPEN_TEXTBOX		((flags & MENUITM_FLAG_OPEN_TEXTBOX)	!= 0)
 
 // Determines how many items will exist on a single row and column within the menu, respectively.
 #macro	MENUITM_WIDTH					4
@@ -249,8 +253,10 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	///	@param {Real}	xPos	The menu's current x position added with the viewport's current x position.
 	/// @param {Real}	yPos	The menu's current y position added with the viewport's current y position.
 	draw_gui_event = function(_xPos, _yPos){
-		// Set the proper alignment for the quantity text that can appear alongside an item's icon. Set the
-		// opacity of all draw commands that don't take in an alpha level to the current opacity of the menu.
+		// Set the font used by all text within this menu, set the proper alignment for the quantity text that 
+		// can appear alongside an item's icon, and set the opacity of all draw commands that don't take in an 
+		// alpha level to the current opacity of the menu.
+		draw_set_font(fnt_small);
 		draw_set_halign(fa_right);
 		draw_set_valign(fa_bottom);
 		draw_set_alpha(alpha);
@@ -394,8 +400,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	
 	/// @description 
 	///	Allows a single line of code calling this function to encapsulate all that is required to reset the
-	/// item menu back to its default state as it involves more steps than just setting its state back to
-	/// state_default.
+	/// item menu back to its default parameters before assigning its current state back to state_default.
 	///	
 	reset_to_default_state = function(){
 		// Re-enable the change page and two additional cursor movement inputs within the menu movement 
@@ -412,9 +417,9 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		// After re-enabling the necessary input information, the inventory has flags set that re-enable its
 		// ability to close through the return input being pressed, its ability to switch from one section to
 		// another, and the item menu is reset to its default state.
-		with(prevMenu) { flags = flags | MENUINV_FLAG_CAN_CLOSE | MENUINV_FLAG_CAN_CHANGE_PAGE; }
+		with(prevMenu) { flags = flags | MENUINV_FLAG_CAN_CLOSE | MENUINV_FLAG_CAN_CHANGE_PAGE & ~MENUINV_FLAG_HIDE_CONTROLS; }
 		object_set_state(state_default);
-		flags			= flags & ~MENUITM_FLAG_MOVING_ITEM;
+		flags			= flags & ~(MENUITM_FLAG_MOVING_ITEM | MENUITM_FLAG_OPEN_TEXTBOX);
 		auxSelOption	= -1;
 		selOption		= -1;
 	}
@@ -465,7 +470,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			// Disable the page and cursor left/right input information since the inventory is no longer 
 			// able to switch between each of the three sections contained within it.
 			var _movementCtrlGroup = movementCtrlGroup;
-			with(CONTROL_UI_MANAGER){ 
+			with(CONTROL_UI_MANAGER){
 				update_control_group_icon_active_state(_movementCtrlGroup, MENUINV_CTRL_GRP_CURSOR_LEFT,	false);
 				update_control_group_icon_active_state(_movementCtrlGroup, MENUINV_CTRL_GRP_CURSOR_RIGHT,	false);
 				update_control_group_icon_active_state(_movementCtrlGroup, MENUINV_CTRL_GRP_PAGE_LEFT,		false);
@@ -519,6 +524,13 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 						
 					break;
 				case ITEM_TYPE_CONSUMABLE:
+					_options = [
+						MENUITM_OPTION_USE, 
+						MENUITM_OPTION_COMBINE, 
+						MENUITM_OPTION_MOVE, 
+						MENUITM_OPTION_DROP
+					];
+					break;
 				case ITEM_TYPE_KEY_ITEM:
 					_options = [ // These are the only two options available to every key item.
 						MENUITM_OPTION_COMBINE,
@@ -627,14 +639,39 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		}
 		itemOptionsAlpha = _itemOptionsAlpha;
 		
-		// When flagged to close, the menu calls its reset function if there isn't an auxillary option
-		// selected by the item menu. Otherwise, it simply just updates its state so further functionality
-		// can occur with that auxillary item.
-		if (_isClosed){
-			if (auxSelOption == -1) { reset_to_default_state(); }
-			else					{ object_set_state(state_default); }
-			flags = flags & ~MENUITM_FLAG_OPTIONS_OPEN; // CLear flag since this submenu is now closed.
+		// Don't proceed further into the funcition if the closing animation hasn't yet concluded.
+		if (!_isClosed)
+			return;
+		flags = flags & ~MENUITM_FLAG_OPTIONS_OPEN; // Clear flag since this submenu is now closed.
+		
+		// When flagged to close the item inventory menu in its whole on an item's use, this branch of the code
+		// is taken. It will also check if the textbox needs to opened after the menu has finished its closing
+		// animation.
+		if (MENUITM_SHOULD_CLOSE_ON_USE){
+			var _openTextbox = MENUITM_SHOULD_OPEN_TEXTBOX;
+			with(prevMenu){ 
+				object_set_state(state_close_animation);
+				if (_openTextbox) { flags = flags | MENUINV_FLAG_OPEN_TEXTBOX; }
+			}
+			return;
 		}
+		
+		// When flagged to open the textbox (But not also flagged to close the item inventory menu), the menu
+		// will switch to a special state which it will remain in until the textbox that it was signaled to
+		// open is closed.
+		if (MENUITM_SHOULD_OPEN_TEXTBOX){
+			with(prevMenu)	{ flags = flags | MENUINV_FLAG_HIDE_CONTROLS; }
+			with(TEXTBOX)	{ activate_textbox(0, TBOX_FLAG_HIDE_CONTROLS); }
+			object_set_state(state_textbox_open);
+			return;
+		}
+		
+		// If no special flags have been set through the use of an item, the function will simply reset the
+		// item inventory menu back to its default state, and will reset required values back to 0 if the value
+		// in "auxSelOption" is set to anything other than its default of -1.
+		object_set_state(state_default);
+		if (auxSelOption == -1) 
+			reset_to_default_state();
 	}
 	
 	
@@ -719,7 +756,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		// also deactivated since it isn't required during said state.
 		if (_isClosing){
 			object_set_state(state_close_item_options);
-			with(itemOptionsMenu) { object_set_state(0); }
+			with(itemOptionsMenu) { object_set_state(STATE_NONE); }
 		}
 	}
 	
@@ -729,28 +766,39 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	///
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_use_item = function(_delta){
-		var _itemUsed	= false;
+		var _useFlags	= 0;
 		var _itemID		= ID_INVALID;
 		with(invItemRefs[selOption]){
-			_itemUsed	= (useFunction != NO_FUNCTION && script_exists(useFunction) 
-							&& script_execute(useFunction));
-			_itemID		= itemID;
+			if (useFunction != NO_FUNCTION && script_exists(useFunction))
+				_useFlags = script_execute(useFunction);
+			_itemID	= itemID;
 		}
 		object_set_state(state_close_item_options);
 
-		// Only proceed to delete the item if it was successfully used. Otherwise, close the item options menu
-		// as normal to return the inventory to its normal functionality.
-		if (!_itemUsed)
+		// No additional logic needs to be performed for the item being used; exit the function early.
+		if (_useFlags == 0)
 			return;
 			
-		// Remove the item that was used from the inventory, but only clear the necessary data from the item
-		// menu if no more of that item exists in the slot it once occupied; as some usable items can have
-		// more than one instance of them per inventory slot (Ex. Cassette Tapes can stack up to 5 per slot).
-		item_inventory_remove(_itemID, 1);
-		if (global.curItems[selOption] == INV_EMPTY_SLOT){
-			invItemRefs[selOption]		= INV_EMPTY_SLOT;
-			itemDataToRender[selOption] = INV_EMPTY_SLOT;
-			delete itemDataToRender[selOption];
+		// Set the flag within the item inventory if the item being used requires the item inventory menu to
+		// be closed when it is used by the player in-game.
+		if ((_useFlags & USEITM_FLAG_CLOSE_MENU) != 0)
+			flags = flags | MENUITM_FLAG_CLOSE_ON_USE;
+			
+		// Set the flag within the item menu that tells it to toggle the flag within the inventory menu struct 
+		// (Which handles opening and closing this menu) that activates the textbox with whatever contents
+		// exists in the text queue.
+		if ((_useFlags & USEITM_FLAG_OPEN_TEXTBOX) != 0)
+			flags = flags | MENUITM_FLAG_OPEN_TEXTBOX;
+		
+		// The final check for item consumption flags: removing the itme that was used from the current item
+		// inventory. Deletes the necessary data from the menu's data if the item no longer exists in the slot.
+		if ((_useFlags & USEITM_FLAG_CONSUMED) != 0){
+			item_inventory_remove(_itemID, 1);
+			if (global.curItems[selOption] == INV_EMPTY_SLOT){
+				invItemRefs[selOption]		= INV_EMPTY_SLOT;
+				itemDataToRender[selOption] = INV_EMPTY_SLOT;
+				delete itemDataToRender[selOption];
+			}
 		}
 	}
 	
@@ -864,7 +912,22 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			options[| auxSelOption]			= options[| curOption];
 			options[| curOption]			= _tempOptionRef;
 		}
+		
 		reset_to_default_state();
+	}
+	
+	/// @description 
+	///	A simple state that waits until the textbox is closed before returning control back over to the
+	/// item inventory menu. Useful whenever an item needs to open the textbox, but doesn't need to close the
+	/// menu out beforehand.
+	///	
+	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
+	state_textbox_open = function(_delta){
+		if (!GAME_IS_TEXTBOX_OPEN){
+			reset_to_default_state();
+			prevInputFlags	= 0;
+			inputFlags		= 0;
+		}
 	}
 }
 

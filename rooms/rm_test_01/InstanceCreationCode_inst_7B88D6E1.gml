@@ -1,1 +1,1 @@
-set_item_params("test_item_04", ITEM_REVITALIFE, 1);
+set_item_params("test_item_04", ITEM_WEAK_MEDICINE, 1);

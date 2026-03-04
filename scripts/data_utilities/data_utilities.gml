@@ -354,6 +354,7 @@ function load_item(_section, _itemKey, _itemIndex, _data, _useFunctions){
 		case KEY_CONSUMABLE: // Parse through the data of a consumable item.
 			with(_itemStructRef){
 				typeID		= ITEM_TYPE_CONSUMABLE;
+				useFunction	= item_use_consumable;
 
 				// Begin adding parameters to the default item struct so that it can contain all the values
 				// needed for a consumable-type item.

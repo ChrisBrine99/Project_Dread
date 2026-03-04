@@ -11,15 +11,17 @@
 #macro	TBOXLOG_FLAG_RENDER				0x00000040
 #macro	TBOXLOG_FLAG_ACTIVE				0x00000080
 #macro	TBOXLOG_FLAG_CLOSING			0x00000100
+#macro	TBOXLOG_FLAG_NOT_FIRST_MOVE		0x00000200
 
 // Macros that condense the code needed to check if each flag bit used by the textbox log's into a neat value
 // that can be auto-completed by GameMaker to simply the typing required.
-#macro	TBOXLOG_MOVE_UP_HELD			((flags & TBOXLOG_INFLAG_UP)		!= 0 && (flags & TBOXLOG_PREV_INFLAG_UP)	!= 0)
-#macro	TBOXLOG_MOVE_DOWN_HELD			((flags & TBOXLOG_INFLAG_DOWN)		!= 0 && (flags & TBOXLOG_PREV_INFLAG_DOWN)	!= 0)
-#macro	TBOXLOG_WAS_CLOSE_RELEASED		((flags & TBOXLOG_INFLAG_CLOSE)		== 0 && (flags & TBOXLOG_PREV_INFLAG_CLOSE)	!= 0)
-#macro	TBOXLOG_SHOULD_RENDER			((flags & TBOXLOG_FLAG_RENDER)		!= 0)
-#macro	TBOXLOG_IS_ACTIVE				((flags & TBOXLOG_FLAG_ACTIVE)		!= 0)
-#macro	TBOXLOG_IS_CLOSING				((flags & TBOXLOG_FLAG_CLOSING)		!= 0)
+#macro	TBOXLOG_MOVE_UP_HELD			((flags & TBOXLOG_INFLAG_UP)			!= 0 && (flags & TBOXLOG_PREV_INFLAG_UP)	!= 0)
+#macro	TBOXLOG_MOVE_DOWN_HELD			((flags & TBOXLOG_INFLAG_DOWN)			!= 0 && (flags & TBOXLOG_PREV_INFLAG_DOWN)	!= 0)
+#macro	TBOXLOG_WAS_CLOSE_RELEASED		((flags & TBOXLOG_INFLAG_CLOSE)			== 0 && (flags & TBOXLOG_PREV_INFLAG_CLOSE)	!= 0)
+#macro	TBOXLOG_SHOULD_RENDER			((flags & TBOXLOG_FLAG_RENDER)			!= 0)
+#macro	TBOXLOG_IS_ACTIVE				((flags & TBOXLOG_FLAG_ACTIVE)			!= 0)
+#macro	TBOXLOG_IS_CLOSING				((flags & TBOXLOG_FLAG_CLOSING)			!= 0)
+#macro	TBOXLOG_IS_NOT_FIRST_MOVE		((flags & TBOXLOG_FLAG_NOT_FIRST_MOVE)	!= 0)
 
 // Values that determine how many pieces of text the log can hold at any given time and how many of those
 // pieces of data will be shown to the player at a single time when they view the log.
@@ -40,7 +42,7 @@
 // Values that determine the distance between the text surfaces edges on all sides to the edges of the
 // background that is rendered behind each surface.
 #macro	TBOXLOG_BG_XPADDING				4
-#macro	TBOXLOG_BG_YPADDING				4
+#macro	TBOXLOG_BG_YPADDING				4	
 
 #endregion Macros for Textbox Log Struct
 
@@ -464,7 +466,7 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 		// other objects that the log can now be closed without issue.
 		if (TBOXLOG_WAS_CLOSE_RELEASED){
 			object_set_state(state_close_animation);
-			flags			= flags & ~(TBOXLOG_INFLAG_UP | TBOXLOG_INFLAG_DOWN) | TBOXLOG_FLAG_CLOSING;
+			flags			= flags & ~(TBOXLOG_INFLAG_UP | TBOXLOG_INFLAG_DOWN | TBOXLOG_FLAG_NOT_FIRST_MOVE) | TBOXLOG_FLAG_CLOSING;
 			prevInputFlags	= 0;
 			moveTimer		= 0.0;
 			return;
@@ -475,16 +477,22 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 		// movement up (-1), down (+1), or nothing (0).
 		var _moveDirection = TBOXLOG_MOVE_DOWN_HELD - TBOXLOG_MOVE_UP_HELD;
 		if (_moveDirection == 0 || logSize <= TBOXLOG_MAXIMUM_VISIBLE){
-			moveTimer = 0.0;
+			flags		= flags & ~TBOXLOG_FLAG_NOT_FIRST_MOVE;
+			moveTimer	= 0.0;
 			return;
 		}
 			
-		// A simplified version of the menu input autoscrolling that simply resets to a constant values as
-		// the user holds one of the two movement inputs down to navigate around the current log contents.
+		// Perform the same logic here to how a menu will auto-scroll its cursor as a movement direction is
+		// held down: waiting slightly longer on the first movement before using a shorter speed for the rest.
 		moveTimer -= _delta;
 		if (moveTimer > 0.0)
 			return;
-		moveTimer += 15.0;
+		if (TBOXLOG_IS_NOT_FIRST_MOVE){
+			moveTimer	= MENU_AUTOSCROLL_TIME;
+		} else{ // First movement sets the flag.
+			flags		= flags | TBOXLOG_FLAG_NOT_FIRST_MOVE;
+			moveTimer	= MENU_FIRST_AUTOSCROLL_TIME;	
+		}
 		
 		// Determine whether to move the user up the log to older messages, or down the log to newer ones
 		// relative to the direction of input they are currently pressing/holding. Each direction will wrap

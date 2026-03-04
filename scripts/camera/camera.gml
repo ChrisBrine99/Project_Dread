@@ -205,7 +205,8 @@ function str_camera(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	///	
+	///	Moves the camera towards a given position at a constant speed. Upon reaching the desired position the
+	/// function will return true to signal that it no longer needs to be used.
 	///	
 	///	@param {Real}	x		Target position along the current room's x axis.
 	/// @param {Real}	y		Target position along the current room's y axis.
@@ -215,19 +216,23 @@ function str_camera(_index) : str_base(_index) constructor {
 		var _dSpeed		= _speed * _delta;
 		var _direction	= point_direction(x, y, _x, _y);
 		
-		// 
+		// Handling the horizontal movement of the camera; placing any previous and newly added fractional 
+		// values within the variable "xFraction".
 		var _xSpeed	= lengthdir_x(_dSpeed, _direction);
 		x		   += _xSpeed + xFraction;
 		xFraction	= x - (floor(abs(x)) * sign(x));
 		x		   -= xFraction;
 		
-		// 
+		// Handling the vertical movement of the camera; storing away the fractional component into a separate
+		// variable in the same way as above for the horizontal movement.
 		var _ySpeed	= lengthdir_y(_dSpeed, _direction);
 		y		   += _ySpeed + yFraction;
 		yFraction	= y - (floor(abs(y)) * sign(y));
 		y		   -= yFraction;
 		
-		// 
+		// Check the distance between the camera's new position and the target position. If it is within the
+		// current speed calculated via the game's delta time value, the camera position is set to the target
+		// and true is returned. Otherwise, false is returned.
 		if (point_distance(x, y, _x, _y) <= _dSpeed){
 			x			= _x;
 			y			= _y;

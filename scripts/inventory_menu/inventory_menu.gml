@@ -4,12 +4,16 @@
 #macro	MENUINV_FLAG_CAN_CLOSE			0x00000001
 #macro	MENUINV_FLAG_OPENED				0x00000002
 #macro	MENUINV_FLAG_CAN_CHANGE_PAGE	0x00000004
+#macro	MENUINV_FLAG_OPEN_TEXTBOX		0x00000008
+#macro	MENUINV_FLAG_HIDE_CONTROLS		0x00000010
 
 // Macros for checking the current state of the flag bits for the inventory menu. They are used by the active
 // submenu to check if they can or cannot perform certain actions to the inventory.
 #macro	MENUINV_CAN_CLOSE				((flags & MENUINV_FLAG_CAN_CLOSE)		!= 0)
 #macro	MENUINV_IS_OPENED				((flags & MENUINV_FLAG_OPENED)			!= 0)
 #macro	MENUINV_CAN_CHANGE_PAGE			((flags & MENUINV_FLAG_CAN_CHANGE_PAGE) != 0)
+#macro	MENUINV_SHOULD_OPEN_TEXTBOX		((flags & MENUINV_FLAG_OPEN_TEXTBOX)	!= 0)
+#macro	MENUINV_SHOULD_HIDE_CONTROLS	((flags & MENUINV_FLAG_HIDE_CONTROLS)	!= 0)
 
 // Various constants relating to the options shown by the inventory menu; their positioning offset relative 
 // to the entire menu, and spacing between each option along both axes.
@@ -72,17 +76,18 @@
 #macro	MENUINV_CTRL_GRP2_SELECT		0
 #macro	MENUINV_CTRL_GRP2_RETURN		1
 
-// 
+// Macros that determine how the background for the inventory will look.
 #macro	MENUINV_MAINBKG_XRADIUS			210
 #macro	MENUINV_MAINBKG_YRADIUS			140
 #macro	MENUINV_MAINBKG_ALPHA1			0.8
 #macro	MENUINV_MAINBKG_ALPHA2			0.3
 
-// 
+// Two macros that determine the height of the header and the position of the footer (Which is offset from the
+// bottom of the screen by the same amount as the header's height), respectively.
 #macro	MENUINV_HEADER_HEIGHT			14
-#macro	MENUINV_FOOTER_Y				(VIEWPORT_HEIGHT - 14)
+#macro	MENUINV_FOOTER_Y				(VIEWPORT_HEIGHT - MENUINV_HEADER_HEIGHT)
 
-// 
+// Macros that determine the width and height of the current section's contents as shown within the menu.
 #macro	MENUINV_SECTION_WIDTH			(VIEWPORT_WIDTH	- 5)
 #macro	MENUINV_SECTION_HEIGHT			(MENUINV_FOOTER_Y - MENUINV_HEADER_HEIGHT)
 
@@ -202,9 +207,9 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	/// to the game's GUI layer. Note that its position refers to the top-left of the menu itself, and its
 	/// contents will be offset from that point based on each of their unique position values.
 	///	
-	///	@param {Real}	xPos	The menu's current x position added with the viewport's current x position.
-	/// @param {Real}	yPos	The menu's current y position added with the viewport's current y position.
-	draw_gui_event = function(_xPos, _yPos){
+	///	@param {Real}	xView	The menu's current x position added with the viewport's current x position.
+	/// @param {Real}	yView	The menu's current y position added with the viewport's current y position.
+	draw_gui_event = function(_xView, _yView){
 		// A local value that allows menu elements to slide off/on the bottom of the screen as other elements
 		// go off/on the otp of the screen alongside the menu y position during the opening/closing animation,
 		// respectively. Multiplied by two to cancel out that upward sliding motion of the y value.
@@ -216,14 +221,14 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 			with(global.colorFadeShader){
 				activate_shader(COLOR_BLACK);
 				draw_circle_ext( // The main portion of the background.
-					_xPos + VIEWPORT_HALF_WIDTH, _yPos + VIEWPORT_HALF_HEIGHT,
+					_xView + VIEWPORT_HALF_WIDTH, _yView + VIEWPORT_HALF_HEIGHT,
 					MENUINV_MAINBKG_XRADIUS, MENUINV_MAINBKG_YRADIUS,
 					COLOR_GRAY, COLOR_WHITE,
 					_alpha * MENUINV_MAINBKG_ALPHA1
 				);
 				set_effect_color(COLOR_VERY_DARK_BLUE);
 				draw_circle_ext( // Adds a subtle blue hue to the background.
-					_xPos + VIEWPORT_HALF_WIDTH, _yPos + VIEWPORT_HALF_HEIGHT,
+					_xView + VIEWPORT_HALF_WIDTH, _yView + VIEWPORT_HALF_HEIGHT,
 					MENUINV_MAINBKG_XRADIUS, MENUINV_MAINBKG_YRADIUS, 
 					COLOR_GRAY, COLOR_WHITE,
 					_alpha * MENUINV_MAINBKG_ALPHA2
@@ -232,12 +237,12 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 			}
 		
 		#endregion Render Vignette-style Background Behind Menu Section's Contents		
-		#region Drawing White Rectangle Around Active Menu Section's Contents
+		#region Drawing Rectangle Around Active Menu Section's Contents
 		
 			draw_sprite_ext( // Left side of the rectangle.
 				spr_rectangle,
 				0,		// Unused
-				_xPos, _yPos + MENUINV_HEADER_HEIGHT,
+				_xView, _yView + MENUINV_HEADER_HEIGHT,
 				1, MENUINV_SECTION_HEIGHT - _yy,
 				0.0,	// Unused
 				COLOR_DARK_GRAY, alpha
@@ -245,7 +250,7 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 			draw_sprite_ext( // Right side of the rectangle.
 				spr_rectangle,
 				0,		// Unused
-				_xPos + VIEWPORT_WIDTH - 1, _yPos + MENUINV_HEADER_HEIGHT,
+				_xView + VIEWPORT_WIDTH - 1, _yView + MENUINV_HEADER_HEIGHT,
 				1, MENUINV_SECTION_HEIGHT - _yy,
 				0.0,	// Unused
 				COLOR_DARK_GRAY, alpha
@@ -253,7 +258,7 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 			draw_sprite_ext( // Top side of the rectangle.
 				spr_rectangle, 
 				0,		// Unused 
-				_xPos, _yPos + MENUINV_HEADER_HEIGHT - 1,
+				_xView, _yView + MENUINV_HEADER_HEIGHT - 1,
 				VIEWPORT_WIDTH, 1,
 				0.0,	// Unused 
 				COLOR_DARK_GRAY, alpha
@@ -261,13 +266,13 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 			draw_sprite_ext( // Bottom side of the rectangle.
 				spr_rectangle, 
 				0,		// Unused 
-				_xPos, _yPos + MENUINV_FOOTER_Y - _yy,
+				_xView, _yView + MENUINV_FOOTER_Y - _yy,
 				VIEWPORT_WIDTH, 1, 
 				0.0,	// Unused
 				COLOR_DARK_GRAY, alpha
 			);
 			
-		#endregion Drawing White Rectangle Around Active Menu Section's Contents
+		#endregion Drawing Rectangle Around Active Menu Section's Contents
 		#region Drawing Header and Footer Backgrounds
 		
 			draw_set_alpha(alpha);
@@ -276,13 +281,13 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 			draw_sprite_stretched( // The header background.
 				spr_inv_menu_header_footer_bkg, 
 				0,	// Unused
-				_xPos, _yPos, 
+				_xView, _yView, 
 				VIEWPORT_WIDTH, 13
 			);
 			draw_sprite_stretched( // The footer background.
 				spr_inv_menu_header_footer_bkg, 
 				0,	// Unused
-				_xPos, _yPos - _yy + VIEWPORT_HEIGHT - 13,	
+				_xView, _yView - _yy + VIEWPORT_HEIGHT - 13,	
 				VIEWPORT_WIDTH, 13
 			);
 			gpu_set_tex_filter(false);
@@ -291,16 +296,43 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		
 		// After the background elements have all been drawn, the inventory's section names will be drawn 
 		// on the top portion of the menu that is outside of the currently active section.
-		draw_visible_options(fnt_medium, _xPos, _yPos, COLOR_DARK_GRAY, 1.0);
+		draw_visible_options(fnt_medium, _xView, _yView, COLOR_DARK_GRAY, 1.0);
+			
+		#region Drawing Textbox Control Information When Open Alongside the Inventory
 		
-		// Finally, display the icon/descriptor data that exists within the cursor movement and menu 
-		// interaction inputs, respectively.
+		if (GAME_IS_TEXTBOX_OPEN){
+			with(TEXTBOX){
+				// Like within the textbox's drawing logic, ignore displaying control information when the
+				// textbox log is open, as that will handle drawing control information to the screen since it
+				// it currently being controlled by the user.
+				if (TBOX_IS_LOG_ACTIVE)
+					break;
+				
+				var _shadowAlpha	= alpha * TBOX_TEXT_SHADOW_ALPHA;
+				var _tboxCtrlGroup	= tboxCtrlGroup;
+				with(CONTROL_UI_MANAGER)
+					draw_control_group(_tboxCtrlGroup, _xView, _yView, _alpha, 
+						COLOR_WHITE, COLOR_DARK_GRAY, _alpha, _shadowAlpha); 
+			}
+			
+			// Prevent drawing anything below this block of code so the inventory control information isn't
+			// drawn on top of the textbox/textbox log's control information.
+			return;
+		}
+		
+		#endregion Drawing Textbox Control Information When Open Alongside the Inventory
+		#region Drawing Inventory Control Information When Region Above Isn't Drawn
+		
+		if (MENUINV_SHOULD_HIDE_CONTROLS)
+			return;
 		var _movementCtrlGroup = movementCtrlGroup;
 		var _interactCtrlGroup = interactCtrlGroup;
 		with(CONTROL_UI_MANAGER){
-			draw_control_group(_movementCtrlGroup, _xPos, _yPos, _alpha, COLOR_WHITE, COLOR_DARK_GRAY, _alpha);
-			draw_control_group(_interactCtrlGroup, _xPos, _yPos, _alpha, COLOR_WHITE, COLOR_DARK_GRAY, _alpha);
+			draw_control_group(_movementCtrlGroup, _xView, _yView, _alpha, COLOR_WHITE, COLOR_DARK_GRAY, _alpha);
+			draw_control_group(_interactCtrlGroup, _xView, _yView, _alpha, COLOR_WHITE, COLOR_DARK_GRAY, _alpha);
 		}
+		
+		#endregion Drawing Inventory Control Information When Region Above Isn't Drawn
 	}
 	
 	/// @description 
@@ -499,6 +531,9 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		
 		alpha  -= MENUINV_CANIM_ALPHA_SPEED * _delta;
 		if (alpha <= 0.0){
+			if (MENUINV_SHOULD_OPEN_TEXTBOX){ // Opens a textbox upon closing the inventory if needed.
+				with(TEXTBOX) { activate_textbox(); }
+			}
 			instance_destroy_menu_struct(selfRef);
 			return;
 		}

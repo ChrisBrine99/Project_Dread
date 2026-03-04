@@ -11,6 +11,7 @@
 #macro	TBOX_FLAG_LOG_ACTIVE			0x00000040
 #macro	TBOX_FLAG_HAS_OPTIONS			0x00000080
 #macro	TBOX_FLAG_OPTIONS_ACTIVE		0x00000100
+#macro	TBOX_FLAG_HIDE_CONTROLS			0x00000200
 
 // Macros that condense the checks required for specific states that the textbox must be in for it to process
 // certain aspects of the data it is displaying the user, if it is allowed to do that currently to begin with.
@@ -23,6 +24,7 @@
 #macro	TBOX_IS_LOG_ACTIVE				((flags & TBOX_FLAG_LOG_ACTIVE)		!= 0)
 #macro	TBOX_HAS_OPTIONS				((flags & TBOX_FLAG_HAS_OPTIONS)	!= 0)
 #macro	TBOX_IS_OPTIONS_ACTIVE			((flags & TBOX_FLAG_OPTIONS_ACTIVE)	!= 0)
+#macro	TBOX_SHOULD_HIDE_CONTROLS		((flags & TBOX_FLAG_HIDE_CONTROLS)	!= 0)
 
 // The value the textbox is looking for within its "nextIndex" variable so it knows it can deactivate itself.
 // This value is then reset to 0 after the deactivation is completed.
@@ -80,7 +82,7 @@
 #macro	TBOX_YSTART						VIEWPORT_HEIGHT + 30
 
 // Determines the position on the GUI the textbox will rest at after its opening transition has completed.
-#macro	TBOX_YTARGET					VIEWPORT_HEIGHT - 64
+#macro	TBOX_YTARGET					VIEWPORT_HEIGHT - 68
 
 // Macros for the characteristics of the opening and closing animations; denoted as such by containing either
 // "OANIM" for opening, and "CANIM" for closing, respectively
@@ -370,37 +372,38 @@ function str_textbox(_index) : str_base(_index) constructor {
 			}
 		}
 		
-		#region Rendering Control UI to Screen
+		// Ignore both the background and the control information if the below flag is set.
+		if (TBOX_SHOULD_HIDE_CONTROLS)
+			return;
+			
+		// Draw a black background with a nice alpha gradient applied to it when required to do so. This 
+		// will be found behind the control information for the textbox, but in front of all elements; 
+		// causing the textbox to slide in from behind this element during its opening animation.
+		var _alpha = alpha;
+		draw_text(_xView + 160, _yView + 20, "Hello");
+		with(global.colorFadeShader){
+			activate_shader(COLOR_BLACK);
+			draw_circle_ext(
+				_xView + (VIEWPORT_WIDTH / 2), _yView + VIEWPORT_HEIGHT, 
+				300.0, 30.0, 
+				COLOR_WHITE, COLOR_BLACK, 
+				_alpha
+			);
+			shader_reset();
+		}
 		
-			// Draw a black background with a nice alpha gradient applied to it. This will be found behind the 
-			// control information for the textbox, but in front of all elements; causing the textbox to slide in
-			// from behind this element during its opening animation.
-			var _alpha = alpha;
-			with(global.colorFadeShader){
-				activate_shader(COLOR_BLACK);
-				draw_circle_ext(
-					_xView + (VIEWPORT_WIDTH / 2), _yView + VIEWPORT_HEIGHT, 
-					300.0, 30.0, 
-					COLOR_WHITE, COLOR_BLACK, 
-					_alpha
-				);
-				shader_reset();
-			}
+		// Don't display the control UI information for the textbox if the player is currently viewing the 
+		// textbox's history log.
+		if (TBOX_IS_LOG_ACTIVE)
+			return;
 		
-			// Don't display the control UI information for the textbox if the player is currently viewing the 
-			// textbox's history log.
-			if (TBOX_IS_LOG_ACTIVE)
-				return;
-		
-			// After rendering the textbox and all its required elements, the control icon group for the textbox 
-			// will be drawn at their calculated positions. The color of the text (Both it and the drop shadow)
-			// are set to match the default color for text within the textbox.
-			var _tboxCtrlGroup = tboxCtrlGroup;
-			with(CONTROL_UI_MANAGER)
-				draw_control_group(_tboxCtrlGroup, _xView, _yView, _alpha, 
-					COLOR_WHITE, COLOR_DARK_GRAY, _alpha, _shadowAlpha); 
-		
-		#endregion Rendering Control UI to Screen
+		// After rendering the textbox and all its required elements, the control icon group for the textbox 
+		// will be drawn at their calculated positions. The color of the text (Both it and the drop shadow)
+		// are set to match the default color for text within the textbox.
+		var _tboxCtrlGroup = tboxCtrlGroup;
+		with(CONTROL_UI_MANAGER)
+			draw_control_group(_tboxCtrlGroup, _xView, _yView, _alpha, 
+				COLOR_WHITE, COLOR_DARK_GRAY, _alpha, _shadowAlpha); 
 	}
 	
 	/// @description 
@@ -430,9 +433,10 @@ function str_textbox(_index) : str_base(_index) constructor {
 	/// to "active" wihtin its flags variable and the starting index is within the valid range of 0 to what the
 	/// size of the data structure (AKA the total number of text elements to show to the user).
 	///	
-	///	@param {Real}	startingIndex				(Optional) Determines which text out of the list is used as the first in the textbox. The default value is zero.
-	/// @param {Bool}	clearDataOnDeactivation		(Optional) Determines if the contents within textData are deleted after the textbox closes down. The default flag is true.
-	activate_textbox = function(_startingIndex = 0, _clearDataOnDeactivation = true){
+	///	@param {Real}	startingIndex		(Optional) Determines which text out of the list is used as the first in the textbox. The default value is zero.
+	/// @param {Real}	flags				(Optional) Additional flags that can be set to alter how the textbox functions upon activation.
+	/// @param {Bool}	keepDataOnClose		(Optional) When true, the textbox will not clear out the queue's data when the textbox is deactivated.
+	activate_textbox = function(_startingIndex = 0, _flags = 0, _keepDataOnClose = false){
 		var _size = ds_list_size(textData);
 		if (TBOX_IS_ACTIVE || _size == 0 || _size <= _startingIndex)
 			return;
@@ -442,11 +446,11 @@ function str_textbox(_index) : str_base(_index) constructor {
 		// to the player object and whatever their state may currently be because of said cutscene.
 		with(PLAYER) { pause_player(); }
 		
-		// Set the default flags that are toggled upon activation of the textbox. Then, if required, the flag
-		// will be set to true that all data will be cleared on deactivation of the textbox.
-		flags = flags | TBOX_FLAG_ACTIVE; // Surface clearing flag is set within "set_textbox_index".
-		if (_clearDataOnDeactivation)
-			flags = flags | TBOX_FLAG_WIPE_DATA;
+		// Set the default flags that are toggled upon activation of the textbox and add all the additional
+		// flags that may have been set within the function's second parameter. On top of that, the flag for
+		// letting the textbox wipe its queue of data when closed is set based on the third parameter's value.
+		flags = flags | TBOX_FLAG_ACTIVE | _flags;
+		if (!_keepDataOnClose) { flags = flags | TBOX_FLAG_WIPE_DATA; }
 		
 		// Finally, start the opening animation, assign the textbox's index to what was passed into this first
 		// function's argument parameter, and set the y position of the textbox to what is needed for the 
@@ -462,7 +466,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 	///	
 	deactivate_textbox = function(){
 		object_set_state(STATE_NONE);
-		flags		    = flags & ~TBOX_FLAG_ACTIVE;
+		flags		    = flags & ~(TBOX_FLAG_ACTIVE | TBOX_FLAG_HIDE_CONTROLS);
 		global.flags    = global.flags & ~GAME_FLAG_TEXTBOX_OPEN;
 		
 		// Destroy the struct to remove it from memory as it is no longer needed when the textbox is destroyed.
@@ -814,7 +818,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 			var _yy = y;
 			with(optionMenu){
 				replace_options(_options, 1, 1, _length);
-				flags			= (flags | MENU_FLAG_ACTIVE) & ~MENUSUB_FLAG_CLOSING;
+				flags			= flags | MENU_FLAG_ACTIVE & ~MENUSUB_FLAG_CLOSING;
 				contentWidth	= _maxWidth;
 				contentHeight	= optionSpacingY * _length;
 				x				= TBOXMENU_XSTART;
