@@ -136,35 +136,11 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		initialize_option_params(MENUITM_OPTIONS_X, MENUITM_OPTIONS_Y, 
 			MENUITM_OPTION_XSPACING, MENUITM_OPTION_YSPACING, fa_left, fa_top, true);
 		
-		// Create a temporary list that will store the slot indexes that any of the player's equipment are
-		// found within the item inventory. These will be used to see what needs to have an "E" on their slot
-		// upon initial menu startup.
-		var _equippedSlots	= ds_list_create();
-		with(PLAYER.equipment){
-			if (weapon		 != INV_EMPTY_SLOT)	{ ds_list_add(_equippedSlots, weapon); }
-			if (armor		 != INV_EMPTY_SLOT)	{ ds_list_add(_equippedSlots, armor); }
-			if (light		 != INV_EMPTY_SLOT)	{ ds_list_add(_equippedSlots, light); }
-			if (firstAmulet  != INV_EMPTY_SLOT)	{ ds_list_add(_equippedSlots, firstAmulet); }
-			if (secondAmulet != INV_EMPTY_SLOT) { ds_list_add(_equippedSlots, secondAmulet); }
-		}
-		
-		// Create some local variables that will help the item menu construct its contents with the information
-		// found in the item inventory. They store data that is passed between the different structs involved
-		// in this creation process.
-		var _itemRef		= noone;
-		var _itemName		= "";
-		var _itemInfo		= "";
-		var _itemID			= ID_INVALID;
-		var _quantity		= 0;
-		
-		// Local variables that are used to setup what extra information is rendered on top of an item slot.
-		var _equipSlot		= 0;
-		var _quantityCol	= COLOR_WHITE;
-		var _showStack		= false;
-		
 		// Loop through the item inventory array so the menu can construct itself to accurately represent what
 		// is currently contained within that data.
 		var _invItem		= INV_EMPTY_SLOT;
+		var _itemName		= MENUITM_DEFAULT_STRING;
+		var _itemInfo		= MENUITM_DEFAULT_STRING;
 		var _length			= array_length(global.curItems);
 		for (var i = 0; i < _length; i++){
 			_invItem = global.curItems[i];
@@ -173,52 +149,15 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 				continue;
 			}
 			
-			// Grab information about the item from the slot's contents; its name, ID, and quantity. These
-			// values will be used below as required. Note that the quantity is capped at displaying "999"
-			// for a maximum.
+			// 
+			create_internal_item_data(i);
 			with(_invItem){
-				_itemName	= itemName;
-				_itemID		= itemID;
-				_quantity	= min(999, quantity);
-				if (_quantity == 0) // If the quantity happens to be zero; set the number to dark red.
-					_quantityCol = COLOR_DARK_RED;
+				_itemName = itemName;
+				with(global.itemIDs[itemID])
+					_itemInfo = itemInfo;
 			}
-			
-			// Grab a reference to the item's data struct based on the ID found in the item inventory's array.
-			// Within that struct, the item's description, and whether or not the item will have its quantity
-			// displayed on its slot.
-			_itemRef = global.itemIDs[_itemID];
-			with(_itemRef){
-				_itemInfo	= itemInfo;
-				_showStack	= ((typeID == ITEM_TYPE_WEAPON && !WEAPON_IS_MELEE) || stackLimit > 1);
-				if (_quantity == stackLimit) // When the quantity is full turn the quantity's color to light green.
-					_quantityCol = COLOR_LIGHT_GREEN;
-			}
-			
-			// Create the menu option using the name of the item and its description as the option's description.
-			// Then, store the reference to the item struct so it can be used to handle other functionality of
-			// the item inventory menu.
 			add_option(_itemName, _itemInfo);
-			array_set(invItemRefs, i, _itemRef);
-			
-			// Create a struct containing infomation about the item occupying the current slot in the item
-			// inventory. It stores the quantity, its color, whether it's equipped or not, and any other info
-			// required for display on the slot itself within the item inventory.
-			_equipSlot = ds_list_find_index(_equippedSlots, i);
-			array_set(itemDataToRender, i, {
-				quantityStr	: _showStack ? string(_quantity) : "",
-				quantityCol	: _quantityCol,
-				isEquipped	: (_equipSlot != -1),
-			});
-			
-			// Reset this value after it has been set in its respective variable in the data created above.
-			_quantityCol = COLOR_WHITE;
 		}
-		
-		// Finally, clear the list that was used to temporarily store the slot indexes where the player's
-		// current equipment is stored in the item inventory.
-		ds_list_clear(_equippedSlots);
-		ds_list_destroy(_equippedSlots);
 	}
 	
 	/// Store the pointer to the base menu's destroy event so it can be called within the item menu's version
@@ -425,6 +364,70 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	}
 	
 	/// @description 
+	///
+	///	
+	///	@param {String}	item		String representing the name/key of the item.
+	///	@param {Real}	amount		How many of said item will be added to the inventory.
+	/// @param {Real}	durability	(Optional; Higher Difficulties Only) The item's current condition.
+	///	@param {Real}	ammoIndex	(Optional; Weapon-Type Items Only) The ammunition found within the item relative to its list of valid ammo types.
+	add_item_to_inventory = function(_item, _amount, _durability = 0, _ammoIndex = 0){
+		var _remainder = item_inventory_add(_item, _amount, _durability, _ammoIndex);
+		if (_remainder == _amount)
+			return;
+		
+		// 
+		var _length = array_length(global.curItems);
+		for (var i = 0; i < _length; i++){
+			if (global.curItems[i] == INV_EMPTY_SLOT || (invItemRefs[i] != INV_EMPTY_SLOT 
+					&& itemDataToRender[i] != INV_EMPTY_SLOT))
+				continue;
+			create_internal_item_data(i);
+		}
+	}
+	
+	/// @description 
+	///	
+	/// 
+	///	@param {Real}	slot
+	create_internal_item_data = function(_slot){
+		var _itemName		= "";
+		var _itemInfo		= "";
+		var _itemID			= ID_INVALID;
+		var _quantity		= 0;
+		var _quantityCol	= COLOR_WHITE;
+		var _showStack		= false;
+		with(global.curItems[_slot]){
+			_itemName	= itemName;
+			_itemID		= itemID;
+			_quantity	= min(999, quantity);
+			if (_quantity == 0) // If the quantity happens to be zero; set the number to dark red.
+				_quantityCol = COLOR_DARK_RED;
+		}
+		
+		var _itemRef = global.itemIDs[_itemID];
+		with(_itemRef){
+			_itemInfo	= itemInfo;
+			_showStack	= ((typeID == ITEM_TYPE_WEAPON && !WEAPON_IS_MELEE) || stackLimit > 1);
+			if (_quantity == stackLimit) // When the quantity is full turn the quantity's color to light green.
+				_quantityCol = COLOR_LIGHT_GREEN;
+		}
+		
+		// 
+		var _isEquipped = false;
+		with(PLAYER.equipment){
+			_isEquipped = (weapon == _slot || armor == _slot || light == _slot 
+					|| firstAmulet == _slot || secondAmulet == _slot);
+		}
+		
+		array_set(invItemRefs, _slot, _itemRef);
+		array_set(itemDataToRender, _slot, {
+			quantityStr	: _showStack ? string(_quantity) : "",
+			quantityCol	: _quantityCol,
+			isEquipped	: _isEquipped,
+		});
+	}
+	
+	/// @description 
 	///	
 	///	
 	/// @param {Real}	slot		The slot in the inventory that will have some amount of its contents removed.
@@ -457,10 +460,15 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		
 		// 
 		if (_quantity > 0){
-			var _quantityCol = COLOR_WHITE;
+			var _itemName		= MENUITM_DEFAULT_STRING;
+			var _itemInfo		= MENUITM_DEFAULT_STRING;
+			var _quantityCol	= COLOR_WHITE;
 			with(_itemRef){
+				_itemName = itemName;
+				_itemInfo = itemInfo;
+				
 				if (_quantity == stackLimit)
-					_quantityCol = COLOR_DARK_RED;
+					_quantityCol = COLOR_GREEN;
 			}
 			
 			// 
@@ -469,20 +477,28 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 				quantityCol = _quantityCol;
 			}
 			invItemRefs[_slot] = _itemRef;
+			
+			// 
+			with(options[| _slot]){
+				oName = _itemName;
+				oInfo = _itemInfo;
+			}
 			return;
 		}
 		
 		// 
-		var _dataRef = itemDataToRender[selOption];
-		if (_dataRef != INV_EMPTY_SLOT && _dataRef.isEquipped) // Unequip the item if it happens to be equipped.
+		var _dataRef = itemDataToRender[_slot];
+		if (_dataRef != INV_EMPTY_SLOT && _dataRef.isEquipped){
+			selOption = _slot;
 			state_unequip_item(0.0);
-		itemDataToRender[selOption] = INV_EMPTY_SLOT;
+		}
+		itemDataToRender[_slot] = INV_EMPTY_SLOT;
 		delete _dataRef;
 		
 		// Remove the reference to the item as it is no longer within the item inventory. Then,
 		// remove the item's data from the menu option with the same slot index.
-		invItemRefs[selOption] = INV_EMPTY_SLOT;
-		with(options[| selOption]){ // Set the option struct to its default values.
+		invItemRefs[_slot] = INV_EMPTY_SLOT;
+		with(options[| _slot]){ // Set the option struct to its default values.
 			oName = MENUITM_DEFAULT_STRING;
 			oInfo = MENUITM_DEFAULT_STRING;
 		}
@@ -909,8 +925,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_unequip_item = function(_delta){
-		var _selOption	 = selOption;
-		var _itemData	 = invItemRefs[_selOption];
+		var _itemData = invItemRefs[selOption];
 		with(PLAYER){
 			// Determine which unequip function to call relative to the item's "equipment type".
 			switch(_itemData.equipType){
@@ -932,7 +947,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_combine_item = function(_delta){
-		/*var _firstSlot	= auxSelOption;
+		var _firstSlot	= auxSelOption;
 		var _secondSlot = selOption;
 		var _firstItem	= invItemRefs[auxSelOption];
 		var _secondItem = invItemRefs[selOption];
@@ -988,12 +1003,11 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 				var _name = global.itemIDs[_resultItemID].itemName;
 				remove_item_from_slot(_firstSlot);
 				remove_item_from_slot(_secondSlot, 1);
-				item_inventory_add(_name, 1);
-				refresh_internal_item_data(_firstSlot, _firstItem);
+				add_item_to_inventory(_name, 1);
 			}
 		}
 		
-		reset_to_default_state();*/
+		reset_to_default_state();
 	}
 	
 	/// @description 
