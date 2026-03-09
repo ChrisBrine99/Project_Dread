@@ -423,6 +423,70 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		auxSelOption	= -1;
 		selOption		= -1;
 	}
+	
+	/// @description 
+	///	
+	///	
+	/// @param {Real}	slot		The slot in the inventory that will have some amount of its contents removed.
+	/// @param {Real}	amount		How many of that item will be removed from the slot in question.
+	remove_item_from_slot = function(_slot, _amount = -1){
+		var _slotEmpty	= false;
+		var _itemID		= ID_INVALID;
+		with(global.curItems[_slot]){
+			_slotEmpty	= (_amount <= -1 || quantity - _amount <= 0);
+			_itemID		= itemID;
+		}
+		
+		if (_slotEmpty) { item_inventory_remove_slot(_slot); }
+		else			{ item_inventory_remove(_itemID, _amount); }
+		
+		refresh_internal_item_data(_slot, global.itemIDs[_itemID]);
+	}
+	
+	/// @description 
+	/// 
+	///	
+	/// @param {Real}				slot
+	/// @param {Struct._structRef}	itemRef	
+	refresh_internal_item_data = function(_slot, _itemRef){
+		// 
+		var _quantity	= 0;
+		var _invItemRef = global.curItems[_slot];
+		if (_invItemRef != INV_EMPTY_SLOT)
+			_quantity = _invItemRef.quantity;
+		
+		// 
+		if (_quantity > 0){
+			var _quantityCol = COLOR_WHITE;
+			with(_itemRef){
+				if (_quantity == stackLimit)
+					_quantityCol = COLOR_DARK_RED;
+			}
+			
+			// 
+			with(itemDataToRender[_slot]){
+				quantityStr = string(_quantity);
+				quantityCol = _quantityCol;
+			}
+			invItemRefs[_slot] = _itemRef;
+			return;
+		}
+		
+		// 
+		var _dataRef = itemDataToRender[selOption];
+		if (_dataRef != INV_EMPTY_SLOT && _dataRef.isEquipped) // Unequip the item if it happens to be equipped.
+			state_unequip_item(0.0);
+		itemDataToRender[selOption] = INV_EMPTY_SLOT;
+		delete _dataRef;
+		
+		// Remove the reference to the item as it is no longer within the item inventory. Then,
+		// remove the item's data from the menu option with the same slot index.
+		invItemRefs[selOption] = INV_EMPTY_SLOT;
+		with(options[| selOption]){ // Set the option struct to its default values.
+			oName = MENUITM_DEFAULT_STRING;
+			oInfo = MENUITM_DEFAULT_STRING;
+		}
+	}
 
 	/// @description 
 	///	The item menu's default state. It will handle selecting a slot within the menu, closing the menu by
@@ -868,11 +932,68 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_combine_item = function(_delta){
+		/*var _firstSlot	= auxSelOption;
+		var _secondSlot = selOption;
 		var _firstItem	= invItemRefs[auxSelOption];
 		var _secondItem = invItemRefs[selOption];
+		if (_firstItem == REF_INVALID || _secondItem == REF_INVALID){
+			reset_to_default_state();
+			return;
+		}
 		
-		show_debug_message("The item in slot {0} was combined the item in slot {1}.", auxSelOption, selOption);
-		reset_to_default_state();
+		// Swap the references if the second item happens to have an item ID value that is lower than the 
+		// first item, as the crafting data is sorted by the first item's ID for organization purposes.
+		if (_firstItem.itemID > _secondItem.itemID){
+			var _temp	= _firstItem;
+			_firstItem	= _secondItem;
+			_secondItem = _temp;
+			_firstSlot	= selOption;
+			_secondSlot	= auxSelOption;
+		}
+		
+		// 
+		var _firstItemID	= ID_INVALID;
+		var _firstItemName	= "";
+		with(_firstItem){
+			_firstItemID	= itemID; 
+			_firstItemName	= itemName;
+		}
+		var _secondItemID	= ID_INVALID;
+		var _secondItemName	= "";
+		with(_secondItem){ 
+			_secondItemID	= itemID;
+			_secondItemName	= itemName;
+		}
+		
+		// Since the upgrade parts should never have an ID value lower than any weapon in the game, the
+		// second item's name is always checked to see if it is the upgrade parts. If so, the first item
+		// (Which should be a weapon) will be upgraded.
+		if (_secondItemName == ITEM_UPGRADE_PARTS){
+			var _comboSuccess	= false;
+			var _resultItemID	= ID_INVALID;
+			var _validCombos	= global.itemData[? KEY_VALID_COMBOS];
+			var _length			= ds_list_size(_validCombos);
+			for (var i = 0; i < _length; i++){
+				with(_validCombos[| i]){
+					if (firstItem != _firstItemID || secondItem != _secondItemID)
+						continue;
+					_comboSuccess = true;
+					_resultItemID = resultItem;
+					break;
+				}
+			}
+			
+			// 
+			if (_comboSuccess){
+				var _name = global.itemIDs[_resultItemID].itemName;
+				remove_item_from_slot(_firstSlot);
+				remove_item_from_slot(_secondSlot, 1);
+				item_inventory_add(_name, 1);
+				refresh_internal_item_data(_firstSlot, _firstItem);
+			}
+		}
+		
+		reset_to_default_state();*/
 	}
 	
 	/// @description 

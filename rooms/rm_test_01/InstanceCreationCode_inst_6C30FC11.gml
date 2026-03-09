@@ -1,1 +1,1 @@
-set_item_params("test_item_06", ITEM_CASSETTE_TAPE, 2);
+set_item_params("test_item_06", ITEM_UPGRADE_PARTS, 1);

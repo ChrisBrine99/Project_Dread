@@ -408,7 +408,7 @@ function item_inventory_add(_item, _amount, _durability = 0, _ammoIndex = 0){
 		global.curItems[i] = _invItem;
 		
 		// The item that was added to the inventory was a weapon, so the value returned is -1 to signify it
-		// was successfully added in case the magazine/clip of the wepaon in question was empty.
+		// was successfully added in case the magazine/clip of the weapon in question was empty.
 		if (global.itemIDs[_itemID].typeID == ITEM_TYPE_WEAPON)
 			return -1;
 		

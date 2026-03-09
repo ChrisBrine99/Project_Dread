@@ -71,4 +71,12 @@ function item_use_consumable(_itemRef){
 	return USEITM_FLAG_OPEN_TEXTBOX;
 }
 
+/// @description
+///	
+///	
+/// @param {Real}	weaponID	The id for the weapon that is being upgraded.
+function item_use_upgrade_parts(_weaponID){
+	
+}
+
 #endregion Functions Utilized By Items When Used
