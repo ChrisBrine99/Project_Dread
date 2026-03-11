@@ -1,10 +1,14 @@
-with(FOG){
+/*with(FOG){
 	add_layer(
 		random_range(-0.5, 0.5),	// X Speed
 		random_range(-0.5, 0.5),	// Y Speed
 		random_range(0.3, 1.0),		// Opacity
 		random_range(1.0, 3.0)		// Scaling
 	);
+}*/
+
+with(CAMERA){
+	camera_set_viewport(420, 180);
 }
 
 // global.blurSigma = (global.blurSigma == 0.0) ? 0.25 : 0.0;

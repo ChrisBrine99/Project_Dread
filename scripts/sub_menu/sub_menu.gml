@@ -28,9 +28,11 @@ function str_sub_menu(_index) : str_base_menu(_index) constructor{
 	///	
 	///	@param {Real}	xPos		The menu's current x position added with the viewport's current x position.
 	/// @param {Real}	yPos		The menu's current y position added with the viewport's current y position.
+	/// @param {Real}	wView		The viewport's current width.
+	/// @param {Real}	hView		The viewport's current height.
 	///	@param {Real}	shadowColor	Determines the color used for the option text's drop shadow.
 	/// @param {Real}	shadowAlpha	Determines the opacity of the option text's drop shadow.
-	draw_gui_event = function(_xPos, _yPos, _shadowColor = COLOR_BLACK, _shadowAlpha = 1.0){
+	draw_gui_event = function(_xPos, _yPos, _wView, _hView, _shadowColor = COLOR_BLACK, _shadowAlpha = 1.0){
 		draw_visible_options(font, _xPos, _yPos, _shadowColor, _shadowAlpha);
 	}
 	

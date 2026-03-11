@@ -191,7 +191,9 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	///	
 	///	@param {Real}	xPos	The menu's current x position added with the viewport's current x position.
 	/// @param {Real}	yPos	The menu's current y position added with the viewport's current y position.
-	draw_gui_event = function(_xPos, _yPos){
+	/// @param {Real}	wView	The viewport's current width.
+	/// @param {Real}	hView	The viewport's current height.
+	draw_gui_event = function(_xPos, _yPos, _wView, _hView){
 		// Set the font used by all text within this menu, set the proper alignment for the quantity text that 
 		// can appear alongside an item's icon, and set the opacity of all draw commands that don't take in an 
 		// alpha level to the current opacity of the menu.

@@ -16,8 +16,8 @@
 
 // The values for half the viewport's width and height, respectively. These represent the exact center of the
 // screen which can be used to help calculate various UI elements and such.
-#macro	VIEWPORT_HALF_WIDTH				(VIEWPORT_WIDTH >> 1)
-#macro	VIEWPORT_HALF_HEIGHT			(VIEWPORT_HEIGHT >> 1)
+// #macro	VIEWPORT_HALF_WIDTH				(VIEWPORT_WIDTH >> 1)
+// #macro	VIEWPORT_HALF_HEIGHT			(VIEWPORT_HEIGHT >> 1)
 
 // Determines a square region with a width and height of the value below multiplied by two where the camera
 // will no longer move alongside the object it is currently set to follow.

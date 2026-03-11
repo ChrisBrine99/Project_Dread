@@ -77,8 +77,8 @@
 #macro	MENUINV_CTRL_GRP2_RETURN		1
 
 // Macros that determine how the background for the inventory will look.
-#macro	MENUINV_MAINBKG_XRADIUS			210
-#macro	MENUINV_MAINBKG_YRADIUS			140
+#macro	MENUINV_MAINBKG_XRADIUS			(VIEWPORT_WIDTH - 90)
+#macro	MENUINV_MAINBKG_YRADIUS			(VIEWPORT_HEIGHT - 40)
 #macro	MENUINV_MAINBKG_ALPHA1			0.8
 #macro	MENUINV_MAINBKG_ALPHA2			0.3
 
@@ -209,7 +209,9 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	///	
 	///	@param {Real}	xView	The menu's current x position added with the viewport's current x position.
 	/// @param {Real}	yView	The menu's current y position added with the viewport's current y position.
-	draw_gui_event = function(_xView, _yView){
+	/// @param {Real}	wView	The viewport's current width.
+	/// @param {Real}	hView	The viewport's current height.
+	draw_gui_event = function(_xView, _yView, _wView, _hView){
 		// A local value that allows menu elements to slide off/on the bottom of the screen as other elements
 		// go off/on the otp of the screen alongside the menu y position during the opening/closing animation,
 		// respectively. Multiplied by two to cancel out that upward sliding motion of the y value.
@@ -218,17 +220,21 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		#region Render Vignette-style Background Behind Menu Section's Contents
 		
 			var _alpha = alpha;
+			var _xBack = _xView - x;
+			var _yBack = _yView - y;
 			with(global.colorFadeShader){
+				var _wViewHalf = (_wView >> 1);
+				var _hViewHalf = (_hView >> 1);
 				activate_shader(COLOR_BLACK);
 				draw_circle_ext( // The main portion of the background.
-					_xView + VIEWPORT_HALF_WIDTH, _yView + VIEWPORT_HALF_HEIGHT,
+					_xBack + _wViewHalf, _yBack + _hViewHalf,
 					MENUINV_MAINBKG_XRADIUS, MENUINV_MAINBKG_YRADIUS,
 					COLOR_GRAY, COLOR_WHITE,
 					_alpha * MENUINV_MAINBKG_ALPHA1
 				);
 				set_effect_color(COLOR_VERY_DARK_BLUE);
 				draw_circle_ext( // Adds a subtle blue hue to the background.
-					_xView + VIEWPORT_HALF_WIDTH, _yView + VIEWPORT_HALF_HEIGHT,
+					_xBack + _wViewHalf, _yBack + _hViewHalf,
 					MENUINV_MAINBKG_XRADIUS, MENUINV_MAINBKG_YRADIUS, 
 					COLOR_GRAY, COLOR_WHITE,
 					_alpha * MENUINV_MAINBKG_ALPHA2

@@ -26,7 +26,9 @@ function str_map_menu(_index) : str_base_menu(_index) constructor {
 	///	
 	///	@param {Real}	xPos	The menu's current x position added with the viewport's current x position.
 	/// @param {Real}	yPos	The menu's current y position added with the viewport's current y position.
-	draw_gui_event = function(_xPos, _yPos){
+	/// @param {Real}	wView	The viewport's current width.
+	/// @param {Real}	hView	The viewport's current height.
+	draw_gui_event = function(_xPos, _yPos, _wView, _hView){
 		draw_set_halign(fa_center);
 		draw_set_valign(fa_middle);
 		draw_text_shadow(_xPos + (VIEWPORT_WIDTH >> 1), _yPos + (VIEWPORT_HEIGHT >> 1), "MAPS", COLOR_WHITE, alpha);

@@ -156,7 +156,7 @@ for (var i = 0; i < _length; i++){
 	with(global.menus[| i]){
 		if (alpha <= _minAlpha || !MENU_IS_VISIBLE)
 			continue;
-		draw_gui_event(x + _xView, y + _yView);
+		draw_gui_event(x + _xView, y + _yView, _wView, _hView);
 	}
 }
 

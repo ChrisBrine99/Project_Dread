@@ -237,8 +237,10 @@ function str_textbox(_index) : str_base(_index) constructor {
 	///	
 	///	@param {Real}	xView		Position of the viewport within the current room along its x axis.
 	/// @param {Real}	yView		Position of the viewport within the current room along its y axis.
+	/// @param {Real}	wView		The viewport's current width.
+	/// @param {Real}	hView		The viewport's current height.
 	///	@param {Real}	delta		The difference in time between the execution of this frame and the last.
-	draw_gui_event = function(_xView, _yView, _delta){
+	draw_gui_event = function(_xView, _yView, _wView, _hView, _delta){
 		// Ensures that the surface will be valid should it randomly be flushed from memory by the GPU. Then,
 		// the previous surface's contents are copied from their buffer onto the newly formed surface.
 		if (!surface_exists(textSurface)){
@@ -382,9 +384,10 @@ function str_textbox(_index) : str_base(_index) constructor {
 		var _alpha = alpha;
 		draw_text(_xView + 160, _yView + 20, "Hello");
 		with(global.colorFadeShader){
+			var _wViewHalf = (_wView >> 1);
 			activate_shader(COLOR_BLACK);
 			draw_circle_ext(
-				_xView + (VIEWPORT_WIDTH / 2), _yView + VIEWPORT_HEIGHT, 
+				_xView + _wViewHalf, _yView + _wView, 
 				300.0, 30.0, 
 				COLOR_WHITE, COLOR_BLACK, 
 				_alpha
@@ -1069,7 +1072,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 			
 			// Check if the required values have hit their targets. If so, the menu is set to inactive, and
 			// the _animFinished value is set to true so the textbox can do what it requires.
-			if (alpha <= 0.0 && x > VIEWPORT_HEIGHT){
+			if (alpha <= 0.0 && x > CAMERA.wViewport){
 				flags			= flags & ~MENU_FLAG_ACTIVE;
 				x				= TBOXMENU_XSTART;
 				alpha			= 0.0;
