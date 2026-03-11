@@ -453,6 +453,14 @@ debugLines		= ds_list_create();
 numDynamicDrawn	= 0;
 numStaticDrawn	= 0;
 
+// 
+curViewportSize = 0;
+viewports = [
+	[320, 180],	// 16:9
+	[320, 200],	// 16:10
+	[420, 180]	// 21:9
+];
+
 #endregion Debug Variable Initialzations
 
 #region Debug Function Initializations

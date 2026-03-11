@@ -79,10 +79,7 @@
 #macro	TBOX_PUNCT_EXCLAIM_DELAY		0.075
 
 // Determines the position on the GUI the textbox will begin the opening animation at.
-#macro	TBOX_YSTART						VIEWPORT_HEIGHT + 30
-
-// Determines the position on the GUI the textbox will rest at after its opening transition has completed.
-#macro	TBOX_YTARGET					VIEWPORT_HEIGHT - 68
+#macro	TBOX_YSTART						CAMERA.hViewport + 30
 
 // Macros for the characteristics of the opening and closing animations; denoted as such by containing either
 // "OANIM" for opening, and "CANIM" for closing, respectively
@@ -193,25 +190,22 @@ function str_textbox(_index) : str_base(_index) constructor {
 	create_event = function(){
 		if (room != rm_init)
 			return; // Prevents a call to this function from executing outside of the game's initialization.
-
-		// Determine the starting position of the textbox. The x position will remain constant, but the y 
-		// value will change during the opening animation; going from the position set below to the value 
-		// found in the constant "TBOX_YTARGET".
-		x = floor((VIEWPORT_WIDTH - TBOX_BG_WIDTH) / 2) - 20; // Offset by 20 to account for the space between the background and the GUI's size.  
-		y = VIEWPORT_HEIGHT + 30; // The same value as "TBOX_YSTART" but utilizing the fact the height was stored locally previously.
 		
-		// Copy the x value of the text so the visible logs are in the same relative area horizontally on the
-		// game's screen. The value never changes hence why it is copied after initially being set.
-		var _x = x;
-		with(TEXTBOX_LOG) { textX = _x; }
+		// 
+		var _wView = 0;
+		var _hView = 0;
+		with(CAMERA){
+			_wView = wViewport;
+			_hView = hViewport;
+		}
 		
 		// Finally, setup the control group that will be utilized by the Textbox and calculate the positions
 		// of the icons and their descriptors so they're displayed at the proper offset. Then, set the
 		// textbox's reference to its control group so it can be referenced for drawing the group when needed.
 		var _tboxCtrlGroup = REF_INVALID;
 		with(CONTROL_UI_MANAGER){
-			_tboxCtrlGroup = create_control_group(TBOX_ICONUI_CTRL_GRP, VIEWPORT_WIDTH - TBOX_CTRL_GRP_XOFFSET, 
-				VIEWPORT_HEIGHT - TBOX_CTRL_GRP_YOFFSET, 3, ICONUI_DRAW_LEFT);
+			_tboxCtrlGroup = create_control_group(TBOX_ICONUI_CTRL_GRP, _wView - TBOX_CTRL_GRP_XOFFSET, 
+				_hView - TBOX_CTRL_GRP_YOFFSET, 3, ICONUI_DRAW_LEFT);
 			add_control_group_icon(_tboxCtrlGroup, ICONUI_TBOX_ADVANCE, "Next");
 			add_control_group_icon(_tboxCtrlGroup, ICONUI_TBOX_LOG, "Log");
 		}
@@ -382,15 +376,13 @@ function str_textbox(_index) : str_base(_index) constructor {
 		// will be found behind the control information for the textbox, but in front of all elements; 
 		// causing the textbox to slide in from behind this element during its opening animation.
 		var _alpha = alpha;
-		draw_text(_xView + 160, _yView + 20, "Hello");
 		with(global.colorFadeShader){
 			var _wViewHalf = (_wView >> 1);
 			activate_shader(COLOR_BLACK);
 			draw_circle_ext(
-				_xView + _wViewHalf, _yView + _wView, 
-				300.0, 30.0, 
-				COLOR_WHITE, COLOR_BLACK, 
-				_alpha
+				_xView + _wViewHalf, _yView + _hView,	// Position
+				_wView - 20, 30,						// Size
+				COLOR_WHITE, COLOR_BLACK, _alpha		// Colors (Values used as alpha in shader) + Alpha
 			);
 			shader_reset();
 		}
@@ -448,6 +440,9 @@ function str_textbox(_index) : str_base(_index) constructor {
 		// Attempt to pause the player object. If a cutscene is currently occurring, this code does nothing
 		// to the player object and whatever their state may currently be because of said cutscene.
 		with(PLAYER) { pause_player(); }
+		
+		// Reset the y position for the textbox's opening position.
+		y = TBOX_YSTART;
 		
 		// Set the default flags that are toggled upon activation of the textbox and add all the additional
 		// flags that may have been set within the function's second parameter. On top of that, the flag for
@@ -858,9 +853,10 @@ function str_textbox(_index) : str_base(_index) constructor {
 	state_open_animation = function(_delta){
 		// Give the player control over the textbox by shifting into its default state function. This state 
 		// is also responsible for "typing" the characters onto the textbox until they're all shown.
-		if (alpha == 1.0 && y <= TBOX_YTARGET){
+		var _yTarget = CAMERA.hViewport - 68;
+		if (alpha == 1.0 && y <= _yTarget){
 			object_set_state(state_default);
-			y = TBOX_YTARGET;
+			y = _yTarget;
 			return;
 		}
 		
@@ -874,10 +870,10 @@ function str_textbox(_index) : str_base(_index) constructor {
 		// Move the y position from where it is initially set below the visible portion of the screen to the
 		// desired position set by this opening animation. Snap it to the target position is the distance
 		// between the current value and target is small enough.
-		if (y != TBOX_YTARGET){
-			y += (TBOX_YTARGET - y) * TBOX_OANIM_MOVE_SPEED * _delta;
-			if (point_distance(0, y, 0, TBOX_YTARGET) <= ceil(_delta))
-				y = TBOX_YTARGET;
+		if (y != _yTarget){
+			y += (_yTarget - y) * TBOX_OANIM_MOVE_SPEED * _delta;
+			if (y - _yTarget <= ceil(_delta))
+				y = _yTarget;
 		}
 	}
 	
@@ -890,7 +886,6 @@ function str_textbox(_index) : str_base(_index) constructor {
 	state_close_animation = function(_delta){
 		// Repeat the opening animation or deactivate the textbox depending on the current value of nextIndex.
 		if (alpha == 0.0){
-			y = TBOX_YSTART; // Reset the y position so the textbox opens properly next time.
 			if (textIndex < 0 || textIndex >= ds_list_size(textData)){ // Closes the textbox.
 				deactivate_textbox();
 				textIndex = 0;
@@ -898,6 +893,7 @@ function str_textbox(_index) : str_base(_index) constructor {
 			}
 			// Set the textbox to "reopen" itself for the new actor's name shown.
 			object_set_state(state_open_animation);
+			y = TBOX_YSTART;
 			return;
 		}
 		
@@ -1036,13 +1032,13 @@ function str_textbox(_index) : str_base(_index) constructor {
 		var _animFinished = false;
 		with(optionMenu){
 			// Update the values that are involved in the animation.
-			var _targetX = VIEWPORT_WIDTH - TBOXMENU_BG_PADDING_LEFT - contentWidth;
+			var _targetX = CAMERA.wViewport - TBOXMENU_BG_PADDING_LEFT - contentWidth;
 			x		    += (_targetX - x) * _delta * 0.2;
 			alpha		+= _delta * 0.075;
 			
 			// Check if all values have hit their respective targets. If so, activate the menu so the player
 			// can navigate its contents and select an option. Otherwise, continue the animation.
-			if (alpha >= 1.0 && x - _targetX <= _delta){
+			if (alpha >= 1.0 && x - _targetX <= ceil(_delta)){
 				object_set_state(state_default);
 				flags			= flags | MENU_FLAG_ACTIVE;
 				x				= _targetX;

@@ -142,19 +142,19 @@ function str_camera(_index) : str_base(_index) constructor {
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	end_step_event = function(_delta){
 		// Offset the viewport coordinates such that the viewport is centered on the camera's position.
-		var _viewX = x - floor(wViewport / 2);
-		var _viewY = y - floor(hViewport / 2);
+		var _xView = x - (wViewport >> 1);
+		var _yView = y - (hViewport >> 1);
 		
 		// Set the camera's viewport position within the room relative to the calculated position above and
 		// whether or not the viewport is bound to stay within the room's dimensions. If bound, the values
 		// are clamped. Otherwise, they are unchanged.
 		if (CAM_ARE_BOUNDS_LOCKED){
 			camera_set_view_pos(cameraID, 
-				clamp(_viewX, 0, room_width - wViewport), 
-				clamp(_viewY, 0, room_height - hViewport)
+				clamp(_xView, 0, room_width - wViewport), 
+				clamp(_yView, 0, room_height - hViewport)
 			);
 		} else{
-			camera_set_view_pos(cameraID, _viewX, _viewY);
+			camera_set_view_pos(cameraID, _xView, _yView);
 		}
 
 		// Update the shake effect if one is currently active.
@@ -176,7 +176,7 @@ function str_camera(_index) : str_base(_index) constructor {
 			
 			// Set the position of the viewport (Not the camera itself) based on the calcualted offset 
 			// values. Then, slowly reduce the strength of the shake relative to how long it should last.
-			camera_set_view_pos(_cameraID, _viewX + xOffset, _viewY + yOffset); 
+			camera_set_view_pos(_cameraID, _xView + xOffset, _yView + yOffset); 
 			curStrength -= (strength / duration) * _delta;
 		}
 		
@@ -294,10 +294,6 @@ function str_camera(_index) : str_base(_index) constructor {
 	/// @param {Real}	width	Size of the camera's viewport along the x axis in whole pixels.
 	/// @param (Real}	height	Size of the camera's viewport along the y axis in whole pixels.
 	camera_set_viewport = function(_width, _height){
-		// If the camera hasn't been initialized for whatever reason OR the argument parameters match the current
-		// dimensions of the viewport--do not execute this function.
-		if (cameraID == -1 || (wViewport == _width && hViewport == _height))
-			return;
 		wViewport	= _width;
 		hViewport	= _height;
 		wTexel		= 1.0 / _width;
@@ -355,3 +351,39 @@ function str_camera(_index) : str_base(_index) constructor {
 }
 
 #endregion Camera Struct Definition
+
+#region Aspect Ratio Adjustment Function
+
+/// @description
+///	Sets the viewport to a given width and height. On top of that, it will also adjust the dimensions of 
+/// the game window if the player isn't in fullscreen, and will update the positional offsets of any UI
+/// elements as needed so they remain in the proper locations after the change occurs.
+///	
+///	@param {Real}	width	The width of the game's viewport.
+/// @param {Real}	height	The height of the game's viewport.
+function set_viewport_size(_width, _height){
+	// First, check if the camera is actually initialized and the viewport dimensions being provided aren't
+	// the same as the values that are already being used. If that is the case, this function exits before
+	// processing anything. Otherwise, it will call the camera's function that handles scaling the application
+	// surface, GUI surface, and window to match the new dimensions.
+	with(CAMERA){
+		if (cameraID == -1 || (wViewport == _width && hViewport == _height))
+			return;
+		camera_set_viewport(_width, _height);
+	}
+	
+	// After updating the viewport, update the Textbox so any values it needs to update based on the changed
+	// values can be changed accordingly. it also updates any values for the log's required values, and the
+	// control icon group tied to the textbox as needed.
+	with(TEXTBOX){
+		x = floor((_width - TBOX_BG_WIDTH) / 2) - 20;
+		with(TEXTBOX_LOG) { x = other.x; } // Textbox log is positioned on the same x value as the textbox.
+		
+		with(tboxCtrlGroup){
+			xPos = _width - TBOX_CTRL_GRP_XOFFSET;
+			yPos = _height - TBOX_CTRL_GRP_YOFFSET;
+		}
+	}
+}
+
+#endregion Aspect Ratio Adjustment Function

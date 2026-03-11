@@ -165,7 +165,7 @@ for (var i = 0; i < _length; i++){
 with(TEXTBOX){
 	if (alpha <= _minAlpha || y >= VIEWPORT_HEIGHT)
 		break;
-	draw_gui_event(_xView, _yView, _delta);
+	draw_gui_event(_xView, _yView, _wView, _hView, _delta);
 }
 
 // Render the textbox's log onto the screen after the textbox is drawn, but only if its alpha isn't below the
@@ -173,7 +173,7 @@ with(TEXTBOX){
 with(TEXTBOX_LOG){
 	if (alpha <= _minAlpha)
 		break;
-	draw_gui_event(_xView, _yView, _delta);
+	draw_gui_event(_xView, _yView, _wView, _hView, _delta);
 }
 
 // Draw the screen fade onto the screen after all UI elements have been rendered onto the application surface.

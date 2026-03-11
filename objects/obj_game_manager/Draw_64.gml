@@ -20,17 +20,24 @@ if (GAME_IS_MENU_OPEN || GAME_IS_TEXTBOX_OPEN){
 
 draw_set_halign(fa_right);
 
+var _wView = 0;
+var _hView = 0;
+with(CAMERA){
+	_wView = wViewport;
+	_hView = hViewport;
+}
+
 with(PLAYER){
-	draw_text_shadow(VIEWPORT_WIDTH - 5, 3, "--- Timers ---");
+	draw_text_shadow(_wView - 5, 3, "--- Timers ---");
 	for (var i = 0; i < PLYR_TOTAL_TIMERS; i++)
-		draw_text_shadow(VIEWPORT_WIDTH - 5, 13 + (i * 10), string("{0}: {1}", i, timers[i]));
+		draw_text_shadow(_wView - 5, 13 + (i * 10), string("{0}: {1}", i, timers[i]));
 		
 	with(equipment){
 		if (weapon == INV_EMPTY_SLOT)
 			break;
 		
 		with(global.curItems[weapon]){
-			draw_text_shadow(VIEWPORT_WIDTH - 5, 13 + (10 * PLYR_TOTAL_TIMERS),
+			draw_text_shadow(_wView - 5, 13 + (10 * PLYR_TOTAL_TIMERS),
 				string("{0} ({1})",
 					itemName,
 					quantity
@@ -38,7 +45,7 @@ with(PLAYER){
 			);
 		}
 		
-		draw_text_shadow(VIEWPORT_WIDTH - 5, 23 + (10 * PLYR_TOTAL_TIMERS), 
+		draw_text_shadow(_wView - 5, 23 + (10 * PLYR_TOTAL_TIMERS), 
 			string("{0} x{1}",
 				global.itemIDs[weaponStatRef.ammoTypes[curAmmoIndex]].itemName,
 				ammoCount[curAmmoIndex]

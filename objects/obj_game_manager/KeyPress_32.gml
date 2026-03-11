@@ -7,9 +7,11 @@
 	);
 }*/
 
-with(CAMERA){
-	camera_set_viewport(420, 180);
-}
+curViewportSize++;
+if (curViewportSize == array_length(viewports))
+	curViewportSize = 0;
+var _viewport = viewports[curViewportSize];
+set_viewport_size(_viewport[0], _viewport[1]);
 
 // global.blurSigma = (global.blurSigma == 0.0) ? 0.25 : 0.0;
 

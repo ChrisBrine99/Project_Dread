@@ -163,39 +163,42 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 	///	
 	///	@param {Real}	xView		Position of the viewport within the current room along its x axis.
 	/// @parma {Real}	yView		Position of the viewport within the current room along its y axis.
+	/// @param {Real}	wView		The viewport's current width.
+	/// @param {Real}	hView		The viewport's current height.
 	///	@param {Real}	delta		The difference in time between the execution of this frame and the last.
-	draw_gui_event = function(_xView, _yView, _delta){
+	draw_gui_event = function(_xView, _yView, _wView, _hView, _delta){
 		#region Drawing Main Background for Textbox Log
 		
 			draw_sprite_ext( // Single rectangle to cover entire screen.
 				spr_rectangle,
 				0,		// Unused
 				_xView, _yView, 
-				VIEWPORT_WIDTH, VIEWPORT_HEIGHT, 
+				_wView, _hView, 
 				0.0,	// Unused
 				COLOR_BLACK, 0.75 * alpha
 			);
 				
 		#endregion Drawing Main Background for Textbox Log
 		
-		// Come local values that are used by the scrollbar and its background element. The X value is basically
+		// Some local values that are used by the scrollbar and its background element. The X value is basically
 		// shared between the two (The background for the bar is one pixel to the left), but the Y values will
 		// differ once enough entries exist in the log. So, two Y variables are created; one for the position
 		// of both the scrollbar and the background (Background is one pixel down), and the other for the offset
 		// of the bar relative to that topmost position. Finally, the height is set and also adjusted when there
 		// are enough elements within the log to require scrollbar movement.
-		var _xScrollbar		= _xView + VIEWPORT_WIDTH - 9;
+		var _xScrollbar		= _xView + _wView - 9;
 		var _yScrollbarTop	= _yView + 15;
 		var _yScrollbarBot	= 0;
-		var _hScrollbar		= 145;
+		var _hScrollbarMax	= _hView - 35;
+		var _hScrollbar		= _hScrollbarMax;
 		
 		// Once the log has grown large enough, the scrollbar will need to be sized and positioned accordingly.
 		// So, the maximum possible value that "curOffset" can be (This is two below the actual log size) will
 		// be the denominator in the calculations for size (_hScrollbar) and position (_yScrollbarBot).
 		if (logSize > TBOXLOG_MAXIMUM_VISIBLE){
 			var _curOffsetMax	= (logSize - TBOXLOG_MAXIMUM_VISIBLE) + 1; // Without the + 1 the values will all be off by one element's amount.
-			_yScrollbarBot		= (145 * ((curOffset - (TBOXLOG_MAXIMUM_VISIBLE - 1)) / _curOffsetMax));
-			_hScrollbar			= 145 / _curOffsetMax; // Shrink the scrollbar as more elements are added to the log.
+			_yScrollbarBot		= (_hScrollbarMax * ((curOffset - (TBOXLOG_MAXIMUM_VISIBLE - 1)) / _curOffsetMax));
+			_hScrollbar			= _hScrollbarMax / _curOffsetMax; // Shrink the scrollbar as more elements are added to the log.
 		}
 		
 		#region Drawing Scrollbar on Left Edge of Textbox Log
@@ -204,7 +207,7 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 				spr_rectangle,
 				0,		// Unused
 				_xScrollbar + 1, _yScrollbarTop + 1, 
-				2, 143,
+				2, _hScrollbarMax - 2,
 				0.0,	// Unused
 				COLOR_DARK_GRAY, alpha
 			);
