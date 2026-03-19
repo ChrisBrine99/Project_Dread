@@ -33,6 +33,11 @@ ds_map_add(global.sInstances, str_screen_fade,			new str_screen_fade(str_screen_
 ds_map_add(global.sInstances, str_fog,					new str_fog(str_fog));
 // NOTE -- This is the only time the default ways of struct and object creation should be used!!!
 
+// After creating the required singleton instances, initialize the camera so the window can be properly sized,
+// the viewport into the game can be created and sized as well, and the game can start rendering to that window
+// via the current viewport position/size.
+camera_initialize(VIEWPORT_WIDTH, VIEWPORT_HEIGHT, _playerInstance, true);
+
 // Initialize what needs initialization above by manually calling its create event (If it wasn't a "compile-
 // time" singleton like it is within this game, the event would've been invoked automatically when it was 
 // created).
@@ -40,7 +45,7 @@ with(CONTROL_UI_MANAGER) { create_event(); }
 with(CAMERA)			 { create_event(); }
 with(TEXTBOX)			 { create_event(); }
 with(TEXTBOX_LOG)		 { create_event(); }
-with(PLAYER)			 { object_set_state(state_initialize); } // FOR TESTING
+with(_playerInstance)	 { object_set_state(state_initialize); } // FOR TESTING
 
 // Once everything has been initialized, the first official room for the game is loaded, and the game is 
 // unpaused to allow various game elements to start updating.

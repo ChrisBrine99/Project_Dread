@@ -4,10 +4,12 @@
 // required during runtime.
 #macro	CAM_FLAG_BOUNDS_LOCKED			0x00000001	// Prevents the viewport from going outside of the room bounds.
 #macro	CAM_FLAG_FOLLOWING_OBJECT		0x00000002
+#macro	CAM_FLAG_INITIALIZED			0x00000004
 
 // Macros for the checks required to see if each flag unique to the camera is currently set 0 or 1.
 #macro	CAM_ARE_BOUNDS_LOCKED			((flags & CAM_FLAG_BOUNDS_LOCKED)		!= 0)
 #macro	CAM_IS_FOLLOWING_OBJECT			((flags & CAM_FLAG_FOLLOWING_OBJECT)	!= 0)
+#macro	CAM_IS_INITIALIZED				((flags & CAM_FLAG_INITIALIZED)			!= 0)
 
 // The application window size should ALWAYS be set to a whole number multiple of these values. Otherwise 
 // pixels on the screen won't be equally sized; ruining the image quality.
@@ -79,18 +81,6 @@ function str_camera(_index) : str_base(_index) constructor {
 		// FPS, but on my computer the 5070 was so fast it was causing the screen to go ballistic during
 		// the effect; this variable to slow the shake effect down fixed the issue.
 		waitTimer		: 0.0
-	}
-	
-	/// @description 
-	///	The camera struct's create event. It simply assigns the dimensions for the viewport, and assigns an 
-	/// object to start following (The player object is the default).
-	///	
-	create_event = function(){
-		if (room != rm_init)
-			return; // Prevents a call to this function from executing outside of the game's initialization.
-			
-		camera_set_viewport(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
-		camera_set_followed_object(PLAYER, true);
 	}
 	
 	/// @description 
@@ -353,6 +343,24 @@ function str_camera(_index) : str_base(_index) constructor {
 #endregion Camera Struct Definition
 
 #region Aspect Ratio Adjustment Function
+
+/// @description 
+///	The function responsible for initializing the game's camera which allows the player to actually see the
+/// game in the window that is set up by the camera's properties. Optionally, an object id can be provided if
+/// the camera needs to instantly follow an object within the game.
+///	
+///	@param {Real}			width			The initial width of the game's viewport.
+/// @param {Real}			height			The initial height of the game's viewport.
+/// @param {Id.Instance}	id				(Optional) Object that the camera will be following after initialization.
+/// @param {Bool}			snapToPosition	(Optional) When true, the camera will immediately center itself onto the followed object's position.
+function camera_initialize(_width, _height, _id = noone, _snapToPosition = false){
+	if (room != rm_init)
+		return;
+	
+	set_viewport_size(_width, _height);
+	with(CAMERA)		{ camera_set_followed_object(_id, _snapToPosition); }
+	with(GAME_MANAGER)	{ visible = true; }
+}
 
 /// @description
 ///	Sets the viewport to a given width and height. On top of that, it will also adjust the dimensions of 
