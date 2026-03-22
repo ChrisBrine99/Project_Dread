@@ -21,7 +21,7 @@ with(CAMERA){
 // if they have one to draw. So, the surface is created if the GPU has flushed it, that surface becomes the
 // render target, and the surface is completely cleared to a value of zero.
 if (!surface_exists(global.shadowSurface))
-	global.shadowSurface = surface_create(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
+	global.shadowSurface = surface_create(_wView, _hView);
 surface_set_target(global.shadowSurface);
 draw_clear_alpha(COLOR_BLACK, 0.0);
 draw_set_color(COLOR_BLACK); // All shadows are drawn completely black at full opacity.

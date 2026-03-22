@@ -191,21 +191,13 @@ function str_textbox(_index) : str_base(_index) constructor {
 		if (room != rm_init)
 			return; // Prevents a call to this function from executing outside of the game's initialization.
 		
-		// 
-		var _wView = 0;
-		var _hView = 0;
-		with(CAMERA){
-			_wView = wViewport;
-			_hView = hViewport;
-		}
-		
-		// Finally, setup the control group that will be utilized by the Textbox and calculate the positions
-		// of the icons and their descriptors so they're displayed at the proper offset. Then, set the
-		// textbox's reference to its control group so it can be referenced for drawing the group when needed.
+		// Set up the control group that will be utilized by the Textbox and calculate the positions of the 
+		// icons and their descriptors so they're displayed at the proper offset. Then, set the textbox's 
+		// reference to its control group so it can be referenced for drawing the group when needed.
 		var _tboxCtrlGroup = REF_INVALID;
 		with(CONTROL_UI_MANAGER){
-			_tboxCtrlGroup = create_control_group(TBOX_ICONUI_CTRL_GRP, _wView - TBOX_CTRL_GRP_XOFFSET, 
-				_hView - TBOX_CTRL_GRP_YOFFSET, 3, ICONUI_DRAW_LEFT);
+			_tboxCtrlGroup = create_control_group(TBOX_ICONUI_CTRL_GRP, CAMERA.wViewport - TBOX_CTRL_GRP_XOFFSET, 
+				CAMERA.hViewport - TBOX_CTRL_GRP_YOFFSET, 3, ICONUI_DRAW_LEFT);
 			add_control_group_icon(_tboxCtrlGroup, ICONUI_TBOX_ADVANCE, "Next");
 			add_control_group_icon(_tboxCtrlGroup, ICONUI_TBOX_LOG, "Log");
 		}

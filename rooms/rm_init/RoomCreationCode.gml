@@ -36,7 +36,7 @@ ds_map_add(global.sInstances, str_fog,					new str_fog(str_fog));
 // After creating the required singleton instances, initialize the camera so the window can be properly sized,
 // the viewport into the game can be created and sized as well, and the game can start rendering to that window
 // via the current viewport position/size.
-camera_initialize(VIEWPORT_WIDTH, VIEWPORT_HEIGHT, _playerInstance, true);
+camera_initialize(320, 180, _playerInstance, true);
 
 // Initialize what needs initialization above by manually calling its create event (If it wasn't a "compile-
 // time" singleton like it is within this game, the event would've been invoked automatically when it was 

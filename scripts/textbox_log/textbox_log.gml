@@ -100,6 +100,14 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 		if (room != rm_init)
 			return; // Prevents a call to this function from executing outside of the game's initialization.
 		
+		// 
+		var _wView = 0;
+		var _hView = 0;
+		with(CAMERA){
+			_wView = wViewport;
+			_hView = hViewport;
+		}
+		
 		// Create two local variables to store the references to the control group information that the log
 		// will utilize to inform the player on how to interact with it. These are then stored in the log's
 		// own variables for each respective control group for use later in the code.
@@ -109,17 +117,15 @@ function str_textbox_log(_index) : str_base(_index) constructor {
 			// Create the control group that will display the inputs for moving up and down through the available
 			// logged textboxes. These inputs are the same as the menu's up and down inputs, so changing those
 			// will cause these to change as well.
-			_movementCtrlGroup = create_control_group(TBOXLOG_ICONUI_CTRL_GRP_MOVE,
-				TBOXLOG_CTRL_GRP_XOFFSET, VIEWPORT_HEIGHT - TBOXLOG_CTRL_GRP_YOFFSET,
-					TBOXLOG_CTRL_GRP_INPUT_PADDING, ICONUI_DRAW_RIGHT);
+			_movementCtrlGroup = create_control_group(TBOXLOG_ICONUI_CTRL_GRP_MOVE, TBOXLOG_CTRL_GRP_XOFFSET, 
+					_hView - TBOXLOG_CTRL_GRP_YOFFSET, TBOXLOG_CTRL_GRP_INPUT_PADDING, ICONUI_DRAW_RIGHT);
 			add_control_group_icon(_movementCtrlGroup, ICONUI_MENU_UP);
 			add_control_group_icon(_movementCtrlGroup, ICONUI_MENU_DOWN, "Navigate");
 			
 			// Create a second control group that stores information for the input that will close the log.
 			// This button is the exact same button that was used to activate the textbox log.
-			_inputCtrlGroup = create_control_group(TBOXLOG_ICONUI_CTRL_GRP_INPUT, 
-				VIEWPORT_WIDTH - TBOXLOG_CTRL_GRP_XOFFSET, VIEWPORT_HEIGHT - TBOXLOG_CTRL_GRP_YOFFSET, 
-					TBOXLOG_CTRL_GRP_MOVE_PADDING, ICONUI_DRAW_LEFT);
+			_inputCtrlGroup = create_control_group(TBOXLOG_ICONUI_CTRL_GRP_INPUT, _wView - TBOXLOG_CTRL_GRP_XOFFSET, 
+					_hView - TBOXLOG_CTRL_GRP_YOFFSET, TBOXLOG_CTRL_GRP_MOVE_PADDING, ICONUI_DRAW_LEFT);
 			add_control_group_icon(_inputCtrlGroup, ICONUI_TBOX_LOG, "Close");
 		}
 		movementCtrlGroup	= _movementCtrlGroup;

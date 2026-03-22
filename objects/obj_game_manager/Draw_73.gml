@@ -163,7 +163,7 @@ for (var i = 0; i < _length; i++){
 // Attempt to render the textbox onto the screen, but only if the alpha isn't below the minimum threshold and
 // if its current y coordinate has it visible on the screen. Otherwise, it will not be rendered.
 with(TEXTBOX){
-	if (alpha <= _minAlpha || y >= VIEWPORT_HEIGHT)
+	if (alpha <= _minAlpha || y >= _hView)
 		break;
 	draw_gui_event(_xView, _yView, _wView, _hView, _delta);
 }

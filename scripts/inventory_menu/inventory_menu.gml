@@ -50,7 +50,6 @@
 // relative to the bottom-right of the GUI and the spacing between each icon/descriptor pairs.
 #macro	MENUINV_CTRL_GRP_PADDING		2
 #macro	MENUINV_CTRL_GRP_XOFFSET		5
-#macro	MENUINV_CTRL_GRP_YOFFSET		(VIEWPORT_HEIGHT - 12)
 
 // Each macro represents the index values where each of the two menu cursor movement icon/descriptor pairs 
 // and each of the two inventory page shift icon/descriptor pairs, respectively.
@@ -68,28 +67,19 @@
 // Determines the position of this second control group on the screen, as well as the amount of padding
 // between each group's icon/descriptor pair.
 #macro	MENUINV_CTRL_GRP2_PADDING		2
-#macro	MENUINV_CTRL_GRP2_XOFFSET		(VIEWPORT_WIDTH - 5)
-#macro	MENUINV_CTRL_GRP2_YOFFSET		(VIEWPORT_HEIGHT - 12)
 
 // Each macro represents the index values where the menu select icon/descriptor pair and menu return icon/
 // descriptor pair, respectively.
 #macro	MENUINV_CTRL_GRP2_SELECT		0
 #macro	MENUINV_CTRL_GRP2_RETURN		1
 
-// Macros that determine how the background for the inventory will look.
-#macro	MENUINV_MAINBKG_XRADIUS			(VIEWPORT_WIDTH - 90)
-#macro	MENUINV_MAINBKG_YRADIUS			(VIEWPORT_HEIGHT - 40)
+// The opacity levels for the two background elements that are blended together to create a nice blue/black
+// alpha gradient effect across the screen.
 #macro	MENUINV_MAINBKG_ALPHA1			0.8
 #macro	MENUINV_MAINBKG_ALPHA2			0.3
 
-// Two macros that determine the height of the header and the position of the footer (Which is offset from the
-// bottom of the screen by the same amount as the header's height), respectively.
+// How tall the header (Footer = this_value - 1) for the inventory menu is in pixels.
 #macro	MENUINV_HEADER_HEIGHT			14
-#macro	MENUINV_FOOTER_Y				(VIEWPORT_HEIGHT - MENUINV_HEADER_HEIGHT)
-
-// Macros that determine the width and height of the current section's contents as shown within the menu.
-#macro	MENUINV_SECTION_WIDTH			(VIEWPORT_WIDTH	- 5)
-#macro	MENUINV_SECTION_HEIGHT			(MENUINV_FOOTER_Y - MENUINV_HEADER_HEIGHT)
 
 #endregion Macros for Inventory Menu Struct
 
@@ -114,9 +104,9 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	/// @description 
 	///	The inventory menu struct's create event. Required menu parameters are initialized, the required 
 	/// options for the inventory which are made up of menus that represent each option as a "section" instead 
-	/// of a standard menu option. Finally, control groups are made for each section since they will all have
-	/// different input requirements aside from standard menu input functionality.
-	///	
+	/// of a standard menu option. Finally, control groups are made (Or updated if they already exist) here
+	/// and updated on a per-section basis as they're switched to by the player.
+	/// 
 	create_event = function(){
 		// Get a reference to this menu so it can be passed into the submenus that it manages.
 		selfRef	= instance_find_struct(structID);
@@ -150,8 +140,8 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 			// Create the control group at the desired position on the inventory menu, and store the reference
 			// it returns so the inventory can then store it for use when drawing the group. Then, add the
 			// desired elements to the group in question.
-			_movementCtrlGroup = create_control_group(MENUINV_ICONUI_CTRL_GRP, MENUINV_CTRL_GRP_XOFFSET, 
-				MENUINV_CTRL_GRP_YOFFSET, MENUINV_CTRL_GRP_PADDING, ICONUI_DRAW_RIGHT);
+			_movementCtrlGroup = create_control_group(MENUINV_ICONUI_CTRL_GRP, 5, CAMERA.hViewport - 12, 
+					MENUINV_CTRL_GRP_PADDING, ICONUI_DRAW_RIGHT);
 			add_control_group_icon(_movementCtrlGroup, ICONUI_MENU_LEFT);
 			add_control_group_icon(_movementCtrlGroup, ICONUI_MENU_RIGHT);
 			add_control_group_icon(_movementCtrlGroup, ICONUI_MENU_UP);
@@ -166,13 +156,15 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		var _interactCtrlGroup = REF_INVALID;
 		with(CONTROL_UI_MANAGER){
 			_interactCtrlGroup = ds_map_find_value(controlGroup, MENUINV_ICONUI_CTRL_GRP2);
-			if (!is_undefined(_interactCtrlGroup))
+			if (!is_undefined(_interactCtrlGroup)){ // Group exists; update horizontal position to match current aspect ratio.
+				with(_interactCtrlGroup) { xPos = CAMERA.wViewport - 5; }
 				break;
+			}
 			
 			// Create the control group in question which is used in this menu alongside the note and map
 			// menus as they all use the Select/Close inputs.
-			_interactCtrlGroup = create_control_group(MENUINV_ICONUI_CTRL_GRP2, MENUINV_CTRL_GRP2_XOFFSET, 
-				MENUINV_CTRL_GRP2_YOFFSET, MENUINV_CTRL_GRP2_PADDING, ICONUI_DRAW_LEFT);
+			_interactCtrlGroup = create_control_group(MENUINV_ICONUI_CTRL_GRP2, CAMERA.wViewport - 5, 
+					CAMERA.hViewport - 12, MENUINV_CTRL_GRP2_PADDING, ICONUI_DRAW_LEFT);
 			add_control_group_icon(_interactCtrlGroup, ICONUI_SELECT, "Select");
 			add_control_group_icon(_interactCtrlGroup, ICONUI_RETURN, "Close");
 		}
@@ -219,23 +211,23 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		
 		#region Render Vignette-style Background Behind Menu Section's Contents
 		
-			var _alpha = alpha;
-			var _xBack = _xView - x;
-			var _yBack = _yView - y;
+			var _alpha		 = alpha;
+			var _xBackPos	 = _xView - x + (_wView >> 1);
+			var _yBackPos	 = _yView - y + (_hView >> 1);
+			var _xBackRadius = _wView - 90;
+			var _yBackRadius = _hView - 40;
 			with(global.colorFadeShader){
-				var _wViewHalf = (_wView >> 1);
-				var _hViewHalf = (_hView >> 1);
 				activate_shader(COLOR_BLACK);
 				draw_circle_ext( // The main portion of the background.
-					_xBack + _wViewHalf, _yBack + _hViewHalf,
-					MENUINV_MAINBKG_XRADIUS, MENUINV_MAINBKG_YRADIUS,
+					_xBackPos, _yBackPos,
+					_xBackRadius, _yBackRadius,
 					COLOR_GRAY, COLOR_WHITE,
 					_alpha * MENUINV_MAINBKG_ALPHA1
 				);
 				set_effect_color(COLOR_VERY_DARK_BLUE);
 				draw_circle_ext( // Adds a subtle blue hue to the background.
-					_xBack + _wViewHalf, _yBack + _hViewHalf,
-					MENUINV_MAINBKG_XRADIUS, MENUINV_MAINBKG_YRADIUS, 
+					_xBackPos, _yBackPos,
+					_xBackRadius, _yBackRadius, 
 					COLOR_GRAY, COLOR_WHITE,
 					_alpha * MENUINV_MAINBKG_ALPHA2
 				);
@@ -245,19 +237,20 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		#endregion Render Vignette-style Background Behind Menu Section's Contents		
 		#region Drawing Rectangle Around Active Menu Section's Contents
 		
+			var _sectionHeight = _hView - MENUINV_HEADER_HEIGHT;
 			draw_sprite_ext( // Left side of the rectangle.
 				spr_rectangle,
 				0,		// Unused
 				_xView, _yView + MENUINV_HEADER_HEIGHT,
-				1, MENUINV_SECTION_HEIGHT - _yy,
+				1, _sectionHeight - _yy,
 				0.0,	// Unused
 				COLOR_DARK_GRAY, alpha
 			);
 			draw_sprite_ext( // Right side of the rectangle.
 				spr_rectangle,
 				0,		// Unused
-				_xView + VIEWPORT_WIDTH - 1, _yView + MENUINV_HEADER_HEIGHT,
-				1, MENUINV_SECTION_HEIGHT - _yy,
+				_xView + _wView - 1, _yView + MENUINV_HEADER_HEIGHT,
+				1, _sectionHeight - _yy,
 				0.0,	// Unused
 				COLOR_DARK_GRAY, alpha
 			);
@@ -265,15 +258,15 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 				spr_rectangle, 
 				0,		// Unused 
 				_xView, _yView + MENUINV_HEADER_HEIGHT - 1,
-				VIEWPORT_WIDTH, 1,
+				_wView, 1,
 				0.0,	// Unused 
 				COLOR_DARK_GRAY, alpha
 			);
 			draw_sprite_ext( // Bottom side of the rectangle.
 				spr_rectangle, 
 				0,		// Unused 
-				_xView, _yView + MENUINV_FOOTER_Y - _yy,
-				VIEWPORT_WIDTH, 1, 
+				_xView, _yView + _sectionHeight - _yy,
+				_wView, 1, 
 				0.0,	// Unused
 				COLOR_DARK_GRAY, alpha
 			);
@@ -288,13 +281,13 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 				spr_inv_menu_header_footer_bkg, 
 				0,	// Unused
 				_xView, _yView, 
-				VIEWPORT_WIDTH, 13
+				_wView, 13
 			);
 			draw_sprite_stretched( // The footer background.
 				spr_inv_menu_header_footer_bkg, 
 				0,	// Unused
-				_xView, _yView - _yy + VIEWPORT_HEIGHT - 13,	
-				VIEWPORT_WIDTH, 13
+				_xView, _yView - _yy + _hView - 13,	
+				_wView, 13
 			);
 			gpu_set_tex_filter(false);
 		
@@ -482,9 +475,11 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 			// Double the inventory's current y position so these upper elements slide up from the bottom 
 			// of the screen instead of sliding down alongside the upper elements as they slide down onto the
 			// screen from above it.
-			var _y	= y * 2.0; 
-			with(movementCtrlGroup) { yPos = MENUINV_CTRL_GRP_YOFFSET  - _y; }
-			with(interactCtrlGroup)	{ yPos = MENUINV_CTRL_GRP2_YOFFSET - _y; }
+			var _y		= y * 2.0; 
+			var _curY	= 0;
+			with(CAMERA)			{ _curY = hViewport - _y - 12; }
+			with(movementCtrlGroup) { yPos = _curY; }
+			with(interactCtrlGroup)	{ yPos = _curY; }
 				
 			// The distance between the current y position and its target is close enough that the animation
 			// can finish its movement-based portion. As such, y is set to zero and positional updates will
@@ -494,8 +489,9 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 				
 				// Also set both control groups to their required target values in case they were some decimal
 				// value as y would be despite being higher than the current negative delta.
-				with(movementCtrlGroup) { yPos = MENUINV_CTRL_GRP_YOFFSET; }
-				with(interactCtrlGroup) { yPos = MENUINV_CTRL_GRP2_YOFFSET; }
+				with(CAMERA)			{ _curY = hViewport - 12; }
+				with(movementCtrlGroup) { yPos = _curY; }
+				with(interactCtrlGroup) { yPos = _curY; }
 			}
 		}
 		
@@ -530,10 +526,12 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_close_animation = function(_delta){
-		y		= lerp(MENUINV_CANIM_YTARGET, MENUINV_OANIM_YTARGET, alpha);
-		var _y	= y * 2.0; // Double current y to allow control groups to slide off the bottom of the screen.
-		with(movementCtrlGroup) { yPos = MENUINV_CTRL_GRP2_YOFFSET - _y; }
-		with(interactCtrlGroup) { yPos = MENUINV_CTRL_GRP_YOFFSET  - _y; }
+		y			= lerp(MENUINV_CANIM_YTARGET, MENUINV_OANIM_YTARGET, alpha);
+		var _y		= y * 2.0; // Double current y to allow control groups to slide off the bottom of the screen.
+		var _ctrlY	= 0;
+		with(CAMERA)			{ _ctrlY = hViewport - _y - 12; }
+		with(movementCtrlGroup) { yPos = _ctrlY; }
+		with(interactCtrlGroup) { yPos = _ctrlY; }
 		
 		alpha  -= MENUINV_CANIM_ALPHA_SPEED * _delta;
 		if (alpha <= 0.0){
