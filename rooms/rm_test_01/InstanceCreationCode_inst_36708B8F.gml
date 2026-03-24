@@ -1,1 +1,1 @@
-set_item_params("test_item_05", ITEM_ENERGY_BOOSTER, 1);
+set_item_params("test_item_05", ITEM_REVITALIFE, 1);

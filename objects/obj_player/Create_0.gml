@@ -121,9 +121,12 @@
 #macro	PLYR_STAMINA_REGEN_TIMER		1
 #macro	PLYR_BLEEDING_TIMER				2
 #macro	PLYR_POISON_TIMER				3
-#macro	PLYR_RELOAD_TIMER				4
-#macro	PLYR_WEAPON_ATTACK_TIMER		5
-#macro	PLYR_TOTAL_TIMERS				6
+#macro	PLYR_POISON_IMMUNE_TIMER		4
+#macro	PLYR_BLEED_IMMUNE_TIMER			5
+#macro	PLYR_CRIPPLE_IMMUNE_TIMER		6
+#macro	PLYR_RELOAD_TIMER				7
+#macro	PLYR_WEAPON_ATTACK_TIMER		8
+#macro	PLYR_TOTAL_TIMERS				9
 
 // Macros that determine the speed at which various interval-based actions will occur for the player.
 #macro	PLYR_STAMINA_LOSS_RATE			3.0

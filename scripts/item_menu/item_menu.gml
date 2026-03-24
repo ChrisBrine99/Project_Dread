@@ -390,7 +390,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	/// @description 
 	///	
 	/// 
-	///	@param {Real}	slot
+	/// @param {Real}	slot	The slot in the inventory that will have some amount of its contents removed.
 	create_internal_item_data = function(_slot){
 		var _itemName		= "";
 		var _itemInfo		= "";
@@ -451,8 +451,8 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	/// @description 
 	/// 
 	///	
-	/// @param {Real}				slot
-	/// @param {Struct._structRef}	itemRef	
+	/// @param {Real}				slot		The slot in the inventory that will have some amount of its contents removed.
+	/// @param {Struct._structRef}	itemRef		
 	refresh_internal_item_data = function(_slot, _itemRef){
 		// 
 		var _quantity	= 0;
@@ -462,9 +462,9 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		
 		// 
 		if (_quantity > 0){
-			var _itemName		= MENUITM_DEFAULT_STRING;
-			var _itemInfo		= MENUITM_DEFAULT_STRING;
-			var _quantityCol	= COLOR_WHITE;
+			var _itemName	 = MENUITM_DEFAULT_STRING;
+			var _itemInfo	 = MENUITM_DEFAULT_STRING;
+			var _quantityCol = COLOR_WHITE;
 			with(_itemRef){
 				_itemName = itemName;
 				_itemInfo = itemInfo;
@@ -848,11 +848,12 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	///
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_use_item = function(_delta){
+		var _selOption	= selOption;
 		var _useFlags	= 0;
 		var _itemID		= ID_INVALID;
 		with(invItemRefs[selOption]){
 			if (useFunction != NO_FUNCTION && script_exists(useFunction))
-				_useFlags = script_execute(useFunction);
+				_useFlags = script_execute(useFunction, _selOption);
 			_itemID	= itemID;
 		}
 		object_set_state(state_close_item_options);
