@@ -28,8 +28,8 @@ function item_use_hitpoint_up(_slot){
 		maxHitpoints += ITEM_HITPOINT_UP_AMOUNT;
 		curHitpoints += ITEM_HITPOINT_UP_AMOUNT;
 	}
-	with(TEXTBOX){ // Flavor text informing the player that their health has been increased.
-		queue_new_text("Hmm... I feel like I'll be able to take another hit or two after drinking this... What the hell is it made with?\n(@0xF87C58{Your maximum health has permanently been increased})");
+	with(TEXTBOX){ // Flavor text informing the player that their max health has been increased.
+		queue_new_text("Hmm... I feel like I'll be able to take another hit or two after drinking this... What the hell is it made with?\n(@0x3050F8{Your maximum health has permanently been increased})");
 	}
 	return USEITM_FLAG_CONSUMED | USEITM_FLAG_OPEN_TEXTBOX;
 }
@@ -46,8 +46,8 @@ function item_use_stamina_up(_slot){
 		maxStamina += ITEM_STAMINA_UP_AMOUNT;
 		curStamina = maxStamina; // Completely restore stamina on use.
 	}
-	with(TEXTBOX){ // Flavor text informing the player that their stamina has been increased.
-		queue_new_text("Huh... I feel like I have a bit more energy than I did before; guess it really did what it says on the label...\n(@0xF87C58{Your maximum stamina has permanently been increased})");
+	with(TEXTBOX){ // Flavor text informing the player that their max stamina has been increased.
+		queue_new_text("Huh... I feel like I have a bit more energy than I did before; guess it really did what it says on the label...\n(@0x00F800{Your maximum stamina has permanently been increased})");
 	}
 	return USEITM_FLAG_CONSUMED | USEITM_FLAG_OPEN_TEXTBOX;
 }
@@ -62,9 +62,11 @@ function item_use_sanity_up(_slot){
 		if (maxSanity >= PLYR_MAX_POSSIBLE_SANITY)
 			return 0; // Player cannot increase their sanity level any longer. Return 0 so nothing happens on use.
 		maxSanity += ITEM_SANITY_UP_AMOUNT;
-		show_debug_message("Player's maximum sanity is now {0}.", maxSanity);
 	}
-	return USEITM_FLAG_CONSUMED;
+	with(TEXTBOX){ // Flavor text informing the player that their max sanity has been increased.
+		queue_new_text("I feel calmer after drinking this... Hopefully that feeling lasts.\n(@0xF894B8{Your maximum sanity has permanently been increased})");
+	}
+	return USEITM_FLAG_CONSUMED | USEITM_FLAG_OPEN_TEXTBOX;
 }
 
 /// @description 
@@ -74,13 +76,20 @@ function item_use_sanity_up(_slot){
 function item_use_consumable(_slot){
 	var _itemName = global.curItems[_slot].itemName;
 	with(PLAYER){
-		var _hpHeal			= 0.0;
-		var _sanityHeal		= 0.0;
-		var _timers			= timers;
-		var _flags			= flags;
+		// If the player already has maximum health and sanity, as well as not being inflicted with any
+		// status conditions, a textbox will appear preventing the item from being consumed.
+		if (curHitpoints == maxHitpoints && curSanity == maxSanity && !PLYR_HAS_AILMENT){
+			with(TEXTBOX) { queue_new_text("I should avoid using this until I'm @0x0010BC{actually injured}."); }
+			return USEITM_FLAG_OPEN_TEXTBOX;
+		}
+		
+		var _hpHeal		= 0.0;
+		var _sanityHeal	= 0.0;
+		var _timers		= timers;
+		var _flags		= flags;
 		with(global.itemData[? _itemName]){
-			_hpHeal			= hpHeal;
-			_sanityHeal		= sanityHeal;
+			_hpHeal		= hpHeal;
+			_sanityHeal	= sanityHeal;
 
 			// Check to see if the consumable stops the player from being poisoned. Also set the immunity timer
 			// for poison if a temporary immunity is also applied by the item upon consumption.
@@ -119,7 +128,7 @@ function item_use_consumable(_slot){
 ///	
 /// @param {Real}	slot	Where the item is located within the player's inventory.
 function item_use_upgrade_parts(_slot){
-	
+	show_debug_message("Upgrade parts have been used.");
 }
 
 #endregion Functions Utilized By Items When Used

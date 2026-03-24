@@ -347,7 +347,7 @@ function camera_initialize(_width, _height, _id = noone, _snapToPosition = false
 	if (room != rm_init)
 		return;
 	
-	set_viewport_size(_width, _height);
+	camera_set_viewport_size(_width, _height);
 	with(CAMERA)		{ camera_set_followed_object(_id, _snapToPosition); }
 	with(GAME_MANAGER)	{ visible = true; }
 }
@@ -359,7 +359,7 @@ function camera_initialize(_width, _height, _id = noone, _snapToPosition = false
 ///	
 ///	@param {Real}	width	The width of the game's viewport.
 /// @param {Real}	height	The height of the game's viewport.
-function set_viewport_size(_width, _height){
+function camera_set_viewport_size(_width, _height){
 	// First, check if the camera is actually initialized and the viewport dimensions being provided aren't
 	// the same as the values that are already being used. If that is the case, this function exits before
 	// processing anything. Otherwise, it will call the camera's function that handles scaling the application

@@ -1,1 +1,1 @@
-set_item_params("test_item_04", ITEM_CHEM_MIX_PP_DC, 1);
+set_item_params("test_item_04", ITEM_MIND_BOOSTER, 1);

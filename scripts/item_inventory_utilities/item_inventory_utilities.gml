@@ -281,48 +281,40 @@ global.curItems = -1;
 /// player selected for their playthrough. The maximum size will also be affected by the selected difficulty,
 /// but not as a hard limit. Instead, it will limit how many capacity upgrades can be found in the world.
 ///	
-///	@param {Real}	cmbDiffFlagBit		Determines how inventory will be initialized.
-function item_inventory_initialize(_cmbDiffFlagBit){
+///	@param {Real}	combatDifficulty		Current difficulty set for the combat within the game.
+function item_inventory_initialize(_combatDifficulty){
 	if (is_array(global.curItems)){ // Clear out old inventory contents to prevent memory leaks.
 		var _length = array_length(global.curItems);
 		for (var i = 0; i < _length; i++){
 			if (is_struct(global.curItems[i]))
 				delete global.curItems[i];
 		}
-	} else{ // Initialize the inventory array with a default size of 0.
-		global.curItems = array_create(0, INV_EMPTY_SLOT);
+		global.curItems = -1;
 	}
 	
-	switch(_cmbDiffFlagBit){
-		default: // Inventory's size set to 0 slots for an initialization error if that occurs.
-			global.maxItemInvCapacity = 0;
-			break;
-		case GAME_FLAG_CMBTDIFF_FORGIVING:	// Start with 10 slots; max out at 24 slots.
-			array_resize(global.curItems, ITEMINV_START_SIZE_FORGIVING);
-			global.maxItemInvCapacity = ITEMINV_MAX_SIZE_FORGIVING;
-			break;
-		case GAME_FLAG_CMBTDIFF_STANDARD:	// Start with 10 slots; max out at 20 slots.
-			array_resize(global.curItems, ITEMINV_START_SIZE_STANDARD);
+	switch(_combatDifficulty){
+		default:
+		case GAME_COMBATDIFF_STANDARD:	// Start with 10 slots; max out at 20 slots.
+			global.curItems = array_create(ITEMINV_START_SIZE_STANDARD, INV_EMPTY_SLOT);
 			global.maxItemInvCapacity = ITEMINV_MAX_SIZE_STANDARD;
 			break;
-		case GAME_FLAG_CMBTDIFF_PUNISHING:	// Start with  8 slots; max out at 16 slots.
-			array_resize(global.curItems, ITEMINV_START_SIZE_PUNISHING);
+		case GAME_COMBATDIFF_FORGIVING:	// Start with 10 slots; max out at 24 slots.
+			global.curItems = array_create(ITEMINV_START_SIZE_FORGIVING, INV_EMPTY_SLOT);
+			global.maxItemInvCapacity = ITEMINV_MAX_SIZE_FORGIVING;
+			break;
+		case GAME_COMBATDIFF_PUNISHING:	// Start with  8 slots; max out at 16 slots.
+			global.curItems = array_create(ITEMINV_START_SIZE_PUNISHING, INV_EMPTY_SLOT);
 			global.maxItemInvCapacity = ITEMINV_MAX_SIZE_PUNISHING;
 			break;
-		case GAME_FLAG_CMBTDIFF_NIGHTMARE:	// Start with  8 slots; max out at 14 slots.
-			array_resize(global.curItems, ITEMINV_START_SIZE_NIGHTMARE);
+		case GAME_COMBATDIFF_NIGHTMARE:	// Start with  8 slots; max out at 14 slots.
+			global.curItems = array_create(ITEMINV_START_SIZE_NIGHTMARE, INV_EMPTY_SLOT);
 			global.maxItemInvCapacity = ITEMINV_MAX_SIZE_NIGHTMARE;
 			break;
-		case GAME_FLAG_CMBTDIFF_ONELIFE:	// Start with  6 slots; max out at 12 slots.
-			array_resize(global.curItems, ITEMINV_START_SIZE_ONELIFE);
+		case GAME_COMBATDIFF_ONELIFE:	// Start with  6 slots; max out at 12 slots.
+			global.curItems = array_create(ITEMINV_START_SIZE_ONELIFE, INV_EMPTY_SLOT);
 			global.maxItemInvCapacity = ITEMINV_MAX_SIZE_ONELIFE;
 			break;
 	}
-	
-	// Fill the array with -1 values since each index defaults to 0 when a resize adds new indices.
-	var _length = array_length(global.curItems);
-	for (var i = 0; i < _length; i++)
-		array_set(global.curItems, i, INV_EMPTY_SLOT);
 }
 
 #endregion Item Inventory Initialization Function

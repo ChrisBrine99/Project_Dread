@@ -123,7 +123,7 @@ function load_json(_filename){
 #macro	CDATA_INDEX_ITEM_ID				0
 #macro	CDATA_INDEX_ITEM_COST			1
 
-// 
+// The keys pointing to function references that a key item will call whenever it is used by the player.
 #macro	FUNC_HITPOINT_UP				"hitpoint_up"
 #macro	FUNC_STAMINA_UP					"stamina_up"
 #macro	FUNC_SANITY_UP					"sanity_up"

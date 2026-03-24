@@ -366,7 +366,9 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	}
 	
 	/// @description 
-	///
+	/// When called, this function will call the "item_inventory_add" function; passing in all of its parameters
+	/// into that function. On top of that, the renderable data for the item menu are updated as required
+	/// if some amount of all of the item was actually added into the item inventory.
 	///	
 	///	@param {String}	item		String representing the name/key of the item.
 	///	@param {Real}	amount		How many of said item will be added to the inventory.
@@ -374,10 +376,12 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	///	@param {Real}	ammoIndex	(Optional; Weapon-Type Items Only) The ammunition found within the item relative to its list of valid ammo types.
 	add_item_to_inventory = function(_item, _amount, _durability = 0, _ammoIndex = 0){
 		var _remainder = item_inventory_add(_item, _amount, _durability, _ammoIndex);
-		if (_remainder == _amount)
+		if (_remainder == _amount) // Item wasn't added to the inventory; exit before the loop.
 			return;
 		
-		// 
+		// Since we don't know what slot the item was added into the inventory, all available slots are checked
+		// and when there is a difference in the slot's state (has item vs no item) and the current renderable
+		// information, call the function to create that info for the item menu.
 		var _length = array_length(global.curItems);
 		for (var i = 0; i < _length; i++){
 			if (global.curItems[i] == INV_EMPTY_SLOT || (invItemRefs[i] != INV_EMPTY_SLOT 
@@ -388,18 +392,16 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	}
 	
 	/// @description 
-	///	
+	///	Creates a new struct within the "itemDataToRender" struct that stores the string versions of any
+	/// values that need to be rendered onto the item menu's inventory grid.
 	/// 
-	/// @param {Real}	slot	The slot in the inventory that will have some amount of its contents removed.
+	/// @param {Real}	slot	The item that will have its properties passed along to the menu for rendering.
 	create_internal_item_data = function(_slot){
-		var _itemName		= "";
-		var _itemInfo		= "";
 		var _itemID			= ID_INVALID;
 		var _quantity		= 0;
 		var _quantityCol	= COLOR_WHITE;
 		var _showStack		= false;
 		with(global.curItems[_slot]){
-			_itemName	= itemName;
 			_itemID		= itemID;
 			_quantity	= min(999, quantity);
 			if (_quantity == 0) // If the quantity happens to be zero; set the number to dark red.
@@ -408,13 +410,13 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		
 		var _itemRef = global.itemIDs[_itemID];
 		with(_itemRef){
-			_itemInfo	= itemInfo;
 			_showStack	= ((typeID == ITEM_TYPE_WEAPON && !WEAPON_IS_MELEE) || stackLimit > 1);
 			if (_quantity == stackLimit) // When the quantity is full turn the quantity's color to light green.
 				_quantityCol = COLOR_LIGHT_GREEN;
 		}
 		
-		// 
+		// Determine if the slot should display an "equipped" icon by seeing if the item occupying it is
+		// equipped in any of the player's five equipment slots.
 		var _isEquipped = false;
 		with(PLAYER.equipment){
 			_isEquipped = (weapon == _slot || armor == _slot || light == _slot 
@@ -430,10 +432,12 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	}
 	
 	/// @description 
-	///	
+	///	Removes whatever item is found within the provided slot index in the player's item inventory. 
+	/// Optionally, an amount can be provided in case the entire stack doesn't need to be removed. Omitting
+	/// this value will remove the entire stack found in that slot.
 	///	
 	/// @param {Real}	slot		The slot in the inventory that will have some amount of its contents removed.
-	/// @param {Real}	amount		How many of that item will be removed from the slot in question.
+	/// @param {Real}	amount		(Optional) How many of that item will be removed from the slot in question.
 	remove_item_from_slot = function(_slot, _amount = -1){
 		var _slotEmpty	= false;
 		var _itemID		= ID_INVALID;
@@ -449,46 +453,44 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	}
 	
 	/// @description 
-	/// 
+	/// Takes whatever was previously stored for renderable information within the provided slot index and
+	/// either replaces it with new information to reflect the item that is now within the slot or removes
+	/// the information if no item occupies the slot.
 	///	
-	/// @param {Real}				slot		The slot in the inventory that will have some amount of its contents removed.
-	/// @param {Struct._structRef}	itemRef		
+	/// @param {Real}				slot		The slot in the inventory that will have its render data refreshed.
+	/// @param {Struct._structRef}	itemRef		The struct containing the item's non-inventory struct information that will be stored for later use.
 	refresh_internal_item_data = function(_slot, _itemRef){
-		// 
+		// By default, a quantity of zero (Excluding weapons as they can have a quantity of zero and still
+		// exist in the inventory) will signify the slot in question no longer contains an item, and the
+		// renderable data should be removed.
 		var _quantity	= 0;
 		var _invItemRef = global.curItems[_slot];
 		if (_invItemRef != INV_EMPTY_SLOT)
 			_quantity = _invItemRef.quantity;
 		
-		// 
-		if (_quantity > 0){
-			var _itemName	 = MENUITM_DEFAULT_STRING;
-			var _itemInfo	 = MENUITM_DEFAULT_STRING;
-			var _quantityCol = COLOR_WHITE;
-			with(_itemRef){
+		// If the quantity is greater than zero OR the item in question is a weapon, the branch below is
+		// taken and the contents of the renderable data are refreshed to reflect any potential changes.
+		if (_quantity > 0 || (!is_undefined(_itemRef) && _itemRef.typeID == ITEM_TYPE_WEAPON)){
+			if (itemDataToRender[_slot] != INV_EMPTY_SLOT)
+				delete itemDataToRender[_slot]; // Delete this previous struct as the function call below creates a new one.
+			create_internal_item_data(_slot);
+			
+			var _itemName = MENUITM_DEFAULT_STRING;
+			var _itemInfo = MENUITM_DEFAULT_STRING;
+			with(_itemRef){ // Get the name and info text for the item that is having its data refreshed.
 				_itemName = itemName;
 				_itemInfo = itemInfo;
-				
-				if (_quantity == stackLimit)
-					_quantityCol = COLOR_GREEN;
 			}
-			
-			// 
-			with(itemDataToRender[_slot]){
-				quantityStr = string(_quantity);
-				quantityCol = _quantityCol;
-			}
-			invItemRefs[_slot] = _itemRef;
-			
-			// 
-			with(options[| _slot]){
+			with(options[| _slot]){ // Copy what was stored into the required parameters within the menu's option struct.
 				oName = _itemName;
 				oInfo = _itemInfo;
 			}
 			return;
 		}
 		
-		// 
+		// Check if there is an item occupying the current slot and whether or not that item is equipped.
+		// If both these checks are true, the item in question is unequipped from the player before the
+		// renderable data for the item is removed.
 		var _dataRef = itemDataToRender[_slot];
 		if (_dataRef != INV_EMPTY_SLOT && _dataRef.isEquipped){
 			selOption = _slot;

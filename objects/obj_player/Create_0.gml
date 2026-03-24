@@ -26,6 +26,9 @@
 #macro	PLYR_IS_SPRINT_TOGGLE			((flags & PLYR_FLAG_SPRINT_TOGGLE)		!= 0)
 #macro	PLYR_IS_AIM_TOGGLE				((flags & PLYR_FLAG_AIM_TOGGLE)			!= 0)
 
+// Special checks that group multiple of the player-specific flags together.
+#macro	PLYR_HAS_AILMENT				((flags & (PLYR_FLAG_BLEEDING | PLYR_FLAG_CRIPPLED | PLYR_FLAG_POISONED))	!= 0)
+
 #endregion Player-Specific Flag Macros
 
 #region Input Macros

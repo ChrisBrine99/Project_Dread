@@ -2,14 +2,6 @@
 
 // Values for the flags found within global.flags. They enable and disable certain aspects of the game on a
 // global scale as required.
-#macro	GAME_FLAG_CMBTDIFF_FORGIVING	0x00000001	// Combat difficulty flags
-#macro	GAME_FLAG_CMBTDIFF_STANDARD		0x00000002
-#macro	GAME_FLAG_CMBTDIFF_PUNISHING	0x00000004
-#macro	GAME_FLAG_CMBTDIFF_NIGHTMARE	0x00000008
-#macro	GAME_FLAG_CMBTDIFF_ONELIFE		0x00000010
-#macro	GAME_FLAG_PUZZDIFF_FORGIVING	0x00000020	// Puzzle difficulty flags
-#macro	GAME_FLAG_PUZZDIFF_STANDARD		0x00000040
-#macro	GAME_FLAG_PUZZDIFF_PUNISHING	0x00000080
 #macro	GAME_FLAG_PLAYTIME_ACTIVE		0x00800000	// Other important flags
 #macro	GAME_FLAG_TRANSITION_ACTIVE		0x01000000
 #macro	GAME_FLAG_ROOM_WARP				0x02000000
@@ -22,14 +14,6 @@
 
 // Macros that allow the state of a given flag within global.flags to be checked; returning either a 0 AKA 
 // "false" or the value of the flag itself which is non-zero AKA "true".
-#macro	GAME_IS_CMBTDIFF_FORGIVING		((global.flags & GAME_FLAG_CMBTDIFF_FORGIVING)	!= 0)
-#macro	GAME_IS_CMBTDIFF_STANDARD		((global.flags & GAME_FLAG_CMBTDIFF_STANDARD)	!= 0)
-#macro	GAME_IS_CMBTDIFF_PUNISHING		((global.flags & GAME_FLAG_CMBTDIFF_PUNISHING)	!= 0)
-#macro	GAME_IS_CMBTDIFF_NIGHTMARE		((global.flags & GAME_FLAG_CMBTDIFF_NIGHTMARE)	!= 0)
-#macro	GAME_IS_CMBTDIFF_ONELIFE		((global.flags & GAME_FLAG_CMBTDIFF_ONELIFE)	!= 0)
-#macro	GAME_IS_PUZZDIFF_FORGIVING		((global.flags & GAME_FLAG_PUZZDIFF_FORGIVING)	!= 0)
-#macro	GAME_IS_PUZZDIFF_STANDARD		((global.flags & GAME_FLAG_PUZZDIFF_STANDARD)	!= 0)
-#macro	GAME_IS_PUZZDIFF_PUNISHING		((global.flags & GAME_FLAG_PUZZDIFF_PUNISHING)	!= 0)
 #macro	GAME_IS_PLAYTIME_ACTIVE			((global.flags & GAME_FLAG_PLAYTIME_ACTIVE)		!= 0)
 #macro	GAME_IS_TRANSITION_ACTIVE		((global.flags & GAME_FLAG_TRANSITION_ACTIVE)	!= 0)
 #macro	GAME_IS_ROOM_WARP_OCCURRING		((global.flags & GAME_FLAG_ROOM_WARP)			!= 0)
@@ -115,6 +99,24 @@
 #macro	GAME_PAD_NOTE_MENU				gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_NOTE_MENU		+ 1])
 #macro	GAME_PAD_MAP_MENU				gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_MAP_MENU		+ 1])
 #macro	GAME_PAD_PAUSE_MENU				gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_PAUSE_MENU		+ 1])
+
+// Values that determine what the current combat difficulty is set to. They are stored in the lower 16 bits
+// of the global difficulty value. If the value found in that space differs from any of the valid values
+// here, the game will default to the standard combat difficulty.
+#macro	GAME_COMBATDIFF_INVALID			0x00000000	// Default value before a file is loaded or new game is started and difficulty is selected.
+#macro	GAME_COMBATDIFF_STANDARD		0x00000001
+#macro	GAME_COMBATDIFF_FORGIVING		0x00000002
+#macro	GAME_COMBATDIFF_PUNISHING		0x00000003
+#macro	GAME_COMBATDIFF_NIGHTMARE		0x00000004
+#macro	GAME_COMBATDIFF_ONELIFE			0x00000005
+
+// Values that determine what the current puzzle difficulty is set to. They are stored in the upper 16 bits
+// of the global difficulty value. If the value found in that space differs from any of the valid values
+// here, the game will default to standard puzzle difficulty.
+#macro	GAME_PUZZLEDIFF_INVALID			0x00000000	// Default value before a file is loaded or new game is started and difficulty is selected.
+#macro	GAME_PUZZLEDIFF_STANDARD		0x00010000
+#macro	GAME_PUZZLEDIFF_FORGIVING		0x00020000
+#macro	GAME_PUZZLEDIFF_PUNISHING		0x00030000
 
 // Macros for what each bit in the global.settings struct's "flags" variable represent in the context of the 
 // game's currently active settings when a given flag is set.
@@ -220,6 +222,10 @@ uptimeFraction			= 0.0;
 // A variable containing various flags that affect the game on a global scale. This includes things like 
 // gamepad input activity, game states, and so on.
 global.flags			= GAME_FLAG_PAUSED;
+
+// Stores the values for the game's currently assigned combat and puzzle difficulties. These will determine
+// how difficult each aspect of the game will be relative to what is the "standard" level for both.
+difficulty				= 0;
 
 // A grid storing the id values for all existing static and dynamic entities within the current room 
 // alongside their current y positions. Those y positions will be used to sort their drawn from top to 
@@ -441,6 +447,28 @@ add_instance_to_warp = function(_id, _targetX, _targetY){
 	});
 }
 
+/// @description
+///	Gets the currently set combat difficulty from the game manager's difficulty value. If this value happens
+/// to be outside the valid range of numbers, the combat difficulty is set to standard as a default.
+///
+get_current_combat_difficulty = function(){
+	var _combatDifficulty = difficulty & 0x0000FFFF; // Isolate lower 16 bits.
+	if (_combatDifficulty == GAME_COMBATDIFF_INVALID || _combatDifficulty > GAME_COMBATDIFF_ONELIFE)
+		return GAME_COMBATDIFF_STANDARD;
+	return _combatDifficulty;
+}
+
+/// @description 
+///	Gets the currently set puzzle difficulty from the game manager's difficulty value. If this value happens
+/// to be outside the valid range of numbers, the puzzle difficulty is set to standard as a default.
+///
+get_current_puzzle_difficulty = function(){
+	var _puzzleDifficulty = difficulty & 0xFFFF0000; // Isolate upper 16 bits.
+	if (_puzzleDifficulty == GAME_PUZZLEDIFF_INVALID || _puzzleDifficulty > GAME_PUZZLEDIFF_PUNISHING)
+		return GAME_PUZZLEDIFF_STANDARD;
+	return _puzzleDifficulty;
+}
+
 #endregion Game Manager Local Function Initializations
 
 #region Debug Variable Initializations
@@ -452,14 +480,6 @@ debugLines		= ds_list_create();
 // Stores the number of dynamic and static entities currently being drawn in the current room, respectively.
 numDynamicDrawn	= 0;
 numStaticDrawn	= 0;
-
-// 
-curViewportSize = 0;
-viewports = [
-	[320, 180],	// 16:9
-	[320, 200],	// 16:10
-	[420, 180]	// 21:9
-];
 
 #endregion Debug Variable Initialzations
 
@@ -489,5 +509,5 @@ add_debug_line = function(_xStart, _yStart, _xEnd, _yEnd, _lifetime){
 #endregion Debug Function Initializations
 
 load_item_data("item_data.json5");
-item_inventory_initialize(GAME_FLAG_CMBTDIFF_STANDARD);
+item_inventory_initialize(GAME_COMBATDIFF_STANDARD);
 show_debug_overlay(false);

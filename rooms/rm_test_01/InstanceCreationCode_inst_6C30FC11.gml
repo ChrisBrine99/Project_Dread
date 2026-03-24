@@ -1,1 +1,1 @@
-set_item_params("test_item_06", ITEM_UPGRADE_PARTS, 1);
+set_item_params("test_item_06", ITEM_ENERGY_BOOSTER, 1);
