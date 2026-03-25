@@ -542,7 +542,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		
 		// The select input was released, so an item will be selected for the player to interact with its
 		// list of available options.
-		if (MINPUT_IS_SELECT_RELEASED){
+		if (MINPUT_IS_SELECT_RELEASED && curOption != auxSelOption){
 			// Don't jump into any of this selection code logic if the current slot is empty AND the 
 			// inventory isn't currently set to move an item to another slot. If slot movement is occurring, 
 			// the check is bypassed to be stopped further below.
@@ -956,7 +956,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		var _secondSlot = selOption;
 		var _firstItem	= invItemRefs[auxSelOption];
 		var _secondItem = invItemRefs[selOption];
-		if (_firstItem == REF_INVALID || _secondItem == REF_INVALID){
+		if (_firstItem == REF_INVALID || _secondItem == REF_INVALID){ //  Prevent combination from occurring if either item is invalid.
 			reset_to_default_state();
 			return;
 		}
@@ -970,8 +970,9 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			_firstSlot	= selOption;
 			_secondSlot	= auxSelOption;
 		}
+		reset_to_default_state();
 		
-		// 
+		// Get the ID and names for both items involved in the combination process.
 		var _firstItemID	= ID_INVALID;
 		var _firstItemName	= "";
 		with(_firstItem){
@@ -985,34 +986,99 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			_secondItemName	= itemName;
 		}
 		
+		// Create additional local values that will be utilized for general combination as well as upgrading
+		// a piece of equipment (Which is the whole branch directly below these variable initializations).
+		var _comboSuccess	= false;
+		var _resultItemID	= ID_INVALID;
+		var _validCombos	= global.itemData[? KEY_VALID_COMBOS];
+		var _length			= ds_list_size(_validCombos);
+		
 		// Since the upgrade parts should never have an ID value lower than any weapon in the game, the
 		// second item's name is always checked to see if it is the upgrade parts. If so, the first item
 		// (Which should be a weapon) will be upgraded.
 		if (_secondItemName == ITEM_UPGRADE_PARTS){
-			var _comboSuccess	= false;
-			var _resultItemID	= ID_INVALID;
-			var _validCombos	= global.itemData[? KEY_VALID_COMBOS];
-			var _length			= ds_list_size(_validCombos);
-			for (var i = 0; i < _length; i++){
+			for (var i = 0; i < _length; i++){ // TODO -- Potentially change to binary search since data is organized.
 				with(_validCombos[| i]){
 					if (firstItem != _firstItemID || secondItem != _secondItemID)
 						continue;
-					_comboSuccess = true;
 					_resultItemID = resultItem;
+					_comboSuccess = (_resultItemID >= 0 && _resultItemID < array_length(global.itemIDs));
 					break;
 				}
 			}
 			
-			// 
+			// If the combo succeeded, the item being upgraded is removed along with a single upgrade part. 
+			// Then, the upgraded version of the item is added to the player's item inventory. The quantity
+			// and ammo index values for the item before it was upgraded are passed along to the new item;
+			// the durability will always be its maximum possible value after an upgrade.
 			if (_comboSuccess){
-				var _name = global.itemIDs[_resultItemID].itemName;
+				var _quantity	= 0;
+				var _ammoIndex	= 0;
+				with(global.curItems[_firstSlot]){ // Get the item's current quantity and ammo index as they carry over during the upgrade.
+					_quantity	= quantity;
+					_ammoIndex	= ammoIndex;
+				}
 				remove_item_from_slot(_firstSlot);
 				remove_item_from_slot(_secondSlot, 1);
-				add_item_to_inventory(_name, 1);
+				
+				var _name		= "";
+				var _durability	= 0;
+				with(global.itemIDs[_resultItemID]){ // Get the resulting items name and its maximum possible durability value (If said value exists for the item).
+					_name		= itemName;
+					_durability	= variable_struct_exists(global.itemIDs[_resultItemID], "durability") ? durability : 0;
+				}
+				add_item_to_inventory(_name, _quantity, _durability, _ammoIndex);
+			}
+			return;
+		}
+		
+		// 
+		var _firstCost		= 0;
+		var _secondCost		= 0;
+		var _resultQuantity	= 0;
+		var _resultMin		= 0;
+		var _resultMax		= 0;
+		
+		// 
+		for (var i = 0; i < _length; i++){
+			with(_validCombos[| i]){
+				if (firstItem != _firstItemID || secondItem != _secondItemID)
+					continue;
+				_firstCost		= firstCost;
+				_secondCost		= secondCost;
+				_resultItemID	= resultItem;
+				_resultMin		= minAmount;
+				_resultMax		= maxAmount;
+				_comboSuccess	= (_resultItemID >= 0 && _resultItemID < array_length(global.itemIDs));
+				break;
 			}
 		}
 		
-		reset_to_default_state();
+		// 
+		if (_comboSuccess){
+			if ( global.curItems[_firstSlot].quantity < _firstCost || global.curItems[_secondSlot].quantity < _secondCost){
+				with(TEXTBOX){ // Flavor text letting the player know they can make something out of the combo, but they need more of either item.
+					queue_new_text("I don't have enough to make anything out of these items...");
+					activate_textbox(0, TBOX_FLAG_HIDE_CONTROLS);
+				}
+				object_set_state(state_textbox_open);
+				return;
+			}
+			remove_item_from_slot(_firstSlot, _firstCost);
+			remove_item_from_slot(_secondSlot, _secondCost);
+			
+			// 
+			var _name		= global.itemIDs[_resultItemID].itemName;
+			var _quantity	= irandom_range(_resultMin, _resultMax);
+			add_item_to_inventory(_name, _quantity);
+			return;
+		}
+		
+		with(TEXTBOX){ // Flavor text letting the player know they can't make anything out of the combination. 
+			queue_new_text("Seems like nothing happens when I try to combine these two together...");
+			activate_textbox(0, TBOX_FLAG_HIDE_CONTROLS);
+		}
+		object_set_state(state_textbox_open);
 	}
 	
 	/// @description 

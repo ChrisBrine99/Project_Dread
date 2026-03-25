@@ -123,12 +123,4 @@ function item_use_consumable(_slot){
 	return USEITM_FLAG_CONSUMED;
 }
 
-/// @description
-///	
-///	
-/// @param {Real}	slot	Where the item is located within the player's inventory.
-function item_use_upgrade_parts(_slot){
-	show_debug_message("Upgrade parts have been used.");
-}
-
 #endregion Functions Utilized By Items When Used
