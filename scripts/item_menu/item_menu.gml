@@ -506,7 +506,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			oName = MENUITM_DEFAULT_STRING;
 			oInfo = MENUITM_DEFAULT_STRING;
 		}
-	}
+    }
 
 	/// @description 
 	///	The item menu's default state. It will handle selecting a slot within the menu, closing the menu by
@@ -948,7 +948,10 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	}
 	
 	/// @description 
-	///	
+	///	The state that is executed when the user has selected two different occupied slots in their inventory. It will take these items 
+    /// and either combine as much of them into a single slot as possible (Happens when both items match in ID/name) or it will attempt 
+    /// to see if they can combine together to result in a new item that is added to the inventory. After running this state once, the 
+    /// inventory will begin returning itself back to its default state.
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_combine_item = function(_delta){
@@ -956,13 +959,13 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		var _secondSlot = selOption;
 		var _firstItem	= invItemRefs[auxSelOption];
 		var _secondItem = invItemRefs[selOption];
-		if (_firstItem == REF_INVALID || _secondItem == REF_INVALID){ //  Prevent combination from occurring if either item is invalid.
+		if (_firstItem == REF_INVALID || _secondItem == REF_INVALID){ // Prevent combination from occurring if either item is invalid.
 			reset_to_default_state();
 			return;
 		}
 		
-		// Swap the references if the second item happens to have an item ID value that is lower than the 
-		// first item, as the crafting data is sorted by the first item's ID for organization purposes.
+		// Swap the references if the second item happens to have an item ID value that is lower than the first item, as the crafting 
+        // data is sorted by the first item's ID for organization purposes.
 		if (_firstItem.itemID > _secondItem.itemID){
 			var _temp	= _firstItem;
 			_firstItem	= _secondItem;
@@ -986,53 +989,11 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			_secondItemName	= itemName;
 		}
 		
-		// Create additional local values that will be utilized for general combination as well as upgrading
-		// a piece of equipment (Which is the whole branch directly below these variable initializations).
+		// 
 		var _comboSuccess	= false;
 		var _resultItemID	= ID_INVALID;
 		var _validCombos	= global.itemData[? KEY_VALID_COMBOS];
 		var _length			= ds_list_size(_validCombos);
-		
-		// Since the upgrade parts should never have an ID value lower than any weapon in the game, the
-		// second item's name is always checked to see if it is the upgrade parts. If so, the first item
-		// (Which should be a weapon) will be upgraded.
-		if (_secondItemName == ITEM_UPGRADE_PARTS){
-			for (var i = 0; i < _length; i++){ // TODO -- Potentially change to binary search since data is organized.
-				with(_validCombos[| i]){
-					if (firstItem != _firstItemID || secondItem != _secondItemID)
-						continue;
-					_resultItemID = resultItem;
-					_comboSuccess = (_resultItemID >= 0 && _resultItemID < array_length(global.itemIDs));
-					break;
-				}
-			}
-			
-			// If the combo succeeded, the item being upgraded is removed along with a single upgrade part. 
-			// Then, the upgraded version of the item is added to the player's item inventory. The quantity
-			// and ammo index values for the item before it was upgraded are passed along to the new item;
-			// the durability will always be its maximum possible value after an upgrade.
-			if (_comboSuccess){
-				var _quantity	= 0;
-				var _ammoIndex	= 0;
-				with(global.curItems[_firstSlot]){ // Get the item's current quantity and ammo index as they carry over during the upgrade.
-					_quantity	= quantity;
-					_ammoIndex	= ammoIndex;
-				}
-				remove_item_from_slot(_firstSlot);
-				remove_item_from_slot(_secondSlot, 1);
-				
-				var _name		= "";
-				var _durability	= 0;
-				with(global.itemIDs[_resultItemID]){ // Get the resulting items name and its maximum possible durability value (If said value exists for the item).
-					_name		= itemName;
-					_durability	= variable_struct_exists(global.itemIDs[_resultItemID], "durability") ? durability : 0;
-				}
-				add_item_to_inventory(_name, _quantity, _durability, _ammoIndex);
-			}
-			return;
-		}
-		
-		// 
 		var _firstCost		= 0;
 		var _secondCost		= 0;
 		var _resultQuantity	= 0;
@@ -1040,6 +1001,8 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		var _resultMax		= 0;
 		
 		// 
+        /*var _iterations = 0;
+        var _startTime  = get_timer();
 		for (var i = 0; i < _length; i++){
 			with(_validCombos[| i]){
 				if (firstItem != _firstItemID || secondItem != _secondItemID)
@@ -1050,13 +1013,51 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 				_resultMin		= minAmount;
 				_resultMax		= maxAmount;
 				_comboSuccess	= (_resultItemID >= 0 && _resultItemID < array_length(global.itemIDs));
-				break;
+                i = _length; // Ensures the loop exits before next iteration (Using 'break;' in a with statement doesn't work).
 			}
+            _iterations++;
+		}
+        show_debug_message("Search took {0} iterations ({1} microseconds).", _iterations, get_timer() - _startTime);*/
+        
+        var _comboData = crafting_data_find_valid_combo(_firstItemID, _secondItemID);
+		with(_comboData){
+			_firstCost		= firstCost;
+			_secondCost		= secondCost;
+			_resultItemID	= resultItem;
+			_resultMin		= minAmount;
+			_resultMax		= maxAmount;
+			_comboSuccess	= (_resultItemID >= 0 && _resultItemID < array_length(global.itemIDs));
 		}
 		
 		// 
 		if (_comboSuccess){
-			if ( global.curItems[_firstSlot].quantity < _firstCost || global.curItems[_secondSlot].quantity < _secondCost){
+			// 
+			if (_secondItemName == ITEM_UPGRADE_PARTS){
+				// 
+				var _quantity	= 0;
+				var _ammoIndex	= 0;
+				with(global.curItems[_firstSlot]){
+					_quantity	= quantity;
+					_ammoIndex	= ammoIndex;
+				}
+				
+				// 
+				remove_item_from_slot(_firstSlot);
+				remove_item_from_slot(_secondSlot, 1);
+				
+				// 
+				var _name		= "";
+				var _durability	= 0;
+				with(global.itemIDs[_resultItemID]){ // Get the resulting items name and its maximum possible durability value (If said value exists for the item).
+					_name		= itemName;
+					_durability	= variable_struct_exists(global.itemIDs[_resultItemID], "durability") ? durability : 0;
+				}
+				add_item_to_inventory(_name, _quantity, _durability, _ammoIndex);
+				return;
+			}
+			
+			// 
+			if (global.curItems[_firstSlot].quantity < _firstCost || global.curItems[_secondSlot].quantity < _secondCost){
 				with(TEXTBOX){ // Flavor text letting the player know they can make something out of the combo, but they need more of either item.
 					queue_new_text("I don't have enough to make anything out of these items...");
 					activate_textbox(0, TBOX_FLAG_HIDE_CONTROLS);
@@ -1064,6 +1065,8 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 				object_set_state(state_textbox_open);
 				return;
 			}
+			
+			// 
 			remove_item_from_slot(_firstSlot, _firstCost);
 			remove_item_from_slot(_secondSlot, _secondCost);
 			
@@ -1082,38 +1085,35 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	}
 	
 	/// @description 
-	///	Moves the item found in the slot index stored in the auxSelOption variable into the slot occupied by
-	/// the item found in the slot index stored in the curOption variable. Resets to the item menu's default
-	/// state immediately upon processing this state.
+	///	Moves the item found in the slot index stored in the auxSelOption variable into the slot occupied by the item found in the slot 
+    /// index stored in the curOption variable. Resets to the item menu's default state immediately upon processing this state.
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_move_item = function(_delta){
 		if (auxSelOption != curOption){ // Only bother swapping data if two unique slots were chosen.
 			item_inventory_slot_swap(auxSelOption, curOption);
 			
-			// Perform a check that will see if any of the current equipment slot values need to be updated to
-			// match the fact that an item (Or two) were moved from their previous slots. If so, they will
-			// be updated through this function call.
+			// Perform a check that will see if any of the current equipment slot values need to be updated to match the fact that an 
+            // item (Or two) were moved from their previous slots. If so, they will be updated through this function call.
 			if (itemDataToRender[auxSelOption] != INV_EMPTY_SLOT || itemDataToRender[curOption] != INV_EMPTY_SLOT){
 				var _auxSelOption	= auxSelOption;
 				var _curOption		= curOption;
 				with(PLAYER) { update_equip_slot(_auxSelOption, _curOption); }
 			}
 			
-			// Update the references to the structs that hold data about how to render an item information on
-			// the slot its icon occupies in the item inventory.
+			// Update the references to the structs that hold data about how to render an item information on the slot its icon occupies 
+            // in the item inventory.
 			var _prevAuxSelOptionData		= itemDataToRender[auxSelOption];
 			itemDataToRender[auxSelOption]	= itemDataToRender[curOption];
 			itemDataToRender[curOption]		= _prevAuxSelOptionData;
 				
-			// Update the references to item structs within the item inventory so the slots they occupy matches
-			// where they are now located after the slot swap occurs.
+			// Update the references to item structs within the item inventory so the slots they occupy matches where they are now 
+            // located after the slot swap occurs.
 			var _tempInvItemRef				= invItemRefs[auxSelOption];
 			invItemRefs[auxSelOption]		= invItemRefs[curOption];
 			invItemRefs[curOption]			= _tempInvItemRef;
 			
-			// Like above, the option contents need to be swapped to match the fact that two items changed
-			// places within the item inventory.
+			// Like above, the option contents need to be swapped to match the fact that two items changed places within the inventory.
 			var _tempOptionRef				= options[| auxSelOption];
 			options[| auxSelOption]			= options[| curOption];
 			options[| curOption]			= _tempOptionRef;
@@ -1123,9 +1123,8 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	}
 	
 	/// @description 
-	///	A simple state that waits until the textbox is closed before returning control back over to the
-	/// item inventory menu. Useful whenever an item needs to open the textbox, but doesn't need to close the
-	/// menu out beforehand.
+	///	A simple state that waits until the textbox is closed before returning control back over to the item inventory menu. Useful 
+    /// whenever an item needs to open the textbox, but doesn't need to close the menu out beforehand.
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_textbox_open = function(_delta){

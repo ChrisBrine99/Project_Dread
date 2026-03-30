@@ -1,0 +1,1 @@
+set_item_params("test_item_03", ITEM_MIND_BOOSTER, 1);

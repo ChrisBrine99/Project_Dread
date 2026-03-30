@@ -1,0 +1,1 @@
+lightSource = light_basic_create(x, y, 180, COLOR_WHITE, 0.55);

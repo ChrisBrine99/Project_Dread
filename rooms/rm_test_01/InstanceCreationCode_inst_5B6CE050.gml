@@ -1,0 +1,1 @@
+set_item_params("test_item_02", ITEM_HANDGUN, 0, 15, 0);

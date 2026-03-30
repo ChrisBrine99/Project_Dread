@@ -981,6 +981,7 @@ state_initialize = function(_delta){
 	if (STNG_IS_SPRINT_INPUT_TOGGLE) { flags = flags | PLYR_FLAG_SPRINT_TOGGLE; }
 	if (STNG_IS_AIM_INPUT_TOGGLE)	 { flags = flags | PLYR_FLAG_AIM_TOGGLE; }
 	
+    item_inventory_add(ITEM_FLASHLIGHT, 1, 0);
 	item_inventory_add(ITEM_WEAK_MEDICINE, 1, 0);
 	item_inventory_add(ITEM_WEAK_PAINKILLER, 1, 0);
 	item_inventory_add(ITEM_POTENT_MEDICINE, 1, 0);
