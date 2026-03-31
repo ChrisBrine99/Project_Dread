@@ -318,7 +318,6 @@ prevStepSoundID		= -1;
 /// @description 
 /// Updates the flags within *inputFlags* to whatever the player has pressed/released for the current frame. Also automatically swaps 
 /// between gamepad and keyboard input polling as required.
-/// 
 process_player_input = function(){
 	if (GAME_IS_GAMEPAD_ACTIVE){
 		// Getting input from the main analog stick by reading its current horizontal and vertical position relative to its centerpoint and
@@ -380,7 +379,6 @@ process_player_input = function(){
 /// Calcualtes the values for *xMoveDirection* and *yMoveDirection* based on if a keyboard is being used for input currently or a connected 
 /// gamepad is being used. Using the joystick on the gamepad will alter the value so it can be any value between -1.0 and 1.0 for each axis,
 /// and the standard digital way returns either a -1, 0, or +1 based on current input flags.
-/// 
 determine_movement_vector = function(){
 	var _isGamepadActive = GAME_IS_GAMEPAD_ACTIVE;
 	if (_isGamepadActive && PINPUT_USING_LEFT_STICK){ // Using the left stick for movement.
@@ -399,7 +397,6 @@ determine_movement_vector = function(){
 /// Handles updating the player's movement animation(s) which works in a similar way to the standard Entity animation processing, but taking
 /// into account that the player can face 4 directions and all those directions are stored in a single sprite together when determining the
 /// starting index within that data. 
-/// 
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 process_movement_animation = function(_delta){
 	var _animSpeed = PLYR_ANIMSPD_NORMAL;
@@ -420,7 +417,6 @@ process_movement_animation = function(_delta){
 /// @description 
 /// Handles playback of the footstep sounds that play depending on the current floor material they are walking on. No sound playback will 
 /// occur if there isn't a layer in the room named "Tiles_Floor_Materials".
-///	
 process_footstep_sound = function(){
 	if (floorMaterials == -1)
 		return; // Don't try to play footstep sounds if the area doesn't have a valid layer for floor types.
@@ -479,7 +475,6 @@ pause_player = function(){
 /// @description 
 ///	A function that can be called whenever a given state the player can find themselves in can allow them to toggle their equipped 
 /// flashlight on or off. If they don't activate the input, this function does nothing.
-///	
 handle_light_toggle_input = function(){
 	if (!PINPUT_FLASHLIGHT_PRESSED || equipment.light == INV_EMPTY_SLOT)
 		return; // No input detected or a light isn't euqipped; don't process anything else in the function.
@@ -507,7 +502,6 @@ handle_light_toggle_input = function(){
 ///	A function that can be called in a given player state to allow them to open their inventory or the pause menu depending on the menu 
 /// input they released on the current frame. These inputs work on a priority; pausing is first; then the inventory's item section; notes; 
 /// and maps.
-///	
 handle_menu_open_inputs = function(){
 	if (PINPUT_OPEN_ITEMS_RELEASED){ // Opens the inventory to the collected item section.
 		menu_inventory_open(MENUINV_INDEX_ITEM_MENU);
@@ -525,7 +519,6 @@ handle_menu_open_inputs = function(){
 /// @description
 ///	Checks all five equipment slots to see if any contain the first parameter or second parameter's value. If they do, the slot where the 
 /// first value is found will now store the second, and vice versa if the second value is contained in the given equipment slot.
-///	
 /// @param {Real}	firstSlot	The first slot value to check for; swapping for the second value instead.
 /// @param {Real}	secondSlot	The second slot value to check for; swapping for the first value instead.
 update_equip_slot = function(_firstSlot, _secondSlot){
@@ -558,8 +551,7 @@ update_equip_slot = function(_firstSlot, _secondSlot){
 
 /// @description 
 /// Equips a main weapon onto the player, which is any of the firearms/melee weapons found within the game.
-///	
-/// @param {Struct._structRef}	itemStructRef	Reference to the struct in the global item data that represents the weapon.
+/// @param {Struct._structFunc}	itemStructRef	Reference to the struct in the global item data that represents the weapon.
 ///	@param {Real}				itemSlot		Slot in the item inventory where the main weapon being equipped is located.
 equip_main_weapon = function(_itemStructRef, _itemSlot){
 	var _quantity = 0;
@@ -627,7 +619,6 @@ equip_main_weapon = function(_itemStructRef, _itemSlot){
 /// @description 
 ///	Unequips the weapon that was previously assigned to the player's main weapon equipment slot while also removing the references to the 
 /// weapon's data struct as well as the current utilized ammo's data struct.
-///	
 unequip_main_weapon = function(){
 	with(equipment){
 		// Before clearing all relevant values from the equipment struct's equipped weapon values, make sure the index for the ammo 
@@ -653,8 +644,7 @@ unequip_main_weapon = function(){
 /// @description 
 ///	Equips the item in the provided slot into the player's light source equipment slot. If the item isn't of equip type *light* the function
 /// will not have it occupy said slot, and the function will do nothing.
-///	
-///	@param {Struct._structRef}	itemStructRef	Reference to the struct that represents the weapon.
+///	@param {Struct._structFunc}	itemStructRef	Reference to the struct that represents the flashlight.
 ///	@param {Real}				itemSlot		Slot in the item inventory where the light being equipped is located.
 equip_flashlight = function(_itemStructRef, _itemSlot){
 	// Create a local variable for easily referencing the properties of the equipped light while updating the player's ambient light to said
@@ -679,7 +669,6 @@ equip_flashlight = function(_itemStructRef, _itemSlot){
 
 /// @description 
 ///	Unequips the light source that was previously assigned to the player's light source equipment slot.
-///	
 unequip_flashlight = function(){
 	// Clear the flag that signifies the flashlight is currently on, and restore the player's default ambient light source characteristics.
 	flags = flags & ~PLYR_FLAG_FLASHLIGHT;
@@ -698,8 +687,7 @@ unequip_flashlight = function(){
 #region Equipped Weapon Function Definitions
 
 /// @description
-///	Reloads the equipped weapon by converting the currently utilized ammo into "quantity" for the equipped weapon in question.
-///	
+///	Reloads the equipped weapon by converting the currently utilized ammo into *quantity* for the equipped weapon in question.
 reload_current_weapon = function(){
 	var _quantity = weaponRemainingAmmo;
 	with(equipment){
@@ -737,7 +725,7 @@ reload_current_weapon = function(){
 ///	Attempts to switch the ammunition being currently used by the equipped weapon with another. If the player doesn't have any amount of 
 /// the other valid ammo types in the inventory no switch will occur. Otherwise, the previous ammo is placed back in the item inventory if
 /// possible, and the new ammo type is put into the equipped weapon by reloading it.
-///	
+///	@returns {Bool}
 swap_current_ammo_index = function(){
 	var _x = x;
 	var _y = y;
@@ -778,13 +766,18 @@ swap_current_ammo_index = function(){
 		var _quantity	= 0;
 		var _remainder	= 0;
 		with(global.curItems[weapon]){
+			// Don't attempt to add ammo to the inventory after the swap if no ammo was in the weapon before the type swap occurred. Ammo
+			// count doesn't need to be updated for the previous ammo either, so the function can return true here.
+			if (quantity == 0)
+				return true;
+			
 			// Attempt to add the previous ammunition to the item inventory. Whatever doesn't get added is stored in the local _remainder 
 			// value so it can be used to place what couldn't be put into the item storage into the world itself.
 			_quantity	= quantity;
 			_remainder	= item_inventory_add(_prevAmmoName, _quantity);
 			if (_remainder == 0){
 				quantity = 0;
-				break; // Break out of the loop after removing the ammo's full quantity from the weapon.
+				break; // Break out of the with statement after removing the ammo's full quantity from the weapon.
 			}
 			
 			// The item inventory couldn't hold all of the previous ammo's amount; create a dynamic item with the remainder of what couldn't
@@ -801,7 +794,7 @@ swap_current_ammo_index = function(){
 		// _remainder is zero, the full quantity is added.
 		ammoCount[_prevAmmoIndex] += _quantity - _remainder;
 		
-		// Return true to signify the ammo swqp was successful so the correct actions can be taken outside of this funciton.
+		// Return true to signify the ammo swap was successful so the correct actions can be taken outside of this funciton.
 		return true;
 	}
 	
@@ -813,7 +806,6 @@ swap_current_ammo_index = function(){
 /// @description 
 ///	Checks to see is an update needs to be done to one of the equipped weapon's current ammo counts. If the ammo isn't a part of the 
 /// equipped weapon's valid ammo types (Or the weapon doesn't use any ammo) the function will exit prematurely.
-///	
 ///	@param {Real}	itemID		The unique numerical identifier for the ammo to check for.
 /// @param {Real}	quantity	How much of said ammo was added to the item inventory.
 update_current_ammo_counts = function(_itemID, _quantity){
@@ -848,9 +840,8 @@ update_current_ammo_counts = function(_itemID, _quantity){
 // Stores a reference to the original function so it can be called within the overridden function.
 __end_step_event = end_step_event;
 /// @description
-///	An inherited version of the "end_step_event" function found witin "par_dynamic_entity" that updates the player's various timers and 
+///	An inherited version of the *end_step_event* function found witin *par_dynamic_entity* that updates the player's various timers and 
 /// other non-state dependent logic.
-///
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 end_step_event = function(_delta){
 	__end_step_event(_delta);
