@@ -12,9 +12,8 @@ global.eventFlags = buffer_create(EVENT_BUFFER_SIZE_BYTES, buffer_fast, 1);
 buffer_fill(global.eventFlags, 0, buffer_u8, 0, EVENT_BUFFER_SIZE_BYTES);
 
 /// @description 
-/// Sets a given bit within the "global.eventFlags" buffer to either true (1) or false (0) depending on what the second argument of the 
+/// Sets a given bit within the *global.eventFlags* buffer to either true (1) or false (0) depending on what the second argument of the 
 /// function is set to.
-/// 
 ///	@param {Real}	flagID		The position of the bit (Starting from 0 as the first) to get the value of.
 /// @param {Bool}	flagState	The desired value to set the event's bit to (True = 1, False = 0).
 function event_set_flag(_flagID, _flagState){
@@ -27,10 +26,6 @@ function event_set_flag(_flagID, _flagState){
 	var _bitField	= buffer_peek(global.eventFlags, _byteOffset, buffer_u8);
 	var _bitOffset	= _flagID % 8; // Determine offset within the byte for the bit we need.
 	
-	// var _bitFieldString = "";
-	// for (var i = 0; i < 8; i++) { _bitFieldString += string(real(bool(_bitField & (1 << i)))); }
-	// show_debug_message("Setting bit {0} from bit field {1} to {2}.", _flagID, _bitFieldString, _flagState);
-	
 	// Finally, clear the bit if "_flagState" is false, or set it if "_flagState" is true by performing bitwise math on the byte that was 
 	// retrieved from the event flag buffer relative to the id bit's offset.
 	if (_flagState) { buffer_poke(global.eventFlags, _byteOffset, buffer_u8, _bitField |  (1 << _bitOffset)); }
@@ -40,9 +35,8 @@ function event_set_flag(_flagID, _flagState){
 /// @descrription 
 ///	Grabs a given flag from the "global.eventFlags" buffer and returns either true (1) or false (0) depending on if the bit in question has 
 /// been set or cleared. If the flagID is out of the bounds of the buffer, the function will return false (0) by default.
-/// @returns {Bool}
-/// 
-///	@param {Real}	flagID		The position of the bit (Starting from 0 as the first) to get the value of.
+/// @returns 	{Bool}
+///	@param 		{Real}	flagID		The position of the bit (Starting from 0 as the first) to get the value of.
 function event_get_flag(_flagID){
 	if (_flagID < 0 || _flagID >= EVENT_BUFFER_SIZE_BITS)
 		return false; // False will always be the default flag value.

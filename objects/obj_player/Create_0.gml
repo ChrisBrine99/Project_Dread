@@ -85,6 +85,10 @@
 
 #region Misc. Macros
 
+// 
+#macro	PLYR_X_INTERACT 				(x + lengthdir_x(8, direction))
+#macro	PLYR_Y_INTERACT					(y + lengthdir_y(8, direction) - 8)
+
 // Macros that determine how high the player's internal values maximums can become before they no longer increased by the use of items.
 #macro	PLYR_MAX_POSSIBLE_HITPOINTS		150
 #macro	PLYR_MAX_POSSIBLE_STAMINA		250
@@ -1010,11 +1014,11 @@ state_default = function(_delta){
 	// with the item.
 	var _isMoving = DENTT_IS_MOVING;
 	if (_isMoving || interactableID == noone){
-		var _interactX	= x + lengthdir_x(8, direction); // Calculate the interaction point based on facing direction.
-		var _interactY	= y + lengthdir_y(8, direction) - 8;
-		interactableID	= instance_nearest(_interactX, _interactY, par_interactable);
+		var _xInteract	= PLYR_X_INTERACT;
+		var _yInteract	= PLYR_Y_INTERACT;
+		interactableID	= instance_nearest(_xInteract, _yInteract, par_interactable);
 		with(interactableID){ // Check to see if the distance of the point if within the interaction radius.
-			if (point_distance(_interactX, _interactY, interactX, interactY) <= interactRadius){
+			if (point_distance(_xInteract, _yInteract, interactX, interactY) <= interactRadius){
 				flags = flags | INTR_FLAG_INTERACT;
 				continue;
 			}

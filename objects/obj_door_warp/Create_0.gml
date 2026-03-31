@@ -61,11 +61,10 @@ arrowOffset		= 0.0;
 #region Interaction Funciton Override
 
 /// @description 
-/// The function that is called whenever the player interacts with the interactable object in question. It  will handle displaying one of the
-/// three messages based on if the door is completely unlocked (All locks have been opened by the player), particallyunlocked  (Only some of 
+/// The function that is called whenever the player interacts with the interactable object in question. It will handle displaying one of the
+/// three messages based on if the door is completely unlocked (All locks have been opened by the player), partically unlocked  (Only some of 
 /// the locks have been opened), or still completely locked (All locks are still locked). When the door is unlocked, an interaction will 
 /// cause the player to be warped to the target room and position set for the door. 
-///	
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 on_player_interact = function(_delta){
 	if (!DOOR_IS_LOCKED || ds_list_size(lockData) == 0){
@@ -105,10 +104,12 @@ on_player_interact = function(_delta){
 			}
 			
 			// Check to see if the player has the required key within their inventory. If they do, unlock the lock by setting its desired 
-			// event flag to the state it requires.
+			// event flag to the state it requires. Increment _locksOpened since a lock has been opened.
 			if (item_inventory_count(keyID) >= 1){
 				item_inventory_remove(keyID, 1);
 				event_set_flag(flagID, flagState);
+				textbox_queue_used_item(global.itemIDs[keyID].itemName);
+				_locksOpened++;
 			}
 		}
 	}
@@ -153,7 +154,6 @@ on_player_interact = function(_delta){
 /// @description 
 ///	A custom drawing function for the door. It will display an arrow pointing in the direction that the door is flagged as facing towards; 
 /// bobbing up and down or left and right for a small animation while it is visible to the player.
-///	
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 custom_draw_default = function(_delta){
 	if (!INTR_CAN_PLAYER_INTERACT || DOOR_IS_LOCKED)
@@ -190,15 +190,19 @@ drawFunction = method_get_index(custom_draw_default);
 /// @description 
 ///	Adds a lock to the door in the form of an event flag bit and item that will be required to unlock the door and set the event flag bit 
 /// tied to the lock. Note that any number of locks can be added to a door.
-///	
-/// @param {Real}	keyID		The ID for the item that represents the lock's key in the player's items.
+/// @param {String}	keyName		The name for the item that represents the lock's key in the player's items.
 ///	@param {Real}	flagID		The event ID flag that is tied to this key.
 /// @param {Real}	flagState	The state that the flag needs to be for the lock to be considered open.
-add_lock = function(_keyID, _flagID, _flagState){
+add_lock = function(_keyName, _flagID, _flagState){
 	flags |= DOOR_FLAG_LOCKED; // A call to this function will always flip the door's "locked" bit.
 	var _index = ds_list_find_index(lockData, _flagID);
 	if (_index != -1) // If the flag is already occupying the list of keys, don't add it again.
 		return;
+	
+	// Get the item ID from the item's data and store it within the lock data struct alongside the flag information.
+	var _keyID = ID_INVALID;
+	with(global.itemData[? _keyName])
+		_keyID = itemID;
 	
 	ds_list_add(lockData, {
 		keyID		: _keyID,
@@ -210,7 +214,6 @@ add_lock = function(_keyID, _flagID, _flagState){
 /// @description 
 /// Attempts to set the parameters for the door's room warping. If the index provided for the room doesn't actually exist, the value for 
 /// *targetRoom* is set to *undefined* so an attempt to warp will not occur.
-/// 
 /// @param {Real}			targetX		Player's destination along the x-axis within the target room.
 /// @param {Real}			targetY		Player's destination along the y-axis within the target room.
 /// @param {Asset.GMRoom}	targetRoom	The room to warp the player to.
@@ -227,7 +230,6 @@ set_warp_params = function(_targetX, _targetY, _targetRoom){
 /// @description 
 ///	Sets up the door to internally face a given *direction* which can be one of four different possibilities: north, south, east, or west. 
 /// This will determine where to place the door indicator arrow and which one to use relative to the desired direction.
-///	
 /// @param {Real}	flag 
 set_facing_direction = function(_flag){
 	// Don't set a facing direction if the flag specified isn't a valid direction flag. Instead, set the door to not be active so it doesn't 

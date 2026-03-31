@@ -1,0 +1,1 @@
+set_item_params("test_item_07", ITEM_TEST_DOOR_KEY, 3);

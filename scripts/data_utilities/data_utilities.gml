@@ -107,6 +107,7 @@ function load_json(_filename){
 #macro	KEY_CAN_USE_FLAG				"Can_Use"
 #macro	KEY_CAN_DROP_FLAG				"Can_Drop"
 #macro	KEY_USE_FUNCTION				"Use_Func"
+#macro 	KEY_USE_PARAMS					"Use_Params" 
 
 // Macros for the keys that only appear within the Valid_Combos section of the unprocessed item data structure.
 #macro	KEY_FIRST_ITEM					"First"
@@ -127,6 +128,7 @@ function load_json(_filename){
 #macro	FUNC_HITPOINT_UP				"hitpoint_up"
 #macro	FUNC_STAMINA_UP					"stamina_up"
 #macro	FUNC_SANITY_UP					"sanity_up"
+#macro 	FUNC_DOOR_KEY 					"door_key"
 
 #endregion item Data Parsing Macros
 
@@ -136,7 +138,6 @@ function load_json(_filename){
 ///	Attempts to load in the game's item data, which is taken in as a *JSON* file automatically converted by *GameMaker* before it gets further 
 /// converted into a custom struct-based format that is easier to manage as it condenses all the sections and data structures into a single 
 /// *ds_map* of struct references.
-/// 
 ///	@param {String} filename	The name of the item data file to load into the game.
 function load_item_data(_filename){
 	if (global.itemData != -1) // Item data has already been loaded; don't bother trying to load it again.
@@ -164,6 +165,7 @@ function load_item_data(_filename){
 	ds_map_add(_useFunctions, FUNC_HITPOINT_UP,		item_use_hitpoint_up);
 	ds_map_add(_useFunctions, FUNC_STAMINA_UP,		item_use_stamina_up);
 	ds_map_add(_useFunctions, FUNC_SANITY_UP,		item_use_sanity_up);
+	ds_map_add(_useFunctions, FUNC_DOOR_KEY,		item_use_door_key);
 	
 	// Loop through all combo data before any items are loaded due to how this information is stored relative to the other sections in 
 	// the JSON.
@@ -262,7 +264,6 @@ function load_item_data(_filename){
 ///	Attempts to load in the provided ds_map data as an item that can then be referenced by other objects in the game via the item's provided 
 /// id value. The section parameter will determine the contents of the item struct past what is provided by default, and will be treated 
 /// different when interacted with by the player in their inventory depending on that parameter's determined numerical value.
-/// 
 /// @param {String}		section			The key that determines how the item's data will be considered when parsed.
 /// @param {String}		itemKey			What will be used to reference the item within the map; it is equal to the name of the item itself.
 /// @param {String}		itemIndex		The string numerical value that will be used for the item's index value.
@@ -371,48 +372,66 @@ function load_item(_section, _itemKey, _itemIndex, _data, _useFunctions){
 			break;
 		case KEY_EQUIPABLE: // Parse through the data of an equipable item.
 			with(_itemStructRef){
-				typeID		= ITEM_TYPE_EQUIPABLE;
+				typeID				= ITEM_TYPE_EQUIPABLE;
 
 				// Begin adding parameters to the default item struct so that it can contain all the values needed for an equipable-type 
 				//item (The durability variable serves the same purpose as the one found in weapon-type items).
-				durability	= load_item_value(_data[? KEY_DURABILITY], 0);
-				equipType	= equipment_get_type_index(_data[? KEY_TYPE]);
+				durability			= load_item_value(_data[? KEY_DURABILITY], 0);
+				equipType			= equipment_get_type_index(_data[? KEY_TYPE]);
 				
 				// Don't bother parsing out equip parameters if the item in question has none.
-				var _paramList = _data[? KEY_EQUIP_PARAMS];
-				if (is_undefined(_paramList))
+				var _paramList 		= _data[? KEY_EQUIP_PARAMS];
+				if (is_undefined(_paramList)){
+					equipParams 	= [];
 					break;
+				}
 				
 				// Create the array within the item struct that will store the data used when equipping it.
-				var _totalParams = ds_list_size(_paramList);
-				equipParams = array_create(_totalParams, -1);
+				var _totalParams 	= ds_list_size(_paramList);
+				equipParams 		= array_create(_totalParams, -1);
 				for (var i = 0; i < _totalParams; i++)
-					equipParams[i] = _paramList[| i];
+					equipParams[i] 	= _paramList[| i];
 			}
 			break;
 		case KEY_KEY_ITEMS: // Parse through the data of a key item.
 			with(_itemStructRef){ 
-				typeID		= ITEM_TYPE_KEY_ITEM;
+				typeID				= ITEM_TYPE_KEY_ITEM;
 				
 				// Store the index to the function that will be called whenever the player uses this item.
-				var _key	= _data[? KEY_USE_FUNCTION];
-				useFunction	= load_item_value(_useFunctions[? _key], NO_FUNCTION);
+				var _key			= _data[? KEY_USE_FUNCTION];
+				useFunction			= load_item_value(_useFunctions[? _key], NO_FUNCTION);
 				
 				// Set the flag bits utilized by key-type items based on the values parsed through the item data for the key item in 
 				// question; offseting them to match the bit's position in the variable's numerical value.
-				flags	    = (bool(_data[? KEY_CAN_CLOSE_FLAG])			) |
-							  (bool(_data[? KEY_CAN_USE_FLAG])		<<	 1	) |
-							  (bool(_data[? KEY_CAN_DROP_FLAG])		<<	 2	);
+				flags	   			= (bool(_data[? KEY_CAN_CLOSE_FLAG])			) |
+									  (bool(_data[? KEY_CAN_USE_FLAG])		<<	 1	) |
+									  (bool(_data[? KEY_CAN_DROP_FLAG])		<<	 2	);
+				
+				// Check if the key item has params that will be passed into its use function. If not, the value will not exist in the JSON
+				// data that is loaded, so the resulting value for useParams is simply an empty array.
+				/*var _paramsList		= _data[? KEY_USE_PARAMS];
+				if (is_undefined(_paramsList)){
+					useParams 		= [];
+					break;
+				}
+				
+				// Should parameters exist for the item's use function, they will be parsed out of the loaded data's ds_list and into the
+				// newly created array inside the item's own data.
+				var _totalParams 	= ds_list_size(_paramsList);
+				useParams			= array_create(_totalParams, -1); 
+				for (var i = 0; i < _totalParams; i++){
+					useParams[i]	= _paramsList[| i];
+				}*/
 			}
 			break;
 	}
 }
 
 /// @description 
-///	A simple function that takes in a value, and either returns it unchanged or returns the provided default should the value provided be 
-/// *undefined*.
-///	@param {Any}	value		The value that is being loaded.
-/// @param {Any}	default		What will be returned if the default value is invalid/undefined.
+///	A simple function that takes in a value, and either returns it unchanged or returns the default should the value be *undefined*.
+/// @returns	{Any}
+///	@param 		{Any}	value		The value that is being loaded.
+/// @param 		{Any}	default		What will be returned if the default value is invalid/undefined.
 function load_item_value(_value, _default){
 	return (is_undefined(_value)) ? _default : _value;
 }
@@ -420,7 +439,8 @@ function load_item_value(_value, _default){
 /// @description 
 ///	Returns a numerical value that is tied to the human-readable string version of that number's purpose
 /// within the game's logic.
-/// @param {String}		typeString	The unformatted version of the euqipment's "type", which will be converted to its proper numerical value.
+/// @returns 	{Real} 
+/// @param 		{String}	typeString	The unformatted version of the euqipment's "type", which will be converted to its proper numerical value.
 function equipment_get_type_index(_typeString){
 	switch(string_lower(_typeString)){
 		default:						return ITEM_EQUIP_TYPE_INVALID;
@@ -438,7 +458,6 @@ function equipment_get_type_index(_typeString){
 ///	Initializes a new element within the world item data structure. This element will store information about an item: the room it exists in 
 /// (This is useful for items that were dropped by the player form their current items), the item's ID, the amount of the item that can be 
 /// collected, and its durability.
-/// 
 /// @param {Any}		key			The value tied to this world item's information.
 ///	@param {String}		itemName	Value that can be used to reference the item's characteristics from the global item data.
 /// @param {Real}		quantity	The current amount of the item found within this world item.
@@ -462,7 +481,6 @@ function world_item_initialize(_key, _itemName, _quantity, _durability, _ammoInd
 /// and have been removed by the player from their item inventory. They don't need to be tracked within the global list of collected items, 
 /// and contain additional information about the position of the item instance and the room it was created within so they can be created 
 /// again if the room unloads and then reloads without the player collecting the item.
-/// 
 /// @param {Real}		x			X position to create the item at within the room.
 /// @param {Real}		y			Y position to create the item at within the room.
 ///	@param {String}		itemName	Value that can be used to reference the item's characteristics from the global item data.
@@ -489,9 +507,8 @@ function dynamic_item_initialize(_x, _y, _itemName, _quantity, _durability, _amm
 /// @description 
 ///	Returns a reference to the struct containing an item's data in respect to the world and not just the area it exists in. If there is no 
 /// data found with the provided key, *ID_INVALID (-1616)* is returned to signify there isn't any data for the item.
-/// @returns {Struct}
-/// 
-///	@param {Any}	key		The value tied to the world item struct reference that will be returned.
+/// @returns 	{Struct}
+///	@param 		{Any}		key		The value tied to the world item struct reference that will be returned.
 function world_item_get(_key){
 	var _value = ds_map_find_value(global.worldItems, _key);
 	if (is_undefined(_value)) // Return ID_INVALID to signify the key doesn't exist in the map.
@@ -502,7 +519,6 @@ function world_item_get(_key){
 /// @description 
 ///	Removes an element from the current world item data structure while adding its key to the list of collected items. This means that the 
 /// item object that used this data will no longer exist within the game, as it will destory itself during its room start event.
-/// 
 ///	@param {Any}	key			The value tied to the to-be-deleted world item information.
 /// @param {Real}	isDynamic	If true, the item's key will not be added the collected item list as that isn't needed.
 function world_item_remove(_key, _isDynamic){
@@ -521,11 +537,10 @@ function world_item_remove(_key, _isDynamic){
 #region Crafting Data Functions
 
 /// @description 
-///
-/// @returns {Id.Instance}
 /// 
-/// @param {Real} firstItemID
-/// @param {Real} secondItemID
+/// @returns 	{Id.Instance}
+/// @param 		{Real} 			firstItemID
+/// @param 		{Real} 			secondItemID
 function crafting_data_find_valid_combo(_firstItemID, _secondItemID){
     var _craftingData   = global.itemData[? KEY_VALID_COMBOS];
     var _dataRef        = noone;

@@ -421,16 +421,8 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	/// @param {Real}	slot		The slot in the inventory that will have some amount of its contents removed.
 	/// @param {Real}	amount		(Optional) How many of that item will be removed from the slot in question.
 	remove_item_from_slot = function(_slot, _amount = -1){
-		var _slotEmpty	= false;
-		var _itemID		= ID_INVALID;
-		with(global.curItems[_slot]){
-			_slotEmpty	= (_amount <= -1 || quantity - _amount <= 0);
-			_itemID		= itemID;
-		}
-		
-		if (_slotEmpty) { item_inventory_remove_slot(_slot); }
-		else			{ item_inventory_remove(_itemID, _amount); }
-		
+		var _itemID = global.curItems[_slot].itemID;
+		item_inventory_remove_slot(_slot, _amount); 
 		refresh_internal_item_data(_slot, global.itemIDs[_itemID]);
 	}
 	
@@ -841,16 +833,10 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		if ((_useFlags & USEITM_FLAG_OPEN_TEXTBOX) != 0)
 			flags = flags | MENUITM_FLAG_OPEN_TEXTBOX;
 		
-		// The final check for item consumption flags: removing the itme that was used from the current item inventory. Deletes the necessary
+		// The final check for item consumption flags: removing the item that was used from the current item inventory. Deletes the necessary
 		// data from the menu's data if the item no longer exists in the slot.
-		if ((_useFlags & USEITM_FLAG_CONSUMED) != 0){
-			item_inventory_remove(_itemID, 1);
-			if (global.curItems[selOption] == INV_EMPTY_SLOT){
-				invItemRefs[selOption]		= INV_EMPTY_SLOT;
-				itemDataToRender[selOption] = INV_EMPTY_SLOT;
-				delete itemDataToRender[selOption];
-			}
-		}
+		if ((_useFlags & USEITM_FLAG_CONSUMED) != 0)
+			remove_item_from_slot(selOption, 1);
 	}
 	
 	/// @description 
@@ -953,36 +939,13 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		}
 		
 		// 
+		var _comboData 		= crafting_data_find_valid_combo(_firstItemID, _secondItemID);
 		var _comboSuccess	= false;
-		var _resultItemID	= ID_INVALID;
-		var _validCombos	= global.itemData[? KEY_VALID_COMBOS];
-		var _length			= ds_list_size(_validCombos);
 		var _firstCost		= 0;
 		var _secondCost		= 0;
-		var _resultQuantity	= 0;
+		var _resultItemID	= ID_INVALID;
 		var _resultMin		= 0;
 		var _resultMax		= 0;
-		
-		// 
-        /*var _iterations = 0;
-        var _startTime  = get_timer();
-		for (var i = 0; i < _length; i++){
-			with(_validCombos[| i]){
-				if (firstItem != _firstItemID || secondItem != _secondItemID)
-					continue;
-				_firstCost		= firstCost;
-				_secondCost		= secondCost;
-				_resultItemID	= resultItem;
-				_resultMin		= minAmount;
-				_resultMax		= maxAmount;
-				_comboSuccess	= (_resultItemID >= 0 && _resultItemID < array_length(global.itemIDs));
-                i = _length; // Ensures the loop exits before next iteration (Using 'break;' in a with statement doesn't work).
-			}
-            _iterations++;
-		}
-        show_debug_message("Search took {0} iterations ({1} microseconds).", _iterations, get_timer() - _startTime);*/
-        
-        var _comboData = crafting_data_find_valid_combo(_firstItemID, _secondItemID);
 		with(_comboData){
 			_firstCost		= firstCost;
 			_secondCost		= secondCost;
