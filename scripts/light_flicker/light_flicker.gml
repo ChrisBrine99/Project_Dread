@@ -1,7 +1,7 @@
 #region Flickering Light Macro Definitions
 
-// Determines the minimum possible amounts for the amount of time between a flicker update and minimum amount
-// to adjust the radius by during said update, respectively.
+// Determines the minimum possible amounts for the amount of time between a flicker update and minimum amount to adjust the radius by during 
+// said update, respectively.
 #macro	LGHT_MIN_FLICKER_TIME			0.05
 #macro	LGHT_MIN_FLICKER_AMOUNT			0.5
 
@@ -9,30 +9,28 @@
 
 #region Flickering Light Struct Definition
 
-/// @param {Function}	index	The value of "str_light_flicker" as determined by GameMaker during runtime.
+/// @param {Function}	index	The value of *str_light_flicker* as determined by GameMaker during runtime.
 function str_light_flicker(_index) : str_light_basic(_index) constructor {
 	// The smallest and largest possible sizes the light can flicker within.
 	minRadius			= 0.0;
 	maxRadius			= 0.0;
 	
-	// Variables responsible for the flicker effect's overall speed. The first variables determine the minimum 
-	// and maximum amount of time between a flicker adjustment, and the last is responsible for tracking if
-	// the required duration of time has passed in order to update said flickering.
+	// Variables responsible for the flicker effect's overall speed. The first variables determine the minimum and maximum amount of time 
+	// between a flicker adjustment, and the last is responsible for tracking if the required duration of time has passed in order to update
+	// said flickering.
 	minFlickerInterval	= 0.0;
 	maxFlickerInterval	= 0.0;
 	flickerTimer		= 0.0;
 	
-	// Stores the starting strength of the light since it will be altered and its grows and shrinks within the
-	// light's set range of flickering.
+	// Stores the starting strength of the light since it will be altered and its grows and shrinks within the light's range of flickering.
 	baseStrength		= 0.0;
 	
-	/// Store the original draw event's reference so the code for handling the light's lifetime (If it has one)
-	/// doesn't need to be copy and pasted into this overridden draw event.
+	/// Store the original draw event's reference so the code for handling the light's lifetime (If it has one) doesn't need to be copy and 
+	/// pasted into this overridden draw event.
 	__draw_event = draw_event;
 	///	@description 
-	///	Called for every frame that the light source exists. It'ss responsible for rendering the light source 
-	/// with its given color and properties at its current position within the room. Also handles the light 
-	/// flicker logic since there is no step event.
+	///	Called for every frame that the light source exists. It'ss responsible for rendering the light source with its given color and 
+	/// properties at its current position within the room. Also handles the light flicker logic since there is no step event.
 	///	
 	/// @param {Real}	viewX		Offset along the x axis caused by the viewport moving around the room.
 	///	@param {Real}	viewY		Offset along the y axis caused by the viewport moving around the room.
@@ -62,7 +60,7 @@ function str_light_flicker(_index) : str_light_basic(_index) constructor {
 	
 	/// @description 
 	///	Sets all possible properties for the light source with a single function call.
-	///	
+	/// 
 	/// @param {Real}	minRadius			The minimum possible distance the light source can illuminate.
 	///	@param {Real}	maxRadius			The maximum possible distance the light source can illuminate.
 	/// @param {Real}	minFlickerInterval	Smallest possible duration between size shifts for the light source's flicker effect.
@@ -87,10 +85,10 @@ function str_light_flicker(_index) : str_light_basic(_index) constructor {
 #region Global Functions for A Flickering Light
 
 /// @description 
-///	Creates a light source instance that will flicker randomly while it is active. The flickering effect is
-/// automatically handled by the instance itself, and the characteristics of that flicker can be adjusted as
-/// needed by changing the effect's parameters.
-///	
+///	Creates a light source instance that will flicker randomly while it is active. The flickering effect is automatically handled by the 
+/// instance itself, and the characteristics of that flicker can be adjusted as needed by changing the effect's parameters.
+/// @returns {Struct.Light_Flicker}
+/// 
 ///	@param {Real}	x					Horizontal position of the light within the room.
 /// @param {Real}	y					Vertical position of the light within the room.
 /// @param {Real}	minRadius			Minimum possible area the light can illuminate.

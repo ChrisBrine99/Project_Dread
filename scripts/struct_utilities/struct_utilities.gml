@@ -39,7 +39,8 @@ ds_map_add(global.structType, str_light_blink,			STRUCT_TYPE_LIGHT_SOURCE);
 /// @description 
 ///	Attempts to create an instance of the provided struct. If that struct happens to be a *special* struct and an instance for said struct 
 /// already exists, this function will not create another instance and *noone* will be returned to signify no creation occured.
-///
+/// @returns {Struct._structFunc}
+/// 
 /// @param {Function}	structFunc		The struct to attempt to create an instance of.
 function instance_create_struct(_structFunc){
 	if (struct_is_singleton(_structFunc))
@@ -61,8 +62,8 @@ function instance_create_struct(_structFunc){
 ///	Destroys the provided struct reference (*Special* structs don't exist within the management list, so a check against the struct being 
 /// *special* is not required here). This removes it from the global management list and also singals to the internal garbage collector to 
 /// free it from memory.
-///	
-/// @param {Struct._structRef}	structRef		Reference to the struct that will be deleted.
+/// 
+/// @param {Struct._structFunc}	structRef		Reference to the struct that will be deleted.
 function instance_destroy_struct(_structRef){
 	var _index = ds_list_find_index(global.structs, _structRef);
 	if (_index == -1 || struct_is_singleton(_structRef.structIndex, true))
@@ -77,10 +78,11 @@ function instance_destroy_struct(_structRef){
 /// @description 
 /// Finds the struct with the matching ID from within the global list of structs. If the id wasn't found, the function will return *noone*. 
 /// Otherwise, it will return the struct's reference.
-///	
+/// @returns {Struct._structFunc}
+/// 
 /// @param {Real}	id		The unique value given upon creation for the desired struct.
 function instance_find_struct(_id){
-	var _structRef	= noone;
+	var _structRef	= undefined;
 	var _start		= 0;
 	var _end		= ds_list_size(global.structs) - 1;
 	var _middle		= 0;
@@ -109,7 +111,8 @@ function instance_find_struct(_id){
 /// that the struct CAN'T be created during runtime, but simply that it can't so long as creation/destruction are done through 
 /// *instance_create_struct* and *instance_destroy_struct*, respectively. The same applies to runtime singletons, but they allow at least 
 /// one instance to be created or destroyed as required.
-///	
+/// @returns {Bool}
+/// 
 /// @param {Function}	structFunc		The struct function to check.
 /// @param {Bool}		isDestroying	(Optional) When true, the function will check if a runtime singleton exists to be deleted.
 function struct_is_singleton(_structFunc, _isDestroying = false){

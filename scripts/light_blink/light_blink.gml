@@ -1,7 +1,7 @@
 #region Blinking Light Macro Definitions
 
-// Determines whether or not the light source is currently "blinked" off (The flag is cleared) or on (The flag
-// is set). When off, the light isn't rendered.
+// Determines whether or not the light source is currently "blinked" off (The flag is cleared) or on (The flag is set). When off, the light 
+// isn't rendered.
 #macro	LGHT_FLAG_POWER_STATE			0x00000001
 #macro	LGHT_IS_POWERED_ON				((flags & LGHT_FLAG_POWER_STATE) != 0)
 
@@ -12,22 +12,21 @@
 
 #region Blinking Light Struct Definition
 
-/// @param {Function}	index	The value of "str_light_blink" as determined by GameMaker during runtime.
+/// @param {Function}	index	The value of *str_light_blink* as determined by GameMaker during runtime.
 function str_light_blink(_index) : str_light_basic(_index) constructor {
-	// These determine the range of time that will elapse between the light blinking to on or off. The third
-	// variable is simply what stores the timer as it decrements form whatever value it was set to after a blink
-	// occurs (This value is anything within the min and max ranges).
+	// These determine the range of time that will elapse between the light blinking to on or off. The third variable is simply what stores 
+	// the timer as it decrements form whatever value it was set to after a blink occurs (This value is anything within the current range).
 	minBlinkInterval	= 0.0;
 	maxBlinkInterval	= 0.0;
 	blinkTimer			= 0.0;
 	
-	/// Store the original draw event's reference so the code for handling the light's lifetime (If it has one)
-	/// doesn't need to be copy and pasted into this overridden draw event.
+	/// Store the original draw event's reference so the code for handling the light's lifetime (If it has one) doesn't need to be copy and 
+	/// pasted into this overridden draw event.
 	__draw_event = draw_event;
 	/// @description
-	///	Called for every frame that the light source exists. It's responsible for rendering the light source 
-	/// with its given color and properties at its current position within the room. On top of that, it manages 
-	/// the blinking logic that will toggle the light on and off at random intervals.
+	///	Called for every frame that the light source exists. It's responsible for rendering the light source with its given color and 
+	/// properties at its current position within the room. On top of that, it manages the blinking logic that will toggle the light on and 
+	/// off at random intervals.
 	///	
 	/// @param {Real}	viewX		Offset along the x axis caused by the viewport moving around the room.
 	///	@param {Real}	viewY		Offset along the y axis caused by the viewport moving around the room.
@@ -38,8 +37,8 @@ function str_light_blink(_index) : str_light_basic(_index) constructor {
 			blinkTimer = max(LGHT_MIN_FLICKER_TIME, // Minimum amount of time is 1/60th of a second.
 							random_range(minBlinkInterval, maxBlinkInterval));
 			
-			// Toggle the flag bit to enable/disable the rendering of the light, but not the logic that is 
-			// also in this draw event that handles the blinking timer.
+			// Toggle the flag bit to enable/disable the rendering of the light, but not the logic that is also in this draw event that 
+			// handles the blinking timer.
 			if (LGHT_IS_POWERED_ON) { flags = flags & ~LGHT_FLAG_POWER_STATE; }
 			else					{ flags = flags |  LGHT_FLAG_POWER_STATE; }
 		}
@@ -71,9 +70,9 @@ function str_light_blink(_index) : str_light_basic(_index) constructor {
 #region Global Functions for A Blinking Light
 
 /// @description
-///	Creates a light source that will blink on and off at a given interval between the minimum and maximum
-/// ranges specified through the arguments in this function. This blinking effect is automatically handled
-/// by the instance of the light itself.
+///	Creates a light source that will blink on and off at a given interval between the minimum and maximum ranges specified through the 
+/// arguments in this function. This blinking effect is automatically handled by the instance of the light itself.
+/// @returns {Struct.Light_Blink}
 ///	
 ///	@param {Real}	x					Horizontal position of the light within the room.
 /// @param {Real}	y					Vertical position of the light within the room.

@@ -1,7 +1,6 @@
 #region General Macro Initializations
 
-// Values for the flags found within global.flags. They enable and disable certain aspects of the game on a
-// global scale as required.
+// Values for the flags found within global.flags. They enable and disable certain aspects of the game on a global scale as required.
 #macro	GAME_FLAG_PLAYTIME_ACTIVE		0x00800000	// Other important flags
 #macro	GAME_FLAG_TRANSITION_ACTIVE		0x01000000
 #macro	GAME_FLAG_ROOM_WARP				0x02000000
@@ -12,8 +11,8 @@
 #macro	GAME_FLAG_CUTSCENE_ACTIVE		0x40000000
 #macro	GAME_FLAG_PAUSED				0x80000000
 
-// Macros that allow the state of a given flag within global.flags to be checked; returning either a 0 AKA 
-// "false" or the value of the flag itself which is non-zero AKA "true".
+// Macros that allow the state of a given flag within global.flags to be checked; returning either a 0 AKA "false" or the value of the flag 
+// itself which is non-zero AKA "true".
 #macro	GAME_IS_PLAYTIME_ACTIVE			((global.flags & GAME_FLAG_PLAYTIME_ACTIVE)		!= 0)
 #macro	GAME_IS_TRANSITION_ACTIVE		((global.flags & GAME_FLAG_TRANSITION_ACTIVE)	!= 0)
 #macro	GAME_IS_ROOM_WARP_OCCURRING		((global.flags & GAME_FLAG_ROOM_WARP)			!= 0)
@@ -24,7 +23,7 @@
 #macro	GAME_IS_CUTSCENE_ACTIVE			((global.flags & GAME_FLAG_CUTSCENE_ACTIVE)		!= 0)
 #macro	GAME_IS_PAUSED					((global.flags & GAME_FLAG_PAUSED)				!= 0)
 
-// Macros for referencing the instance IDs for all compile-time singletons.
+// Macros for referencing the instance IDs for all compile-time singletons. These should NEVER return "noone" outside of rm_init.
 #macro	GAME_MANAGER					global.sInstances[? obj_game_manager]
 #macro	PLAYER							global.sInstances[? obj_player]
 #macro	CUTSCENE_MANAGER				global.sInstances[? str_cutscene_manager]
@@ -35,16 +34,14 @@
 #macro	SCREEN_FADE						global.sInstances[? str_screen_fade]
 #macro	FOG								global.sInstances[? str_fog]
 
-// Macros for referencing the instance IDs of all runtime singletons. These will return "noone" if no 
-// instance exists for these special singleton types.
+// Macros for referencing the instance IDs of all runtime singletons. These return "noone" when the single allowed instance doesn't exist.
 #macro	MENU_INVENTORY					global.sInstances[? str_inventory_menu]
 #macro	MENU_ITEMS						global.sInstances[? str_item_menu]
 #macro	MENU_NOTES						global.sInstances[? str_note_menu]
 #macro	MENU_MAPS						global.sInstances[? str_map_menu]
 
-// Macros for retrieving the state of a given input binding on the keyboard. It simply returns if the key is
-// currently held down or not, and logic for key presses/releases is done within a controllable object using
-// their "inputFlags" and "prevInputFlags" variables.
+// Macros for retrieving the state of a given input binding on the keyboard. It simply returns if the key is currently held down or not, and
+// logic for key presses/releases is done within a controllable object using their "inputFlags" and "prevInputFlags" variables.
 #macro	GAME_KEY_RIGHT					keyboard_check(global.settings.inputs[STNG_INPUT_GAME_RIGHT])
 #macro	GAME_KEY_LEFT					keyboard_check(global.settings.inputs[STNG_INPUT_GAME_LEFT])
 #macro	GAME_KEY_UP						keyboard_check(global.settings.inputs[STNG_INPUT_GAME_UP])
@@ -100,9 +97,8 @@
 #macro	GAME_PAD_MAP_MENU				gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_MAP_MENU		+ 1])
 #macro	GAME_PAD_PAUSE_MENU				gamepad_button_check(global.gamepadID, global.settings.inputs[STNG_INPUT_PAUSE_MENU		+ 1])
 
-// Values that determine what the current combat difficulty is set to. They are stored in the lower 16 bits
-// of the global difficulty value. If the value found in that space differs from any of the valid values
-// here, the game will default to the standard combat difficulty.
+// Values that determine what the current combat difficulty is set to. They are stored in the lower 16 bits of the global difficulty value. 
+// If the value found in that space differs from any of the valid values here, the game will default to the standard combat difficulty.
 #macro	GAME_COMBATDIFF_INVALID			0x00000000	// Default value before a file is loaded or new game is started and difficulty is selected.
 #macro	GAME_COMBATDIFF_STANDARD		0x00000001
 #macro	GAME_COMBATDIFF_FORGIVING		0x00000002
@@ -110,16 +106,15 @@
 #macro	GAME_COMBATDIFF_NIGHTMARE		0x00000004
 #macro	GAME_COMBATDIFF_ONELIFE			0x00000005
 
-// Values that determine what the current puzzle difficulty is set to. They are stored in the upper 16 bits
-// of the global difficulty value. If the value found in that space differs from any of the valid values
-// here, the game will default to standard puzzle difficulty.
+// Values that determine what the current puzzle difficulty is set to. They are stored in the upper 16 bits of the global difficulty value. 
+// If the value found in that space differs from any of the valid values here, the game will default to standard puzzle difficulty.
 #macro	GAME_PUZZLEDIFF_INVALID			0x00000000	// Default value before a file is loaded or new game is started and difficulty is selected.
 #macro	GAME_PUZZLEDIFF_STANDARD		0x00010000
 #macro	GAME_PUZZLEDIFF_FORGIVING		0x00020000
 #macro	GAME_PUZZLEDIFF_PUNISHING		0x00030000
 
-// Macros for what each bit in the global.settings struct's "flags" variable represent in the context of the 
-// game's currently active settings when a given flag is set.
+// Macros for what each bit in the global.settings struct's "flags" variable represent in the context of the game's currently active settings
+// when a given flag is set.
 #macro	STNG_FLAG_VSYNC					0x00000001	// Video flags
 #macro	STNG_FLAG_FULL_SCREEN			0x00000002
 #macro	STNG_FLAG_QUANTIZATION			0x00000004
@@ -141,9 +136,8 @@
 #macro	STNG_IS_SPRINT_INPUT_TOGGLE		((global.settings.flags & STNG_FLAG_SPRINT_TOGGLE)	!= 0)
 #macro	STNG_IS_VIBRATION_ACTIVE		((global.settings.flags & STNG_FLAG_VIBRATION)		!= 0)
 
-// Macros for the index values within the global.setting struct volume array. They each correspond to a 
-// group of sounds that can have their volume adjusted independently of the other values (As well as the
-// main master volume value at index 0).
+// Macros for the index values within the global.setting struct volume array. They each correspond to a group of sounds that can have their 
+// volume adjusted independently of the other values (As well as the main master volume value at index 0).
 #macro	STNG_AUDIO_MASTER				0
 #macro	STNG_AUDIO_GAME_SOUNDS			1
 #macro	STNG_AUDIO_MENU_SOUNDS			2
@@ -151,9 +145,8 @@
 #macro	STNG_AUDIO_AMBIENCE				4
 #macro	TOTAL_VOLUME_OPTIONS			5
 
-// Macros for the index values within the global.settings struct input binding array. There are two values 
-// for each input: the keyboard binding, and the gamepad binding. So, each macro is an even number and is 
-// incremented in order to get the input's gamepad equivalent.
+// Macros for the index values within the global.settings struct input binding array. There are two values for each input: the keyboard 
+// binding, and the gamepad binding. So, each macro is an even number and is incremented in order to get the input's gamepad equivalent.
 #macro	STNG_INPUT_GAME_RIGHT			0
 #macro	STNG_INPUT_GAME_LEFT			2
 #macro	STNG_INPUT_GAME_UP				4
@@ -184,56 +177,50 @@
 // Determines how fast the blur will increment or decrement to its current target value.
 #macro	BLUR_TRANSITION_SPEED			0.025
 
-// When warping, this is the maximum level that the sigma will be set to. It's actual value during the process
-// is tied to the current opacity of the screen fade effect, which is between 0.0 and 1.0.
+// When warping, this is the maximum level that the sigma will be set to. It's actual value during the process is tied to the current opacity
+// of the screen fade effect, which is between 0.0 and 1.0.
 #macro	WARP_BLUR_SIGMA					0.25
 
 #endregion General Macro Initializations
 
 #region Game Manager Global and Local Variable Initializations
 
-// The map that manages the instance IDs and references to all existing special objects within the game. 
-// These objects are "special" in that only one instance may exist of any of them during runtime, and 
-// attempts to create multiples instances of them will fail when utilizing the proper creation functions. 
-// They also cannot be deleted during runtime and attempts to do so will also fail when utilizing the proper 
-// deletion functions.
+// The map that manages the instance IDs and references to all existing special objects within the game. These objects are "special" in that 
+// only one instance may exist of any of them during runtime, and attempts to create multiples instances of them will fail when utilizing the
+// proper creation functions. They also cannot be deleted during runtime when using the proper deletion functions.
 global.sInstances		= ds_map_create();
 
-// Stores a copy of the application surface for any post-processing effects that require the application 
-// surface that occur outside of the draw GUI events. Otherwise, it will draw itself to itself which makes 
-// no sense and nothing will be rendered.
+// Stores a copy of the application surface for any post-processing effects that require the application surface that occur outside of the 
+// draw GUI events. Otherwise, it will draw itself to itself which makes no sense and nothing will be rendered.
 global.worldSurface		= -1;
 
-// Surface that contains the shadows casted by entities onto the floor beneath them. The mask layer will
-// store an ID for the tile layer of all walls in the room which will be used to mask out any shadows that
-// might cast onto these walls if their shape doesn't match the entity's collision bounds.
+// Surface that contains the shadows casted by entities onto the floor beneath them. The mask layer will store an ID for the tile layer of
+// all walls in the room which will be used to mask out any shadows that might cast onto these walls if their shape doesn't match the 
+// entity's collision bounds.
 global.shadowSurface	= -1;
 maskLayerID				= -1;
 
-// Variables for allowing frame-independent movement as well as two values that track the application's 
-// total uptime and current playtime, respectively. Fraction values for both are stored seperately as values
-// between 0 and the game's target FPS value.
+// Variables for allowing frame-independent movement as well as two values that track the application's total uptime and current playtime, 
+// respectively. Fraction values for both are stored seperately as values between 0 and the game's target FPS value.
 global.deltaTime		= 0.0;
 global.totalPlaytime	= 0;
 global.totalUptime		= 0;
 playtimeFraction		= 0.0;
 uptimeFraction			= 0.0;
 
-// A variable containing various flags that affect the game on a global scale. This includes things like 
-// gamepad input activity, game states, and so on.
+// A variable containing various flags that affect the game on a global scale.
 global.flags			= GAME_FLAG_PAUSED;
 
-// Stores the values for the game's currently assigned combat and puzzle difficulties. These will determine
-// how difficult each aspect of the game will be relative to what is the "standard" level for both.
+// Stores the values for the game's currently assigned combat and puzzle difficulties. These will determine how difficult each aspect of the 
+// game will be relative to what is the "standard" level for both.
 difficulty				= 0;
 
-// A grid storing the id values for all existing static and dynamic entities within the current room 
-// alongside their current y positions. Those y positions will be used to sort their drawn from top to 
-// bottom on the screen.
+// A grid storing the id values for all existing static and dynamic entities within the current room alongside their current y positions. 
+// Those y positions will be used to sort their drawn from top to bottom on the screen.
 global.sortOrder		= ds_grid_create(2, 0);
 
-// Struct containings all of the various settings for the game that can be altered by the player. These 
-// altered values will be saved from "settings.ini" and loaded from there as well on all subsequent start-ups.
+// Struct containings all of the various settings for the game that can be altered by the player. These altered values will be saved from 
+// "settings.ini" and loaded from there as well on all subsequent start-ups.
 global.settings			= {
 	// --- Holds Flags Used in All Settting Groups --- //
 	flags				: STNG_FLAG_QUANTIZATION | STNG_FLAG_DITHERING | STNG_FLAG_SCANLINES |
@@ -326,9 +313,8 @@ global.settings			= {
 
 // Struct containing information and functionality regarding the color fade shader effect.
 global.colorFadeShader = {
-	// Stores the color being used for the shader's effect in both hexidecimal and individual RGB format. 
-	// This allows the hex value to check if a color update should occur to prevent constantly having to
-	// convert a color if that color is already being used with the shader.
+	// Stores the color being used for the shader's effect in both hexidecimal and individual RGB format. This allows the hex value to check
+	// if a color update should occur to prevent constantly having to convert a color if that color is already being used with the shader.
 	curColorHex			: COLOR_BLACK,
 	curColorRGB			: [0.0, 0.0, 0.0],
 	
@@ -336,9 +322,9 @@ global.colorFadeShader = {
 	uFadeColor			: shader_get_uniform(shd_color_fade, "fadeColor"),
 	
 	/// @description 
-	///	Call this to activate the shader and set its uniform vector to match the color the effect will use.
-	/// If the effect is already active when this function is called, it will simply exit early. Note that 
-	/// calling "shader_reset" at some point after calling this function is REQUIRED!!!
+	///	Call this to activate the shader and set its uniform vector to match the color the effect will use. If the effect is already active 
+	/// when this function is called, it will simply exit early. Note that calling *shader_reset* at some point after calling this function 
+	/// is REQUIRED!!!
 	///	
 	/// @param {Real}	color	Determines the color that this shader effect will utilize.
 	activate_shader	: function(_color){
@@ -359,8 +345,8 @@ global.colorFadeShader = {
 			return; // Don't set a color if it matches the one that is currently in use.
 		}
 		
-		// Copy the hex code for the color, and then split that color into its indiviual RGB components that
-		// range between 0.0 and 1.0 so the shader can properly utilize each value.
+		// Copy the hex code for the color, and then split that color into its indiviual RGB components that range between 0.0 and 1.0 so the
+		// shader can properly utilize each value.
 		curColorHex	= _color;
 		curColorRGB = [
 			color_get_red(_color)	/ 255.0,
@@ -374,28 +360,27 @@ global.colorFadeShader = {
 // Stores the device ID for the gamepad that is currently connected to the game so its input can be polled.
 global.gamepadID		= -1;
 
-// Uniforms for the lighting shader that will allow the properties of the shader to be changed on-the-fly as
-// required for the current area in the game.
+// Uniforms for the lighting shader that will allow the properties of the shader to be changed on-the-fly as required for the current area 
+// in the game.
 uLightColor				= shader_get_uniform(shd_lighting,			"color");
 uLightBrightness		= shader_get_uniform(shd_lighting,			"brightness");
 uLightSaturation		= shader_get_uniform(shd_lighting,			"saturation");
 uLightContrast			= shader_get_uniform(shd_lighting,			"contrast");
 uLightTexture			= shader_get_sampler_index(shd_lighting,	"lightTex");
 
-// Uniforms for the screen blurring shader that will allow the properties of the shader to be altered as
-// needed to achieve the desired effect (Note that UI elements will not be affected by the blur).
+// Uniforms for the screen blurring shader that will allow the properties of the shader to be altered as needed to achieve the desired effect
+// (Note that UI elements will not be affected by the blur).
 uTexelSize				= shader_get_uniform(shd_screen_blur,		"texelSize");
 uBlurDirection			= shader_get_uniform(shd_screen_blur,		"blurDirection");
 uBlurSteps				= shader_get_uniform(shd_screen_blur,		"blurSteps");
 uSigma					= shader_get_uniform(shd_screen_blur,		"sigma");
 
-// Two variables that handle the game's blurring effect. The first value is the target, and the second is what
-// the current blurring intensity that is being utilized. When the blur sigma is zero, the shader is not in use.
+// Two variables that handle the game's blurring effect. The first value is the target, and the second is what the current blurring intensity
+// that is being utilized. When the blur sigma is zero, the shader is not in use.
 global.blurSigma		= 0.0;
 curBlurSigma			= 0.0;
 
-// Uniforms for the shader that is responsible for applying the quantization, dithering, and scanline effects
-// onto the game's image.
+// Uniforms for the shader that is responsible for applying the quantization, dithering, and scanline effects onto the game's image.
 uScanlineFactor			= shader_get_uniform(shd_retro_effects,		"scanlineFactor");
 uQuantizeLevel			= shader_get_uniform(shd_retro_effects,		"quantizeLevel");
 uDitherMatrix			= shader_get_uniform(shd_retro_effects,		"ditherMatrix");
@@ -404,14 +389,13 @@ uQuantizationActive		= shader_get_uniform(shd_retro_effects,		"quantizationActiv
 uDitheringActive		= shader_get_uniform(shd_retro_effects,		"ditheringActive");
 uScanlinesActive		= shader_get_uniform(shd_retro_effects,		"scanlinesActive");
 
-// Stores the current offset for the screen-wide noise effect. This allows the game to pause the effect if it
-// is ever required since without these variables the draw call would constantly be setting new random numbers
-// for each offset between 0 and 63.
+// Stores the current offset for the screen-wide noise effect. This allows the game to pause the effect if it is ever required since without 
+// these variables the draw call would constantly be setting new random numbers for each offset between 0 and 63.
 xNoiseOffset			= 0;
 yNoiseOffset			= 0;
 
-// Variables for storing data regarding a room transition. The first value is simply the index for the room
-// that should be loaded next. The second is a map containing the instances that should move to the next room.
+// Variables for storing data regarding a room transition. The first value is simply the index for the room that should be loaded next. The 
+// second is a map containing the instances that should move to the next room.
 targetRoom				= noone;
 instancesToWarp			= ds_map_create();
 
@@ -420,8 +404,8 @@ instancesToWarp			= ds_map_create();
 #region Game Manager Local Function Initializations
 
 /// @description 
-///	Adds a given instance to the map of instances that will warp to the target room together. Each instance
-/// can be given a unique position, and all will temporarily be set to persistent during the warping process.
+///	Adds a given instance to the map of instances that will warp to the target room together. Each instance can be given a unique position, 
+/// and all will temporarily be set to persistent during the warping process.
 ///	
 ///	@param {Id.Instance}	id			The unique value given to the instance in question.
 /// @param {Real}			targetX		Position along the x-axis within the target room to set the instance's x position to.
@@ -437,9 +421,9 @@ add_instance_to_warp = function(_id, _targetX, _targetY){
 		persistent	= true;
 	}
 	
-	// Store the target position for the instance to warp to and whether the object was persistent based on the
-	// value stored in the local "_persistent" variable. This is required since warping objects will be set to
-	// temporary persistence so they aren't destroyed during the actual room transition.
+	// Store the target position for the instance to warp to and whether the object was persistent based on the value stored in the local 
+	// "_persistent" variable. This is required since warping objects will be set to temporary persistence so they aren't destroyed during 
+	// the actual room transition.
 	ds_map_add(instancesToWarp, _id, {
 		targetX			: _targetX,
 		targetY			: _targetY,
@@ -448,8 +432,8 @@ add_instance_to_warp = function(_id, _targetX, _targetY){
 }
 
 /// @description
-///	Gets the currently set combat difficulty from the game manager's difficulty value. If this value happens
-/// to be outside the valid range of numbers, the combat difficulty is set to standard as a default.
+///	Gets the currently set combat difficulty from the game manager's difficulty value. If this value happens to be outside the valid range 
+/// of numbers, the combat difficulty is set to standard as a default.
 ///
 get_current_combat_difficulty = function(){
 	var _combatDifficulty = difficulty & 0x0000FFFF; // Isolate lower 16 bits.
@@ -459,8 +443,8 @@ get_current_combat_difficulty = function(){
 }
 
 /// @description 
-///	Gets the currently set puzzle difficulty from the game manager's difficulty value. If this value happens
-/// to be outside the valid range of numbers, the puzzle difficulty is set to standard as a default.
+///	Gets the currently set puzzle difficulty from the game manager's difficulty value. If this value happens to be outside the valid range 
+/// of numbers, the puzzle difficulty is set to standard as a default.
 ///
 get_current_puzzle_difficulty = function(){
 	var _puzzleDifficulty = difficulty & 0xFFFF0000; // Isolate upper 16 bits.
@@ -473,8 +457,8 @@ get_current_puzzle_difficulty = function(){
 
 #region Debug Variable Initializations
 
-// Stores a list of structs that are lines rendered to the screen for a limited amount of time or indefintely
-// if that is required. Useful for tracking hitscan collision paths or distances between objects and so on.
+// Stores a list of structs that are lines rendered to the screen for a limited amount of time or indefintely if that is required. Useful 
+// for tracking hitscan collision paths or distances between objects and so on.
 debugLines		= ds_list_create();
 
 // Stores the number of dynamic and static entities currently being drawn in the current room, respectively.
@@ -486,9 +470,8 @@ numStaticDrawn	= 0;
 #region Debug Function Initializations
 
 /// @description 
-///	Creates a line within the world from the provided starting coordinates to the provided ending coordinates
-/// for the lifetime set in the final parameter (60 units = 1 second of real-time). Useful for showing hitscan
-/// collision lines and such.
+///	Creates a line within the world from the provided starting coordinates to the provided ending coordinates for the lifetime set in the 
+/// final parameter (60 units = 1 second of real-time). Useful for showing hitscan collision lines and such.
 ///	
 ///	@param {Real}	xStart		Origin of the line along the current room's x axis.
 /// @param {Real}	yStart		Origin of the line along the current room's y axis.

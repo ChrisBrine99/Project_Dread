@@ -4,15 +4,14 @@
 function str_fog(_index) : str_base(_index) constructor {
 	flags			= STR_FLAG_PERSISTENT;
 	
-	// Two variables for the effect to work; a list that stores the layers of fog that are currently active,
-	// and the uniform ID for the holepunch shader that is used to lower the opacity of the fog layers closer 
-	// to the player.
+	// Two variables for the effect to work; a list that stores the layers of fog that are currently active, and the uniform ID for the 
+	// holepunch shader that is used to lower the opacity of the fog layers closer to the player.
 	curLayers		= ds_list_create();
 	uPlayerPos		= shader_get_uniform(shd_fog_holepunch, "playerPos");
 	
 	/// @description 
-	///	The fog weather struct's destroy event. It will clean up anything that isn't automatically cleaned up 
-	/// by GameMaker when this struct is destroyed/out of scope.
+	///	The fog weather struct's destroy event. It will clean up anything that isn't automatically cleaned up by GameMaker when this struct 
+	/// is destroyed/out of scope.
 	///	
 	destroy_event = function(){
 		var _length = ds_list_size(curLayers);
@@ -22,36 +21,34 @@ function str_fog(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	///	Render all active fog layers onto the application surface. On top of that, their positions will be
-	/// updated according to the speeds each respective layer is set to move at, and their opacity.
+	///	Render all active fog layers onto the application surface. On top of that, their positions will be updated according to the speeds 
+	/// each respective layer is set to move at, and their opacity.
 	/// 
 	draw_end_event = function(){
-		// Get a reference to the list storing the fog layers, as it is needed when a layer needs to remove 
-		// itself when it has completely faded out of visibility. Then, get the size of the list as it is needed
-		// throughout the event.
+		// Get a reference to the list storing the fog layers, as it is needed when a layer needs to remove itself when it has completely 
+		// faded out of visibility. Then, get the size of the list as it is needed throughout the event.
 		var _curLayers	= curLayers;
 		var _length		= ds_list_size(_curLayers);
 		if (_length == 0) // Exit without processing anything if there are currently no layers of fog active.
 			return;
 		
-		// Store some more local values for the dimensions of the sprite used for the fog effect, the current
-		// delta time, and the uniform for the hole punch shader.
+		// Store some more local values for the dimensions of the sprite used for the fog effect, the current delta time, and the uniform for
+		// the hole punch shader.
 		var _sprWidth	= sprite_get_width(spr_fog);
 		var _sprHeight	= sprite_get_height(spr_fog);
 		var _delta		= global.deltaTime;
 		var _uPlayerPos	= uPlayerPos;
 		
-		// Activate the shader that punches a hole in the fog around the player, and set the required uniform
-		// to the player's current position.
+		// Activate the shader that punches a hole in the fog around the player, and set the required uniform to the player's position.
 		shader_set(shd_fog_holepunch);
 		with(PLAYER) { shader_set_uniform_f(_uPlayerPos, x, y - 12); }
 		
-		// Loop through all layers of fog; updating their positions and opacity before drawing them onto the
-		// screen in the order they appear in the list.
+		// Loop through all layers of fog; updating their positions and opacity before drawing them onto the screen in the order they appear 
+		// in the list.
 		for (var i = 0; i < _length; i++){
 			with(curLayers[| i]){
-				// Fade the layer in or out depending on if its targetAlpha variable is current zero or a non-
-				// zero value. Each layer will fade in and out at the same speed of 0.01.
+				// Fade the layer in or out depending on if its targetAlpha variable is current zero or a non-zero value. Each layer will 
+				// fade in and out at the same speed of 0.01.
 				if (targetAlpha == 0.0){
 					alpha -= _delta * 0.01;
 					if (alpha <= 0.0){
@@ -66,20 +63,20 @@ function str_fog(_index) : str_base(_index) constructor {
 						alpha = targetAlpha;
 				}
 					
-				// Update the fog's x position relative to its horizontal speed; wrapping the value when it
-				// exceeds the sprite's width multiplied by the layer's scaling factor for that texture.
+				// Update the fog's x position relative to its horizontal speed; wrapping the value when it exceeds the sprite's width
+				// multiplied by the layer's scaling factor for that texture.
 				x += xSpeed * _delta;
 				if (abs(x) >= _sprWidth * scale)
 					x -= _sprWidth * scale * sign(xSpeed);
 				
-				// Update the fog's y position relative to its vertical speed; wrapping the value when it
-				// exceeds the sprite's height multiplied by the layer's scaling factor for that texture.
+				// Update the fog's y position relative to its vertical speed; wrapping the value when it exceeds the sprite's height 
+				// multiplied by the layer's scaling factor for that texture.
 				y += ySpeed * _delta;
 				if (abs(y) >= _sprHeight * scale)
 					y -= _sprHeight * scale * sign(ySpeed);
 					
-				// Since this fog covers the entire screen, use draw_sprite_tiled_ext so GML can handle what
-				// is required to tile the 64x64 fog sprite across the entire viewport.
+				// Since this fog covers the entire screen, use draw_sprite_tiled_ext so GML can handle what is required to tile the 64x64 
+				// fog sprite across the entire viewport.
 				draw_sprite_tiled_ext(spr_fog, 0, x, y, scale, scale, COLOR_TRUE_WHITE, alpha);
 			}
 		}

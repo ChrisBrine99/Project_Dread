@@ -1,8 +1,7 @@
 #region Macros Utilized Primarily by the Inventory System
 
-// Macros for the numerical representations of an item's type, which will help determine how it functions within
-// the game and what options are available to the player when it is selected in the inventory (Excluding any
-// flags that may also affect this).
+// Macros for the numerical representations of an item's type, which will help determine how it functions within the game and what options 
+// are available to the player when it is selected in the inventory (Excluding any flags that may also affect this).
 #macro	ITEM_TYPE_INVALID			   -1
 #macro	ITEM_TYPE_WEAPON				0
 #macro	ITEM_TYPE_AMMO					1
@@ -11,8 +10,8 @@
 #macro	ITEM_TYPE_EQUIPABLE				4
 #macro	ITEM_TYPE_KEY_ITEM				5
 
-// Macros for the equipment index values for certain item types which will determine which slot of the player's
-// current equipment will be occupied by it when equipped.
+// Macros for the equipment index values for certain item types which will determine which slot of the player's current equipment will be 
+// occupied by it when equipped.
 #macro	ITEM_EQUIP_TYPE_INVALID		   -2
 #macro	ITEM_EQUIP_TYPE_FLASHLIGHT		10
 #macro	ITEM_EQUIP_TYPE_ARMOR			11
@@ -82,38 +81,38 @@
 #macro	ITEMINV_MAX_SIZE_NIGHTMARE		12
 #macro	ITEMINV_MAX_SIZE_ONELIFE		10
 
-// Prevents using the actual index in the code which doesn't explain which ammo type is being chosen for all
-// "handgun" based weapons that utilize ammunition.
+// Prevents using the actual index in the code which doesn't explain which ammo type is being chosen for all "handgun" based weapons that 
+// utilize ammunition.
 #macro	AMMOINDEX_HANDGUN_NORMAL		0
 #macro	AMMOINDEX_HANDGUN_GOOD			1
 #macro	AMMOINDEX_HANDGUN_POOR			2
 
-// Prevents using the actual index in the code which doesn't explain which ammo type is being chosen for all
-// "shotgun" based weapons that utilize ammunition.
+// Prevents using the actual index in the code which doesn't explain which ammo type is being chosen for all "shotgun" based weapons that 
+// utilize ammunition.
 #macro	AMMOINDEX_SHOTGUN_NORMAL		0
 #macro	AMMOINDEX_SHOTGUN_GOOD			1
 #macro	AMMOINDEX_SHOTGUN_POOR			2
 
-// Prevents using the actual index in the code which doesn't explain which ammo type is being chosen for all
-// "rifle" based weapons that utilize ammunition.
+// Prevents using the actual index in the code which doesn't explain which ammo type is being chosen for all "rifle" based weapons that 
+// utilize ammunition.
 #macro	AMMOINDEX_RIFLE_NORMAL			0
 #macro	AMMOINDEX_RIFLE_GOOD			1
 #macro	AMMOINDEX_RIFLE_POOR			2
 
-// Prevents using the actual index in the code which doesn't explain which ammo type is being chosen for all
-// "submachine gun" based weapons that utilize ammunition.
+// Prevents using the actual index in the code which doesn't explain which ammo type is being chosen for all "submachine gun" based weapons 
+// that utilize ammunition.
 #macro	AMMOINDEX_SMG_NORMAL			0
 #macro	AMMOINDEX_SMG_GOOD				1
 #macro	AMMOINDEX_SMG_POOR				2
 
-// Prevents using the actual index in the code which doesn't explain which ammo type is being chosen for all
-// "magnum" based weapons that utilize ammunition.
+// Prevents using the actual index in the code which doesn't explain which ammo type is being chosen for all "magnum" based weapons that 
+// utilize ammunition.
 #macro	AMMOINDEX_MAGNUM_NORMAL			0
 #macro	AMMOINDEX_MAGNUM_GOOD			1
 #macro	AMMOINDEX_MAGNUM_POOR			2
 
-// Prevents using the actual index in the code which doesn't explain which ammo type is being chosen for all
-// "grenade launcher" based weapons that utilize ammunition.
+// Prevents using the actual index in the code which doesn't explain which ammo type is being chosen for all "grenade launcher" based 
+// weapons that utilize ammunition.
 #macro	AMMOINDEX_GSHELL_EXPLOSIVE		0
 #macro	AMMOINDEX_GSHELL_FRAGMENT		1
 #macro	AMMOINDEX_GSHELL_FROST			2
@@ -121,8 +120,8 @@
 #macro	AMMOINDEX_GSHELL_EXPLOSIVE_POOR	4
 #macro	AMMOINDEX_GSHELL_FRAGMENT_POOR	5
 
-// Prevents using the actual index in the code which doesn't explain which ammo type is being chosen for all
-// "chainsaw" based weapons that utilize ammunition.
+// Prevents using the actual index in the code which doesn't explain which ammo type is being chosen for all "chainsaw" based weapons that 
+// utilize ammunition.
 #macro	AMMOINDEX_CSAW_CRUDE_NORMAL		0
 #macro	AMMOINDEX_CSAW_REFINED_NORMAL	1
 #macro	AMMOINDEX_CSAW_REFINED_GOOD		2
@@ -267,9 +266,8 @@
 
 #region Globals Related to the Inventory System
 
-// Upon initialization, it stores the value -1, but will contain an array of items the player current has on
-// their person during gameplay; with the starting and maximum sizes being determined by the difficulty the
-// user selected when starting a new playthrough.
+// Upon initialization, it stores the value -1, but will contain an array of items the player current has on their person during gameplay; 
+// with the starting and maximum sizes being determined by the difficulty the user selected when starting a new playthrough.
 global.curItems = -1;
 
 #endregion Globals Related to the Inventory System
@@ -277,9 +275,9 @@ global.curItems = -1;
 #region Item Inventory Initialization Function
 
 /// @description
-///	Initializes the inventory data structure. It's starting size will be determined by what difficulty the
-/// player selected for their playthrough. The maximum size will also be affected by the selected difficulty,
-/// but not as a hard limit. Instead, it will limit how many capacity upgrades can be found in the world.
+///	Initializes the inventory data structure. It's starting size will be determined by what difficulty the player selected for their 
+/// playthrough. The maximum size will also be affected by the selected difficulty, but not as a hard limit. Instead, it will limit how 
+/// many capacity upgrades can be found in the world.
 ///	
 ///	@param {Real}	combatDifficulty		Current difficulty set for the combat within the game.
 function item_inventory_initialize(_combatDifficulty){
@@ -322,11 +320,11 @@ function item_inventory_initialize(_combatDifficulty){
 #region Functions for Manipulating the Item Inventory's Contents
 
 /// @description 
-///	Adds some variable amount of an item to the player's inventory. The value returned will be the remainder
-/// of the item that didn't fit within the inventory. The same value as the _amount parameter is returned if
-/// it couldn't be added to the inventory due to the inventory not being initialized, the item id being invalid
-/// or the inventory being completely full.
-///	
+///	Adds some variable amount of an item to the player's inventory. The value returned will be the remainder of the item that didn't fit 
+/// within the inventory. The same value as the _amount parameter is returned if it couldn't be added to the inventory due to the inventory 
+/// not being initialized, the item id being invalid or the inventory being completely full.
+/// @returns {Real}
+/// 
 ///	@param {String}	item		String representing the name/key of the item.
 ///	@param {Real}	amount		How many of said item will be added to the inventory.
 /// @param {Real}	durability	(Optional; Higher Difficulties Only) The item's current condition.
@@ -351,28 +349,27 @@ function item_inventory_add(_item, _amount, _durability = 0, _ammoIndex = 0){
 		_stackLimit	= stackLimit;
 	}
 	
-	// Being looping through the inventory from its first slot to its last slot; checking to see where the item
-	// in question can be placed within it. It can either be added to an existing slot containing the same item
-	// if there is room, or occupy the first empty slot that's found, or both is required.
+	// Being looping through the inventory from its first slot to its last slot; checking to see where the item in question can be placed 
+	// within it. It can either be added to an existing slot containing the same item if there is room, or occupy the first empty slot 
+	// that's found, or both is required.
 	var _invItem	= -1;
 	var _length		= array_length(global.curItems);
 	for (var i = 0; i < _length; i++){
 		_invItem = global.curItems[i];
 		if (is_struct(_invItem)){
-			// Immediately skip to the next slot in the inventory if the item is a weapon, piece of equipment,
-			// or has a stack limit of one since all cases mean the item cannot be stacked.
+			// Immediately skip to the next slot in the inventory if the item is a weapon, piece of equipment, or has a stack limit of one 
+			// since all cases mean the item cannot be stacked.
 			if (_stackLimit == 1 || _itemType == ITEM_TYPE_WEAPON || _itemType == ITEM_TYPE_EQUIPABLE)
 				continue;
 			
 			with(_invItem){
-				// Either the item id doesn't match the current item in the slot OR the slot is already maxed
-				// out in capacity for the item in question. Move onto the next slot.
+				// Either the item id doesn't match the current item in the slot OR the slot is already maxed out in capacity for the item 
+				// in question. Move onto the next slot.
 				if (itemID != _itemID || quantity == _stackLimit)
 					break;
 				
-				// The amount to be added exceeds what can be stored inside a single slot. So, the amount that
-				// can fit within the slot is added and the remainder from the total amount to add will move
-				// onto the next slot to find a vacant place to be added.
+				// The amount to be added exceeds what can be stored inside a single slot. So, the amount that can fit within the slot is 
+				// added and the remainder from the total amount to add will move onto the next slot to find a vacant place to be added.
 				if (quantity + _amount > _stackLimit){
 					_amount -= (_stackLimit - quantity);
 					quantity = _stackLimit;
@@ -384,8 +381,7 @@ function item_inventory_add(_item, _amount, _durability = 0, _ammoIndex = 0){
 				return 0;
 			}
 			
-			// Item exists within the slot so the next slot will be considered if the return 0 seen above
-			// wasn't hit by the code.
+			// Item exists within the slot so the next slot will be considered if the return 0 seen above wasn't hit by the code.
 			continue;
 		}
 		
@@ -399,13 +395,13 @@ function item_inventory_add(_item, _amount, _durability = 0, _ammoIndex = 0){
 		};
 		global.curItems[i] = _invItem;
 		
-		// The item that was added to the inventory was a weapon, so the value returned is -1 to signify it
-		// was successfully added in case the magazine/clip of the weapon in question was empty.
+		// The item that was added to the inventory was a weapon, so the value returned is -1 to signify it was successfully added in case 
+		// the magazine/clip of the weapon in question was empty.
 		if (global.itemIDs[_itemID].typeID == ITEM_TYPE_WEAPON)
 			return -1;
 		
-		// The amount couldn't be added into a single inventory slot. So, what can fit is added, and the
-		// remaining quantity will be placed in another slot(s) as needed.
+		// The amount couldn't be added into a single inventory slot. So, what can fit is added, and the remaining quantity will be placed
+		// in another slot(s) as needed.
 		with(_invItem){
 			if (_amount > _stackLimit){
 				_amount -= _stackLimit;
@@ -416,17 +412,17 @@ function item_inventory_add(_item, _amount, _durability = 0, _ammoIndex = 0){
 		}
 	}
 	
-	// Return whatever the remainder is for what needed to be added to the inventory. If this happens, it means
-	// the inventory doesn't have enough room to store all of the items that were picked up.
+	// Return whatever the remainder is for what needed to be added to the inventory. If this happens, it means the inventory doesn't have 
+	// enough room to store all of the items that were picked up.
 	return _amount;
 }
 
 /// @description 
-///	Removes some variable amount of an item from the inventory. It will search through the entire array to 
-/// find the slots containing an item with the matching id and remove as much as it can. The remaining amount
-/// is returned by the function if there weren't enough of it in the item inventory. Otherwise, a zero is
-/// returned for a successful removal, and the full amount is returned in the case of an error or full item
-/// inventory.
+///	Removes some variable amount of an item from the inventory. It will search through the entire array to find the slots containing an item
+/// with the matching id and remove as much as it can. The remaining amount is returned by the function if there weren't enough of it in the
+/// item inventory. Otherwise, a zero is returned for a successful removal, and the full amount is returned in the case of an error or full 
+/// item inventory.
+/// @returns {Real}
 ///	
 ///	@param {Real}	itemID		Number representing the item within the game's data.
 /// @param {Real}	amount		How many of said item will be removed from the inventory.
@@ -435,8 +431,8 @@ function item_inventory_remove(_itemID, _amount){
 	if (!is_array(global.curItems))
 		return _amount;
 	
-	// Loop through the inventory in search of any slots containing the required item. If any are found,
-	// remove as much as possible from its current quantity within the slot to satisfy the amount to remove.
+	// Loop through the inventory in search of any slots containing the required item. If any are found, remove as much as possible from its
+	// current quantity within the slot to satisfy the amount to remove.
 	var _invItem		= -1;
 	var _slotQuantity	= 0;
 	var _amountRemoved	= 0;
@@ -446,9 +442,8 @@ function item_inventory_remove(_itemID, _amount){
 		if (!is_struct(_invItem) || _invItem.itemID != _itemID) // Ignore all empty inventory slots or items with non-matching IDs.
 			continue;
 		
-		// Check to see if there is enough of the item within the slot to meet the required amount to remove.
-		// If the amount is equal to or exceeds the quantity, the item is removed from the inventory and the
-		// loop will continue its execution.
+		// Check to see if there is enough of the item within the slot to meet the required amount to remove. If the amount is equal to or 
+		// exceeds the quantity, the item is removed from the inventory and the loop will continue its execution.
 		_slotQuantity = _invItem.quantity;
 		if (_slotQuantity <= _amount){
 			_amountRemoved = _slotQuantity;
@@ -457,29 +452,26 @@ function item_inventory_remove(_itemID, _amount){
 			continue;
 		}
 		
-		// There was enough in the current slot to satisfy the amount to be removed, so decrement the quantity
-		// by said amount breaking out of the loop to return from the function.
+		// There was enough in the current slot to satisfy the amount to be removed, so decrement the quantity by said amount breaking out 
+		// of the loop to return from the function.
 		_invItem.quantity  -= _amount;
 		_amountRemoved		= _amount;
 		break;
 	}
 	
-	// Jump into scope of the player object to see if the item that was removed from their item inventory is
-	// of type ammunition. If so, the player will check and update any ammo currently stored ammo counts that
-	// match the ID of this item.
+	// Jump into scope of the player object to see if the item that was removed from their item inventory is of type ammunition. If so, the 
+	// player will check and update any ammo currently stored ammo counts that match the ID of this item.
 	with(PLAYER){
 		if (global.itemIDs[_itemID].typeID == ITEM_TYPE_AMMO)
 			update_current_ammo_counts(_itemID, -_amountRemoved);
 	}
 	
-	// Return the amount that was successfully removed from the inventory relative to the amount that was 
-	// placed within the _amount parameter.
+	// Return the amount that was successfully removed from the inventory relative to the amount that was placed within the _amount.
 	return (_amount - _amountRemoved);
 }
 
 /// @description 
-///	Removes an entire slot's contents from the item inventory; regardless of the quantity of items currently
-/// occupying that slot.
+///	Removes an entire slot's contents from the item inventory; regardless of the quantity of items currently occupying that slot.
 /// 
 ///	@param {Real}	slot		Index for the slot that will be removed from the item inventory.
 function item_inventory_remove_slot(_slot){
@@ -492,29 +484,27 @@ function item_inventory_remove_slot(_slot){
 	if (!is_struct(_item))
 		return;
 	
-	// Jump into scope of the player object to see if the item that was removed from their item inventory is
-	// of type ammunition. If so, the player will check and update any ammo currently stored ammo counts that
-	// match the ID of this item.
+	// Jump into scope of the player object to see if the item that was removed from their item inventory is of type ammunition. If so, the 
+	// player will check and update any ammo currently stored ammo counts that match the ID of this item.
 	with(PLAYER){
 		if (global.itemIDs[_item.itemID].typeID == ITEM_TYPE_AMMO)
 			update_current_ammo_counts(_item.itemID, -_item.quantity);
 	}
 		
-	// Remove reference to the soon-to-be delete struct from the player's item inventory. Then, delete
-	// that reference using the local value that was grabbed earlier in the function.
+	// Remove reference to the soon-to-be delete struct from the player's item inventory. Then, delete that reference using the local value 
+	// that was grabbed earlier in the function.
 	array_set(global.curItems, _slot, INV_EMPTY_SLOT);
 	delete _item;
 }
 
 /// @description
-///	Moves the contents of one inventory slot to another; moving whatever was contained in the destination into 
-/// that initial slot.
+///	Moves the contents of one inventory slot to another; moving whatever was contained in the destination into that initial slot.
 ///	
 ///	@param {Real}	first		The first slot to swap.
 /// @param {Real}	second		The second slot to swap.
 function item_inventory_slot_swap(_first, _second){
-	// Don't attempt to swap anything if the inventory hasn't been initialized or if either of the slot values
-	// happen to be out of the bounds of the inventory array.
+	// Don't attempt to swap anything if the inventory hasn't been initialized or if either of the slot values happen to be out of the 
+	// bounds of the inventory array.
 	if (!is_array(global.curItems) || _first < 0 || _second < 0 || 
 			_first >= array_length(global.curItems) || _second >= array_length(global.curItems))
 		return;
@@ -525,9 +515,9 @@ function item_inventory_slot_swap(_first, _second){
 }
 
 /// @description 
-///	A special function for removing an item from an inventory slot that will create said item as an instance
-/// of obj_world_item at a given position within the current room. This item is then added to a list of
-/// dynamically created items and will remain persistent at where it was dropped until it is picked up again.
+///	A special function for removing an item from an inventory slot that will create said item as an instance of *obj_world_item* at a given 
+/// position within the current room. This item is then added to a list of dynamically created items and will remain persistent at where it
+/// was dropped until it is picked up again.
 ///	
 /// @param {Real}	x		Position along the room's x axis that the world item object is created at.
 /// @param {Real}	y		Position along the room's y axis that the world item object is created at.
@@ -536,8 +526,8 @@ function item_inventory_slot_create_item(_x, _y, _slot){
 	if (_slot < 0 || _slot > array_length(global.curItems))
 		return; // Don't attempt to remove an item from invalid slot index.
 	
-	// Grab the properties for the item within the slot, as they will be used to construct the instance of
-	// obj_world_item down below. Then, completely remove this item from its slot in the item inventory.
+	// Grab the properties for the item within the slot, as they will be used to construct the instance of obj_world_item down below. Then, 
+	// completely remove this item from its slot in the item inventory.
 	var _name		= "";
 	var _quantity	= 0;
 	var _durability = 0;
@@ -550,8 +540,8 @@ function item_inventory_slot_create_item(_x, _y, _slot){
 	}
 	item_inventory_remove_slot(_slot);
 	
-	// Use the properties grabbed above alongside the provided position parameters to create the object and
-	// add its data into the world item data structure as a dynamic item. It is flagged as dynamic as well.
+	// Use the properties grabbed above alongside the provided position parameters to create the object and add its data into the world item
+	// data structure as a dynamic item. It is flagged as dynamic as well.
 	var _worldItem = instance_create_object(_x, _y, obj_world_item);
 	with(_worldItem){
 		set_item_params(global.nextDynamicKey, _name, _quantity, _durability, _ammoIndex);
@@ -565,11 +555,11 @@ function item_inventory_slot_create_item(_x, _y, _slot){
 #region Functions for Getting Info About the Item Inventory's Contents
 
 /// @description 
-///	Returns the struct containing the information about the item that occupies a slot within the inventory.
-/// If no item currently occupies the slot, the value -1 (INV_EMPTY_SLOT) will be returned. This value is also
-/// returned if for some reason the provided value for "slot" is out of bounds or the inventory hasn't been
-/// initialized properly.
-///	
+///	Returns the struct containing the information about the item that occupies a slot within the inventory. If no item currently occupies 
+/// the slot, the value -1 (*INV_EMPTY_SLOT*) will be returned. This value is also returned if for some reason the provided value for *slot*
+/// is out of bounds or the inventory hasn't been initialized properly.
+/// @returns {Struct._structFunc}
+/// 
 /// @param {Real}	slot	The slot within the inventory to grab the information from.
 function item_inventory_slot_get_data(_slot){
 	if (!is_array(global.curItems) || _slot < 0 || _slot >= array_length(global.curItems))
@@ -583,6 +573,7 @@ function item_inventory_slot_get_data(_slot){
 
 /// @description
 /// Returns the sum of a given item within the inventory.
+/// @returns {Real}
 ///	
 /// @param {Real}	itemID		Number representing the item within the game's data.
 function item_inventory_count(_itemID){

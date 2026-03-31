@@ -4,15 +4,14 @@ switch(async_load[? "event_type"]){
 		if (global.gamepadID != -1)
 			return;
 	
-		// Get the ID for the gamepad from the operating system. Then, see if the connected gamepad is one that
-		// is supported by SDL (This is what Game Maker uses for input). If not, the gamepad can't be used.
+		// Get the ID for the gamepad from the operating system. Then, see if the connected gamepad is one that is supported by SDL (This is
+		// what Game Maker uses for input). If not, the gamepad can't be used.
 		var _gamepadID = async_load[? "pad_index"];
 		if (!gamepad_is_supported()) 
 			return;
 		
-		// Set the gamepad's desired deadzones along its joystick(s) and the threshold for activation of the
-		// its analog triggers. Then, store the reference to the input array so control icon info can be set 
-		// for the newly connected gamepad.
+		// Set the gamepad's desired deadzones along its joystick(s) and the threshold for activation of the its analog triggers. Then, store
+		// the reference to the input array so control icon info can be set for the newly connected gamepad.
 		var _inputs = 0;
 		with(global.settings){
 			gamepad_set_axis_deadzone(_gamepadID, stickDeadzone);
@@ -20,8 +19,8 @@ switch(async_load[? "event_type"]){
 			_inputs = inputs;
 		}
 		
-		// Jump into scope of the control icon ui manager struct so all of the gamepad's matching input sprites
-		// can be used whenever input information is shown to the player while the gamepad is active.
+		// Jump into scope of the control icon ui manager struct so all of the gamepad's matching input sprites can be used whenever input 
+		// information is shown to the player while the gamepad is active.
 		with(CONTROL_UI_MANAGER){
 			// Getting icon info for all in-game gamepad bindings.
 			set_gamepad_control_icon(ICONUI_GAME_RIGHT,		_inputs[STNG_INPUT_GAME_RIGHT	+ 1]);
@@ -59,8 +58,8 @@ switch(async_load[? "event_type"]){
 		show_debug_message("gamepad {0} connected", global.gamepadID);
 		return;
 	case "gamepad lost":
-		// Make sure the disconnected gamepad is the same as the one that was being utilized by the game. If 
-		// not, that gamepad will remain connected to the game.
+		// Make sure the disconnected gamepad is the same as the one that was being utilized by the game. If not, that gamepad will remain 
+		// connected to the game.
 		if (gamepad_is_connected(global.gamepadID))
 			return;
 		show_debug_message("gamepad {0} disconnected", global.gamepadID);

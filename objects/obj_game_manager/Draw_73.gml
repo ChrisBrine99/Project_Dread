@@ -1,9 +1,9 @@
-// Draw the fog right before the lighting is applied to ensure it is rendered above all other elements in the
-// current room. Otherwise, the ceiling tiles and any layers above that will not have the fog affect them.
+// Draw the fog right before the lighting is applied to ensure it is rendered above all other elements in the current room. Otherwise, the 
+// ceiling tiles and any layers above that will not have the fog affect them.
 with(FOG) { draw_end_event(); }
 
-// Create a few local variables that will be used and referenced throughout the event by different instances
-// and structures to avoid having to constantly get the same values over and over again. 
+// Create a few local variables that will be used and referenced throughout the event by different instances and structures to avoid having 
+// to constantly get the same values over and over again. 
 var _minAlpha	= gpu_get_alphatestref() / 255.0;
 var _delta		= global.deltaTime;
 var _xView		= 0;		// All these zeroed values are set to variables found in the Camera struct.
@@ -25,48 +25,45 @@ with(CAMERA){
 if (!surface_exists(global.worldSurface))
 	global.worldSurface = surface_create(_wView, _hView);
 
-// Only spend time applying a blurring effect if the current "sigma" value is above zero. Otherwise, it is
-// bypassed and not applied onto the final application surface.
+// Only spend time applying a blurring effect if the current "sigma" value is above zero. Otherwise, it is bypassed and not applied onto the
+// final application surface.
 if (curBlurSigma > 0.0){
 	shader_set(shd_screen_blur);
 	shader_set_uniform_f(uTexelSize, _wTexel, _hTexel);
 	shader_set_uniform_f(uBlurSteps, 3.0);
 	shader_set_uniform_f(uSigma, curBlurSigma);
 
-	// First pass: Blur the unaltered application surface horizontally and store that result into the world
-	// surface temporarily.
+	// First pass: Blur the unaltered application surface horizontally and store that result into the world surface temporarily.
 	shader_set_uniform_f(uBlurDirection, 1.0, 0.0);
 	surface_set_target(global.worldSurface);
 	draw_surface(application_surface, 0, 0);
 	surface_reset_target();
 	
-	// Second pass: Blur the world surface vertically and draw the result onto the application surface so it
-	// is displayed to the player once the application surface is rendered onto the screen.
+	// Second pass: Blur the world surface vertically and draw the result onto the application surface so it is displayed to the player once
+	// the application surface is rendered onto the screen.
 	shader_set_uniform_f(uBlurDirection, 0.0, 1.0);
 	draw_surface(global.worldSurface, _xView, _yView);
 	shader_reset();
 }
 	
-// Only update the lighting surface if the game isn't currently paused. This means that whenever the flag for
-// pausing the game is set, the lighting surface isn't updated, and will simply be redrawn over and over again
-// until the game is unpaused once again.
+// Only update the lighting surface if the game isn't currently paused. This means that whenever the flag for pausing the game is set, the 
+// lighting surface isn't updated, and will simply be redrawn over and over again until the game is unpaused once again.
 if (!GAME_IS_PAUSED){
-	// First, draw the current application surface to the world surface so it can be then drawn back onto the
-	// application surface when applying the lighting (Has to be done this way or else GameMaker shits itself).
+	// First, draw the current application surface to the world surface so it can be then drawn back onto the application surface when 
+	// applying the lighting (Has to be done this way or else GameMaker shits itself).
 	surface_set_target(global.worldSurface);
 	draw_surface(application_surface, 0, 0);
 	surface_reset_target();
 	
-	// Make sure the GPU hasn't flushed the lighting surface before handling any lighting code. If so, a new
-	// surface will be created, and a reference to its texture ID will be stored so the lighting shader can 
-	// utilize it.
+	// Make sure the GPU hasn't flushed the lighting surface before handling any lighting code. If so, a new surface will be created, and a 
+	// reference to its texture ID will be stored so the lighting shader can utilize it.
 	if (!surface_exists(global.lightSurface)){
 		global.lightSurface = surface_create(_wView, _hView);
 		global.lightTexture	= surface_get_texture(global.lightSurface);
 	}
 		
-	// Begin drawing the on-screen light sources to a separate surface. The lights will then "punch holes" into
-	// this surface through an additive blending mode as they are drawn.
+	// Begin drawing the on-screen light sources to a separate surface. The lights will then "punch holes" into this surface through an 
+	// additive blending mode as they are drawn.
 	surface_set_target(global.lightSurface);
 	draw_clear(COLOR_BLACK);
 	gpu_set_blendmode(bm_add);
@@ -80,8 +77,8 @@ if (!GAME_IS_PAUSED){
 	while (_index < _length){
 		_light = ds_list_find_value(global.lights, _index);
 		with(_light){
-			// Skip rendering the light source if it isn't currently active, the strength value is too low, or
-			// the position/radius of the light is outside of the viewport's current bounds.
+			// Skip rendering the light source if it isn't currently active, the strength value is too low, or the position/radius of the 
+			// light is outside of the viewport's current bounds.
 			if (!LGHT_IS_ACTIVE || strength <= _minAlpha || x + radius < _xView || y + radius < _yView 
 					|| x - radius > _wViewX || y - radius > _hViewY)
 				continue;
@@ -101,9 +98,8 @@ if (!GAME_IS_PAUSED){
 	surface_reset_target();
 }
 
-// Activate the main shader responsible for applying a given world lighting onto the application surface 
-// (Stored in a separate surface "global.worldSurface") as well as blending that newly lit surface with the 
-// lighting surface that was created in the block of code above.
+// Activate the main shader responsible for applying a given world lighting onto the application surface (Stored in a separate surface 
+// "global.worldSurface") as well as blending that newly lit surface with the lighting surface that was created in the block of code above.
 shader_set(shd_lighting);
 shader_set_uniform_f_array(uLightColor, [0.05, 0.05, 0.05]);
 shader_set_uniform_f(uLightBrightness, -0.55);
@@ -137,9 +133,8 @@ if (_length > 0){
 
 #endregion Debug Element Rendering Code
 
-// Display the interaction prompt for the current interactable the player is focused on. If that interactable
-// objects happens to not be active/visible or the player cannot currently interact with it, the prompt will
-// not be displayed on the UI.
+// Display the interaction prompt for the current interactable the player is focused on. If that interactable objects happens to not be 
+// active/visible or the player cannot currently interact with it, the prompt will not be displayed on the UI.
 with(PLAYER){
 	with(interactableID){
 		if (!ENTT_IS_VISIBLE || !INTR_CAN_PLAYER_INTERACT)
@@ -148,9 +143,8 @@ with(PLAYER){
 	}
 }
 
-// Loop through all currently active menus; rendering them to the screen if they're flagged to be visible and
-// their current alpha level is above the minimum alpha threshold. If a menu fails to meet these conditions it
-// will not be rendered to the GUI layer.
+// Loop through all currently active menus; rendering them to the screen if they're flagged to be visible and their current alpha level is 
+// above the minimum alpha threshold. If a menu fails to meet these conditions it will not be rendered to the GUI layer.
 _length = ds_list_size(global.menus);
 for (var i = 0; i < _length; i++){
 	with(global.menus[| i]){
@@ -160,16 +154,15 @@ for (var i = 0; i < _length; i++){
 	}
 }
 
-// Attempt to render the textbox onto the screen, but only if the alpha isn't below the minimum threshold and
-// if its current y coordinate has it visible on the screen. Otherwise, it will not be rendered.
+// Attempt to render the textbox onto the screen, but only if the alpha isn't below the minimum threshold and if its current y coordinate
+// has it visible on the screen. Otherwise, it will not be rendered.
 with(TEXTBOX){
 	if (alpha <= _minAlpha || y >= _hView)
 		break;
 	draw_gui_event(_xView, _yView, _wView, _hView, _delta);
 }
 
-// Render the textbox's log onto the screen after the textbox is drawn, but only if its alpha isn't below the
-// minimum threshold for opacity.
+// Render the textbox's log onto the screen after the textbox is drawn, but only if its alpha isn't below the minimum threshold for opacity.
 with(TEXTBOX_LOG){
 	if (alpha <= _minAlpha)
 		break;

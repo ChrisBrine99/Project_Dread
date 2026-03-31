@@ -1,27 +1,24 @@
-// Since the game manager is a singleton instance that is created within this initialization room, if it 
-// happens to exist BEFORE the line of code that creates the instance something has gone terrible wong and the 
-// game will close itself.
+// Since the game manager is a singleton instance that is created within this initialization room, if it happens to exist BEFORE the line of 
+// code that creates the instance something has gone terrible wong and the game will close itself.
 if (instance_exists(obj_game_manager)){
 	game_end(1);
 	return;
 }
 
-// Disable drawing the application surface automatically so post-processing effects can be done properly and
-// set the rendering alpha test threshold so nearly invisible elements will be completely ignored in the
-// rendering pipeline.
+// Disable drawing the application surface automatically so post-processing effects can be done properly and set the rendering alpha test 
+// threshold so nearly invisible elements will be completely ignored in the rendering pipeline.
 application_surface_draw_enable(false);
 gpu_set_alphatestref(2); // ~0.0078
 
-// Since the create event of "obj_game_manager" is where the variable global.sInstances is initialized, the
-// game manager must be created BEFORE it is added to that data structure. The same is done with the player and
-// any other objects to ensure weird issues with YYC don't occur like what happened before I split the creation
-// of the game manager away from where it is added to the global.sInstances map.
+// Since the create event of "obj_game_manager" is where the variable global.sInstances is initialized, the game manager must be created 
+// BEFORE it is added to that data structure. The same is done with the player and any other objects to ensure weird issues with YYC don't 
+// occur like what happened before I split the creation of the game manager away from where it is added to the global.sInstances map.
 var _gManagerInstance	= instance_create_depth(0, 0, 30, obj_game_manager);
 var _playerInstance		= instance_create_depth(200, 200, 30, obj_player);
 
-// Adding the game manager, player, and any other objects to the global.sInstances map so they can all be
-// referenced and also cannot be created again through the custom instance_create_object function. The same
-// is done for all struct instances that are also singletons that exist from game start to game end.
+// Adding the game manager, player, and any other objects to the global.sInstances map so they can all be referenced and also cannot be 
+// created again through the custom instance_create_object function. The same is done for all struct instances that are also singletons that
+// exist from game start to game end.
 ds_map_add(global.sInstances, obj_game_manager,			_gManagerInstance);
 ds_map_add(global.sInstances, obj_player,				_playerInstance);
 ds_map_add(global.sInstances, str_cutscene_manager,		new str_cutscene_manager(str_cutscene_manager));
@@ -33,21 +30,19 @@ ds_map_add(global.sInstances, str_screen_fade,			new str_screen_fade(str_screen_
 ds_map_add(global.sInstances, str_fog,					new str_fog(str_fog));
 // NOTE -- This is the only time the default ways of struct and object creation should be used!!!
 
-// After creating the required singleton instances, initialize the camera so the window can be properly sized,
-// the viewport into the game can be created and sized as well, and the game can start rendering to that window
-// via the current viewport position/size.
+// After creating the required singleton instances, initialize the camera so the window can be properly sized, the viewport into the game can 
+// be created and sized as well, and the game can start rendering to that window via the current viewport position/size.
 camera_initialize(320, 180, _playerInstance, true);
 
-// Initialize what needs initialization above by manually calling its create event (If it wasn't a "compile-
-// time" singleton like it is within this game, the event would've been invoked automatically when it was 
-// created).
+// Initialize what needs initialization above by manually calling its create event (If it wasn't a "compile-time" singleton like it is within 
+// this game, the event would've been invoked automatically when it was created).
 with(CONTROL_UI_MANAGER) { create_event(); }
 with(CAMERA)			 { create_event(); }
 with(TEXTBOX)			 { create_event(); }
 with(TEXTBOX_LOG)		 { create_event(); }
 with(_playerInstance)	 { object_set_state(state_initialize); } // FOR TESTING
 
-// Once everything has been initialized, the first official room for the game is loaded, and the game is 
-// unpaused to allow various game elements to start updating.
+// Once everything has been initialized, the first official room for the game is loaded, and the game is unpaused to allow various game 
+// elements to start updating.
 room_goto(rm_test_01);
 global.flags = global.flags & ~GAME_FLAG_PAUSED;

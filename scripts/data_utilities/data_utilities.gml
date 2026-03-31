@@ -28,7 +28,8 @@ global.collectedItems	= ds_list_create();
 /// @description
 /// Loads in and automatically decodes a *JSON* file into a *GML* data structure made up of *ds_map* and *ds_list* instances which is then 
 /// returned by the function to be utilized as required in the code.
-///	
+/// @returns {Id.DsMap}
+/// 
 ///	@param {String}	filename	The JSON file to load.
 function load_json(_filename){
 	var _buffer = buffer_load(_filename);
@@ -135,7 +136,7 @@ function load_json(_filename){
 ///	Attempts to load in the game's item data, which is taken in as a *JSON* file automatically converted by *GameMaker* before it gets further 
 /// converted into a custom struct-based format that is easier to manage as it condenses all the sections and data structures into a single 
 /// *ds_map* of struct references.
-///	
+/// 
 ///	@param {String} filename	The name of the item data file to load into the game.
 function load_item_data(_filename){
 	if (global.itemData != -1) // Item data has already been loaded; don't bother trying to load it again.
@@ -261,7 +262,7 @@ function load_item_data(_filename){
 ///	Attempts to load in the provided ds_map data as an item that can then be referenced by other objects in the game via the item's provided 
 /// id value. The section parameter will determine the contents of the item struct past what is provided by default, and will be treated 
 /// different when interacted with by the player in their inventory depending on that parameter's determined numerical value.
-///	
+/// 
 /// @param {String}		section			The key that determines how the item's data will be considered when parsed.
 /// @param {String}		itemKey			What will be used to reference the item within the map; it is equal to the name of the item itself.
 /// @param {String}		itemIndex		The string numerical value that will be used for the item's index value.
@@ -410,7 +411,6 @@ function load_item(_section, _itemKey, _itemIndex, _data, _useFunctions){
 /// @description 
 ///	A simple function that takes in a value, and either returns it unchanged or returns the provided default should the value provided be 
 /// *undefined*.
-///
 ///	@param {Any}	value		The value that is being loaded.
 /// @param {Any}	default		What will be returned if the default value is invalid/undefined.
 function load_item_value(_value, _default){
@@ -420,7 +420,6 @@ function load_item_value(_value, _default){
 /// @description 
 ///	Returns a numerical value that is tied to the human-readable string version of that number's purpose
 /// within the game's logic.
-///	
 /// @param {String}		typeString	The unformatted version of the euqipment's "type", which will be converted to its proper numerical value.
 function equipment_get_type_index(_typeString){
 	switch(string_lower(_typeString)){
@@ -439,7 +438,7 @@ function equipment_get_type_index(_typeString){
 ///	Initializes a new element within the world item data structure. This element will store information about an item: the room it exists in 
 /// (This is useful for items that were dropped by the player form their current items), the item's ID, the amount of the item that can be 
 /// collected, and its durability.
-///	
+/// 
 /// @param {Any}		key			The value tied to this world item's information.
 ///	@param {String}		itemName	Value that can be used to reference the item's characteristics from the global item data.
 /// @param {Real}		quantity	The current amount of the item found within this world item.
@@ -463,7 +462,7 @@ function world_item_initialize(_key, _itemName, _quantity, _durability, _ammoInd
 /// and have been removed by the player from their item inventory. They don't need to be tracked within the global list of collected items, 
 /// and contain additional information about the position of the item instance and the room it was created within so they can be created 
 /// again if the room unloads and then reloads without the player collecting the item.
-///	
+/// 
 /// @param {Real}		x			X position to create the item at within the room.
 /// @param {Real}		y			Y position to create the item at within the room.
 ///	@param {String}		itemName	Value that can be used to reference the item's characteristics from the global item data.
@@ -490,7 +489,8 @@ function dynamic_item_initialize(_x, _y, _itemName, _quantity, _durability, _amm
 /// @description 
 ///	Returns a reference to the struct containing an item's data in respect to the world and not just the area it exists in. If there is no 
 /// data found with the provided key, *ID_INVALID (-1616)* is returned to signify there isn't any data for the item.
-///	
+/// @returns {Struct}
+/// 
 ///	@param {Any}	key		The value tied to the world item struct reference that will be returned.
 function world_item_get(_key){
 	var _value = ds_map_find_value(global.worldItems, _key);
@@ -502,7 +502,7 @@ function world_item_get(_key){
 /// @description 
 ///	Removes an element from the current world item data structure while adding its key to the list of collected items. This means that the 
 /// item object that used this data will no longer exist within the game, as it will destory itself during its room start event.
-///	
+/// 
 ///	@param {Any}	key			The value tied to the to-be-deleted world item information.
 /// @param {Real}	isDynamic	If true, the item's key will not be added the collected item list as that isn't needed.
 function world_item_remove(_key, _isDynamic){
@@ -522,13 +522,11 @@ function world_item_remove(_key, _isDynamic){
 
 /// @description 
 ///
+/// @returns {Id.Instance}
 /// 
 /// @param {Real} firstItemID
 /// @param {Real} secondItemID
 function crafting_data_find_valid_combo(_firstItemID, _secondItemID){
-    var _startTime      = get_timer();
-    var _iterations     = 0;
-	
     var _craftingData   = global.itemData[? KEY_VALID_COMBOS];
     var _dataRef        = noone;
     var _start          = 0;
@@ -548,17 +546,16 @@ function crafting_data_find_valid_combo(_firstItemID, _secondItemID){
                 continue;
             }
             
-            // Now that the 
+            // 
 			var _index 			= _middle;
 			var _iterateForward = false;
             do {
-                if (_dataRef.secondItem == _secondItemID){
-                    show_debug_message("Successful search took {0} iterations ({1} microseconds).", _iterations, get_timer() - _startTime);
+                if (_dataRef.secondItem == _secondItemID)
                     return _dataRef;
-                }
-				
-				_index    += _iterateForward ? 1 : -1;
+				_index     += _iterateForward ? 1 : -1;
                 _dataRef 	= _craftingData[| _index];
+				
+				// 
 				if (!_iterateForward){
 					if (_dataRef.firstItem < _firstItemID){
 						_dataRef 		= _craftingData[| ++_middle];
@@ -566,15 +563,12 @@ function crafting_data_find_valid_combo(_firstItemID, _secondItemID){
 						_iterateForward = true;
 					}
 				}
-                _iterations++;
             } until(_dataRef.firstItem > _firstItemID);
 			_start = _end + 1; // Ensures the loop will exit since the search succeeded, but the combination did not.
         }
-        _iterations++;
     }
     
     // No valid crafting data could be found; return noone.
-    show_debug_message("Failed search took {0} iterations ({1} microseconds).", _iterations, get_timer() - _startTime);
     return noone;
 }
 

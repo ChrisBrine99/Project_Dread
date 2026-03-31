@@ -1,5 +1,5 @@
-// Render entity shadows so long as the surface exists. Otherwise, shadows will be skipped for the frame and
-// their surface will be recreated/redrawn in the next frame's pre-draw event.
+// Render entity shadows so long as the surface exists. Otherwise, shadows will be skipped for the frame and their surface will be recreated/
+// redrawn in the next frame's pre-draw event.
 if (surface_exists(global.shadowSurface)){
 	var _xView = 0;
 	var _yView = 0;
@@ -10,8 +10,8 @@ if (surface_exists(global.shadowSurface)){
 	draw_surface_ext(global.shadowSurface, _xView, _yView, 1.0, 1.0, 0.0, COLOR_TRUE_WHITE, 0.5);
 }
 
-// Renders all Entities after they've been sorted by their y positions; the Entity's with smaller y positions 
-// (Higher on the screen due to GameMaker's coordinate system) being drawn first.
+// Renders all Entities after they've been sorted by their y positions; the Entity's with smaller y positions (Higher on the screen due to
+// GameMaker's coordinate system) being drawn first.
 var _delta	= global.deltaTime;
 var _length = ds_grid_height(global.sortOrder);
 for (var i = 0; i < _length; i++){

@@ -1,7 +1,7 @@
 #region Player-Specific Flag Macros
 
-// Values for the bits that are used within the player object only. These values shouldn't overwrite occupied
-// flags found in obj_dynamic_entity and any general entity flags; as doing so will cause unintended results.
+// Values for the bits that are used within the player object only. These values shouldn't overwrite occupied flags found in 
+// obj_dynamic_entity and any general entity flags; as doing so will cause unintended results.
 #macro	PLYR_FLAG_SPRINTING				0x00000001
 #macro	PLYR_FLAG_BLEEDING				0x00000002
 #macro	PLYR_FLAG_CRIPPLED				0x00000004
@@ -33,8 +33,8 @@
 
 #region Input Macros
 
-// Values for the bits found within "inputFlags" and "prevInputFlags". Each denotes a seperate input binding
-// that allows the player to perform a certain action within the game depending on their current state.
+// Values for the bits found within "inputFlags" and "prevInputFlags". Each denotes a seperate input binding that allows the player to 
+// perform a certain action within the game depending on their current state.
 #macro	PINPUT_FLAG_MOVE_RIGHT			0x00000001
 #macro	PINPUT_FLAG_MOVE_LEFT			0x00000002
 #macro	PINPUT_FLAG_MOVE_UP				0x00000004
@@ -53,8 +53,8 @@
 #macro	PINPUT_FLAG_MAP_MENU			0x40000000
 #macro	PINPUT_FLAG_PAUSE_MENU			0x80000000
 
-// Checks to see if the above input flags have been set in such a way that they have been pressed, held, or
-// released as required by each individual input.
+// Checks to see if the above input flags have been set in such a way that they have been pressed, held, or released as required by each 
+// individual input.
 #macro	PINPUT_MOVE_RIGHT_HELD			((inputFlags & PINPUT_FLAG_MOVE_RIGHT)		!= 0 && (inputFlags & PINPUT_FLAG_MOVE_LEFT)			== 0)
 #macro	PINPUT_MOVE_LEFT_HELD			((inputFlags & PINPUT_FLAG_MOVE_LEFT)		!= 0 && (inputFlags & PINPUT_FLAG_MOVE_RIGHT)			== 0)
 #macro	PINPUT_MOVE_UP_HELD				((inputFlags & PINPUT_FLAG_MOVE_UP)			!= 0 && (inputFlags & PINPUT_FLAG_MOVE_DOWN)			== 0)
@@ -76,8 +76,8 @@
 #macro	PINPUT_OPEN_MAPS_RELEASED		((inputFlags & PINPUT_FLAG_MAP_MENU)		== 0 && (prevInputFlags & PINPUT_FLAG_MAP_MENU)			!= 0)
 #macro	PINPUT_OPEN_PAUSE_RELEASED		((inputFlags & PINPUT_FLAG_PAUSE_MENU)		== 0 && (prevInputFlags & PINPUT_FLAG_PAUSE_MENU)		!= 0)
 
-// Two unique flags contained within the player's "inputFlags" variable. They will let the rest of the code
-// run by the player which of the two sticks are being used for movement during the current frame.
+// Two unique flags contained within the player's "inputFlags" variable. They will let the rest of the code run by the player which of the 
+// two sticks are being used for movement during the current frame.
 #macro	PINPUT_USING_LEFT_STICK			((inputFlags & PINPUT_FLAG_GP_LEFT_STICK)	!= 0)
 #macro	PINPUT_USING_RIGHT_STICK		((inputFlags & PINPUT_FLAG_GP_RIGHT_STICK)	!= 0)
 
@@ -85,41 +85,40 @@
 
 #region Misc. Macros
 
-// Macros that determine how high the player's internal values maximums can become before they no longer 
-// increased by the use of items.
+// Macros that determine how high the player's internal values maximums can become before they no longer increased by the use of items.
 #macro	PLYR_MAX_POSSIBLE_HITPOINTS		150
 #macro	PLYR_MAX_POSSIBLE_STAMINA		250
 #macro	PLYR_MAX_POSSIBLE_SANITY		300
 
-// Macros for the player's default acceleration and maximum speeds. When crippled, these act as the "slow"
-// sprinting speed when their stamina is completely depleted.
+// Macros for the player's default acceleration and maximum speeds. When crippled, these act as the "slow" sprinting speed when their 
+// stamina is completely depleted.
 #macro	PLYR_ACCEL_NORMAL				0.10
 #macro	PLYR_SPEED_NORMAL				0.90
 #macro	PLYR_ANIMSPD_NORMAL				1.00
 
-// Macros for the player's acceleration and maximum speed when sprinting. These values are only utilized when
-// the player has available stamina and isn't crippled.
+// Macros for the player's acceleration and maximum speed when sprinting. These values are only utilized when the player has available 
+// stamina and isn't crippled.
 #macro	PLYR_ACCEL_SPRINT_FAST			0.09
 #macro	PLYR_SPEED_SPRINT_FAST			1.80
 #macro	PLYR_ANIMSPD_SPRINT_FAST		1.05
 
-// Macros for the player's acceleration and maximum speed when sprinting without stamina. When crippled, these
-// act as the "fast" sprinting speed should the player still have stamina remaining.
+// Macros for the player's acceleration and maximum speed when sprinting without stamina. When crippled, these act as the "fast" sprinting 
+// speed should the player still have stamina remaining.
 #macro	PLYR_ACCEL_SPRINT_SLOW			0.08
 #macro	PLYR_SPEED_SPRINT_SLOW			1.30
 #macro	PLYR_ANIMSPD_SPRINT_SLOW		0.85
 
-// Determines the minimum percentage of movement can occur when using a gamepad's analog stick relative to the
-// player's current maximum movement speed.
+// Determines the minimum percentage of movement can occur when using a gamepad's analog stick relative to the player's current maximum 
+// movement speed.
 #macro	PLYR_MIN_ANALOG_PERCENTAGE		0.25
 
-// Macros that will determine how the player's movement animation sprite is split up relative to the number of
-// directions representing within that sprite resource.
+// Macros that will determine how the player's movement animation sprite is split up relative to the number of directions representing 
+// within that sprite resource.
 #macro	PLYR_ANIM_DIRECTION_DELTA		90.0	// Number MUST divide 360 with no remainder.
 #macro	PLYR_MOVE_ANIM_LENGTH			3.0
 
-// Macros for the indices into the "timers" array that correspond to each one utilized by the player for various
-// interval-based actions and code. The final value is the total number of those timers required by the object.
+// Macros for the indices into the "timers" array that correspond to each one utilized by the player for various interval-based actions and
+// code. The final value is the total number of those timers required by the object.
 #macro	PLYR_STAMINA_LOSS_TIMER			0
 #macro	PLYR_STAMINA_REGEN_TIMER		1
 #macro	PLYR_BLEEDING_TIMER				2
@@ -137,47 +136,45 @@
 #macro	PLYR_BLEEDING_DAMAGE_RATE		300.0
 #macro	PLYR_POISON_DAMAGE_RATE			600.0
 
-// Determines the additional time added to the player's stamina regeneration timer for the interval of time
-// between the player releasing the run button and their stamina beginning its regeneration.
+// Determines the additional time added to the player's stamina regeneration timer for the interval of time between the player releasing 
+// the run button and their stamina beginning its regeneration.
 #macro	PLYR_STAMINA_PAUSE_FACTOR		8.0
 
-// Determines how much of a penalty is applied to the player's initial break before their stamina regenerates
-// if their stamina is completely depleted while running.
+// Determines how much of a penalty is applied to the player's initial break before their stamina regenerates if their stamina is completely
+// depleted while running.
 #macro	PLYR_STAMINA_EXHAUST_FACTOR		3.0
 
-// Determines the percentage amount relative to their current maximum hitpoints of damage dealt to the player 
-// whenever they're bleeding and the damage interval timer rolls over. Unlike poison, it is a constant amount.
+// Determines the percentage amount relative to their current maximum hitpoints of damage dealt to the player whenever they're bleeding and 
+// the damage interval timer rolls over. Unlike poison, it is a constant amount.
 #macro	PLYR_BLEEDING_DAMAGE_AMOUNT		0.02
 
-// Determines the starting damage of the poison status condition. From here, it doubles until the player either
-// curs the status or dies from the damage. The damage is reset once the player's poison status is removed.
+// Determines the starting damage of the poison status condition. From here, it doubles until the player either cures the status or dies 
+// from the damage. The damage is reset once the player's poison status is removed.
 #macro	PLYR_POISON_BASE_DAMAGE			0.01
 
-// Determines various characteristics of the accuracy penalty system; how they'll incur over sustained weapon
-// usage, how large the penalty can be, and how quick it will decay to zero once no longer using the weapon,
-// respectively.
+// Determines various characteristics of the accuracy penalty system; how they'll incur over sustained weapon usage, how large the penalty 
+// can be, and how quick it will decay to zero once no longer using the weapon, respectively.
 #macro	PLYR_ACCPEN_DECAY_INCREMENT		0.15
 #macro	PLYR_ACCPEN_MAX_VALUE			1.75
 #macro	PLYR_ACCPEN_DECAY_AMOUNT		0.01
 
-// Values for the characteristics of the player's shadow (Aside from how it is a drawn as that is a function
-// and not a seemingly random number at first glance like these are). They determine the offset and size of
-// the shadow that is drawn.
+// Values for the characteristics of the player's shadow (Aside from how it is a drawn as that is a function and not a seemingly random 
+// number at first glance like these are). They determine the offset and size of the shadow that is drawn.
 #macro	PLYR_SHADOW_XOFFSET				0
 #macro	PLYR_SHADOW_YOFFSET			   -1
 #macro	PLYR_SHADOW_WIDTH				7
 #macro	PLYR_SHADOW_HEIGHT				3
 
-// Macros for the values/properties applied to the player's ambient light source whenever they're in the world
-// without a flashlight or with their equipped flashlight turned off.
+// Macros for the values/properties applied to the player's ambient light source whenever they're in the world without a flashlight or with 
+// their equipped flashlight turned off.
 #macro	PLYR_AMBLIGHT_XOFFSET			0
 #macro	PLYR_AMBLIGHT_YOFFSET		   -14
 #macro	PLYR_AMBLIGHT_RADIUS			12.0
 #macro	PLYR_AMBLIGHT_COLOR				COLOR_DARK_GRAY
 #macro	PLYR_AMBLIGHT_STRENGTH			0.25
 
-// The vertical offset for the point that will be checked to determine the current floor material beneath
-// the player which will set what footstep sound should be played when one is required.
+// The vertical offset for the point that will be checked to determine the current floor material beneath the player which will set what 
+// footstep sound should be played when one is required.
 #macro	PLYR_FLOOR_CHECK_YOFFSET		2
 
 // Macros that determine which frames in the player's walking/running animation will trigger a step sound.
@@ -195,12 +192,12 @@ event_inherited();
 flags			    = DENTT_FLAG_WORLD_COLLISION | ENTT_FLAG_PAUSE_FOR_CUTSCENE | ENTT_FLAG_OVERRIDE_DRAW |
 						ENTT_FLAG_VISIBLE | ENTT_FLAG_ACTIVE;
 
-// Set the player's acceleration and maximum movement speeds (Running allows the player to temporarily 
-// exceed this maximum until their stamina runs out).
+// Set the player's acceleration and maximum movement speeds (Running allows the player to temporarily exceed this maximum until their 
+// stamina runs out).
 accel				= PLYR_ACCEL_NORMAL;
 maxMoveSpeed		= PLYR_SPEED_NORMAL;
 
-// 
+// Creates a circular shadow that is flattened vertically to adhere to the 2.5D perspective of the game's art.
 entity_add_shadow(entity_draw_shadow_circle, PLYR_SHADOW_XOFFSET, PLYR_SHADOW_YOFFSET,
 	PLYR_SHADOW_WIDTH, PLYR_SHADOW_HEIGHT);
 
@@ -213,16 +210,14 @@ entity_add_basic_light(PLYR_AMBLIGHT_XOFFSET, PLYR_AMBLIGHT_YOFFSET,
 entity_set_sprite(spr_player_unarmed_walk);
 animSpeed			= 0.0; // Pauses the inherited animation system so the one below can be utilized instead.
 
-// To prevent repeating the same frame twice for each direction (An extra 4 redundant sprites), the player 
-// will use a slightly adjusted version of the standard Entity animation system. It will set "image_index" to 
-// the value found at each index within "animFrames" and "animCurFrame" will store what "image_index" was 
-// originally required to.
+// To prevent repeating the same frame twice for each direction (An extra 4 redundant sprites), the player will use a slightly adjusted 
+// version of the standard Entity animation system. It will set "image_index" to the value found at each index within "animFrames" and 
+// "animCurFrame" will store what "image_index" was originally required to.
 animFrames			= [0, 1, 0, 2];
 animFrameCount		= array_length(animFrames);
 animCurFrame		= 0.0;
 
-// Assign the player's starting and maximum hitpoints to be 100 units so whole percentage values are always
-// at or above a value of one.
+// Assign the player's starting and maximum hitpoints to be 100 units so whole percentage values are always at or above a value of one.
 maxHitpoints		= 100;
 curHitpoints		= maxHitpoints;
 
@@ -234,34 +229,31 @@ curStamina			= maxStamina;
 maxSanity			= 100;
 curSanity			= maxSanity;
 
-// Stores the inputs that were held versus not held for the current and last frame of gameplay. From this, 
-// checks to see if they've been pressed, held, or released can be performed quickly through bitwise math.
+// Stores the inputs that were held versus not held for the current and last frame of gameplay. From this, checks to see if they've been 
+// pressed, held, or released can be performed quickly through bitwise math.
 inputFlags			= 0;
 prevInputFlags		= 0;
 
-// Variables for input that are exclusive to a controller with at least one analog stick. They simply store
-// the values retrieved from said sticks when inputs is handled by the player.
+// Variables for input that are exclusive to a controller with at least one analog stick. They simply store the values retrieved from said 
+// sticks when inputs is handled by the player.
 padStickInputLH		= 0.0;
 padStickInputLV		= 0.0;
 padStickInputRH		= 0.0;
 padStickInputRV		= 0.0;
 
-// Determines the movement direction of the player character relative to the inputs that have been held or if
-// the left stick has been moved to a position outside its deadzone.
+// Determines the movement direction of the player character relative to the inputs that have been held or if the left stick has been moved 
+// to a position outside its deadzone.
 xMoveDirection		= 0.0;
 yMoveDirection		= 0.0;
 
-// Stores a collection of floating point values that act as timers for various interval-based things that can
-// occur to the player. For example, the damage intervals for bleeding and poison, as well as the stamina loss
-// and regen timers are all found within this array.
+// Stores a collection of floating point values that act as timers for various interval-based things that can occur to the player. For 
+// example, the damage intervals for bleeding and poison, as well as the stamina loss and regen timers are all found within this array.
 timers				= array_create(PLYR_TOTAL_TIMERS, 0.0);
 
-// Stores the current damage that the poison status will inflict on its next damage interval. After which the
-// value will double itself again.
+// Stores the current damage that the poison status will inflict on its next damage interval. After which the value will double.
 poisonDamagePercent	= PLYR_POISON_BASE_DAMAGE;
 
-// Create a struct that stores and manages the currently equipped items on the player and the variables/data
-// each of them require to function efficiently. 
+// Create a struct that stores and manages the currently equipped items on the player and the variables/data each of them require. 
 equipment = {
 	// --- Variables Related to Equipped Weapon --- //
 	weapon				: INV_EMPTY_SLOT,
@@ -288,32 +280,30 @@ equipment = {
 	secondAmulet		: INV_EMPTY_SLOT,
 };
 
-// Stores the total number of bullets that can be fired by holding down the "use weapon" input. When this
-// value matches the total number, the player will need to release the input before being able to fire the
-// weapon again. If the total is -1 they will never have to release the input.
+// Stores the total number of bullets that can be fired by holding down the "use weapon" input. When this value matches the total number, 
+// the player will need to release the input before being able to fire the weapon again. If the total is -1 they will never have to release 
+// the input.
 weaponBulletCount	= 0;
 bulletCounter		= 0;
 
-// Determines how much ammo is remaining with the equipped weapon's current clip/magazine to avoid having
-// to constantly jump into the struct stored within the item inventory array to grab said value.
+// Determines how much ammo is remaining with the equipped weapon's current clip/magazine to avoid having to constantly jump into the struct
+// stored within the item inventory array to grab said value.
 weaponRemainingAmmo	= 0;
 
-// Store copies of the reload and fire rate/attack speed for the currently equipped weapon outside of the 
-// equipment struct since having to jump into there to get the reference to the equipped weapon's item struct
-// reference so those two values can be grabbed each time they're needed.
+// Store copies of the reload and fire rate/attack speed for the currently equipped weapon outside of the equipment struct since having to 
+// jump into there to get the reference to the equipped weapon's item struct reference so those two values can be grabbed as they're needed.
 weaponReloadSpeed	= 0.0;
 weaponAttackSpeed	= 0.0;
 
-// Determines the penalty applied to the weapon's accuracy as it is used coninuously. Value goes down when
-// the player is no longer actively firing their weapon.
+// Determines the penalty applied to the weapon's accuracy as it is used coninuously. Value goes down when the player is no longer actively 
+// firing their weapon.
 curAccuracyPenalty	= 0.0;
 
 // Stores the instance ID for the nearest interactable object to the player's current position.
 interactableID		= noone;
 
-// Variables used for the player's footstep sound effect system. The first value stores the ID for the layer
-// in the room that stores the floor material tiles, and the second stores the ID of the footstep sound that
-// was most recently played back.
+// Variables used for the player's footstep sound effect system. The first value stores the ID for the layer in the room that stores the 
+// floor material tiles, and the second stores the ID of the footstep sound that was most recently played back.
 floorMaterials		= -1;
 prevStepSoundID		= -1;
 
@@ -322,21 +312,20 @@ prevStepSoundID		= -1;
 #region Utility Function Definitions
 
 /// @description 
-/// Updates the flags within "inputFlags" to whatever the player has pressed/released for the current
-/// frame. Also automatically swaps between gamepad and keyboard input polling as required.
+/// Updates the flags within *inputFlags* to whatever the player has pressed/released for the current frame. Also automatically swaps 
+/// between gamepad and keyboard input polling as required.
 /// 
 process_player_input = function(){
 	if (GAME_IS_GAMEPAD_ACTIVE){
-		// Getting input from the main analog stick by reading its current horizontal and vertical position
-		// relative to its centerpoint and the deadzone applied by the game's input settings.
+		// Getting input from the main analog stick by reading its current horizontal and vertical position relative to its centerpoint and
+		// the deadzone applied by the game's input settings.
 		var _gamepad	= global.gamepadID;
 		padStickInputLH = gamepad_axis_value(_gamepad, gp_axislh);
 		padStickInputLV = gamepad_axis_value(_gamepad, gp_axislv);
 		if (padStickInputLH != 0.0 || padStickInputLV != 0.0)
 			inputFlags = inputFlags | PINPUT_FLAG_GP_LEFT_STICK;
 		
-		// Getting input from the secondary analog stick if the controller has one and the primary stick isn't
-		// being currently utilized by the player.
+		// Getting input from the secondary analog stick if the controller has one and the primary stick isn't being currently utilized.
 		if (gamepad_axis_count(global.gamepadID) > 1){
 			padStickInputRH	= gamepad_axis_value(_gamepad, gp_axisrh);
 			padStickInputRV = gamepad_axis_value(_gamepad, gp_axisrv);
@@ -344,9 +333,8 @@ process_player_input = function(){
 				inputFlags = inputFlags | PINPUT_FLAG_GP_RIGHT_STICK;
 		}
 		
-		// This looks like a lot but its a way of avoiding confusing YYC since it doesn't like the player's
-		// bitwise AND operations and I'd rather not risk something breaking because of other bitwise 
-		// operators.
+		// This looks like a lot but its a way of avoiding confusing YYC since it doesn't like the player's bitwise AND operations and I'd 
+		// rather not risk something breaking because of other bitwise operators.
 		inputFlags = inputFlags | (GAME_PAD_RIGHT				 ); // Offset based on position of the bit within the variable.
 		inputFlags = inputFlags | (GAME_PAD_LEFT			<<  1);
 		inputFlags = inputFlags | (GAME_PAD_UP				<<  2);
@@ -365,8 +353,8 @@ process_player_input = function(){
 		return;
 	}
 	
-	// This looks like a lot but its a way of avoiding confusing the YYC since it doesn't like the player's
-	// bitwise AND operations and I'd rather not risk something breaking because of other bitwise operators.
+	// This looks like a lot but its a way of avoiding confusing the YYC since it doesn't like the player's bitwise AND operations and I'd 
+	// rather not risk something breaking because of other bitwise operators.
 	inputFlags = inputFlags | (GAME_KEY_RIGHT				 ); // Offset based on position of the bit within the variable.
 	inputFlags = inputFlags | (GAME_KEY_LEFT			<<  1);
 	inputFlags = inputFlags | (GAME_KEY_UP				<<  2);
@@ -385,10 +373,9 @@ process_player_input = function(){
 }
 
 /// @description
-/// Calcualtes the values for "xMoveDirection" and "yMoveDirection" based on if a keyboard is being used for
-/// input currently or a connected gamepad is being used. Using the joystick on the gamepad will alter the value
-/// so it can be any value between -1.0 and 1.0 for each axis, and the standard digital way returns either a
-/// -1, 0, or +1 based on current input flags.
+/// Calcualtes the values for *xMoveDirection* and *yMoveDirection* based on if a keyboard is being used for input currently or a connected 
+/// gamepad is being used. Using the joystick on the gamepad will alter the value so it can be any value between -1.0 and 1.0 for each axis,
+/// and the standard digital way returns either a -1, 0, or +1 based on current input flags.
 /// 
 determine_movement_vector = function(){
 	var _isGamepadActive = GAME_IS_GAMEPAD_ACTIVE;
@@ -405,9 +392,9 @@ determine_movement_vector = function(){
 }
 
 /// @description
-/// Handles updating the player's movement animation(s) which works in a similar way to the standard Entity
-///	animation processing, but taking into account that the player can face 4 directions and all those directions
-/// are stored in a single sprite together when determining the starting index within that data. 
+/// Handles updating the player's movement animation(s) which works in a similar way to the standard Entity animation processing, but taking
+/// into account that the player can face 4 directions and all those directions are stored in a single sprite together when determining the
+/// starting index within that data. 
 /// 
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 process_movement_animation = function(_delta){
@@ -427,30 +414,30 @@ process_movement_animation = function(_delta){
 }
 
 /// @description 
-/// Handles playback of the footstep sounds that play depending on the current floor material they are walking
-/// on. No sound playback will occur if there isn't a layer in the room named "Tiles_Floor_Materials".
+/// Handles playback of the footstep sounds that play depending on the current floor material they are walking on. No sound playback will 
+/// occur if there isn't a layer in the room named "Tiles_Floor_Materials".
 ///	
 process_footstep_sound = function(){
 	if (floorMaterials == -1)
 		return; // Don't try to play footstep sounds if the area doesn't have a valid layer for floor types.
 	
-	// Make sure the correct animation frame is being shown before any sound is played. If the frame isn't one
-	// of the two valid values, the function exits early and no step sound playback occurs for the game frame.
+	// Make sure the correct animation frame is being shown before any sound is played. If the frame isn't one of the two valid values, the 
+	// function exits early and no step sound playback occurs for the game frame.
 	var _animCurFrame = floor(animCurFrame);
 	if (_animCurFrame != PLYR_FIRST_STEP_INDEX && _animCurFrame != PLYR_SECOND_STEP_INDEX){
 		flags = flags | PLYR_FLAG_PLAY_STEP_SOUND; // Flag is only ever set when beginning movement or during off frames.
 		return;
 	}
 	
-	// If the current frame of animation is one of the two valid values (Both can occur for any number of game
-	// frames relative to what else is happening in the room), make sure the flag allowing a step sound to play
-	// is set. Otherwise, exit the function early. If not, proceed and immediately clear said flag.
+	// If the current frame of animation is one of the two valid values (Both can occur for any number of game frames relative to what else 
+	// is happening in the room), make sure the flag allowing a step sound to play is set. Otherwise, exit the function early. If not, 
+	// proceed and immediately clear said flag.
 	if (!PLYR_CAN_PLAY_STEP_SOUND)
 		return;
 	flags = flags & ~PLYR_FLAG_PLAY_STEP_SOUND;
 	
-	// Calculate which tile the player is currently walking on, and set the sound to playback relative to the
-	// tile index value that is returned by the tilemap_get function.
+	// Calculate which tile the player is currently walking on, and set the sound to playback relative to the tile index value that is 
+	// returned by the tilemap_get function.
 	var _snd	= -1;
 	var _cellX	= floor(x / TILE_WIDTH);
 	var _cellY	= floor((y - PLYR_FLOOR_CHECK_YOFFSET) / TILE_HEIGHT);
@@ -462,9 +449,8 @@ process_footstep_sound = function(){
 		case TILE_INDEX_FLOOR_GRASS:	_snd = snd_player_step_grass;		break;
 	}
 	
-	// Set the sound's unaltered volume, and very slightly increase it if the player is currently running.
-	// Then, play the sound effect using the special function that automatically adjusts volume and pitch
-	// within a random range on a per-playback basis.
+	// Set the sound's unaltered volume, and very slightly increase it if the player is currently running. Then, play the sound effect 
+	// using the special function that automatically adjusts volume and pitch within a random range on a per-playback basis.
 	var _volume = 0.4;
 	if (PLYR_IS_SPRINTING)
 		_volume += 0.05;
@@ -472,8 +458,8 @@ process_footstep_sound = function(){
 }
 
 /// @description 
-/// A function that can be called whenever the player needs to be paused while other entities and objects are 
-/// still allowed to remain active (Ex. Interacting with objects or opening a menu that isn't the pause menu).
+/// A function that can be called whenever the player needs to be paused while other entities and objects are still allowed to remain 
+/// active (Ex. Interacting with objects or opening a menu that isn't the pause menu).
 /// 
 pause_player = function(){
 	if (curState == method_get_index(state_player_paused) || GAME_IS_CUTSCENE_ACTIVE)
@@ -487,8 +473,8 @@ pause_player = function(){
 }
 
 /// @description 
-///	A function that can be called whenever a given state the player can find themselves in can allow them to
-/// toggle their equipped flashlight on or off. If they don't activate the input, this function does nothing.
+///	A function that can be called whenever a given state the player can find themselves in can allow them to toggle their equipped 
+/// flashlight on or off. If they don't activate the input, this function does nothing.
 ///	
 handle_light_toggle_input = function(){
 	if (!PINPUT_FLASHLIGHT_PRESSED || equipment.light == INV_EMPTY_SLOT)
@@ -514,9 +500,9 @@ handle_light_toggle_input = function(){
 }
 
 /// @description 
-///	A function that can be called in a given player state to allow them to open their inventory or the pause
-/// menu depending on the menu input they released on the current frame. These inputs work on a priority;
-/// pausing is first; then the inventory's item section; notes; and maps.
+///	A function that can be called in a given player state to allow them to open their inventory or the pause menu depending on the menu 
+/// input they released on the current frame. These inputs work on a priority; pausing is first; then the inventory's item section; notes; 
+/// and maps.
 ///	
 handle_menu_open_inputs = function(){
 	if (PINPUT_OPEN_ITEMS_RELEASED){ // Opens the inventory to the collected item section.
@@ -533,16 +519,14 @@ handle_menu_open_inputs = function(){
 #region Equipment Function Definitions
 
 /// @description
-///	Checks all five equipment slots to see if any contain the first parameter or second parameter's value. If
-/// they do, the slot where the first value is found will now store the second, and vice versa if the second
-/// value is contained in the given equipment slot.
+///	Checks all five equipment slots to see if any contain the first parameter or second parameter's value. If they do, the slot where the 
+/// first value is found will now store the second, and vice versa if the second value is contained in the given equipment slot.
 ///	
 /// @param {Real}	firstSlot	The first slot value to check for; swapping for the second value instead.
 /// @param {Real}	secondSlot	The second slot value to check for; swapping for the first value instead.
 update_equip_slot = function(_firstSlot, _secondSlot){
 	with(equipment){
-		// Check if the equipped weapon was in either slot. If so, swap the first with the second or the 
-		// second with the first as required.
+		// Check if the equipped weapon was in either slot. If so, swap the first with the second or the second with the first as required.
 		if (weapon == _firstSlot)				{ weapon = _secondSlot; }
 		else if (weapon == _secondSlot)			{ weapon = _firstSlot; }
 		
@@ -576,22 +560,21 @@ update_equip_slot = function(_firstSlot, _secondSlot){
 equip_main_weapon = function(_itemStructRef, _itemSlot){
 	var _quantity = 0;
 	with(equipment){
-		// Make sure the previously equipped weapon's ammo index is carried over into the item inventory data
-		// if another weapon happened to be previously equipped before this function executed to equip another
-		// weapon. Then, normal equipping logic can commence.
+		// Make sure the previously equipped weapon's ammo index is carried over into the item inventory data if another weapon happened to 
+		// be previously equipped before this function executed to equip another weapon. Then, normal equipping logic can commence.
 		if (weapon != INV_EMPTY_SLOT){
 			var _curAmmoIndex = curAmmoIndex;
 			with(global.curItems[weapon])
 				ammoIndex = _curAmmoIndex;
 		}
 		
-		// First, copy the slot index where the weapon is found in the item inventory. Then, store the
-		// reference to that weapon's data so it can be accessed later as required.
+		// First, copy the slot index where the weapon is found in the item inventory. Then, store the reference to that weapon's data so it
+		// can be accessed later as required.
 		weapon			= _itemSlot;
 		weaponStatRef	= _itemStructRef;
 		
-		// Grab some data from the item inventory slot that holds the weapon that is to be equipped. Then,
-		// set the current ammunition index within this struct to match so the proper ammo is utilized.
+		// Grab some data from the item inventory slot that holds the weapon that is to be equipped. Then, set the current ammunition index 
+		// within this struct to match so the proper ammo is utilized.
 		var _ammoIndex	= 0;
 		with(global.curItems[_itemSlot]){
 			_quantity	= quantity;
@@ -599,8 +582,8 @@ equip_main_weapon = function(_itemStructRef, _itemSlot){
 		}
 		curAmmoIndex	= global.curItems[_itemSlot].ammoIndex;
 		
-		// Using the current ammunition found within the gun, get the ID for the item it is tied to and check
-		// if that value isn't (-1). If it is, the weapon doesn't use ammo and the function exits early.
+		// Using the current ammunition found within the gun, get the ID for the item it is tied to and check if that value isn't (-1). If 
+		// it is, the weapon doesn't use ammo and the function exits early.
 		var _ammoTypes	= _itemStructRef.ammoTypes;
 		var _ammoID		= _ammoTypes[curAmmoIndex];
 		if (_ammoID == ID_INVALID)
@@ -609,9 +592,8 @@ equip_main_weapon = function(_itemStructRef, _itemSlot){
 		// Grab a reference to the current ammunition's data so it can be referenced later as required.
 		curAmmoStatRef	= array_get(global.itemIDs, _ammoID);
 		
-		// Loop through all possible ammo type of the equipped weapon, storing the current sum of each into
-		// an array that is updated as the equipped weapon's possible ammo types are added/removed from the
-		// item inventory.
+		// Loop through all possible ammo type of the equipped weapon, storing the current sum of each into an array that is updated as the 
+		// equipped weapon's possible ammo types are added/removed from the item inventory.
 		var _ammoNum = array_length(_ammoTypes);
 		array_resize(ammoCount, _ammoNum);
 		for (var i = 0; i < _ammoNum; i++)
@@ -619,15 +601,14 @@ equip_main_weapon = function(_itemStructRef, _itemSlot){
 	}
 	weaponRemainingAmmo	= _quantity;
 	
-	// Grab some values from the item data struct of the weapon that will be frequently used by the player
-	// for various states and operations to avoid having to constantly jump around to grab said values.
+	// Grab some values from the item data struct of the weapon that will be frequently used by the player for various states and operations
+	// to avoid having to constantly jump around to grab said values.
 	var _bulletCount = -1;
 	var _reloadSpeed = 0;
 	var _attackSpeed = 0;
 	with(_itemStructRef){
-		// When set to be a burstfire weapon, the bullet count will match what is specified in the item
-		// data. Otherwise, the count is set to one and that value will be used to determine how many
-		// projectiles to spawn for a single bullet (Ex. shotguns).
+		// When set to be a burstfire weapon, the bullet count will match what is specified in the item data. Otherwise, the count is set to
+		// one and that value will be used to determine how many projectiles to spawn for a single bullet (Ex. shotguns).
 		if (WEAPON_IS_BURSTFIRE)		{ _bulletCount = bulletCount; }
 		else if (!WEAPON_IS_AUTOMATIC)	{ _bulletCount = 1; }
 		else							{ _bulletCount = -1; }
@@ -640,13 +621,13 @@ equip_main_weapon = function(_itemStructRef, _itemSlot){
 }
 
 /// @description 
-///	Unequips the weapon that was previously assigned to the player's main weapon equipment slot while also
-/// removing the references to the weapon's data struct as well as the current utilized ammo's data struct.
+///	Unequips the weapon that was previously assigned to the player's main weapon equipment slot while also removing the references to the 
+/// weapon's data struct as well as the current utilized ammo's data struct.
 ///	
 unequip_main_weapon = function(){
 	with(equipment){
-		// Before clearing all relevant values from the equipment struct's equipped weapon values, make
-		// sure the index for the ammo currently in the weapon is copied into the item's struct itself.
+		// Before clearing all relevant values from the equipment struct's equipped weapon values, make sure the index for the ammo 
+		// currently in the weapon is copied into the item's struct itself.
 		var _curAmmoIndex = curAmmoIndex;
 		with(global.curItems[weapon])
 			ammoIndex = _curAmmoIndex;
@@ -666,15 +647,15 @@ unequip_main_weapon = function(){
 }
 
 /// @description 
-///	Equips the item in the provided slot into the player's light source equipment slot. If the item isn't of
-/// equip type "light" the function will not have it occupy said slot, and the function will do nothing.
+///	Equips the item in the provided slot into the player's light source equipment slot. If the item isn't of equip type *light* the function
+/// will not have it occupy said slot, and the function will do nothing.
 ///	
 ///	@param {Struct._structRef}	itemStructRef	Reference to the struct that represents the weapon.
 ///	@param {Real}				itemSlot		Slot in the item inventory where the light being equipped is located.
 equip_flashlight = function(_itemStructRef, _itemSlot){
-	// Create a local variable for easily referencing the properties of the equipped light while updating
-	// the player's ambient light to said properties. Copy the slot index and a reference to those light
-	// properties within the equipment struct so they can be referenced when toggling the light on/off.
+	// Create a local variable for easily referencing the properties of the equipped light while updating the player's ambient light to said
+	// properties. Copy the slot index and a reference to those light properties within the equipment struct so they can be referenced when 
+	// toggling the light on/off.
 	var _paramRef = 0;
 	with(equipment){
 		light			= _itemSlot;
@@ -682,9 +663,8 @@ equip_flashlight = function(_itemStructRef, _itemSlot){
 		_paramRef		= lightParamRef;
 	}
 	
-	// Enable the light source as soon as it is equipped by setting the flag within the player's data that
-	// signifies the light's state, and apply the parameters of the player's ambient light to be that of
-	// the equipped light's parameters.
+	// Enable the light source as soon as it is equipped by setting the flag within the player's data that signifies the light's state, and 
+	// apply the parameters of the player's ambient light to be that of the equipped light's parameters.
 	flags = flags | PLYR_FLAG_FLASHLIGHT;
 	lightRef.light_set_properties(
 		_paramRef[EQUP_PARAM_LIGHT_RADIUS],
@@ -697,13 +677,12 @@ equip_flashlight = function(_itemStructRef, _itemSlot){
 ///	Unequips the light source that was previously assigned to the player's light source equipment slot.
 ///	
 unequip_flashlight = function(){
-	// Clear the flag that signifies the flashlight is currently on, and restore the player's default
-	// ambient light source characteristics.
+	// Clear the flag that signifies the flashlight is currently on, and restore the player's default ambient light source characteristics.
 	flags = flags & ~PLYR_FLAG_FLASHLIGHT;
 	lightRef.light_set_properties(PLYR_AMBLIGHT_RADIUS, PLYR_AMBLIGHT_COLOR, PLYR_AMBLIGHT_STRENGTH);
 	
-	// Reset the light value so it is no longer a valid slot in the inventory and reset the reference value
-	// that points towards its parameters for whenever the light is active.
+	// Reset the light value so it is no longer a valid slot in the inventory and reset the reference value that points towards its 
+	// parameters for whenever the light is active.
 	with(equipment){
 		light			= INV_EMPTY_SLOT;
 		lightParamRef	= ID_INVALID;
@@ -715,15 +694,13 @@ unequip_flashlight = function(){
 #region Equipped Weapon Function Definitions
 
 /// @description
-///	Reloads the equipped weapon by converting the currently utilized ammo into "quantity" for the equipped
-/// weapon in question.
+///	Reloads the equipped weapon by converting the currently utilized ammo into "quantity" for the equipped weapon in question.
 ///	
 reload_current_weapon = function(){
 	var _quantity = weaponRemainingAmmo;
 	with(equipment){
-		// Jump into the struct referenced within the equipped weapon for its stats/variables; copying over
-		// the ID for the ammo being used and the stack limit for the equipped weapon which is the same as
-		// its magazine/clip size.
+		// Jump into the struct referenced within the equipped weapon for its stats/variables; copying over the ID for the ammo being used 
+		// and the stack limit for the equipped weapon which is the same as its magazine/clip size.
 		var _curAmmoIndex	= curAmmoIndex;
 		var _ammoItemID		= 0;
 		var _stackLimit		= 0;
@@ -732,17 +709,16 @@ reload_current_weapon = function(){
 			_stackLimit		= stackLimit;
 		}
 		
-		// If that item ID is ID_INVALID (-1), the weapon doesn't actually use any ammunition and is assumed
-		// to be an infinite ammo weapon, so the quantity is set to the stack limit without any ammo used.
+		// If that item ID is ID_INVALID (-1), the weapon doesn't actually use any ammunition and is assumed to be an infinite ammo weapon, 
+		// so the quantity is set to the stack limit without any ammo used.
 		if (_ammoItemID == ID_INVALID){
 			global.curItems[weapon].quantity = _stackLimit;
 			break;
 		}
 		
-		// Jump into the scope of the item inventory's item struct so that the available space can be found
-		// which is then used to remove that amount of ammo from the item inventory. Any remainder returned
-		// by that function is subtracted from the max amount the equipped weapon can hold instead of the
-		// full amount being added to that quantity value.
+		// Jump into the scope of the item inventory's item struct so that the available space can be found which is then used to remove 
+		// that amount of ammo from the item inventory. Any remainder returned by that function is subtracted from the max amount the 
+		// equipped weapon can hold instead of the full amount being added to that quantity value.
 		with(global.curItems[weapon]){
 			var _availableSpace = _stackLimit - quantity;
 			var _remainder		= item_inventory_remove(_ammoItemID, _availableSpace);
@@ -754,23 +730,22 @@ reload_current_weapon = function(){
 }
 
 /// @description 
-///	Attempts to switch the ammunition being currently used by the equipped weapon with another. If the
-/// player doesn't have any amount of the other valid ammo types in the inventory no switch will occur.
-/// Otherwise, the previous ammo is placed back in the item inventory if possible, and the new ammo type
-/// is put into the equipped weapon by reloading it.
+///	Attempts to switch the ammunition being currently used by the equipped weapon with another. If the player doesn't have any amount of 
+/// the other valid ammo types in the inventory no switch will occur. Otherwise, the previous ammo is placed back in the item inventory if
+/// possible, and the new ammo type is put into the equipped weapon by reloading it.
 ///	
 swap_current_ammo_index = function(){
 	var _x = x;
 	var _y = y;
 	with(equipment){
-		// If there is only one type of ammunition for the currently equipped weapon OR the type of ammo is
-		// an invalid ID (-1) it means an ammo swap should never occur, so the function will exit early.
+		// If there is only one type of ammunition for the currently equipped weapon OR the type of ammo is an invalid ID (-1) it means an 
+		// ammo swap should never occur, so the function will exit early.
 		var _length	= array_length(ammoCount);
 		if (_length == 1 || weaponStatRef.ammoTypes[0] == ID_INVALID)
 			return false;
 		
-		// Keep looping until the same value is hit again for the current ammo index or the new value's
-		// count is a value other than zero; meaning a swap can occur.
+		// Keep looping until the same value is hit again for the current ammo index or the new value's count is a value other than zero; 
+		// meaning a swap can occur.
 		var _prevAmmoIndex	= curAmmoIndex;
 		var _curAmmoIndex	= curAmmoIndex;
 		do{
@@ -780,13 +755,13 @@ swap_current_ammo_index = function(){
 		} until(ammoCount[curAmmoIndex] != 0 || _prevAmmoIndex == curAmmoIndex);
 		_curAmmoIndex = curAmmoIndex;
 		
-		// The previous and current index values match. This means no ammunition switch could occur and the
-		// function will exit early instead of swapping ammo types.
+		// The previous and current index values match. This means no ammunition switch could occur and the function will exit early 
+		// instead of swapping ammo types.
 		if (_prevAmmoIndex == _curAmmoIndex)
 			return false;
 		
-		// Get the name for the previous ammo in use so it can be added to the inventory while removing
-		// it from the quantity of the current weapon's magazine/clip.
+		// Get the name for the previous ammo in use so it can be added to the inventory while removing it from the quantity of the current
+		// weapon's magazine/clip.
 		var _prevAmmoName = ""; 
 		with(weaponStatRef){
 			var _prevAmmoItemID = ammoTypes[_prevAmmoIndex];
@@ -794,14 +769,13 @@ swap_current_ammo_index = function(){
 				_prevAmmoName = global.itemIDs[_prevAmmoItemID].itemName;
 		}
 
-		// Jump into scope of the item inventory's struct representation of the equipped weapon to add the
-		// previous ammunition into the item inventory before reloading said weapon with the new ammo.
+		// Jump into scope of the item inventory's struct representation of the equipped weapon to add the previous ammunition into the item
+		// inventory before reloading said weapon with the new ammo.
 		var _quantity	= 0;
 		var _remainder	= 0;
 		with(global.curItems[weapon]){
-			// Attempt to add the previous ammunition to the item inventory. Whatever doesn't get added is
-			// stored in the local _remainder value so it can be used to place what couldn't be put into
-			// the item storage into the world itself.
+			// Attempt to add the previous ammunition to the item inventory. Whatever doesn't get added is stored in the local _remainder 
+			// value so it can be used to place what couldn't be put into the item storage into the world itself.
 			_quantity	= quantity;
 			_remainder	= item_inventory_add(_prevAmmoName, _quantity);
 			if (_remainder == 0){
@@ -809,8 +783,8 @@ swap_current_ammo_index = function(){
 				break; // Break out of the loop after removing the ammo's full quantity from the weapon.
 			}
 			
-			// The item inventory couldn't hold all of the previous ammo's amount; create a dynamic item 
-			// with the remainder of what couldn't fit into the item inventory.
+			// The item inventory couldn't hold all of the previous ammo's amount; create a dynamic item with the remainder of what couldn't
+			// fit into the item inventory.
 			var _worldItem = instance_create_object(_x, _y, obj_world_item);
 			with(_worldItem){ // Applies the parameters of the ammunition instead of the weapon itself.
 				set_item_params(global.nextDynamicKey, _prevAmmoName, _quantity, 0, 0);
@@ -819,49 +793,44 @@ swap_current_ammo_index = function(){
 			dynamic_item_initialize(_x, _y, _prevAmmoName, _remainder, 0, 0);
 		}
 		
-		// Finally, update the count of the previous ammunition to match what was successfully added to
-		// the player's item inventory. If _remainder is zero, the full quantity is added.
+		// Finally, update the count of the previous ammunition to match what was successfully added to the player's item inventory. If 
+		// _remainder is zero, the full quantity is added.
 		ammoCount[_prevAmmoIndex] += _quantity - _remainder;
 		
-		// Return true to signify the ammo swqp was successful so the correct actions can be taken outside
-		// of this funciton.
+		// Return true to signify the ammo swqp was successful so the correct actions can be taken outside of this funciton.
 		return true;
 	}
 	
-	// Return false if the equipment struct's scope was never entered into. This should never happen, but
-	// in case it does somehow this will cause ammo swapping to cease its function.
+	// Return false if the equipment struct's scope was never entered into. This should never happen, but in case it does somehow this will 
+	// cause ammo swapping to cease its function.
 	return false;
 }
 
 /// @description 
-///	Checks to see is an update needs to be done to one of the equipped weapon's current ammo counts. If the
-/// ammo isn't a part of the equipped weapon's valid ammo types (Or the weapon doesn't use any ammo) the
-/// function will exit prematurely.
+///	Checks to see is an update needs to be done to one of the equipped weapon's current ammo counts. If the ammo isn't a part of the 
+/// equipped weapon's valid ammo types (Or the weapon doesn't use any ammo) the function will exit prematurely.
 ///	
 ///	@param {Real}	itemID		The unique numerical identifier for the ammo to check for.
-/// @param (Real)	quantity	How much of said ammo was added to the item inventory.
+/// @param {Real}	quantity	How much of said ammo was added to the item inventory.
 update_current_ammo_counts = function(_itemID, _quantity){
 	with(equipment){
 		// If no weapon is equipped there is no need to check for ammunition counts; exit the function.
 		if (weapon == INV_EMPTY_SLOT)
 			return;
 		
-		// A weapon is equipped, but we don't know if it uses ammunition. A check is performed against the
-		// 0th index of the wepaon's ammunition types array (This should always have at least one element).
-		// If the value of this element is invalid (-1), the weapon doesn't use ammo and the count check
-		// is completely skipped.
+		// A weapon is equipped, but we don't know if it uses ammunition. A check is performed against the 0th index of the wepaon's 
+		// ammunition types array (This should always have at least one element). If the value of this element is invalid (-1), the weapon
+		// doesn't use ammo and the count check is completely skipped.
 		var _ammoTypes = weaponStatRef.ammoTypes;
 		if (_ammoTypes[0] == ID_INVALID)
 			return;
 		
-		// Loop through all possible ammunition types for the equipped weapon and check if their item ID
-		// matches the ID of the ammo being added to/removed from the item inventory. If a match is found,
-		// add the _quantity parameter to the current count and exit the function.
+		// Loop through all possible ammunition types for the equipped weapon and check if their item ID matches the ID of the ammo being 
+		// added to/removed from the item inventory. If a match is found, add the _quantity parameter to the current count and exit.
 		var _length	= array_length(_ammoTypes);
 		for (var i = 0; i < _length; i++){
 			if (_ammoTypes[i] == _itemID){
 				ammoCount[i] += _quantity;
-				// show_debug_message("Ammo ID: {0}, Amount: {1}", _ammoTypes[i], ammoCount[i]);
 				return;
 			}
 		}
@@ -875,16 +844,15 @@ update_current_ammo_counts = function(_itemID, _quantity){
 // Stores a reference to the original function so it can be called within the overridden function.
 __end_step_event = end_step_event;
 /// @description
-///	An inherited version of the "end_step_event" function found witin "par_dynamic_entity" that updates the
-/// player's various timers and other non-state dependent logic.
+///	An inherited version of the "end_step_event" function found witin "par_dynamic_entity" that updates the player's various timers and 
+/// other non-state dependent logic.
 ///
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 end_step_event = function(_delta){
 	__end_step_event(_delta);
 	
-	// Always tranfer the current frame's input states into the variable that stores the state from the
-	// previous frame, and then set the main input state storing variable to zero regardless of if there
-	// is input polling occurring within the player's current state.
+	// Always tranfer the current frame's input states into the variable that stores the state from the previous frame, and then set the 
+	// main input state storing variable to zero regardless of if there is input polling occurring within the player's current state.
 	prevInputFlags	= inputFlags;
 	inputFlags		= 0;
 	
@@ -895,8 +863,8 @@ end_step_event = function(_delta){
 			timers[i] = 0.0;
 	}
 	
-	// Regenerating the player's stamina when they're no longer sprinting but don't have all their stamina or
-	// depleting their stamina if the player is currently running.
+	// Regenerating the player's stamina when they're no longer sprinting but don't have all their stamina or depleting their stamina if 
+	// the player is currently running.
 	if (!PLYR_IS_SPRINTING && curStamina < maxStamina && timers[PLYR_STAMINA_REGEN_TIMER] == 0.0){
 		timers[PLYR_STAMINA_REGEN_TIMER] = PLYR_STAMINA_REGEN_RATE;
 		curStamina++;
@@ -922,14 +890,14 @@ end_step_event = function(_delta){
 		update_hitpoints(floor(maxHitpoints * PLYR_BLEEDING_DAMAGE_AMOUNT)); // Reduce hitpoints by 2% rounded down.
 	}
 	
-	// Damaging the player at each poison damage interval if they are currently poisoned and also doubling
-	// the damage it will deal after every other time damage has been dealt.
+	// Damaging the player at each poison damage interval if they are currently poisoned and also doubling the damage it will deal after 
+	// every other time damage has been dealt.
 	if (PLYR_IS_POISONED && timers[PLYR_POISON_TIMER] == 0.0){
 		timers[PLYR_POISON_TIMER] = PLYR_POISON_DAMAGE_RATE;
 		update_hitpoints(floor(maxHitpoints * poisonDamagePercent));
 		
-		// There's no limit to how high this percentage can go; meaning it will become a fatal amount of damage
-		// (128% of the player's maximum hitpoints) inflicted even when at max hitpoints after 80 seconds.
+		// There's no limit to how high this percentage can go; meaning it will become a fatal amount of damage (128% of the player's
+		// maximum hitpoints) inflicted even when at max hitpoints after 80 seconds.
 		if (PLYR_CAN_UP_POISON_DAMAGE){
 			flags = flags | PLYR_FLAG_UP_POISON_DAMAGE;
 			poisonDamagePercent *= 2.0;
@@ -938,9 +906,8 @@ end_step_event = function(_delta){
 		}
 	}
 	
-	// Lowering the current accuracy penalty (How many additional degrees are added to the equipped firearm's
-	// base accuracy) once the weapon's recoil timer has completed; reducing at a constant speed until it
-	// hits zero once again.
+	// Lowering the current accuracy penalty (How many additional degrees are added to the equipped firearm's base accuracy) once the 
+	// weapon's recoil timer has completed; reducing at a constant speed until it hits zero once again.
 	if (curAccuracyPenalty > 0.0 && timers[PLYR_WEAPON_ATTACK_TIMER] == 0.0){
 		curAccuracyPenalty -= PLYR_ACCPEN_DECAY_AMOUNT * _delta;
 		if (curAccuracyPenalty < 0.0)
@@ -972,9 +939,8 @@ drawFunction = method_get_index(custom_draw_default);
 #region State Function Definitions
 
 /// @description 
-///	An initialization state that will act as the "Create Event" for the player object since they're actually
-/// created at the very beginning of the game alongside other singleton objects/structs. It automatically
-/// shifts to the player's default state at the end of its first execution.
+///	An initialization state that will act as the "Create Event" for the player object since they're actually created at the very beginning 
+/// of the game alongside other singleton objects/structs. It automatically shifts to the default state at the end of its first execution.
 ///	
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 state_initialize = function(_delta){
@@ -993,17 +959,15 @@ state_initialize = function(_delta){
 }
 
 /// @description 
-/// The player's standard state. When in this state, they can move around the environment at either walking
-/// or running speed, shift facing direction relative to movement, interact with objects in the environment,
-/// and ready their weapon for use if one is equipped.
+/// The player's standard state. When in this state, they can move around the environment at either walking or running speed, shift facing 
+/// direction relative to movement, interact with objects in the environment, and ready their weapon for use if one is equipped.
 /// 
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 state_default = function(_delta){
 	process_player_input();
 	determine_movement_vector();
 	
-	// Updating the current direction of the player and also accelerating/decelerating them depending on the
-	// movement vector.
+	// Updating the current direction of the player and also accelerating/decelerating them depending on the movement vector.
 	if (xMoveDirection != 0.0 || yMoveDirection != 0.0){ // Handling acceleration
 		if (!DENTT_IS_MOVING){
 			flags		 = flags | DENTT_FLAG_MOVING | PLYR_FLAG_PLAY_STEP_SOUND;
@@ -1012,9 +976,9 @@ state_default = function(_delta){
 		moveSpeed  += accel * _delta;
 		direction	= point_direction(0.0, 0.0, xMoveDirection, yMoveDirection);
 		
-		// Dynamically calculate the limit for the player's movement speed based on if they're currently 
-		// using the primary or secondary analog sticks on a gamepad. If they aren't using either stick (Or 
-		// are using the keyboard for input) the maximum movement speed isn't altered by this logic.
+		// Dynamically calculate the limit for the player's movement speed based on if they're currently using the primary or secondary 
+		// analog sticks on a gamepad. If they aren't using either stick (Or are using the keyboard for input) the maximum movement speed 
+		// isn't altered by this logic.
 		var _maxMoveSpeed = maxMoveSpeed;
 		if (PINPUT_USING_LEFT_STICK){ // This is considered the primary stick, so it has priority.
 			var _movePercent	= point_distance(0.0, 0.0, padStickInputLH, padStickInputLV);
@@ -1040,11 +1004,10 @@ state_default = function(_delta){
 		}
 	}
 	
-	// Updating what the player is currently able to interact with, which only occurs if the player is moving
-	// around or they haven't checked the current room to see what the nearest interactable is. Then, the
-	// interactable checks to see if the player's point of interaction is within the item's valid interaction
-	// radius. If so, the player will be able to press the interact input to perform the interaction with the
-	// item.
+	// Updating what the player is currently able to interact with, which only occurs if the player is moving around or they haven't checked
+	// the current room to see what the nearest interactable is. Then, the interactable checks to see if the player's point of interaction 
+	// is within the item's valid interaction radius. If so, the player will be able to press the interact input to perform the interaction
+	// with the item.
 	var _isMoving = DENTT_IS_MOVING;
 	if (_isMoving || interactableID == noone){
 		var _interactX	= x + lengthdir_x(8, direction); // Calculate the interaction point based on facing direction.
@@ -1059,9 +1022,8 @@ state_default = function(_delta){
 		}
 	}
 	
-	// Checking for player input for an interaction. It will check to see if the current nearest interactable
-	// can be interacted with (This is decided by the state of its interaction flag). If it can, its function
-	// for the interaction is executed.
+	// Checking for player input for an interaction. It will check to see if the current nearest interactable can be interacted with (This 
+	// is decided by the state of its interaction flag). If it can, its function for the interaction is executed.
 	if (PINPUT_INTERACT_PRESSED){
 		with(interactableID){
 			if (INTR_CAN_PLAYER_INTERACT){
@@ -1071,9 +1033,9 @@ state_default = function(_delta){
 			}
 		}
 		
-		// Remove the reference to the interactable since it isn't required during the interaction process.
-		// Then, exit the state early so collision with the world and opening the inventory/pause menu are
-		// prevented if those inputs were hit at the same time as the interaction input was.
+		// Remove the reference to the interactable since it isn't required during the interaction process. Then, exit the state early so 
+		// collision with the world and opening the inventory/pause menu are prevented if those inputs were hit at the same time as the 
+		// interaction input was.
 		if (!_isMoving){
 			entity_set_sprite(spr_player_unarmed_walk);
 			interactableID = noone;
@@ -1081,9 +1043,8 @@ state_default = function(_delta){
 		}
 	}
 	
-	// The player has pressed the input for readying their equipped main weapon/sub weapon. If there isn't
-	// a equip currently equipped, the branch is not taken. Otherwise, the player is set to their aiming/
-	// weapon readied state and this state exits early as well.
+	// The player has pressed the input for readying their equipped main weapon/sub weapon. If there isn't a equip currently equipped, the 
+	// branch is not taken. Otherwise, the player is set to their aiming/weapon readied state and this state exits early as well.
 	if (PINPUT_READY_WEAPON_PRESSED && equipment.weapon != INV_EMPTY_SLOT){
 		object_set_state(state_player_weapon_ready);
 		flags		    = flags & ~(DENTT_FLAG_MOVING | PLYR_FLAG_SPRINTING);
@@ -1095,8 +1056,8 @@ state_default = function(_delta){
 		return;
 	}
 	
-	// In this state, the player should be able to toggle the light source they currently have equipped on
-	// or off as they see fit, and also open their inventory or the pause menu should they choose to do so.
+	// In this state, the player should be able to toggle the light source they currently have equipped on or off as they see fit, and also 
+	// open their inventory or the pause menu should they choose to do so.
 	handle_light_toggle_input();
 	handle_menu_open_inputs();
 
@@ -1104,20 +1065,20 @@ state_default = function(_delta){
 	if (!_isMoving)
 		return;
 		
-	// Activating the player's sprinting, which will cause their stamina to deplete to zero and remain there
-	// until they stop running. They can still run without stamina, but the speed is heavily reduced.
+	// Activating the player's sprinting, which will cause their stamina to deplete to zero and remain there until they stop running. They 
+	// can still run without stamina, but the speed is heavily reduced.
 	if (PINPUT_SPRINT_PRESSED && !PLYR_IS_SPRINTING){
 		timers[PLYR_STAMINA_LOSS_TIMER] = PLYR_STAMINA_LOSS_RATE;
 		flags = flags | PLYR_FLAG_SPRINTING;
 		
-		// Fixes an issue where sprinting would be immediately cancelled if the input is set to a toggle
-		// instead of a hold by turning the player's press input into a hold for the current frame.
+		// Fixes an issue where sprinting would be immediately cancelled if the input is set to a toggle instead of a hold by turning the 
+		// player's press input into a hold for the current frame.
 		if (PLYR_IS_SPRINT_TOGGLE)
 			prevInputFlags = inputFlags;
 		
 		
-		// Determine if the player should use their fast speed values (stamina > 0 and not crippled) or their 
-		// slow speed values (stamina == 0 or stamina > 0 and crippled).
+		// Determine if the player should use their fast speed values (stamina > 0 and not crippled) or their slow speed values (stamina == 
+		// 0 or stamina > 0 and crippled).
 		if (curStamina > 0 && !PLYR_IS_CRIPPLED){
 			accel			= PLYR_ACCEL_SPRINT_FAST;
 			maxMoveSpeed	= PLYR_SPEED_SPRINT_FAST;
@@ -1127,14 +1088,13 @@ state_default = function(_delta){
 		}
 	}
 	
-	// Store the previous position of the player so a line collision can be performed between it and the new
-	// position they are at after movement/collision has been executed. Used for handling cutscene trigger
-	// collisions at the end of this state.
+	// Store the previous position of the player so a line collision can be performed between it and the new position they are at after 
+	// movement/collision has been executed. Used for handling cutscene trigger collisions at the end of this state.
 	var _xPrev = x;
 	var _yPrev = y;
 	
-	// Update the position of the player and handle collision against the world. Then, depending on the value
-	// returned, reset the animation back to the player's idle stance or animate them as they move.
+	// Update the position of the player and handle collision against the world. Then, depending on the value returned, reset the animation 
+	// back to the player's idle stance or animate them as they move.
 	var _xMove			= lengthdir_x(moveSpeed, direction);
 	var _yMove			= lengthdir_y(moveSpeed, direction);
 	var _sprintEndInput	= PLYR_IS_SPRINT_TOGGLE ? PINPUT_SPRINT_PRESSED : PINPUT_SPRINT_RELEASED;
@@ -1148,15 +1108,15 @@ state_default = function(_delta){
 		maxMoveSpeed	= PLYR_SPEED_NORMAL;
 	}
 	
-	// Check if a cutscene collider was walked into during the current frame. If so, the scene it has will be
-	// queued up and executed immediately upon this collision.
+	// Check if a cutscene collider was walked into during the current frame. If so, the scene it has will be queued up and executed 
+	// immediately upon this collision.
 	with(collision_line(_xPrev, _yPrev, x + _xMove, y + _yMove, obj_cutscene_collider, false, true)){
 		var _actionQueue = actionQueue;
 		with(CUTSCENE_MANAGER)
 			start_action_queue(_actionQueue);
 		
-		// Check if the collider needs to destroy itself upon activation of its scene. If so, destroy the
-		// object now that its scene information has been copied into the cutscene manager.
+		// Check if the collider needs to destroy itself upon activation of its scene. If so, destroy the object now that its scene 
+		// information has been copied into the cutscene manager.
 		if (CUTCOL_DESTROY_ON_COLLIDE)
 			instance_destroy(self);
 		
@@ -1168,91 +1128,84 @@ state_default = function(_delta){
 		}
 	}
 
-	// Finally, process the player's movement animation and handle their footstep sound logic which requires
-	// the movement animation being processed in order to do anything.
+	// Finally, process the player's movement animation and handle their footstep sound logic which requires the movement animation being 
+	// processed in order to do anything.
 	process_movement_animation(_delta);
 	process_footstep_sound();
 }
 
 /// @description
-///	The function that is running whenever the player is in their readied weapon state. It handles switching
-/// directions to choose where to aim, swapping ammunition and reloading (If applicable to the currently
-/// equipped weapon), and using the weapon by switch the player to their using weapon state to handle that
-/// process.
+///	The function that is running whenever the player is in their readied weapon state. It handles switching directions to choose where to 
+/// aim, swapping ammunition and reloading (If applicable to the currently equipped weapon), and using the weapon by switch the player to 
+/// their using weapon state to handle that process.
 ///	
 ///	@param {Real}	delta	The difference in time between the execution of this frame and the last.
 state_player_weapon_ready = function(_delta){
 	process_player_input();
 	determine_movement_vector();
 	
-	// If the movement vector in either direction is not zero, the currently facing direction will be updated;
-	// allowing the player to aim in their desired direction but not move during this state.
+	// If the movement vector in either direction is not zero, the currently facing direction will be updated; allowing the player to aim 
+	// in their desired direction but not move during this state.
 	if (xMoveDirection != 0.0 || yMoveDirection != 0.0){
 		direction	= point_direction(0.0, 0.0, xMoveDirection, yMoveDirection);
 		image_index	= PLYR_MOVE_ANIM_LENGTH * round(direction / PLYR_ANIM_DIRECTION_DELTA);
 	}
 	
-	// Returning from this state will have the highest input priority (Aside from updating the current aiming 
-	// direction) and its input check is altered based on if it is set as a toggle or the default method of
-	// checking for a hold ending. If the relevant check returns true, the player returns to their default
-	// state once again.
+	// Returning from this state will have the highest input priority (Aside from updating the current aiming direction) and its input 
+	// check is altered based on if it is set as a toggle or the default method of checking for a hold ending. If the relevant check returns
+	// true, the player returns to their default state once again.
 	if (PLYR_IS_AIM_TOGGLE ? PINPUT_READY_WEAPON_PRESSED : !PINPUT_READY_WEAPON_HELD){
 		object_set_state(state_default);
 		return;
 	}
 	
-	// Firing or using the equipped weapon. For fully automatic weapons, the input doesn't need to be 
-	// released. For melee and non-automatic weapons, the input will need to be released and pressed again
-	// to use the weapon again.
+	// Firing or using the equipped weapon. For fully automatic weapons, the input doesn't need to be released. For melee and non-automatic
+	// weapons, the input will need to be released and pressed again to use the weapon again.
 	if (timers[PLYR_WEAPON_ATTACK_TIMER] == 0.0 && PINPUT_USE_WEAPON_HELD && 
 			(bulletCounter < weaponBulletCount || weaponBulletCount == -1)){
-		// The weapon's clip/magazine is currently empty, so check if a reload is possible and do so instead
-		// of firing the weapon when it shouldn't be able to.
+		// The weapon's clip/magazine is currently empty, so check if a reload is possible and do so instead of firing the weapon when it 
+		// shouldn't be able to.
 		if (weaponRemainingAmmo == 0){
-			// Check to make sure there is ammunition within the player's item inventory they can even use
-			// to reload their equipped weapon. If not, the state immediately exits and the weapon will not
-			// be fired OR reloaded.
+			// Check to make sure there is ammunition within the player's item inventory they can even use to reload their equipped weapon. 
+			// If not, the state immediately exits and the weapon will not be fired OR reloaded.
 			with(equipment){
 				if (ammoCount[curAmmoIndex] == 0)
 					return;
 			}
 			
-			// Since remaining ammo was found, the player's state is switched to their reloading state so
-			// they can reloading when trying to fire a weapon that is currently empty.
+			// Since remaining ammo was found, the player's state is switched to their reloading state so they can reloading when trying to
+			// fire a weapon that is currently empty.
 			object_set_state(state_player_reloading);
 			timers[PLYR_RELOAD_TIMER] = weaponReloadSpeed;
 			return;
 		}
 		
-		// Check if the weapon is set to fire a single time/automatically or it is set to fire a burst of
-		// bullets before the input needs to be released. If it is the latter, the attack speed for that
-		// burst is significantly faster than the regular fire rate.
+		// Check if the weapon is set to fire a single time/automatically or it is set to fire a burst of bullets before the input needs to
+		// be released. If it is the latter, the attack speed for that burst is significantly faster than the regular fire rate.
 		if (weaponBulletCount > 1)  { timers[PLYR_WEAPON_ATTACK_TIMER] = weaponAttackSpeed * 0.1; }
 		else						{ timers[PLYR_WEAPON_ATTACK_TIMER] = weaponAttackSpeed; }
 		
-		// Increase the bullet counter and lower the remaining ammo value, but only do the latter if the
-		// remaining ammo is any value greater than zero.
+		// Increase the bullet counter and lower the remaining ammo value, but only do the latter if the remaining ammo is any value greater
+		// than zero.
 		bulletCounter++;
 		if (weaponRemainingAmmo != -1)
 			weaponRemainingAmmo--;
 		
-		// Store the player's directional value rounded to one of four possible values, and store the current 
-		// accuracy penalty value that will be applied to the accuracy of the fired bullet.
+		// Store the player's directional value rounded to one of four possible values, and store the current accuracy penalty value that 
+		// will be applied to the accuracy of the fired bullet.
 		var _direction		 = round(direction / 90) * 90;
 		var _accuracyPenalty = curAccuracyPenalty;
 		
-		// Add to the current accuracy penalty's value whenever a firearm is used. This value isn't reflected
-		// in the accuracy of the current fired bullet, but all the ones fired after it.
+		// Add to the current accuracy penalty's value whenever a firearm is used. This value isn't reflected in the accuracy of the current
+		// fired bullet, but all the ones fired after it.
 		curAccuracyPenalty += PLYR_ACCPEN_DECAY_INCREMENT;
 		if (curAccuracyPenalty > PLYR_ACCPEN_MAX_VALUE)
 			curAccuracyPenalty = PLYR_ACCPEN_MAX_VALUE;
 		
-		// Jump into scope of the equipment struct so its values can be utilized for determining how the
-		// weapon will be used.
+		// Jump into scope of the equipment struct so its values can be utilized for determining how the weapon will be used.
 		with(equipment){
-			// Copy over some of the equipped weapon's characteristics as they will be used to determine how
-			// much damage the weapon will do, how many projectiles it needs to spawn, the flags it has toggled,
-			// and so on.
+			// Copy over some of the equipped weapon's characteristics as they will be used to determine how much damage the weapon will do,
+			// how many projectiles it needs to spawn, the flags it has toggled, and so on.
 			var _damage			= 0;
 			var _range			= 0;
 			var _accuracy		= 0;
@@ -1266,8 +1219,8 @@ state_player_weapon_ready = function(_delta){
 				_flags			= flags;
 			}
 			
-			// Jump into scope fo the weapon's item inventory struct to see if its quantity and/or durabilty
-			// needs to be reduced to reflect the use of the weapon.
+			// Jump into scope fo the weapon's item inventory struct to see if its quantity and/or durabilty needs to be reduced to reflect
+			// the use of the weapon.
 			var _isMelee = ((_flags & WEAP_FLAG_IS_MELEE) != 0);
 			with(global.curItems[weapon]){
 				if (!_isMelee) { quantity--; }
@@ -1283,9 +1236,8 @@ state_player_weapon_ready = function(_delta){
 				return;
 			}
 			
-			// When a non-melee weapon is being used, the ammunition it utilizes needs to have an effect on
-			// the damage, range, accuracy, and bullet count of the projectile. So, this values are all added
-			// to what values are currently there.
+			// When a non-melee weapon is being used, the ammunition it utilizes needs to have an effect on the damage, range, accuracy, and
+			// bullet count of the projectile. So, this values are all added to what values are currently there.
 			with(curAmmoStatRef){
 				_damage		   += damage;
 				_range		   += range;
@@ -1293,19 +1245,17 @@ state_player_weapon_ready = function(_delta){
 				_bulletCount   += bulletCount;
 			}
 				
-			// Multiply the accuracy against the current penalty value. At the worst, an additional 75%
-			// is added to the accuracy value to make constant shooting incredihbly inaccurate.
+			// Multiply the accuracy against the current penalty value. At the worst, an additional 75% is added to the accuracy value to 
+			// make constant shooting incredihbly inaccurate.
 			_accuracy += (_accuracy * _accuracyPenalty);
 				
-			// Use the accuracy value calculated above to create a range that is -accuracy and +accuracy from
-			// the cardinal direction the player is currently facing. A random direction within that area is
-			// chosen and added to the base direction to offset it.
+			// Use the accuracy value calculated above to create a range that is -accuracy and +accuracy from the cardinal direction the 
+			// player is currently facing. A random direction within that area is chosen and added to the base direction to offset it.
 			_direction += random_range(-_accuracy, _accuracy);
 			
-			// Hitscan projectiles will cast a ray between the barrel of the equipped weapon, and the endpoint
-			// of the bullet's path based on weapon's range stat. It then iterates through the objects until
-			// it hits an object that it can interact with. When that occurs, the bullet ignores the rest of
-			// the list as it will be assumed they cannot go through objects.
+			// Hitscan projectiles will cast a ray between the barrel of the equipped weapon, and the endpoint of the bullet's path based on
+			// weapon's range stat. It then iterates through the objects until it hits an object that it can interact with. When that occurs,
+			// the bullet ignores the rest of the list as it will be assumed they cannot go through objects.
 			if ((_flags & WEAP_FLAG_IS_HITSCAN) != 0){
 				for (var i = 0; i < _bulletCount; i++){
 					with(GAME_MANAGER){
@@ -1328,27 +1278,26 @@ state_player_weapon_ready = function(_delta){
 		return;
 	}
 	
-	// Releasing the input while using a non-automatic weapon will have its remaining bullet before needing
-	// to release the input reset to what the total count of bullets for that burst fire is.
+	// Releasing the input while using a non-automatic weapon will have its remaining bullet before needing to release the input reset to 
+	// what the total count of bullets for that burst fire is.
 	if (PINPUT_USE_WEAPON_RELEASED && weaponBulletCount != -1)
 		bulletCounter = 0;
 	
-	// The player has pressed the input that changes the equipped weapon's current ammunition to another
-	// type (So long as another type exists), so the function for swapping ammo is called which handles the
-	// logic for switch ammo types if possible.
+	// The player has pressed the input that changes the equipped weapon's current ammunition to another type (So long as another type 
+	// exists), so the function for swapping ammo is called which handles the logic for switch ammo types if possible.
 	if (PINPUT_CHANGE_AMMO_PRESSED && swap_current_ammo_index()){
 		object_set_state(state_player_reloading);
 		timers[PLYR_RELOAD_TIMER] = weaponReloadSpeed;
 		return;
 	}
 	
-	// Exit the function early so long as the player hasn't pressed the reload input, as this is the lowest
-	// priority processed input while in the readied weapon state.
+	// Exit the function early so long as the player hasn't pressed the reload input, as this is the lowest priority processed input while
+	// in the readied weapon state.
 	if (!PINPUT_RELOAD_WEAPON_PRESSED)
 		return;
 	
-	// Make sure there is ammo in the player's inventory to use in the reload process and that the weapon
-	// isn't full on ammo already. If either happens to be true, the reload process isn't started.
+	// Make sure there is ammo in the player's inventory to use in the reload process and that the weapon isn't full on ammo already. If 
+	// either happens to be true, the reload process isn't started.
 	with(equipment){
 		if (ammoCount[curAmmoIndex] == 0 || global.curItems[weapon].quantity == weaponStatRef.stackLimit)
 			return;
@@ -1358,9 +1307,8 @@ state_player_weapon_ready = function(_delta){
 }
 
 /// @description 
-///	A state the player finds themself in when they're reloading their equipped weapon (If that weapon needs
-/// to be reloaded). Once the timer for reloading has decremented to zero, the state ends and the reload
-/// function is called to handle what is required for that process.
+///	A state the player finds themself in when they're reloading their equipped weapon (If that weapon needs to be reloaded). Once the timer
+/// for reloading has decremented to zero, the state ends and the reload function is called to handle what is required for that process.
 ///	
 ///	@param {Real}	delta	The difference in time between the execution of this frame and the last.
 state_player_reloading = function(_delta){
@@ -1372,9 +1320,8 @@ state_player_reloading = function(_delta){
 }
 
 /// @description
-///	A very simple state that the player is placed in whenever they need to have their funcitonality paused
-/// without having other existing entities paused as well (Ex. Opening a menu that isn't the pause menu, an
-/// interaction textbox opening, etc.).
+///	A very simple state that the player is placed in whenever they need to have their funcitonality paused without having other existing 
+/// entities paused as well (Ex. Opening a menu that isn't the pause menu, an interaction textbox opening, etc.).
 ///	
 ///	@param {Real}	delta	The difference in time between the execution of this frame and the last.
 state_player_paused = function(_delta){

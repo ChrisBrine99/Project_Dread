@@ -2,8 +2,7 @@
 event_inherited();
 flags			= ENTT_FLAG_VISIBLE | ENTT_FLAG_ACTIVE;
 
-// Add a shadow for the underside of the table so light doesn't completely illuminate the visible portion of
-// what is underneath it.
+// Add a shadow for the underside of the table so light doesn't completely illuminate the visible portion of what is underneath it.
 entity_add_shadow(
 	entity_draw_shadow_square, 
 	-8, -2,		// Offsets compared to x and y of object.

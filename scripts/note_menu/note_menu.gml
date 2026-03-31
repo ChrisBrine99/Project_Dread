@@ -9,17 +9,17 @@ function str_note_menu(_index) : str_base_menu(_index) constructor {
 	///	
 	///	
 	create_event = function(){
-		// Set up the "auxilliary" return inputs to the input that opens up this menu during gameplay, so 
-		// it can also close the menu should the player choose to use it instead of the standard input.
+		// Set up the "auxilliary" return inputs to the input that opens up this menu during gameplay, so it can also close the menu should 
+		// the player choose to use it instead of the standard input.
 		var _inputs		= global.settings.inputs;
 		keyAuxReturn	= _inputs[STNG_INPUT_NOTE_MENU];
 		padAuxReturn	= _inputs[STNG_INPUT_NOTE_MENU + 1];
 	}
 	
 	/// @description
-	///	Called during every frame that the menu exists for. It will be responsible for rendering its contents
-	/// to the game's GUI layer. Note that its position refers to the top-left of the menu itself, and its
-	/// contents will be offset from that point based on each of their unique position values.
+	///	Called during every frame that the menu exists for. It will be responsible for rendering its contents to the game's GUI layer. Note 
+	/// that its position refers to the top-left of the menu itself, and its contents will be offset from that point based on each of their 
+	/// unique position values.
 	///	
 	///	@param {Real}	xPos	The menu's current x position added with the viewport's current x position.
 	/// @param {Real}	yPos	The menu's current y position added with the viewport's current y position.

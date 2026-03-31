@@ -1,7 +1,7 @@
 #region Shared Macros Between Entity Types
 
-// Values for the flag bits found within an entity (Both dynamic and static utilize these) that will determine
-// what non-function states apply to them currently. Each flag has its own unique purpose and effect.
+// Values for the flag bits found within an entity (Both dynamic and static utilize these) that will determine what non-function states apply
+// to them currently. Each flag has its own unique purpose and effect.
 #macro	ENTT_FLAG_SHADOW				0x01000000
 #macro	ENTT_FLAG_PAUSE_FOR_CUTSCENE	0x02000000
 #macro	ENTT_FLAG_OVERRIDE_DRAW			0x04000000
@@ -12,22 +12,22 @@
 #macro	ENTT_FLAG_INVINCIBLE			0x80000000
 
 
-// Macros for the code required to check the state of a given flag or flag(s) that are required for certain
-// events or code to trigger within a given entity. They simple condense those checks down to a single term.
+// Macros for the code required to check the state of a given flag or flag(s) that are required for certain events or code to trigger within 
+// a given entity. They simple condense those checks down to a single term.
 #macro	ENTT_HAS_SHADOW					((flags & ENTT_FLAG_SHADOW)				!= 0)
 #macro	ENTT_PAUSES_FOR_CUTSCENE		((flags & ENTT_FLAG_PAUSE_FOR_CUTSCENE)	!= 0)
 #macro	ENTT_OVERRIDES_DRAW_EVENT		((flags & ENTT_FLAG_OVERRIDE_DRAW)		!= 0)
 #macro	ENTT_DID_ANIMATION_END			((flags & ENTT_FLAG_ANIMATION_END)		!= 0)
 #macro	ENTT_IS_ACTIVE					((flags & ENTT_FLAG_ACTIVE				!= 0) && (flags & ENTT_FLAG_DESTROYED) == 0)
-#macro	ENTT_IS_VISIBLE					((flags & (ENTT_FLAG_VISIBLE | ENTT_FLAG_ACTIVE))	== ENTT_FLAG_VISIBLE | ENTT_FLAG_ACTIVE)
+#macro	ENTT_IS_VISIBLE					((flags & (ENTT_FLAG_VISIBLE | ENTT_FLAG_ACTIVE)) == ENTT_FLAG_VISIBLE | ENTT_FLAG_ACTIVE)
 #macro	ENTT_IS_DESTROYED				((flags & ENTT_FLAG_DESTROYED			!= 0) && (flags & ENTT_FLAG_INVINCIBLE)	== 0)
 
 #endregion Shared Macros Between Entity Types
 
 #region Shared Global Variables Entities Utilize
 
-// A list containing state information for any entities that are currently paused. In this context, "paused"
-// means all of their state variables are set to STATE_NONE (0).
+// A list containing state information for any entities that are currently paused. In this context, "paused" means all of their state 
+// variables are set to STATE_NONE (0).
 global.pausedEntities = ds_list_create();
 
 #endregion Shared Global Variables Entities Utilize
@@ -35,8 +35,8 @@ global.pausedEntities = ds_list_create();
 #region Shared Event Functions Between Entity Types
 
 /// @description
-///	The default Entity drawing function, which will also handle animation that Entity should their current
-/// sprite have more than one frame OR their animation speed is set to some non-zero value.
+///	The default Entity drawing function, which will also handle animation that Entity should their current sprite have more than one frame OR
+/// their animation speed is set to some non-zero value.
 ///	
 /// @param {Real}	delta		The current delta time for the frame.
 function entity_draw_event(_delta){
@@ -61,10 +61,9 @@ function entity_draw_event(_delta){
 #region Shared Utility Functions Between Entity Types
 
 /// @description 
-///	Prepares an entity for being paused by copying over its state values and storing them; clearing them from
-/// the variables within the entity that were previously storing these values, respectively. Note that this
-/// function should only be called within children of par_dynamic_entity or par_static_entity. Failing to do
-/// so will cause the game to crash.
+///	Prepares an entity for being paused by copying over its state values and storing them; clearing them from the variables within the entity 
+/// that were previously storing these values, respectively. Note that this function should only be called within children of *par_dynamic_entity*
+/// or *par_static_entity*. Failing to do so will cause the game to crash.
 ///	
 ///	@param {Id.Instance}	id				Instance ID for the entity that will be paused.
 /// @param {Real}			curState		Index of the state method that was currently being executed by the entity.
@@ -76,9 +75,8 @@ function entity_pause(_id, _curState, _nextState, _lastState){
 	nextState		= STATE_NONE;
 	lastState		= STATE_NONE;
 	
-	// Create the small struct that will store the state information for the paused entity until they can
-	// be unpaused once again. Persistence is also stored so the data isn't removed during room transitions
-	// if it represents the state of a persistent entity.
+	// Create the small struct that will store the state information for the paused entity until they can be unpaused once again. Persistence
+	// is also stored so the data isn't removed during room transitions if it represents the state of a persistent entity.
 	ds_list_add(global.pausedEntities, {
 		entityID		: _id, 
 		curState		: _curState,
@@ -88,9 +86,8 @@ function entity_pause(_id, _curState, _nextState, _lastState){
 }
 
 /// @description 
-/// Unpauses an entity that is found within the list of paused entities. If a matching ID cannot be found,
-/// nothing is done. Otherwise, the entity has its state values returned to it and the list will delete the
-/// values it passed along from itself.
+/// Unpauses an entity that is found within the list of paused entities. If a matching ID cannot be found, nothing is done. Otherwise, the 
+/// entity has its state values returned to it and the list will delete the values it passed along from itself.
 ///	
 ///	@param {Id.Instance}	id	Instance ID for the entity that will be paused.
 function entity_unpause(_id){
@@ -98,54 +95,25 @@ function entity_unpause(_id){
 	if (_size == 0) // Exit instantly when there aren't any entities currently paused.
 		return;
 	
-	// A slight optimization that ignores the binary search below should their only be a single entity that
-	// is currently paused. If the ID matches, the list is emptied and the Entity returns to its state prior
-	// to being paused.
-	if (_size == 1){
-		with(global.pausedEntities[| 0]){
-			if (entityID == _id)
-				return; // Entity did not match; exit the function.
-				
-			// Store the values to return to the Entity into local variables so they can be passed through
-			// once jumping into the Entity's scope via their ID.
-			var _curState	= curState;
-			var _nextState	= nextState;
-			var _lastState	= lastState;
-			with(_id){
-				curState	= _curState;
-				nextState	= _nextState;
-				lastState	= _lastState;
-			}
-		}
-		return;
-	}
-	
 	var _data	= noone;
-	var _middle = _size >> 1;
 	var _start	= 0;
 	var _end	= _size - 1;
-	while (_start != _end){
-		_data = global.pausedEntities[| _start];
-		if (_data.entityID > _id){
-			_start	= _middle; // Cut off bottom half; search remainder of instances.
-			_middle = (_end + _start) >> 1;
-			// Fix for potential endless looping; ensures the next interation is the last.
-			if (_start == _middle)
-				_middle = _end;
+	var _middle = 0;
+	while (_start <= _end){
+		_middle	= _start + floor((_end - _start) / 2);
+		_data 	= global.pausedEntities[| _start];
+		if (_data.entityID > _id){ // Cut off bottom half of the list; continue search.
+			_start = _middle + 1;
 			continue;
 		}
 
-		if (_data.entityID < _id){
-			_end	= _middle; // Cut off top half; search remainder of instances.
-			_middle = (_end + _start) >> 1;
-			// Fix for potential endless looping; ensures the next interation is the last.
-			if (_end == _middle)
-				_middle = _start;
+		if (_data.entityID < _id){ // Cut off top half of the list; continue search.
+			_end = _middle + 1;
 			continue;
 		}
 		
-		// Matching Entity has been found, return them to their state prior to being paused by copying the
-		// state data found in the data into local values that are then passed into the entity's state values.
+		// Matching Entity has been found, return them to their state prior to being paused by copying the state data found in the data into 
+		// local values that are then passed into the entity's state values.
 		var _curState	= STATE_NONE;
 		var _nextState	= STATE_NONE;
 		var _lastState	= STATE_NONE;
@@ -170,8 +138,8 @@ function entity_unpause(_id){
 }
 
 /// @description 
-///	Loops through the list of all currently paused entities and returns their state data back to them. The
-/// list for storing previous state data of said entities is then completely cleared.
+///	Loops through the list of all currently paused entities and returns their state data back to them. The list for storing previous state 
+/// data of said entities is then completely cleared.
 ///	
 function entity_unpause_all(){
 	var _curState	= STATE_NONE;
@@ -194,9 +162,8 @@ function entity_unpause_all(){
 }
 
 /// @description 
-///	A general function for rendering an entity's shadow as a circle. Note that this circle's horizontal
-/// radius is equal to the value found in "widthShadow", and its vertical radius is the value found in
-/// "heightShadow".
+///	A general function for rendering an entity's shadow as a circle. Note that this circle's horizontal radius is equal to the value found 
+/// in *widthShadow*, and its vertical radius is the value found in *heightShadow*.
 ///	
 ///	@param {Real}	x	The x position of the entity and its shadow's horizontal offset from said position.
 /// @param {Real}	y	The y position of the entity and its shadow's vertical offset from said position.
@@ -218,8 +185,8 @@ function entity_draw_shadow_square(_x, _y){
 #region Shared Miscellaneous Functions Between Entity Types
 
 /// @description 
-///	Assigns a new sprite for the Entity to use. If the sprite resource already matches what the Entity's current
-///	sprite is, the current animation speed can be updated as required through calling this function.
+///	Assigns a new sprite for the Entity to use. If the sprite resource already matches what the Entity's current sprite is, the current 
+/// animation speed can be updated as required through calling this function.
 ///	
 /// @param {Asset.GMSprite}	sprite		Index for the sprite to assign to the Entity in question.
 /// @param {Real}			speed		(Optional) Animation speed relative to the value set within the sprite editor.
@@ -232,17 +199,17 @@ function entity_set_sprite(_sprite, _speed = 1.0, _start = -1, _loopStart = -1){
 		animFps			= sprite_get_speed(_sprite);
 		
 		if (_start > 0) // Prevent the image index from being updated if no value was provided to replace the default.
-			image_index		= _start;
+			image_index	= _start;
 			
 		if (_loopStart > 0) // Perform the same check as above to not overwrite the loop start when not necessary.
-			animLoopStart	= clamp(_loopStart, 0, animLength - 1);
+			animLoopStart = clamp(_loopStart, 0, animLength - 1);
 	}
 	animSpeed = _speed;
 }
 
 /// @description 
-///	Adds a shadow to the entity while also allowing the way that shadow will drawn and its properties to be
-/// set at the same time as the flag that enables shadow rendering to begin with.
+///	Adds a shadow to the entity while also allowing the way that shadow will drawn and its properties to be set at the same time as the flag 
+/// that enables shadow rendering to begin with.
 ///	
 ///	@param {Function}	function	Script or method to call when the shadow is being drawn.
 /// @param {Real}		x			Offset of the shadow relative to the entity's x position.
@@ -262,8 +229,8 @@ function entity_add_shadow(_function, _x, _y, _width, _height){
 }
 
 /// @description 
-///	Creates an instance of str_light_source and stores it within the Entity's lightSource variable. The x and
-///	y parameters denote the offsets along each axis relative to the Entity's current position.
+///	Creates an instance of *str_light_source* and stores it within the Entity's *lightSource* variable. The *x* and *y* parameters denote the 
+/// offsets along each axis relative to the Entity's current position.
 ///	
 ///	@param {Real}	x			Offset relative to the entity's current x position.
 /// @param {Real}	y			Offset relative to the entity's current y position.

@@ -1,7 +1,6 @@
 #region Macros for Basic Light Struct
 
-// Values for the bits being utilized within a light struct's "flags" variable to enable/disable functionality
-// during its lifetime.
+// Values for the bits being utilized within a light struct's "flags" variable to enable/disable functionality during its lifetime.
 #macro	LGHT_FLAG_LIMITED_LIFE			0x10000000
 #macro	LGHT_FLAG_ACTIVE				0x20000000
 #macro	LGHT_FLAG_DESTROYED				0x40000000
@@ -19,7 +18,7 @@
 
 #region Basic Light Struct Definition
 
-/// @param {Function}	index	The value of "str_light_source" as determined by GameMaker during runtime.
+/// @param {Function}	index	The value of *str_light_source* as determined by GameMaker during runtime.
 function str_light_basic(_index) : str_base(_index) constructor {
 	x				= 0;
 	y				= 0;
@@ -29,8 +28,8 @@ function str_light_basic(_index) : str_base(_index) constructor {
 	strength		= LGHT_MIN_STRENGTH;
 	
 	///	@description 
-	///	Called for every frame that the light source exists. It's responsible for rendering the light source 
-	/// with its given color and properties at its current position within the room.
+	///	Called for every frame that the light source exists. It's responsible for rendering the light source with its given color and 
+	/// properties at its current position within the room.
 	///	
 	/// @param {Real}	viewX		Offset along the x axis caused by the viewport moving around the room.
 	///	@param {Real}	viewY		Offset along the y axis caused by the viewport moving around the room.
@@ -49,8 +48,8 @@ function str_light_basic(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	///	Sets the base properties of the light source. Children of this basic light source struct can override
-	///	this function to enabled setting up the parameters they add for their type of lighting style.
+	///	Sets the base properties of the light source. Children of this basic light source struct can override this function to enabled setting
+	/// up the parameters they add for their type of lighting style.
 	///	
 	/// @param {Real}	radius		Area from the origin of the light source that is illuminated by it.
 	/// @param {Real}	color		The hue of the light source.
@@ -62,8 +61,8 @@ function str_light_basic(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	///	Sets the position within the room for the light's origin to be. Any floating-point values passed in
-	///	as argument parameters will be truncated to become whole-pixel values.
+	///	Sets the position within the room for the light's origin to be. Any floating-point values passed in as argument parameters will be 
+	/// truncated to become whole-pixel values.
 	///	
 	///	@param {Real}	x	Horizontal position of the light within the room.
 	/// @param {Real}	y	Vertical position of the light within the room.
@@ -78,8 +77,9 @@ function str_light_basic(_index) : str_base(_index) constructor {
 #region Global Functions for A Basic Light
 
 /// @description 
-///	Creates a basic light source instance. It has a set size, color, and strength that can be updated as needed,
-/// but will never be updated automatically by the light itself.
+///	Creates a basic light source instance. It has a set size, color, and strength that can be updated as needed, but will never be updated 
+/// automatically by the light itself.
+/// @returns {Struct.Light_Basic}
 ///	
 ///	@param {Real}	x			Horizontal position of the light within the room.
 /// @param {Real}	y			Vertical position of the light within the room.

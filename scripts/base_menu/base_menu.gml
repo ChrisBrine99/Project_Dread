@@ -1,7 +1,7 @@
 #region Macros for Base Menu Struct
 
-// Macros for the various bits utilized by all menus to determine which aspects of itself are initialized and
-// also general flags for if the menu can be rendered or recieve player input, and so on.
+// Macros for the various bits utilized by all menus to determine which aspects of itself are initialized and also general flags for if the
+// menu can be rendered or recieve player input, and so on.
 #macro	MENU_FLAG_OPTINFO_INITIALIZED	0x01000000
 #macro	MENU_FLAG_OPTIONS_INITIALIZED	0x02000000
 #macro	MENU_FLAG_PARAMS_INITIALIZED	0x04000000
@@ -11,8 +11,8 @@
 #macro	MENU_FLAG_ACTIVE				0x40000000
 // NOTE --- bit 0x80000000 is already used by STR_FLAG_PERSISTENT as defined in the script "base". 
 
-// Macros for checking the various bits within a menu's "flags" variable to see if they're currently cleared
-// or set, which can then be used to determine what to happen with regards to the menu in question.
+// Macros for checking the various bits within a menu's "flags" variable to see if they're currently cleared or set, which can then be used 
+// to determine what to happen with regards to the menu in question.
 #macro	MENU_IS_OPTINFO_INITIALIZED		((flags & MENU_FLAG_OPTINFO_INITIALIZED)	!= 0)
 #macro	MENU_ARE_OPTIONS_INITIALIZED	((flags & MENU_FLAG_OPTIONS_INITIALIZED)	!= 0)
 #macro	MENU_ARE_PARAMS_INITIALIZED		((flags & MENU_FLAG_PARAMS_INITIALIZED)		!= 0)
@@ -21,8 +21,8 @@
 #macro	MENU_IS_VISIBLE					((flags & MENU_FLAG_VISIBLE)				!= 0)
 #macro	MENU_IS_ACTIVE					((flags & MENU_FLAG_ACTIVE)					!= 0)
 
-// A unique check to see if a menu hasn't been properly initialized; meaning its option parameters and general
-// parameters haven't been setup before the code attempts to perform any menu logic involving such data.
+// A unique check to see if a menu hasn't been properly initialized; meaning its option parameters and general parameters haven't been setup 
+// before the code attempts to perform any menu logic involving such data.
 #macro	MENU_NOT_PROPERLY_INITIALIZED	((flags & (MENU_FLAG_OPTIONS_INITIALIZED | MENU_FLAG_PARAMS_INITIALIZED)) != (MENU_FLAG_OPTIONS_INITIALIZED | MENU_FLAG_PARAMS_INITIALIZED))
 
 // Macros for the inputs a menu will check for; stored within a variable named "inputFlags".
@@ -35,8 +35,8 @@
 #macro	MINPUT_FLAG_RETURN				0x00000040
 #macro	MINPUT_FLAG_AUX_RETURN			0x00000080
 
-// Macros to check the state of a given input flag to see if it is currently set or cleared. Note that these
-// checks have additional conditions alongside seeing if the bit is set to determine if the input is valid.
+// Macros to check the state of a given input flag to see if it is currently set or cleared. Note that these checks have additional conditions
+// alongside seeing if the bit is set to determine if the input is valid.
 #macro	MINPUT_IS_RIGHT_HELD			((inputFlags & MINPUT_FLAG_CURSOR_RIGHT)	!= 0 && (inputFlags & MINPUT_FLAG_CURSOR_LEFT)		== 0)
 #macro	MINPUT_IS_LEFT_HELD				((inputFlags & MINPUT_FLAG_CURSOR_LEFT)		!= 0 && (inputFlags & MINPUT_FLAG_CURSOR_RIGHT)		== 0)
 #macro	MINPUT_IS_UP_HELD				((inputFlags & MINPUT_FLAG_CURSOR_UP)		!= 0 && (inputFlags & MINPUT_FLAG_CURSOR_DOWN)		== 0)
@@ -46,73 +46,67 @@
 #macro	MINPUT_IS_AUX_SELECT_RELEASED	((inputFlags & MINPUT_FLAG_AUX_SELECT)		== 0 && (prevInputFlags & MINPUT_FLAG_AUX_SELECT)	!= 0)
 #macro	MINPUT_IS_AUX_RETURN_RELEASED	((inputFlags & MINPUT_FLAG_AUX_RETURN)		== 0 && (prevInputFlags & MINPUT_FLAG_AUX_RETURN)	!= 0)
 
-// A unique check to see if no cursor movement inputs are being held by the player. Prevents having to perform
-// four seperate checks on each input since they'll all equal 0 when none are held.
+// A unique check to see if no cursor movement inputs are being held by the player. Prevents having to perform four seperate checks on each 
+// input since they'll all equal 0 when none are held.
 #macro	MINPUT_NO_DIRECTION_HELD		((inputFlags & (MINPUT_FLAG_CURSOR_RIGHT | MINPUT_FLAG_CURSOR_LEFT | MINPUT_FLAG_CURSOR_UP | MINPUT_FLAG_CURSOR_DOWN)) == 0)
 
-// Macros for the values that determine the cursor's movement direction whenever a given direction input is
-// currently being held by the user.
+// Macros for the values that determine the cursor's movement direction whenever a given direction input is currently being held by the user.
 #macro	MENU_MOVEMENT_RIGHT				1
 #macro	MENU_MOVEMENT_LEFT			   -1
 #macro	MENU_MOVEMENT_DOWN				1
 #macro	MENU_MOVEMENT_UP			   -1
 #macro	MENU_MOVEMENT_NONE				0
 
-// Two values for the menu's autoscrolling functionality whenever a cursor input is continuously held down by
-// the player. The first value is the initial interval between the cursor movement occurring, and the second
-// value is what is used from that point on until the player stops autoscrolling the cursor.
+// Two values for the menu's autoscrolling functionality whenever a cursor input is continuously held down by the player. The first value is 
+// the initial interval between the cursor movement occurring, and the second value is what is used from that point on until the player 
+// stops autoscrolling the cursor.
 #macro	MENU_FIRST_AUTOSCROLL_TIME		30.0
 #macro	MENU_AUTOSCROLL_TIME			10.0
 
-// A simple catchall to be used by the variables storing selected option indexes whenever they don't have
-// anything currently selected.
+// A simple catchall to be used by the variables storing selected option indexes whenever they don't have anything currently selected.
 #macro	MENU_OPTION_INVALID			   -1
 
 #endregion Macros for Base Menu Struct
 
 #region Base Menu Struct Definition
 
-/// @param {Function}	index	The value of "str_base_menu" as determined by GameMaker during runtime.
+/// @param {Function}	index	The value of *str_base_menu* as determined by GameMaker during runtime.
 function str_base_menu(_index) : str_base(_index) constructor {
-	// Stores the current position of the menu on the GUI layer of the screen. All elements will be offset 
-	// from this position relative to their own "origin" positions.
+	// Stores the current position of the menu on the GUI layer of the screen. All elements will be offset from this position relative to 
+	// their own "origin" positions.
 	x					= 0;
 	y					= 0;
 	
-	// Stores a reference to the menu that was responsible for creating the new on in question. If this value
-	// isn't set, it is assumed that the menu with the unset "prevMenu" value is the root of the tree and
-	// should return gameplay back to normal upon its closing.
+	// Stores a reference to the menu that was responsible for creating the new on in question. If this value isn't set, it is assumed that 
+	// the menu with the unset "prevMenu" value is the root of the tree and should return gameplay back to normal upon its closing.
 	prevMenu			= noone;
 	
-	// Stores the currently executing state, as well as the last state to be executed AND the state to shift 
-	// to at the end of the current frame if applicable (Its value matches that of "curState" otherwise).
+	// Stores the currently executing state, as well as the last state to be executed AND the state to shift to at the end of the current 
+	// frame if applicable (Its value matches that of "curState" otherwise).
 	curState			= 0;
 	nextState			= 0;
 	lastState			= 0;
 	
-	// Stores the inputs that were held versus not held for the current and last frame of gameplay. From this, 
-	// checks to see if they've been pressed, held, or released can be performed quickly through bitwise math.
+	// Stores the inputs that were held versus not held for the current and last frame of gameplay. From this, checks to see if they've been 
+	// pressed, held, or released can be performed quickly through bitwise math.
 	inputFlags			= 0;
 	prevInputFlags		= 0;
 	
-	// Variables for input that are exclusive to a controller with at least one analog stick (Second pair of
-	// values is used for a potential second analog stick). Each pair will simply store the values retrieved
-	// from each of the sticks when inputs are handled by the current menu.
+	// Variables for input that are exclusive to a controller with at least one analog stick (Second pair of values is used for a potential 
+	// second analog stick). Each pair will simply store the values retrieved from each of the sticks when inputs are handled.
 	padStickInputLH		= 0.0;
 	padStickInputLV		= 0.0;
 	padStickInputRH		= 0.0;
 	padStickInputRV		= 0.0;
 	
-	// Stores the movement for the menu's cursor in a way similar to how variables with the same names store
-	// the player's current movement vector when handling their movement. The main difference is these will
-	// only ever store -1, 0, or +1 for their respective movement since circular movement doesn't need to be
-	// accounted for in a menu.
+	// Stores the movement for the menu's cursor in a way similar to how variables with the same names store the player's current movement 
+	// vector when handling their movement. The main difference is these will only ever store -1, 0, or +1 for their respective movement 
+	// since circular movement doesn't need to be accounted for in a menu.
 	moveDirectionX		= 0;
 	moveDirectionY		= 0;
 	
-	// Variables for input that are exclusive to a menu. They store the value corresponding to the keycodes and
-	// gamepad buttons that correspond to secondary inputs that allow a menu option to be selected or the return
-	// logic to be activated, respectively.
+	// Variables for input that are exclusive to a menu. They store the value corresponding to the keycodes and gamepad buttons that 
+	// correspond to secondary inputs that allow a menu option to be selected or the return logic to be activated, respectively.
 	keyAuxSelect		= vk_nokey;
 	keyAuxReturn		= vk_nokey;
 	padAuxSelect		= 0;
@@ -122,9 +116,8 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	width				= 0;	// Set on a per-menu basis.
 	height				= 0;	// Set automatically as menu options are added.
 	
-	// Variables related to a menu's options. There is a list of "options" that are structs containing info
-	// about a given option within the menu, and the remaining values are all parameters that affect the
-	// positioning, spacing, and alignment of all currently visible options.
+	// Variables related to a menu's options. There is a list of "options" that are structs containing info about a given option within the 
+	// menu, and the remaining values are all parameters that affect the positioning, spacing, and alignment of all currently visible options.
 	options				= ds_list_create();
 	optionX				= 0;
 	optionY				= 0;
@@ -133,40 +126,40 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	optionAlignX		= fa_left;
 	optionAlignY		= fa_top;
 	
-	// Stores the index of the option that is currently being highlighted, has been selected, and was selected
-	// but has been stored for later use within the menu, respectively.
+	// Stores the index of the option that is currently being highlighted, has been selected, and was selected but has been stored for later 
+	// use within the menu, respectively.
 	curOption			= 0;
 	selOption			= MENU_OPTION_INVALID;
 	auxSelOption		= MENU_OPTION_INVALID;
 	
-	// Determines how much of the menu is visible to the user at any given time. This region will be shifted
-	// as the cursor is moved relative to what the two variable below this group are set to.
+	// Determines how much of the menu is visible to the user at any given time. This region will be shifted as the cursor is moved relative 
+	// to what the two variable below this group are set to.
 	visibleAreaX		= 0;
 	visibleAreaY		= 0;
 	visibleAreaW		= 0;
 	visibleAreaH		= 0;
 	
-	// Defines how far from the edge of the visible area along the x or y axis the cursor must be before another
-	// movement in the given direction will shift the current viewable region alongside the cursor's movement
-	// so long as there are further rows or columns in that movement direction.
+	// Defines how far from the edge of the visible area along the x or y axis the cursor must be before another movement in the given 
+	// direction will shift the current viewable region alongside the cursor's movement so long as there are further rows or columns in that
+	// movement direction.
 	visAreaShiftX		= 0;
 	visAreaShiftY		= 0;
 	
-	// Determines the opactity for the entire menu. Unique opacities can reference this one to allow different
-	// values that are all kept in step for things like opening/closing animations, and so on.
+	// Determines the opactity for the entire menu. Unique opacities can reference this one to allow different values that are all kept in 
+	// step for things like opening/closing animations, and so on.
 	alpha				= 0.0;
 	
-	// Stores the duration the player has been holding a cursor movement key for which is then used to process
-	// automatic cursor movement so long as any of those keys are held.
+	// Stores the duration the player has been holding a cursor movement key for which is then used to process automatic cursor movement so 
+	// long as any of those keys are held.
 	cursorShiftTimer	= 0.0;
 	
 	/// @description 
-	///	Called whenever a menu is closed. It handles cleaning up memory that was allocated for any menu options,
-	/// and can be further extended to clean up additional memory allocated by child menu structs.
+	///	Called whenever a menu is closed. It handles cleaning up memory that was allocated for any menu options, and can be further extended 
+	/// to clean up additional memory allocated by child menu structs.
 	///	
 	destroy_event = function(){
-		// If no menu created this one (Or it shouldn't have responsibility over this flag's state) it means 
-		// that the global flag saying there is a menu open currently should be cleared.
+		// If no menu created this one (Or it shouldn't have responsibility over this flag's state) it means that the global flag saying 
+		// there is a menu open currently should be cleared.
 		if (prevMenu == noone) { global.flags = global.flags & ~GAME_FLAG_MENU_OPEN; }
 		
 		// Loop through and delete all menu options structs before deleting their management list from memory.
@@ -175,15 +168,15 @@ function str_base_menu(_index) : str_base(_index) constructor {
 			delete options[| i];
 		ds_list_destroy(options);
 		
-		// Finally, clear the flags that are responsible for allowing the menu to have its current state code
-		// executed and render itself to the game's GUI layer.
+		// Finally, clear the flags that are responsible for allowing the menu to have its current state code executed and render itself to 
+		// the game's GUI layer.
 		flags = flags & ~(MENU_FLAG_VISIBLE | MENU_FLAG_ACTIVE);
 	}
 	
 	/// @description 
-	///	Called during every frame that the menu exists for. It will be responsible for rendering menu's contents
-	/// to the game's screen. The argument values should include the menu's current position on the screen as
-	/// well as the screen's current position within the room since they use room-space coordinates.
+	///	Called during every frame that the menu exists for. It will be responsible for rendering menu's contents to the game's screen. The 
+	/// argument values should include the menu's current position on the screen as well as the screen's current position within the room 
+	/// since they use room-space coordinates.
 	///	
 	///	@param {Real}	xView	The menu's current x position added with the viewport's current x position.
 	/// @param {Real}	yView	The menu's current y position added with the viewport's current y position.
@@ -192,10 +185,10 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	draw_gui_event = function(_xView, _yView, _wView, _hView) {}
 	
 	/// @description
-	///	Initializes some default parameters for the menu. Specifically, whether or not it should be active or
-	/// visible on start-up, how wide it will be should options be added to the menu, how large the visible
-	/// region will be, how that visible region will shift around relative to the cursor's position within the 
-	/// menu, and whether or not the options will loop endlessly or have a defined left, right, top, and bottom.
+	///	Initializes some default parameters for the menu. Specifically, whether or not it should be active or visible on start-up, how wide 
+	/// it will be should options be added to the menu, how large the visible region will be, how that visible region will shift around 
+	/// relative to the cursor's position within the menu, and whether or not the options will loop endlessly or have a defined left, right, 
+	/// top, and bottom.
 	///	
 	///	@param {Real}	x				Starting x position for the menu which all elements will offset themselves from.
 	/// @param {Real}	y				Starting y position for the menu which all elements will offset themselves from.
@@ -225,10 +218,9 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	///	Initializes parameters related to the menu's options. Specifically, it will set the position of the
-	/// options themselves on the screen (This position is the top-left corner of the visible region of options),
-	/// how far apart those options will be along each axis, and whether or not an option can be indefinitely
-	/// selected by the user if that is required for the menu.
+	///	Initializes parameters related to the menu's options. Specifically, it will set the position of the options themselves on the screen 
+	/// (This position is the top-left corner of the visible region of options), how far apart those options will be along each axis, and 
+	/// whether or not an option can be indefinitely selected by the user if that is required for the menu.
 	/// 
 	///	@param {Real}				x				Position of the top-leftmost currently visible option on the screen along the x axis.
 	/// @param {Real}				y				Position of the top-leftmost currently visible option on the screen along the y axis.
@@ -254,10 +246,9 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	///	Attempts to add an option to the current menu. It takes in a name for the option as the only requirement
-	/// which is the string that will be shown to the player when the option is visible on the menu. Optionally,
-	///	a description can be provided, and the active state of the option can be set. It can also be inserted
-	/// into the current list of options if required, but it appends the option by default.
+	///	Attempts to add an option to the current menu. It takes in a name for the option as the only requirement which is the string that 
+	/// will be shown to the player when the option is visible on the menu. Optionally, a description can be provided, and the active state 
+	/// of the option can be set. It can also be inserted into the current list of options if required, but it appends the option by default.
 	///	
 	///	@param {String} name			The string that will be shown as the option itself within the menu.
 	/// @param {String}	description		(Optional) Supplemental text alongside the option that helps explain what it represents or what selecting it will do.
@@ -277,14 +268,13 @@ function str_base_menu(_index) : str_base(_index) constructor {
 			isActive	: _isActive,
 		};
 		
-		// Update the height of the menu to match the dimensions relative to the set width. If the menu still
-		// hasn't reached the desired width, the height will always be set to a value of one.
+		// Update the height of the menu to match the dimensions relative to the set width. If the menu still hasn't reached the desired 
+		// width, the height will always be set to a value of one.
 		var _size = ds_list_size(options);
 		height = _size >= width ? ceil((_size + 1) / width) : 1;
 		
-		// Places new option at the end of the menu if the _index parameter is an invalid number. Otherwise, it
-		// will insert the option at the specified position. The position of the option is also returned to be
-		// referenced as required.
+		// Places new option at the end of the menu if the _index parameter is an invalid number. Otherwise, it will insert the option at the
+		// specified position. The position of the option is also returned to be referenced as required.
 		if (_index < 0 || _index >= _size){
 			ds_list_add(options, _option);
 			return;
@@ -293,10 +283,9 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	///	An extended version of add_option that also provides parameters for adding an image/icon to the menu
-	/// option as well as the visible string of text that also represents it. This icon can be positioned 
-	/// independently of the option itself when required, or an empty string can be passed in to make the icon
-	/// be what represents the option within the menu.
+	///	An extended version of add_option that also provides parameters for adding an image/icon to the menu option as well as the visible 
+	/// string of text that also represents it. This icon can be positioned independently of the option itself when required, or an empty 
+	/// string can be passed in to make the icon be what represents the option within the menu.
 	///	
 	///	@param {String}			name			The string that will be shown as the option itself within the menu.
 	/// @param {Asset.GMSprite}	sprite			The sprite resource to grab the option's icon from.
@@ -322,8 +311,8 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	///	Attempts to remove the option at the given position within the menu. Will not do anything if an invalid
-	/// index is provided or menu options haven't been properly initialized.
+	///	Attempts to remove the option at the given position within the menu. Will not do anything if an invalid index is provided or menu 
+	/// options haven't been properly initialized.
 	///	
 	/// @param {Real}	index	The position of the option that will be removed.
 	remove_option = function(_index){
@@ -331,20 +320,20 @@ function str_base_menu(_index) : str_base(_index) constructor {
 			return; // Don't attempt to remove out of bound indexes or when options aren't initialized.
 		ds_list_delete(options, _index);
 		
-		// Update the height of the menu to match what the dimensions should be after an element has been
-		// removed from it. If the new size is smaller than the desired width, the menu's height is one.
+		// Update the height of the menu to match what the dimensions should be after an element has been removed from it. If the new size is
+		// smaller than the desired width, the menu's height is one.
 		var _size = ds_list_size(options);
 		height = _size > width ? ceil(_size / width) : 1;
 		
-		// Fix edge case where the highlighted option is the last option and that option is also the one being
-		// removed. Otherwise curOption will be out of bounds and cause errors.
+		// Fix edge case where the highlighted option is the last option and that option is also the one being removed. Otherwise curOption 
+		// will be out of bounds and cause errors.
 		if (_size > 1 && _index == _size && curOption == _size)
 			curOption--;
 	}
 	
 	/// @description 
-	///	Attempts to find the option within a given menu that matches the name string in the function's only
-	/// paramter. Returns -1 if menu options haven't been properly initialized.
+	///	Attempts to find the option within a given menu that matches the name string in the function's only paramter. Returns -1 if menu 
+	/// options haven't been properly initialized.
 	///	
 	/// @param {String}	name	The visible name of the option to search for.
 	find_option_position = function(_name){
@@ -354,18 +343,17 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	///	Gets player input for the menu in question. It handles getting inputs from both the gamepad and the
-	/// keyboard, but prioritizes the one that is currently active. The previous frame's inputs are stored in
-	/// the prevInputFlags variable, so the input can be checked to see if it was pressed, held, or released
-	/// with only a single keyboard_* or gamepad_* per input.
+	///	Gets player input for the menu in question. It handles getting inputs from both the gamepad and the keyboard, but prioritizes the one
+	/// that is currently active. The previous frame's inputs are stored in the *prevInputFlags* variable, so the input can be checked to see
+	/// if it was pressed, held, or released with only a single *keyboard_...* or *gamepad_...* function call per input.
 	///	
 	process_player_input = function(){
 		prevInputFlags	= inputFlags;
 		inputFlags		= 0;
 		
 		if (GAME_IS_GAMEPAD_ACTIVE){
-			// Getting input from the main analog stick by reading its current horizontal and vertical position
-			// relative to its centerpoint and the deadzone applied by the game's input settings.
+			// Getting input from the main analog stick by reading its current horizontal and vertical position relative to its centerpoint 
+			// and the deadzone applied by the game's input settings.
 			var _gamepad	= global.gamepadID;
 			padStickInputLH = gamepad_axis_value(_gamepad, gp_axislh);
 			padStickInputLV = gamepad_axis_value(_gamepad, gp_axislv);
@@ -383,8 +371,8 @@ function str_base_menu(_index) : str_base(_index) constructor {
 			inputFlags = inputFlags | (MENU_PAD_SELECT			<<  4);
 			inputFlags = inputFlags | (MENU_PAD_RETURN			<<  6);
 			
-			// Only check for auxiliary select/return inputs so long as their variables responsible for storing
-			// those gamepad bindings are set to something other than their default value, respectively.
+			// Only check for auxiliary select/return inputs so long as their variables responsible for storing those gamepad bindings are 
+			// set to something other than their default value, respectively.
 			if (padAuxSelect != 0) { inputFlags = inputFlags | (gamepad_button_check(global.gamepadID, padAuxSelect) <<  5); }
 			if (padAuxReturn != 0) { inputFlags = inputFlags | (gamepad_button_check(global.gamepadID, padAuxReturn) <<  7); }
 			
@@ -398,29 +386,27 @@ function str_base_menu(_index) : str_base(_index) constructor {
 		inputFlags = inputFlags | (MENU_KEY_SELECT			<<  4);
 		inputFlags = inputFlags | (MENU_KEY_RETURN			<<  6);
 		
-		// Only check for auxiliary select/return inputs so long as their variables responsible for storing
-		// those keyboard bindings are set to something other than their default value, respectively.
+		// Only check for auxiliary select/return inputs so long as their variables responsible for storing those keyboard bindings are set 
+		// to something other than their default value, respectively.
 		if (keyAuxSelect != vk_nokey) { inputFlags = inputFlags | (keyboard_check(keyAuxSelect) <<  5); }
 		if (keyAuxReturn != vk_nokey) { inputFlags = inputFlags | (keyboard_check(keyAuxReturn) <<  7); }
 	}
 	
 	/// @description 
-	///	Processes the cursor movement for the current game frame. It also handles decrementing the timer that
-	/// counts durations between automatic cursor shifts if the user is holding down a cursor movement key. If
-	/// no movement is detected, the menu itself has a single element, or the menu itself hasn't been properly
-	/// initialized, this function will exit early and never update the cursor's position.
+	///	Processes the cursor movement for the current game frame. It also handles decrementing the timer that counts durations between 
+	/// automatic cursor shifts if the user is holding down a cursor movement key. If no movement is detected, the menu itself has a single 
+	/// element, or the menu itself hasn't been properly initialized, this function will exit early and never update the cursor's position.
 	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	update_cursor_position = function(_delta){
-		// Don't bother processing cursor movement on a menu that is smaller than a size of 2 since the cursor
-		// will have no place to be or one option to highlight, respectively.
+		// Don't bother processing cursor movement on a menu that is smaller than a size of 2 since the cursor will have no place to be or 
+		// one option to highlight, respectively.
 		var _menuSize = ds_list_size(options);
 		if (MENU_NOT_PROPERLY_INITIALIZED || _menuSize < 2)
 			return;
 		
-		// This if statement is fucking disgusting but it's the only way to ensure autoscrolling is paused
-		// when the gamepad doesn't detect input on the d-pad as well as both potential analog sticks that
-		// can also be used for moving the menu's cursor.
+		// This if statement is fucking disgusting but it's the only way to ensure autoscrolling is paused when the gamepad doesn't detect 
+		// input on the d-pad as well as both potential analog sticks that can also be used for moving the menu's cursor.
 		var _noDirectionsHeld = MINPUT_NO_DIRECTION_HELD;
 		if (_noDirectionsHeld || (_noDirectionsHeld && GAME_IS_GAMEPAD_ACTIVE && 
 				padStickInputLH == 0.0 && padStickInputLV == 0.0 && 
@@ -430,16 +416,14 @@ function str_base_menu(_index) : str_base(_index) constructor {
 			return;
 		}
 		
-		// Decrement the current remaining time for the cursor's auto-shifting functionality. This timer does
-		// not matter if the user is clicking through the options since it will always be reset to 0.0 on no
-		// cursor movement/direction inputs being detected.
+		// Decrement the current remaining time for the cursor's auto-shifting functionality. This timer does not matter if the user is 
+		// clicking through the options since it will always be reset to 0.0 on no cursor movement/direction inputs being detected.
 		cursorShiftTimer -= _delta;
 		if (cursorShiftTimer >= 0.0)
 			return;
 
-		// Determine the length of duration between cursor movements by checking if the "is autoscrolling"
-		// flag is currently set within the menu or not. If so, the interval time is slightly longer than
-		// all subsequent cursor position updates.
+		// Determine the length of duration between cursor movements by checking if the "is autoscrolling" flag is currently set within the 
+		// menu or not. If so, the interval time is slightly longer than all subsequent cursor position updates.
 		if (!MENU_IS_CURSOR_AUTOSCROLLING){
 			flags			 = flags | MENU_FLAG_CURSOR_AUTOSCROLL;
 			cursorShiftTimer = MENU_FIRST_AUTOSCROLL_TIME;
@@ -447,9 +431,8 @@ function str_base_menu(_index) : str_base(_index) constructor {
 			cursorShiftTimer = MENU_AUTOSCROLL_TIME;
 		}
 		
-		// Determine the direction the cursor is moving based on whether or not the gamepad is active and if
-		// the gamepad's first or second analog stick are being used instead of its d-pad, or if the keyboard's
-		// movement inputs are currently being used instead.
+		// Determine the direction the cursor is moving based on whether or not the gamepad is active and if the gamepad's first or second 
+		// analog stick are being used instead of its d-pad, or if the keyboard's movement inputs are currently being used instead.
 		var _isGamepadActive = GAME_IS_GAMEPAD_ACTIVE;
 		if (_isGamepadActive && (padStickInputLH != 0.0 || padStickInputLV != 0.0)){
 			moveDirectionX = sign(padStickInputLH); // Converts values from analog to -1, 0, +1.
@@ -462,15 +445,14 @@ function str_base_menu(_index) : str_base(_index) constructor {
 			moveDirectionY = ((inputFlags & MINPUT_FLAG_CURSOR_DOWN)	!= 0) - ((inputFlags & MINPUT_FLAG_CURSOR_UP)	!= 0);
 		}
 		
-		// A small optimization for the smallest possible menu that can have the cursor move. It simply flips
-		// the value of curOption between 0 and 1 relative to the correct axis of input being held and the
-		// menu's width also matching what is required for the direction of movement (Ex. You can't move the
-		// cursor with left/right inputs if the menu's width is 1, and can't use up/down while the width is 2).
+		// A small optimization for the smallest possible menu that can have the cursor move. It simply flips the value of curOption between 
+		// 0 and 1 relative to the correct axis of input being held and the menu's width also matching what is required for the direction of 
+		// movement (Ex. You can't move the cursor with left/right inputs if the width is 1, and can't use up/down while the width is 2).
 		if (_menuSize == 2){
 			if ((width == 1 && moveDirectionY != 0) || (width == 2 && moveDirectionX != 0)){
 				curOption = !curOption;
-				// Make sure the highlighted option is still visible if only one of the two options happens to
-				// be visible within this two-option menu if the visible region is set to a size of 1x1.
+				// Make sure the highlighted option is still visible if only one of the two options happens to be visible within this 
+				// two-option menu if the visible region is set to a size of 1x1.
 				if (width == 1 && visibleAreaH == 1)		{ visibleAreaY = curOption; }
 				else if (height	== 1 && visibleAreaW == 1)	{ visibleAreaX = curOption; }
 				
@@ -478,20 +460,19 @@ function str_base_menu(_index) : str_base(_index) constructor {
 			return;
 		}
 		
-		// Handle vertical movement by seeing if either the upward or downward key was pressed/held by the player,
-		// but not both of them. On top of that, this section is skipped if the menu's height is equal to one.
+		// Handle vertical movement by seeing if either the upward or downward key was pressed/held by the player, but not both of them. On 
+		// top of that, this section is skipped if the menu's height is equal to one.
 		if (height > 1 && moveDirectionY != 0){
 			
-			// Determine what to do based on what the current value for "curOption" is and what direction the
-			// player has chosen to move their cursor. 
+			// Determine what to do based on what the value for "curOption" is and what direction the player has chosen to move their cursor. 
 			if (curOption - width < 0 && moveDirectionY == MENU_MOVEMENT_UP){
 				curOption	   += width * floor(_menuSize / width);
 				if (curOption >= _menuSize)
 					curOption  -= width;
 				
-				// Calculate the topmost visible row by subtracting the visible region's height by the menu's
-				// actual height (AKA the total number of rows). The clamp function will ensure this new value
-				// never exceeds or goes below what is considered the "valid area" of options for the menu.
+				// Calculate the topmost visible row by subtracting the visible region's height by the menu's actual height (AKA the total 
+				// number of rows). The clamp function will ensure this new value never exceeds or goes below what is considered the "valid 
+				// area" of options for the menu.
 				visibleAreaY	= clamp(height - visibleAreaH, 0, floor(curOption / width) - visAreaShiftY + 1);
 			} else if (curOption + width >= _menuSize && moveDirectionY == MENU_MOVEMENT_DOWN){
 				curOption	   %= width;
@@ -499,8 +480,8 @@ function str_base_menu(_index) : str_base(_index) constructor {
 			} else{
 				curOption	   += width * moveDirectionY;
 				
-				// Determine if the menu's vertical visible region should be shifted upward or downward depending.
-				// of the updated "curOption" value as well as the current row the menu cursor is now on.
+				// Determine if the menu's vertical visible region should be shifted upward or downward depending on the updated "curOption" 
+				// value as well as the current row the menu cursor is now on.
 				var _curRow		= floor(curOption / width);
 				if (visibleAreaY + visibleAreaH < height 
 						&& _curRow >= visibleAreaY + visibleAreaH - visAreaShiftY){
@@ -511,14 +492,13 @@ function str_base_menu(_index) : str_base(_index) constructor {
 			}
 		}
 		
-		// Handle horizontal movement by seeing if either the upward or downward key was pressed/held by the 
-		// player, but not both of them. On top of that, this section is skipped if the menu's width is equal
-		// to one.
+		// Handle horizontal movement by seeing if either the upward or downward key was pressed/held by the player, but not both of them. On
+		// top of that, this section is skipped if the menu's width is equal to one.
 		if (width > 1 && moveDirectionX != MENU_MOVEMENT_NONE){
 			var _curColumn		= curOption % width;
 			
-			// Determine what to do based on the current column the highlighted option is on (This is where the
-			// cursor is currently positioned) and what direction the player has chosen to move the cursor.
+			// Determine what to do based on the current column the highlighted option is on (This is where the cursor is currently 
+			// positioned) and what direction the player has chosen to move the cursor.
 			if (_curColumn == 0 && moveDirectionX == MENU_MOVEMENT_LEFT){
 				curOption		= min(_menuSize - 1, curOption + width - 1);
 				visibleAreaX	= clamp(visibleAreaX + width - visibleAreaW, 0, curOption % width - visAreaShiftX + 1);
@@ -528,15 +508,15 @@ function str_base_menu(_index) : str_base(_index) constructor {
 			} else{
 				curOption	   += moveDirectionX;
 				
-				// Handling wrapping to the leftmost option on the bottom row should it not contain enough
-				// options to completely populate the row relative to the menu's width.
+				// Handling wrapping to the leftmost option on the bottom row should it not contain enough options to completely populate the
+				// row relative to the menu's width.
 				if (moveDirectionX == MENU_MOVEMENT_RIGHT && curOption >= _menuSize){
 					curOption	   -= curOption % width;
 					visibleAreaX	= 0;
 				}
 				
-				// Determining how to shift the visible region of the menu along the x-axis. It will shift
-				// right until hitting the first column, or shift left until hitting the final column.
+				// Determining how to shift the visible region of the menu along the x-axis. It will shift right until hitting the first 
+				// column, or shift left until hitting the final column.
 				_curColumn = curOption % width;
 				if (visibleAreaX + visibleAreaW < width 
 						&& _curColumn >= visibleAreaX + visibleAreaW - visAreaShiftX){
@@ -549,10 +529,9 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	}
 	
 	/// @description 
-	/// Renders the currently visible region of menu options to the screen given the positioning, spacing, and
-	/// alignment for each option that is (AND SHOULD ALWAYS BE) set upon initialization of a given menu. This
-	/// version will only render the text elements of each option and ignore any potential icons that could
-	/// also exist. To draw both text and icons, draw_visible_options_ext must be used.
+	/// Renders the currently visible region of menu options to the screen given the positioning, spacing, and alignment for each option that
+	/// is (AND SHOULD ALWAYS BE) set upon initialization of a given menu. This version will only render the text elements of each option and
+	/// ignore any potential icons that could also exist. To draw both text and icons, draw_visible_options_ext must be used.
 	/// 
 	/// @param {Asset.GMFont}	font				Four resource to use when displaying the option's name.
 	/// @param {Real}			xPos				The x position to offset the visible options by relative to their own x positions.
@@ -564,8 +543,8 @@ function str_base_menu(_index) : str_base(_index) constructor {
 		draw_set_halign(optionAlignX);
 		draw_set_valign(optionAlignY);
 		
-		// Loop through the visible region of option structs. Each has their color determined on-the-fly
-		// relative to their state and how the cursor and menu itself are currently interacting with them.
+		// Loop through the visible region of option structs. Each has their color determined on-the-fly relative to their state and how the 
+		// cursor and menu itself are currently interacting with them.
 		var _menuSize		= ds_list_size(options);
 		var _curOption		= curOption;
 		var _selOption		= selOption;
@@ -579,16 +558,15 @@ function str_base_menu(_index) : str_base(_index) constructor {
 			for (var curX = visibleAreaX; curX < visibleAreaX + visibleAreaW; curX++){
 				_oIndex = (curY * width) + curX; // Convert to a one-dimensional index.
 				
-				// The menu has reached its end so the inner loop will be broken out of and the value of curY
-				// is set to the earliest value that will break it out of the outer loop to end all drawing.
+				// The menu has reached its end so the inner loop will be broken out of and the value of curY is set to the earliest value 
+				// that will break it out of the outer loop to end all drawing.
 				if (_oIndex >= _menuSize){
 					curY = visibleAreaY + visibleAreaH;
 					break; // Exits the inner loop instantly.
 				}
 				
-				// Jump into the scope of the option at the calculated index within the menu. Then, the state
-				// of the option is checked to see if it is inactive, selected, highlighted, or simply visible.
-				// Each of these will cause it to show up as a different color compared to the rest.
+				// Jump into the scope of the option at the calculated index within the menu. Then, the state of the option is checked to see
+				// if it is inactive, selected, highlighted, or simply visible.
 				with(options[| _oIndex]){
 					if (!isActive)						{ _color = COLOR_DARK_GRAY; }
 					else if (_auxSelOption == _oIndex)	{ _color = COLOR_RED; }
@@ -600,14 +578,12 @@ function str_base_menu(_index) : str_base(_index) constructor {
 						_textShadowColor, _textShadowAlpha * _alpha);
 				}
 				
-				// Shift the x position based on the x spacing set for the menuu when its option parameters 
-				// were first initialized.
+				// Shift the x position based on the x spacing set for the menuu when its option parameters were first initialized.
 				_xx += optionSpacingX;
 			}
 			
-			// Shift the y position based on the y spacing set for the menu with its option parameters were
-			// first initialized, and then reset the x position back to the leftmost value for the inner loop
-			// to have the correct coordinates for the next loop.
+			// Shift the y position based on the y spacing set for the menu with its option parameters were first initialized, and then reset
+			// the x position back to the leftmost value for the inner loop to have the correct coordinates for the next loop.
 			_yy    += optionSpacingY;
 			_xx		= _xPos + optionX;
 		}

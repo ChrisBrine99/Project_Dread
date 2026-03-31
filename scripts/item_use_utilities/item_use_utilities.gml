@@ -1,13 +1,12 @@
 #region Macros Utilized When Certain Items Are Used
 
-// Macros that are returned by functions that are called upon a given item's usage by the player. Depending
-// on what bits here are set, the game can take action to ensure the proper process occurs as a result.
+// Macros that are returned by functions that are called upon a given item's usage by the player. Depending on what bits here are set, the 
+// game can take action to ensure the proper process occurs as a result.
 #macro	USEITM_FLAG_CONSUMED			0x00000001
 #macro	USEITM_FLAG_CLOSE_MENU			0x00000002
 #macro	USEITM_FLAG_OPEN_TEXTBOX		0x00000004
 
-// The amounts to increase each of the player's main values when their respective item for increasing those
-// maximum is used by them during gameplay.
+// The amounts to increase each of the player's main values when their respective item for increasing those maximum is used.
 #macro	ITEM_HITPOINT_UP_AMOUNT			10
 #macro	ITEM_STAMINA_UP_AMOUNT			25
 #macro	ITEM_SANITY_UP_AMOUNT			25
@@ -17,8 +16,9 @@
 #region Functions Utilized By Items When Used
 
 /// @description 
-///	Increases the player's maximum hitpoints by 10 points; capping out at a maximum of 150 regardless of the
-/// current difficulty level. Returns 0x00000001 if the item was successfully used.
+///	Increases the player's maximum hitpoints by 10 points; capping out at a maximum of 150 regardless of the current difficulty level. 
+/// Returns *0x00000005* if the item was successfully used.
+/// @returns {Real}
 ///	
 /// @param {Real}	slot	(Unused) Where the item is located within the player's inventory.
 function item_use_hitpoint_up(_slot){
@@ -35,8 +35,9 @@ function item_use_hitpoint_up(_slot){
 }
 
 /// @description 
-///	Increases the player's maximum stamina by 25 points; capping out at a maximum of 250 regardless of the
-/// current difficulty level. Returns 0x00000001 if the item was successfully used.
+///	Increases the player's maximum stamina by 25 points; capping out at a maximum of 250 regardless of the current difficulty level. Returns
+/// *0x00000005* if the item was successfully used.
+/// @returns {Real}
 ///	
 /// @param {Real}	slot	(Unused) Where the item is located within the player's inventory.
 function item_use_stamina_up(_slot){
@@ -53,8 +54,9 @@ function item_use_stamina_up(_slot){
 }
 
 /// @description 
-///	Increases the player's maximum sanity level by 25 points; capping out at a maximum of 300 regardless of the
-/// current difficulty level. Returns 0x00000001 if the item was successfully used.
+///	Increases the player's maximum sanity level by 25 points; capping out at a maximum of 300 regardless of the current difficulty level. 
+/// Returns *0x00000005* if the item was successfully used.
+/// @returns {Real}
 ///	
 /// @param {Real}	slot	(Unused) Where the item is located within the player's inventory.
 function item_use_sanity_up(_slot){
@@ -70,14 +72,17 @@ function item_use_sanity_up(_slot){
 }
 
 /// @description 
-///	
+///	The function that is executed by the player using a consumable found within their item inventory. When completely healthy, a textbox
+/// appears and the function exits with the value *0x00000004* and doesn't consume the item or applies its consumption effects. Otherwise,
+/// everything that the consumable does will be applied to the player's various stats (Ex. hitpoints, sanity, etc.).
+/// @returns {Real}
 /// 
 /// @param {Real}	slot	Where the item is located within the player's inventory.
 function item_use_consumable(_slot){
 	var _itemName = global.curItems[_slot].itemName;
 	with(PLAYER){
-		// If the player already has maximum health and sanity, as well as not being inflicted with any
-		// status conditions, a textbox will appear preventing the item from being consumed.
+		// If the player already has maximum health and sanity, as well as not being inflicted with any status conditions, a textbox will 
+		// appear preventing the item from being consumed.
 		if (curHitpoints == maxHitpoints && curSanity == maxSanity && !PLYR_HAS_AILMENT){
 			with(TEXTBOX) { queue_new_text("I should avoid using this until I'm @0x0010BC{actually injured}."); }
 			return USEITM_FLAG_OPEN_TEXTBOX;
@@ -91,8 +96,8 @@ function item_use_consumable(_slot){
 			_hpHeal		= hpHeal;
 			_sanityHeal	= sanityHeal;
 
-			// Check to see if the consumable stops the player from being poisoned. Also set the immunity timer
-			// for poison if a temporary immunity is also applied by the item upon consumption.
+			// Check to see if the consumable stops the player from being poisoned. Also set the immunity timer for poison if a temporary 
+			// immunity is also applied by the item upon consumption.
 			if (CNSM_CURES_POISON){
 				_flags = _flags & ~PLYR_FLAG_POISONED;
 				if (CNSM_GIVES_TMPIMU_POISON)
