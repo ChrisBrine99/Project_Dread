@@ -758,18 +758,19 @@ swap_current_ammo_index = function(){
 		var _prevAmmoName = "";
 		with(weaponStatRef) { _prevAmmoName = ammoTypes[_prevAmmoIndex]; }
 
-		// 
+		// Check if the ammo being swapped can fit into the inventory or not, and if there is any ammo in the weapon to even add back into 
+		// the inventory.
 		var _quantity	= 0;
 		var _remainder	= 0;
 		with(global.curItems[weapon]){
 			_quantity = quantity;
 			if (_quantity == 0)
-				break;
+				break; // No ammo in the weapon; break out of the statement and move on.
 			
 			_remainder = item_inventory_add(_prevAmmoName, _quantity);
 			if (_remainder == 0){
 				quantity = 0;
-				break;
+				break; // All of the ammo was added back into the inventory; exit the with statement.
 			}
 			
 			// The item inventory couldn't hold all of the previous ammo's amount; create a dynamic item with the remainder of what couldn't
