@@ -80,10 +80,10 @@ pathIndex		= 0;
 ///	Handles updating the position of the entity while also processing collision against the world if the Entity has been set to collide with 
 /// that type of collider. The parameter values should be calculated at a rate of 60 times per second since that's the target FPS for the 
 /// game overwll (*deltaTime* is 1.0 at 60fps).
-///
-///	@param {Real}	xMove	The current horizontal movement rate.
-/// @param {Real}	yMove	The current vertical movement rate.
-/// @param {Real}	delta	Time between the current and previous frame.
+///	@returns 	{Bool}
+///	@param 		{Real}	xMove	The current horizontal movement rate.
+/// @param 		{Real}	yMove	The current vertical movement rate.
+/// @param 		{Real}	delta	Time between the current and previous frame.
 update_position = function(_xMove, _yMove, _delta){
 	// Removing fractional values from the Entity's horizontal movement.
 	if (_xMove != 0.0){
@@ -114,9 +114,9 @@ update_position = function(_xMove, _yMove, _delta){
 /// @description 
 ///	Handles collision between an Entity and the world collision objects. It handles movement in whole pixels, and as such is pixel-perfect 
 /// when it comes to collision resolution. Returns true if a collision occurred.
-///	
-/// @param {Real}	xMove	The number of whole pixels to move along the horizontal axis.
-/// @param {Real}	yMove	The number of whole pixels to move along the vertical axis.
+///	@returns 	{Bool}
+/// @param 		{Real}	xMove	The number of whole pixels to move along the horizontal axis.
+/// @param 		{Real}	yMove	The number of whole pixels to move along the vertical axis.
 process_world_collision = function(_xMove, _yMove){
 	var _collision = false;
 	
@@ -145,11 +145,11 @@ process_world_collision = function(_xMove, _yMove){
 
 /// @description 
 ///	Moves an Entity to the supplied coordinates at a given speed (Default speed multiplier is 1.0 to have no effect).
-///	
-/// @param {Real}	delta		The difference in time between the execution of this frame and the last.
-/// @param {Real}	xTarget		Position along the current room's x-axis to move towards.
-/// @param {Real}	yTarget		Position along the current room's y-axis to move towards.
-/// @param {Real}	speed		How fast the entity should move relative to its actual movement speed.
+///	@returns 	{Bool}
+/// @param 		{Real}	delta		The difference in time between the execution of this frame and the last.
+/// @param 		{Real}	xTarget		Position along the current room's x-axis to move towards.
+/// @param 		{Real}	yTarget		Position along the current room's y-axis to move towards.
+/// @param 		{Real}	speed		How fast the entity should move relative to its actual movement speed.
 move_to_position = function(_delta, _xTarget, _yTarget, _speed = 1.0){
 	var _maxMoveSpeed = maxMoveSpeed * _speed;
 	moveSpeed += accel * _delta;
@@ -168,7 +168,6 @@ move_to_position = function(_delta, _xTarget, _yTarget, _speed = 1.0){
 /// @description 
 ///	A function that will remove or add some amount of hitpoints from the Entity. It automatically clamps the new value to be between 0 and 
 /// whatever the Entity's maximum hitpoints are.
-///	
 ///	@param {Real}	amount	The value to remove from the Entity's current hitpoints (Negative numbers will increase their hitpoints).
 update_hitpoints = function(_amount){
 	curHitpoints = clamp(curHitpoints + _amount, 0, maxHitpoints);
@@ -186,7 +185,6 @@ update_hitpoints = function(_amount){
 /// @description
 ///	Called within *obj_game_manager* for all dynamic entities. Can be overridden by children to extend its capabilities from simply updating 
 /// the current state to more as required by the object.
-///
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 end_step_event = function(_delta){
 	if (curState != nextState){

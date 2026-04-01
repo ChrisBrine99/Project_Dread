@@ -67,14 +67,13 @@
   ],
   "ForcedPrefabProjectReferences":[],
   "IncludedFiles":[
+    {"$GMIncludedFile":"","%Name":"item_data_old.json5","CopyToMask":-1,"filePath":"datafiles","name":"item_data_old.json5","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
     {"$GMIncludedFile":"","%Name":"item_data.json5","CopyToMask":-1,"filePath":"datafiles","name":"item_data.json5","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
-    {"$GMIncludedFile":"","%Name":"items_OLD.dat","CopyToMask":-1,"filePath":"datafiles","name":"items_OLD.dat","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
-    {"$GMIncludedFile":"","%Name":"items.dat","CopyToMask":-1,"filePath":"datafiles","name":"items.dat","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
   ],
   "isEcma":false,
   "LibraryEmitters":[],
   "MetaData":{
-    "IDEVersion":"2024.14.4.221",
+    "IDEVersion":"2024.14.4.222",
   },
   "name":"Project_Dread",
   "resources":[

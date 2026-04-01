@@ -1,3 +1,5 @@
+event_inherited(); // Ensures the message's width is stored for displaying it on the screen properly.
+
 // Make sure the item isn't a weapon before checking if the quantity is less then or equal to zero, so that check is skipped over for weapon's
 // that have an empty magazine/clip.
 var _notWeapon = false;

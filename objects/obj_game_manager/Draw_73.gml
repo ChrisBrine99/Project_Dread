@@ -139,7 +139,7 @@ with(PLAYER){
 	with(interactableID){
 		if (!ENTT_IS_VISIBLE || !INTR_CAN_PLAYER_INTERACT)
 			break;
-		draw_gui_event(_xView, _yView);
+		draw_gui_event(_xView, _yView, _wView, _hView);
 	}
 }
 

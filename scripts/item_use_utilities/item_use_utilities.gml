@@ -22,7 +22,7 @@
 /// @param 		{Real}	slot	(Unused) Where the item is located within the player's inventory.
 function item_use_hitpoint_up(_slot){
 	with(PLAYER){
-		if (maxHitpoints >= PLYR_MAX_POSSIBLE_HITPOINTS)
+		if (maxHitpoints >= PLYR_MAXHITPOINTS_LIMIT)
 			return 0; // Player cannot increase their hitpoints any longer. Return 0 so nothing happens on use.
 		maxHitpoints += ITEM_HITPOINT_UP_AMOUNT;
 		curHitpoints += ITEM_HITPOINT_UP_AMOUNT;
@@ -40,7 +40,7 @@ function item_use_hitpoint_up(_slot){
 /// @param 		{Real}	slot	(Unused) Where the item is located within the player's inventory.
 function item_use_stamina_up(_slot){
 	with(PLAYER){
-		if (maxStamina >= PLYR_MAX_POSSIBLE_STAMINA)
+		if (maxStamina >= PLYR_MAXSTAMINA_LIMIT)
 			return 0; // Player cannot increase their stamina any longer. Return 0 so nothing happens on use.
 		maxStamina += ITEM_STAMINA_UP_AMOUNT;
 		curStamina = maxStamina; // Completely restore stamina on use.
@@ -58,7 +58,7 @@ function item_use_stamina_up(_slot){
 /// @param 		{Real}	slot	(Unused) Where the item is located within the player's inventory.
 function item_use_sanity_up(_slot){
 	with(PLAYER){
-		if (maxSanity >= PLYR_MAX_POSSIBLE_SANITY)
+		if (maxSanity >= PLYR_MAXSANITY_LIMIT)
 			return 0; // Player cannot increase their sanity level any longer. Return 0 so nothing happens on use.
 		maxSanity += ITEM_SANITY_UP_AMOUNT;
 	}

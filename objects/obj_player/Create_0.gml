@@ -89,10 +89,13 @@
 #macro	PLYR_X_INTERACT 				(x + lengthdir_x(8, direction))
 #macro	PLYR_Y_INTERACT					(y + lengthdir_y(8, direction) - 8)
 
-// Macros that determine how high the player's internal values maximums can become before they no longer increased by the use of items.
-#macro	PLYR_MAX_POSSIBLE_HITPOINTS		150
-#macro	PLYR_MAX_POSSIBLE_STAMINA		250
-#macro	PLYR_MAX_POSSIBLE_SANITY		300
+// 
+#macro 	PLYR_MAXHITPOINTS_START			100 
+#macro	PLYR_MAXHITPOINTS_LIMIT			150
+#macro 	PLYR_MAXSTAMINA_START			100 
+#macro	PLYR_MAXSTAMINA_LIMIT			250
+#macro	PLYR_MAXSANITY_START			100 
+#macro	PLYR_MAXSANITY_LIMIT			300
 
 // Macros for the player's default acceleration and maximum speeds. When crippled, these act as the "slow" sprinting speed when their 
 // stamina is completely depleted.
@@ -460,7 +463,6 @@ process_footstep_sound = function(){
 /// @description 
 /// A function that can be called whenever the player needs to be paused while other entities and objects are still allowed to remain 
 /// active (Ex. Interacting with objects or opening a menu that isn't the pause menu).
-/// 
 pause_player = function(){
 	if (curState == method_get_index(state_player_paused) || GAME_IS_CUTSCENE_ACTIVE)
 		return; // Don't pause the player again if they've been paused previously or a cutscene is active.
@@ -936,12 +938,12 @@ drawFunction = method_get_index(custom_draw_default);
 /// @description 
 ///	An initialization state that will act as the "Create Event" for the player object since they're actually created at the very beginning 
 /// of the game alongside other singleton objects/structs. It automatically shifts to the default state at the end of its first execution.
-///	
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 state_initialize = function(_delta){
 	if (STNG_IS_SPRINT_INPUT_TOGGLE) { flags = flags | PLYR_FLAG_SPRINT_TOGGLE; }
 	if (STNG_IS_AIM_INPUT_TOGGLE)	 { flags = flags | PLYR_FLAG_AIM_TOGGLE; }
 	
+	// --- FOR TESTING PURPOSES ONLY --- //
     item_inventory_add(ITEM_FLASHLIGHT, 1, 0);
 	item_inventory_add(ITEM_WEAK_MEDICINE, 1, 0);
 	item_inventory_add(ITEM_WEAK_PAINKILLER, 1, 0);
@@ -949,6 +951,7 @@ state_initialize = function(_delta){
 	item_inventory_add(ITEM_POTENT_PAINKILLER, 1, 0);
 	item_inventory_add(ITEM_DETOXING_COMPOUND, 2, 0);
 	item_inventory_add(ITEM_CALMING_COMPOUND, 2, 0);
+	// --- FOR TESTING PURPOSES ONLY --- //
 	
 	object_set_state(state_default);
 }
@@ -956,7 +959,6 @@ state_initialize = function(_delta){
 /// @description 
 /// The player's standard state. When in this state, they can move around the environment at either walking or running speed, shift facing 
 /// direction relative to movement, interact with objects in the environment, and ready their weapon for use if one is equipped.
-/// 
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 state_default = function(_delta){
 	process_player_input();
@@ -1133,7 +1135,6 @@ state_default = function(_delta){
 ///	The function that is running whenever the player is in their readied weapon state. It handles switching directions to choose where to 
 /// aim, swapping ammunition and reloading (If applicable to the currently equipped weapon), and using the weapon by switch the player to 
 /// their using weapon state to handle that process.
-///	
 ///	@param {Real}	delta	The difference in time between the execution of this frame and the last.
 state_player_weapon_ready = function(_delta){
 	process_player_input();
@@ -1304,7 +1305,6 @@ state_player_weapon_ready = function(_delta){
 /// @description 
 ///	A state the player finds themself in when they're reloading their equipped weapon (If that weapon needs to be reloaded). Once the timer
 /// for reloading has decremented to zero, the state ends and the reload function is called to handle what is required for that process.
-///	
 ///	@param {Real}	delta	The difference in time between the execution of this frame and the last.
 state_player_reloading = function(_delta){
 	if (timers[PLYR_RELOAD_TIMER] == 0.0){
@@ -1317,7 +1317,6 @@ state_player_reloading = function(_delta){
 /// @description
 ///	A very simple state that the player is placed in whenever they need to have their funcitonality paused without having other existing 
 /// entities paused as well (Ex. Opening a menu that isn't the pause menu, an interaction textbox opening, etc.).
-///	
 ///	@param {Real}	delta	The difference in time between the execution of this frame and the last.
 state_player_paused = function(_delta){
 	if (!GAME_IS_MENU_OPEN && !GAME_IS_TEXTBOX_OPEN){
