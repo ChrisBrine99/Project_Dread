@@ -583,12 +583,12 @@ equip_main_weapon = function(_itemStructRef, _itemSlot){
 		// Using the current ammunition found within the gun, get the ID for the item it is tied to and check if that value isn't (-1). If 
 		// it is, the weapon doesn't use ammo and the function exits early.
 		var _ammoTypes	= _itemStructRef.ammoTypes;
-		var _ammoID		= _ammoTypes[curAmmoIndex];
-		if (_ammoID == ID_INVALID)
+		var _ammoRef	= global.itemData[? _ammoTypes[curAmmoIndex]];
+		if (is_undefined(_ammoRef))
 			return;
 			
 		// Grab a reference to the current ammunition's data so it can be referenced later as required.
-		curAmmoStatRef	= array_get(global.itemIDs, _ammoID);
+		curAmmoStatRef = _ammoRef;
 		
 		// Loop through all possible ammo type of the equipped weapon, storing the current sum of each into an array that is updated as the 
 		// equipped weapon's possible ammo types are added/removed from the item inventory.
@@ -696,16 +696,17 @@ reload_current_weapon = function(){
 		// Jump into the struct referenced within the equipped weapon for its stats/variables; copying over the ID for the ammo being used 
 		// and the stack limit for the equipped weapon which is the same as its magazine/clip size.
 		var _curAmmoIndex	= curAmmoIndex;
-		var _ammoItemID		= 0;
+		var _ammoItemName	= "";
 		var _stackLimit		= 0;
 		with(weaponStatRef){
-			_ammoItemID		= ammoTypes[_curAmmoIndex];
-			_stackLimit		= stackLimit;
+			if (array_length(ammoTypes) > 0)
+				_ammoItemName = ammoTypes[_curAmmoIndex];
+			_stackLimit	= stackLimit;
 		}
 		
 		// If that item ID is ID_INVALID (-1), the weapon doesn't actually use any ammunition and is assumed to be an infinite ammo weapon, 
 		// so the quantity is set to the stack limit without any ammo used.
-		if (_ammoItemID == ID_INVALID){
+		if (_ammoItemName == ""){
 			global.curItems[weapon].quantity = _stackLimit;
 			break;
 		}
@@ -715,7 +716,7 @@ reload_current_weapon = function(){
 		// equipped weapon can hold instead of the full amount being added to that quantity value.
 		with(global.curItems[weapon]){
 			var _availableSpace = _stackLimit - quantity;
-			var _remainder		= item_inventory_remove(_ammoItemID, _availableSpace);
+			var _remainder		= item_inventory_remove(_ammoItemName, _availableSpace);
 			_quantity			= _stackLimit - _remainder;
 			quantity			= _quantity;
 		}
@@ -732,10 +733,9 @@ swap_current_ammo_index = function(){
 	var _x = x;
 	var _y = y;
 	with(equipment){
-		// If there is only one type of ammunition for the currently equipped weapon OR the type of ammo is an invalid ID (-1) it means an 
-		// ammo swap should never occur, so the function will exit early.
+		// Don't bother swapping ammunition if the currently equipped weapon has one ammo type or zero assigned to them.
 		var _length	= array_length(ammoCount);
-		if (_length == 1 || weaponStatRef.ammoTypes[0] == ID_INVALID)
+		if (_length <= 1)
 			return false;
 		
 		// Keep looping until the same value is hit again for the current ammo index or the new value's count is a value other than zero; 
@@ -754,32 +754,22 @@ swap_current_ammo_index = function(){
 		if (_prevAmmoIndex == _curAmmoIndex)
 			return false;
 		
-		// Get the name for the previous ammo in use so it can be added to the inventory while removing it from the quantity of the current
-		// weapon's magazine/clip.
-		var _prevAmmoName = ""; 
-		with(weaponStatRef){
-			var _prevAmmoItemID = ammoTypes[_prevAmmoIndex];
-			if (_prevAmmoItemID != ID_INVALID)
-				_prevAmmoName = global.itemIDs[_prevAmmoItemID].itemName;
-		}
+		// Get the name for the previous ammo in use so it can be added to the inventory.
+		var _prevAmmoName = "";
+		with(weaponStatRef) { _prevAmmoName = ammoTypes[_prevAmmoIndex]; }
 
-		// Jump into scope of the item inventory's struct representation of the equipped weapon to add the previous ammunition into the item
-		// inventory before reloading said weapon with the new ammo.
+		// 
 		var _quantity	= 0;
 		var _remainder	= 0;
 		with(global.curItems[weapon]){
-			// Don't attempt to add ammo to the inventory after the swap if no ammo was in the weapon before the type swap occurred. Ammo
-			// count doesn't need to be updated for the previous ammo either, so the function can return true here.
-			if (quantity == 0)
-				return true;
+			_quantity = quantity;
+			if (_quantity == 0)
+				break;
 			
-			// Attempt to add the previous ammunition to the item inventory. Whatever doesn't get added is stored in the local _remainder 
-			// value so it can be used to place what couldn't be put into the item storage into the world itself.
-			_quantity	= quantity;
-			_remainder	= item_inventory_add(_prevAmmoName, _quantity);
+			_remainder = item_inventory_add(_prevAmmoName, _quantity);
 			if (_remainder == 0){
 				quantity = 0;
-				break; // Break out of the with statement after removing the ammo's full quantity from the weapon.
+				break;
 			}
 			
 			// The item inventory couldn't hold all of the previous ammo's amount; create a dynamic item with the remainder of what couldn't
@@ -808,9 +798,9 @@ swap_current_ammo_index = function(){
 /// @description 
 ///	Checks to see is an update needs to be done to one of the equipped weapon's current ammo counts. If the ammo isn't a part of the 
 /// equipped weapon's valid ammo types (Or the weapon doesn't use any ammo) the function will exit prematurely.
-///	@param {Real}	itemID		The unique numerical identifier for the ammo to check for.
+///	@param {String}	item		Name of the item which is also the key to its data found within *global.itemData*.
 /// @param {Real}	quantity	How much of said ammo was added to the item inventory.
-update_current_ammo_counts = function(_itemID, _quantity){
+update_current_ammo_counts = function(_item, _quantity){
 	with(equipment){
 		// If no weapon is equipped there is no need to check for ammunition counts; exit the function.
 		if (weapon == INV_EMPTY_SLOT)
@@ -826,8 +816,9 @@ update_current_ammo_counts = function(_itemID, _quantity){
 		// Loop through all possible ammunition types for the equipped weapon and check if their item ID matches the ID of the ammo being 
 		// added to/removed from the item inventory. If a match is found, add the _quantity parameter to the current count and exit.
 		var _length	= array_length(_ammoTypes);
+		var _itemID	= global.itemData[? _item].itemID;
 		for (var i = 0; i < _length; i++){
-			if (_ammoTypes[i] == _itemID){
+			if (global.itemData[? _ammoTypes[i]].itemID == _itemID){
 				ammoCount[i] += _quantity;
 				return;
 			}
@@ -1222,7 +1213,7 @@ state_player_weapon_ready = function(_delta){
 				if (!_isMelee) { quantity--; }
 				
 				// On higher difficulties, durability will be reduced by one every time the weapon is used.
-				if (global.flags & (GAME_FLAG_CMBTDIFF_PUNISHING | GAME_FLAG_CMBTDIFF_NIGHTMARE | GAME_FLAG_CMBTDIFF_ONELIFE) != 0)
+				if (GAME_MANAGER.get_current_combat_difficulty() >= GAME_COMBATDIFF_PUNISHING)
 					durability--;
 			}
 			

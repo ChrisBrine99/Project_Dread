@@ -52,7 +52,7 @@ with(PLAYER){
 		
 		draw_text_shadow(_wView - 5, 53 + (10 * PLYR_TOTAL_TIMERS), 
 			string("{0} x{1}",
-				global.itemIDs[weaponStatRef.ammoTypes[curAmmoIndex]].itemName,
+				weaponStatRef.ammoTypes[curAmmoIndex],
 				ammoCount[curAmmoIndex]
 			)
 		);

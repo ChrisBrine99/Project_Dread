@@ -397,7 +397,7 @@ function item_inventory_add(_item, _amount, _durability = 0, _ammoIndex = 0){
 		
 		// The item that was added to the inventory was a weapon, so the value returned is -1 to signify it was successfully added in case 
 		// the magazine/clip of the weapon in question was empty.
-		if (global.itemIDs[_itemID].typeID == ITEM_TYPE_WEAPON)
+		if (global.itemData[? _item].typeID == ITEM_TYPE_WEAPON)
 			return -1;
 		
 		// The amount couldn't be added into a single inventory slot. So, what can fit is added, and the remaining quantity will be placed
@@ -423,15 +423,16 @@ function item_inventory_add(_item, _amount, _durability = 0, _ammoIndex = 0){
 /// item inventory. Otherwise, a zero is returned for a successful removal, and the full amount is returned in the case of an error or full 
 /// item inventory.
 /// @returns 	{Real}
-///	@param 		{Real}	itemID		Number representing the item within the game's data.
-/// @param 		{Real}	amount		How many of said item will be removed from the inventory.
-function item_inventory_remove(_itemID, _amount){
+///	@param 		{String}	item		Name of the item which is also the key to its data in the *global.itemData* map.
+/// @param 		{Real}		amount		How many of said item will be removed from the inventory.
+function item_inventory_remove(_item, _amount){
 	// Don't try adding anything to an uninitialized inventory.
 	if (!is_array(global.curItems))
 		return _amount;
 	
 	// Loop through the inventory in search of any slots containing the required item. If any are found, remove as much as possible from its
 	// current quantity within the slot to satisfy the amount to remove.
+	var _itemID			= global.itemData[? _item].itemID;
 	var _invItem		= -1;
 	var _slotQuantity	= 0;
 	var _amountRemoved	= 0;
@@ -465,8 +466,8 @@ function item_inventory_remove(_itemID, _amount){
 	// Jump into scope of the player object to see if the item that was removed from their item inventory is of type ammunition. If so, the 
 	// player will check and update any ammo currently stored ammo counts that match the ID of this item.
 	with(PLAYER){
-		if (global.itemIDs[_itemID].typeID == ITEM_TYPE_AMMO)
-			update_current_ammo_counts(_itemID, -_amountRemoved);
+		if (global.itemData[? _item].typeID == ITEM_TYPE_AMMO)
+			update_current_ammo_counts(_item, -_amountRemoved);
 	}
 	
 	// Return the amount that was successfully removed from the inventory relative to the amount that was placed within the _amount.
@@ -492,10 +493,10 @@ function item_inventory_remove_slot(_slot, _amount = -1){
 	// 
 	var _amountRemoved 	= 0;
 	var _quantity		= 0;
-	var _itemID			= ID_INVALID;
+	var _itemName		= "";
 	with(_item){
 		_quantity 		= quantity;
-		_itemID			= itemID;
+		_itemName		= itemName;
 		
 		// 
 		if (_amount == -1){ 
@@ -517,8 +518,8 @@ function item_inventory_remove_slot(_slot, _amount = -1){
 	
 	// 
 	with(PLAYER){
-		if (global.itemIDs[_itemID].typeID == ITEM_TYPE_AMMO)
-			update_current_ammo_counts(_itemID, -_amountRemoved);
+		if (global.itemData[? _itemName].typeID == ITEM_TYPE_AMMO)
+			update_current_ammo_counts(_itemName, -_amountRemoved);
 	}
 	return (_amount - _amountRemoved);
 }
@@ -594,20 +595,21 @@ function item_inventory_slot_get_data(_slot){
 	var _slotContents = global.curItems[_slot];
 	if (_slotContents == INV_EMPTY_SLOT) // The inventory slot is empty; return -1 to signify such.
 		return INV_EMPTY_SLOT;
-	return array_get(global.itemIDs, _slotContents.itemID);
+	return global.itemData[? _slotContents.itemName];
 }
 
 /// @description
 /// Returns the sum of a given item within the inventory.
-/// @returns {Real}
-///	
-/// @param {Real}	itemID		Number representing the item within the game's data.
-function item_inventory_count(_itemID){
-	// Don't try counting items in an inventory that hasn't been initialized.
-	if (!is_array(global.curItems))
+/// @returns 	{Real}
+/// @param 		{Real}	itemName	Name of the item to count within the inventory.
+function item_inventory_count(_itemName){
+	// Don't try counting items in an inventory that hasn't been initialized or the provided item does not exist.
+	var _item = global.itemData[? _itemName];
+	if (!is_array(global.curItems) || is_undefined(_item))
 		return 0;
 	
-	// Loop through inventory and count up the requested item IDs quantity within.
+	// Loop through inventory and count up the requested item's quantity within.
+	var _itemID 	= _item.itemID;
 	var _invItem	= -1;
 	var _count		= 0; // Stores the sum of quantities.
 	var _length		= array_length(global.curItems);

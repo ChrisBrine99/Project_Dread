@@ -1,10 +1,8 @@
 #region Globals Related to General Data Management
 
-// Two data structures that will store references to a given item's data which is stored in a struct (The global.itemData ds_map will be 
-// responsible for cleaning up those structs when they need to be deleted). The first is a map of these references to allow grabbing it by 
-// name/key, and the second is a number-based system to get the reference by item ID value.
+// 
 global.itemData			= -1;
-global.itemIDs			= -1;
+global.itemComboData	= -1;
 
 // A map struct that will contain information about items in the game world. It will contain items that have been placed manually within 
 // GameMaker's room editor. Any dynamic items (Those that were collected previously and then removed by the player from their item iventory)
@@ -156,8 +154,8 @@ function load_item_data(_filename){
 		ds_map_destroy(_itemData);
 		return;
 	}
-	global.itemData = ds_map_create();	// Stores the item data in structs; manages the references.
-	global.itemIDs	= array_create(0, ID_INVALID); // Stores an ID/reference pair for access via ID instead of name/key.
+	global.itemData 	 = ds_map_create();		// Stores the item data in structs; manages the references.
+	global.itemComboData = ds_list_create();	// Stores the data for combos between various items in the game.
 	
 	// Create a map containing references to all the functions needed by the key items. Each of these values is paired with a key matching 
 	// the string found in the key item data inside its "Use_Func" variable.
@@ -169,7 +167,6 @@ function load_item_data(_filename){
 	
 	// Loop through all combo data before any items are loaded due to how this information is stored relative to the other sections in 
 	// the JSON.
-	var _validCombos = ds_list_create();
 	var _firstItem	 = "";
 	var _firstCost	 = 1;
 	var _secondItem	 = "";
@@ -199,21 +196,20 @@ function load_item_data(_filename){
 		
 		// Create a struct that stores the information about the combination and place said struct into the list that will be placed into 
 		// the global item data structure after this loop is completed.
-		ds_list_add(_validCombos, {
-			firstItem	: _firstItem,
-			firstCost	: _firstCost,
-			secondItem	: _secondItem,
-			secondCost	: _secondCost,
-			resultItem	: _curData[? KEY_RESULT_ITEM],
-			minAmount	: load_item_value(_curData[? KEY_MIN_AMOUNT], 1),
-			maxAmount	: load_item_value(_curData[? KEY_MAX_AMOUNT], 1)
+		ds_list_add(global.itemComboData, {
+			firstItemID		: _firstItem,
+			firstCost		: _firstCost,
+			secondItemID	: _secondItem,
+			secondCost		: _secondCost,
+			resultItem		: _curData[? KEY_RESULT_ITEM],
+			minAmount		: load_item_value(_curData[? KEY_MIN_AMOUNT], 1),
+			maxAmount		: load_item_value(_curData[? KEY_MAX_AMOUNT], 1)
 		});
 		
 		// Set these values back to 1 in case they were changed due to a unique cost in the combo being present on either item.
 		_firstCost	= 1;
 		_secondCost = 1;
 	}
-	ds_map_add(global.itemData, KEY_VALID_COMBOS, _validCombos);
 	
 	// After the combo data is loaded, the remaining sections will have their information loaded into the structure as they all simply 
 	// contain different items.
@@ -256,7 +252,7 @@ function load_item_data(_filename){
 		"Processed and parsed all item data ({1} items and {2} combo recipes) in {0} microseconds.", 
 		get_timer() - _startTime,
 		ds_map_size(global.itemData) - 1,
-		ds_list_size(_validCombos)
+		ds_list_size(global.itemComboData)
 	);
 }
 
@@ -287,7 +283,6 @@ function load_item(_section, _itemKey, _itemIndex, _data, _useFunctions){
 		stackLimit	:	load_item_value(_data[? KEY_STACK], 1),
 		flags		:	0,
 	};
-	array_set(global.itemIDs, _itemID, _itemStructRef);
 	ds_map_add(global.itemData, _itemKey, _itemStructRef);
 	
 	switch(_section){
@@ -318,11 +313,11 @@ function load_item(_section, _itemKey, _itemIndex, _data, _useFunctions){
 				if (WEAPON_IS_THROWN)	{ equipType = ITEM_EQUIP_TYPE_SUBWEAPON; }
 				else					{ equipType = ITEM_EQUIP_TYPE_MAINWEAPON; }
 				
-				// Copy over the item IDs for the various ammo types the given weapon can utilize from the raw JSON data's ds_list that the 
-				// text arrays are converted to by GML.
-				var _ammoTypes	= _data[? KEY_AMMO_TYPES];
-				if (is_undefined(_ammoTypes)){ // Default to a single element array with -1 as a value when no ammo data is present.
-					ammoTypes = [-1];
+				// Grab the references to each of the weapon's usable ammunitions within global.itemData by using the ID value found in the
+				// raw JSON data of the weapon.
+				var _ammoTypes = _data[? KEY_AMMO_TYPES];
+				if (is_undefined(_ammoTypes)){ // Default to an empty array if the weapon uses no ammo.
+					ammoTypes = [];
 					break;
 				}
 				var _size = ds_list_size(_ammoTypes);
@@ -542,7 +537,7 @@ function world_item_remove(_key, _isDynamic){
 /// @param 		{Real} 			firstItemID
 /// @param 		{Real} 			secondItemID
 function crafting_data_find_valid_combo(_firstItemID, _secondItemID){
-    var _craftingData   = global.itemData[? KEY_VALID_COMBOS];
+    var _craftingData   = global.itemComboData;
     var _dataRef        = noone;
     var _start          = 0;
     var _end            = ds_list_size(_craftingData) - 1;
@@ -551,12 +546,12 @@ function crafting_data_find_valid_combo(_firstItemID, _secondItemID){
         _middle     = _start + floor((_end - _start) / 2);
         _dataRef    = _craftingData[| _middle];
         with(_dataRef){
-            if (firstItem < _firstItemID){
+            if (firstItemID < _firstItemID){
                 _start = _middle + 1;
                 continue;
             }
             
-            if (firstItem > _firstItemID){
+            if (firstItemID > _firstItemID){
                 _end = _middle - 1;
                 continue;
             }
@@ -565,20 +560,20 @@ function crafting_data_find_valid_combo(_firstItemID, _secondItemID){
 			var _index 			= _middle;
 			var _iterateForward = false;
             do {
-                if (_dataRef.secondItem == _secondItemID)
+                if (_dataRef.secondItemID == _secondItemID)
                     return _dataRef;
 				_index     += _iterateForward ? 1 : -1;
                 _dataRef 	= _craftingData[| _index];
 				
 				// 
 				if (!_iterateForward){
-					if (_dataRef.firstItem < _firstItemID){
+					if (_dataRef.firstItemID < _firstItemID){
 						_dataRef 		= _craftingData[| ++_middle];
 						_index 			= _middle;
 						_iterateForward = true;
 					}
 				}
-            } until(_dataRef.firstItem > _firstItemID);
+            } until(_dataRef.firstItemID > _firstItemID);
 			_start = _end + 1; // Ensures the loop will exit since the search succeeded, but the combination did not.
         }
     }

@@ -27,10 +27,6 @@ if (is_array(global.curItems)){
 	array_resize(global.curItems, 0);
 }
 
-// Since the item references are also stored in an array based on their given ID values, the array is resized to zero so all those references
-// are removed before they are cleaned up below.
-array_resize(global.itemIDs, 0);
-
 // Before looping through and deleting all item data, the combo recipes stored alongside those items will need to be cleaned up and removed. 
 // So, that list is grabbed and each struct is deleted before the list itself is destroyed and its ID is removed from the item data map.
 var _validCombos = global.itemData[? KEY_VALID_COMBOS];

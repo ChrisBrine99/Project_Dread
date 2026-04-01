@@ -146,7 +146,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			create_internal_item_data(i);
 			with(_invItem){
 				_itemName = itemName;
-				with(global.itemIDs[itemID])
+				with(global.itemData[? itemName])
 					_itemInfo = itemInfo;
 			}
 			add_option(_itemName, _itemInfo);
@@ -380,18 +380,18 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	/// 
 	/// @param {Real}	slot	The item that will have its properties passed along to the menu for rendering.
 	create_internal_item_data = function(_slot){
-		var _itemID			= ID_INVALID;
+		var _itemName		= "";
 		var _quantity		= 0;
 		var _quantityCol	= COLOR_WHITE;
 		var _showStack		= false;
 		with(global.curItems[_slot]){
-			_itemID		= itemID;
+			_itemName	= itemName;
 			_quantity	= min(999, quantity);
 			if (_quantity == 0) // If the quantity happens to be zero; set the number to dark red.
 				_quantityCol = COLOR_DARK_RED;
 		}
 		
-		var _itemRef = global.itemIDs[_itemID];
+		var _itemRef = global.itemData[? _itemName];
 		with(_itemRef){
 			_showStack	= ((typeID == ITEM_TYPE_WEAPON && !WEAPON_IS_MELEE) || stackLimit > 1);
 			if (_quantity == stackLimit) // When the quantity is full turn the quantity's color to light green.
@@ -421,9 +421,9 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	/// @param {Real}	slot		The slot in the inventory that will have some amount of its contents removed.
 	/// @param {Real}	amount		(Optional) How many of that item will be removed from the slot in question.
 	remove_item_from_slot = function(_slot, _amount = -1){
-		var _itemID = global.curItems[_slot].itemID;
+		var _itemName = global.curItems[_slot].itemName;
 		item_inventory_remove_slot(_slot, _amount); 
-		refresh_internal_item_data(_slot, global.itemIDs[_itemID]);
+		refresh_internal_item_data(_slot, global.itemData[? _itemName]);
 	}
 	
 	/// @description 
@@ -847,7 +847,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	state_equip_item = function(_delta){
 		var _selOption		= selOption;
 		var _itemData		= invItemRefs[_selOption];
-		var _itemStructRef	= global.itemIDs[_itemData.itemID];
+		var _itemStructRef	= global.itemData[? _itemData.itemName];
 		var _slotToCheck	= INV_EMPTY_SLOT;
 		with(PLAYER){
 			// Determine what equipment slot to check for in the "equippedSlots" list and function to call based on what "equipment type" 
@@ -925,40 +925,30 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		reset_to_default_state();
 		
 		// Get the ID and names for both items involved in the combination process.
-		var _firstItemID	= ID_INVALID;
-		var _firstItemName	= "";
-		with(_firstItem){
-			_firstItemID	= itemID; 
-			_firstItemName	= itemName;
-		}
-		var _secondItemID	= ID_INVALID;
-		var _secondItemName	= "";
-		with(_secondItem){ 
-			_secondItemID	= itemID;
-			_secondItemName	= itemName;
-		}
+		var _firstItemID	= _firstItem.itemID;
+		var _secondItemID	= _secondItem.itemID;
 		
 		// 
 		var _comboData 		= crafting_data_find_valid_combo(_firstItemID, _secondItemID);
 		var _comboSuccess	= false;
 		var _firstCost		= 0;
 		var _secondCost		= 0;
-		var _resultItemID	= ID_INVALID;
+		var _resultItem		= "";
 		var _resultMin		= 0;
 		var _resultMax		= 0;
 		with(_comboData){
 			_firstCost		= firstCost;
 			_secondCost		= secondCost;
-			_resultItemID	= resultItem;
+			_resultItem		= resultItem;
 			_resultMin		= minAmount;
 			_resultMax		= maxAmount;
-			_comboSuccess	= (_resultItemID >= 0 && _resultItemID < array_length(global.itemIDs));
+			_comboSuccess	= (!is_undefined(_resultItem));
 		}
 		
 		// 
 		if (_comboSuccess){
 			// 
-			if (_secondItemName == ITEM_UPGRADE_PARTS){
+			if (_secondItem.itemName == ITEM_UPGRADE_PARTS){
 				// 
 				var _quantity	= 0;
 				var _ammoIndex	= 0;
@@ -972,13 +962,11 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 				remove_item_from_slot(_secondSlot, 1);
 				
 				// 
-				var _name		= "";
 				var _durability	= 0;
-				with(global.itemIDs[_resultItemID]){ // Get the resulting items name and its maximum possible durability value (If said value exists for the item).
-					_name		= itemName;
-					_durability	= variable_struct_exists(global.itemIDs[_resultItemID], "durability") ? durability : 0;
+				with(global.itemData[? _resultItem]){ // Get the resulting item's maximum possible durability value (If said value exists for the item).
+					_durability	= variable_struct_exists(global.itemData[? _name], "durability") ? durability : 0;
 				}
-				add_item_to_inventory(_name, _quantity, _durability, _ammoIndex);
+				add_item_to_inventory(_resultItem, _quantity, _durability, _ammoIndex);
 				return;
 			}
 			
@@ -997,9 +985,8 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			remove_item_from_slot(_secondSlot, _secondCost);
 			
 			// 
-			var _name		= global.itemIDs[_resultItemID].itemName;
-			var _quantity	= irandom_range(_resultMin, _resultMax);
-			add_item_to_inventory(_name, _quantity);
+			var _quantity = irandom_range(_resultMin, _resultMax);
+			add_item_to_inventory(_resultItem, _quantity);
 			return;
 		}
 		
