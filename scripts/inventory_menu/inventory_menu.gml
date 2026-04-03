@@ -96,7 +96,6 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	///	The inventory menu struct's create event. Required menu parameters are initialized, the required options for the inventory which are 
 	/// made up of menus that represent each option as a *section* instead of a standard menu option. Finally, control groups are made (Or 
 	/// updated if they already exist) here and updated on a per-section basis as they're switched to by the player.
-	/// 
 	create_event = function(){
 		// Get a reference to this menu so it can be passed into the submenus that it manages.
 		selfRef	= instance_find_struct(structID);
@@ -165,7 +164,6 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	/// @description 
 	///	Called whenever the inventory menu is closed by the player. It handles cleaning up memory that was allocated from the *str_base_menu*
 	/// struct while also freeing up any memory that was allocated by submenus that were created.
-	///	
 	destroy_event = function(){
 		__destroy_event(); // Executes general menu destroy event
 		
@@ -181,7 +179,6 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	///	Called during every frame that the menu exists for. It will be responsible for rendering its contents to the game's GUI layer. Note 
 	/// that its position refers to the top-left of the menu itself, and its contents will be offset from that point based on each of their 
 	/// unique position values.
-	///	
 	///	@param {Real}	xView	The menu's current x position added with the viewport's current x position.
 	/// @param {Real}	yView	The menu's current y position added with the viewport's current y position.
 	/// @param {Real}	wView	The viewport's current width.
@@ -320,7 +317,6 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	///	Creates a new instance of one of the three submenu structs that are handled by this main inventory menu struct. Each one is only 
 	/// created when needed, but will stay active until the inventory window is closed, so this function will not do anything if the same 
 	/// index is passed in twice during only one of the inventory's lifetimes.
-	///	
 	///	@param {Real}	index	The value that will determine which menu is created by calling this function.
 	initialize_submenu = function(_index){
 		if (_index < 0 || _index >= array_length(menuRef))
@@ -372,7 +368,6 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	///	Since the inventory menu only needs to care about three inputs (*Tabbing* left and right to open each respectively section of the 
 	/// inventory: items, notes, and maps), those will be the only three inputs checked. The right and left inputs are also unique to the 
 	/// inventory, and default to the *C* and *V* keys on the keyboard, or the left and right shoulder buttons of the gamepad, respectively.
-	///	
 	process_player_input = function(){
 		prevInputFlags	= inputFlags;
 		inputFlags		= 0;
@@ -391,7 +386,6 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	///	The inventory's default state, which is responsible for managing which page of the inventory is currently active out of the three: 
 	/// items, notes, and maps. It also handles closing the inventory and all of those pages (If they have been instantiated throughout the 
 	/// lifetime of the inventory) if required.
-	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_default = function(_delta){
 		// Grab the inputs for the current frame, but using the inventory's unique version of this function.
@@ -439,7 +433,6 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	///	The inventory's opening animation which is set as its initial state when opened. Once the conditions of the animation are met, the 
 	/// inventory will shift to its default state and the currently visible submenu will do so as well to allow their input and logic function
 	/// alities to be processed.
-	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_open_animation = function(_delta){
 		// Keep updating the position of the menu until it reaches its target value. The control group managed by this menu and the one 
@@ -495,7 +488,6 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	/// @description 
 	///	The inventory's closing animation which is set as its state whenever the inventory is set to close so gameplay can return to normal 
 	/// once the conditions for the animation are met.
-	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_close_animation = function(_delta){
 		y			= lerp(MENUINV_CANIM_YTARGET, MENUINV_OANIM_YTARGET, alpha);
@@ -527,7 +519,6 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 
 /// @description 
 ///	Create the invnetory menu, which will pause the player's movements until it is closed. Remaining entities will still function normally.
-///	
 ///	@param {Real}	index	Determines which of the three pages of the inventory to open up first.
 function menu_inventory_open(_index){
 	var _ref = instance_create_menu_struct(str_inventory_menu);

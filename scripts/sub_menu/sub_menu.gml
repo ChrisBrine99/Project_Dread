@@ -25,7 +25,6 @@ function str_sub_menu(_index) : str_base_menu(_index) constructor{
 	///	Called during every frame that the menu exists for. It will be responsible for rendering its contents to the game's GUI layer. Note 
 	/// that its position refers to the top-left of the menu itself, and its contents will be offset from that point based on each of their 
 	/// unique position values.
-	///	
 	///	@param {Real}	xPos		The menu's current x position added with the viewport's current x position.
 	/// @param {Real}	yPos		The menu's current y position added with the viewport's current y position.
 	/// @param {Real}	wView		The viewport's current width.
@@ -39,7 +38,6 @@ function str_sub_menu(_index) : str_base_menu(_index) constructor{
 	/// @description 
 	///	Replaces the current options contained within this menu with an entirely new set. The dimensions of the menu can also be updated as 
 	/// required for the new set of options.
-	///	
 	///	@param {Array<String>}	options			The list of strings that will replace existing options or create new options as required.
 	/// @param {Real}			width			Determines how many options will exist on a given row within the menu (Height is calculated as options are added/removed).
 	/// @param {Real}			visibleWidth	Number of option columns visible to the player at any given time.
@@ -117,17 +115,16 @@ function str_sub_menu(_index) : str_base_menu(_index) constructor{
 /// @description 
 ///	Creates a special type of menu that can have any number of itself existing at any given time. Can be utilized by menus to have a 
 /// confirmation window, or a subset of options that appears when an option is selected within that main menu, and so on.
-///	@returns {Struct.Sub_Menu}
-/// 
-/// @param {Function}			menuToCreate	A instance of a "str_sub_menu" child (Or "str_sub_menu" itself) that will be created.
-///	@param {Struct._structRef}	parentMenu		Reference to the menu that is handling this menu.
-/// @param {Real}				x				Position on the x axis of the GUI to place the menu.
-/// @param {Real}				y				Position on the y axis of the GUI to place the menu.
-/// @param {Array<String>}		options			An array of strings that will be used to create the menu's available options.
-/// @param {Real}				width			(Optional) Determines the width of the menu; default value is one.
-/// @param {Real}				visibleWidth	(Optional) Number of columns that are visible to the user at any given time; default value is one.
-/// @param {Real}				visibleHeight	(Optional) Number of rows that are visible to the user at any given time; default value is three.
-/// @param {Asset.GMFont}		font			(Optional) Font resource to use when displaying the menu's visible options.
+///	@returns 	{Struct.Sub_Menu}
+/// @param 		{Function}				menuToCreate	A instance of a "str_sub_menu" child (Or "str_sub_menu" itself) that will be created.
+///	@param 		{Struct._structFunc}	parentMenu		Reference to the menu that is handling this menu.
+/// @param 		{Real}					x				Position on the x axis of the GUI to place the menu.
+/// @param 		{Real}					y				Position on the y axis of the GUI to place the menu.
+/// @param 		{Array<String>}			options			An array of strings that will be used to create the menu's available options.
+/// @param 		{Real}					width			(Optional) Determines the width of the menu; default value is one.
+/// @param 		{Real}					visibleWidth	(Optional) Number of columns that are visible to the user at any given time; default value is one.
+/// @param 		{Real}					visibleHeight	(Optional) Number of rows that are visible to the user at any given time; default value is three.
+/// @param 		{Asset.GMFont}			font			(Optional) Font resource to use when displaying the menu's visible options.
 function create_sub_menu(_menuToCreate, _parentMenu, _x, _y, _options, _width = 1, _visibleWidth = 1, _visibleHeight = 3, _font = fnt_small){
 	var _submenuRef = instance_create_menu_struct(_menuToCreate);
 	with(_submenuRef){

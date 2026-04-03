@@ -505,7 +505,9 @@ handle_light_toggle_input = function(){
 /// input they released on the current frame. These inputs work on a priority; pausing is first; then the inventory's item section; notes; 
 /// and maps.
 handle_menu_open_inputs = function(){
-	if (PINPUT_OPEN_ITEMS_RELEASED){ // Opens the inventory to the collected item section.
+	if (PINPUT_OPEN_PAUSE_RELEASED){ // Open the pause menu.
+		var _pauseMenu = instance_create_menu_struct(str_pause_menu);
+	} else if (PINPUT_OPEN_ITEMS_RELEASED){ // Opens the inventory to the collected item section.
 		menu_inventory_open(MENUINV_INDEX_ITEM_MENU);
 	} else if (PINPUT_OPEN_NOTES_RELEASED){ // Open the inventory to its collected notes section.
 		menu_inventory_open(MENUINV_INDEX_NOTE_MENU); 

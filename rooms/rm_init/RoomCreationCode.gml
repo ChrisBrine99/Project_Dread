@@ -25,10 +25,18 @@ ds_map_add(global.sInstances, str_cutscene_manager,		new str_cutscene_manager(st
 ds_map_add(global.sInstances, str_control_ui_manager,	new str_control_ui_manager(str_control_ui_manager));
 ds_map_add(global.sInstances, str_camera,				new str_camera(str_camera));
 ds_map_add(global.sInstances, str_textbox,				new str_textbox(str_textbox));
-ds_map_add(global.sInstances, str_textbox_log,			new str_textbox_log(str_textbox));
+ds_map_add(global.sInstances, str_textbox_log,			new str_textbox_log(str_textbox_log));
 ds_map_add(global.sInstances, str_screen_fade,			new str_screen_fade(str_screen_fade));
-ds_map_add(global.sInstances, str_fog,					new str_fog(str_fog));
 // NOTE -- This is the only time the default ways of struct and object creation should be used!!!
+
+// Filling the remainder of the global.sInstances elements that will exist to store runtime singleton instances with their default value.
+ds_map_add(global.sInstances, str_pause_menu, 			noone);
+ds_map_add(global.sInstances, str_inventory_menu, 		noone);
+ds_map_add(global.sInstances, str_item_menu, 			noone);
+ds_map_add(global.sInstances, str_note_menu, 			noone);
+ds_map_add(global.sInstances, str_map_menu, 			noone);
+ds_map_add(global.sInstances, str_textbox_options_menu,	noone);
+ds_map_add(global.sInstances, str_fog,					noone);
 
 // After creating the required singleton instances, initialize the camera so the window can be properly sized, the viewport into the game can 
 // be created and sized as well, and the game can start rendering to that window via the current viewport position/size.

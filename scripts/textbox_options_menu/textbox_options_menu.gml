@@ -2,7 +2,7 @@
 
 // The position that this menu will be at when its opening animation starts playing and when its closing animation has been completed. The 
 // target position is dynamically determined based on the width of the text shown on the menu, so it cannot be set as a macro.
-#macro	TBOXMENU_XSTART					VIEWPORT_WIDTH + 50
+#macro	TBOXMENU_XSTART					CAMERA.wViewport + 50
 
 // Values that determine the distance between the content's four edges (Left, right, top, and bottom) and the edges of the background 
 // containing said content.

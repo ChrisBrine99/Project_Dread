@@ -12,7 +12,6 @@ function str_fog(_index) : str_base(_index) constructor {
 	/// @description 
 	///	The fog weather struct's destroy event. It will clean up anything that isn't automatically cleaned up by GameMaker when this struct 
 	/// is destroyed/out of scope.
-	///	
 	destroy_event = function(){
 		var _length = ds_list_size(curLayers);
 		for (var i = 0; i < _length; i++)
@@ -23,7 +22,6 @@ function str_fog(_index) : str_base(_index) constructor {
 	/// @description 
 	///	Render all active fog layers onto the application surface. On top of that, their positions will be updated according to the speeds 
 	/// each respective layer is set to move at, and their opacity.
-	/// 
 	draw_end_event = function(){
 		// Get a reference to the list storing the fog layers, as it is needed when a layer needs to remove itself when it has completely 
 		// faded out of visibility. Then, get the size of the list as it is needed throughout the event.
@@ -55,6 +53,10 @@ function str_fog(_index) : str_base(_index) constructor {
 						ds_list_delete(_curLayers, i);
 						_length--;
 						i--;
+						
+						// When the final layer has been faded out, delete the fog struct instance.
+						if (_length == 0)
+							instance_destroy_struct(FOG);
 						continue;
 					}
 				} else{
@@ -85,7 +87,6 @@ function str_fog(_index) : str_base(_index) constructor {
 	
 	/// @description 
 	///	Creates a new layer of fog with its own speed, scaling, and opacity.
-	/// 
 	///	@param {Real}	xSpeed	How fast and what direction (- left, + right) the layer will move along the x axis.
 	/// @param {Real}	ySpeed	How fast and what direction (- up, + down) the layer will move along the y axis.
 	/// @param {Real}	alpha	Overall opacity of the layer in question.
@@ -104,7 +105,6 @@ function str_fog(_index) : str_base(_index) constructor {
 	
 	/// @description 
 	///	A simple function that allows a given layer of fog to begin fading out.
-	/// 
 	///	@param {Real}	index	The layer within the list of active fog layers to target.
 	remove_layer = function(_index){
 		if (_index < 0 || _index >= ds_list_size(curLayers))
@@ -114,3 +114,55 @@ function str_fog(_index) : str_base(_index) constructor {
 }
 
 #endregion Fog Weather Struct Definition
+
+#region Fog Global Function Definitions
+
+/// @description
+/// Creates a fog effect utilizing the parameters provided within the *layerParams* array passed into this function for each layer that will
+/// be created. Each element in the array needs to have exactly *four* elements for each fog layer to initialize without causing a crash.
+///	@param {Array<Array>}	layerParams		An array containing arrays that store the properties (*xSpeed*, *ySpeed*, *alpha*, *scale*) of each fog layer.
+function fog_create(_layerParams){
+	if (instance_create_struct(str_fog) == noone || !is_array(_layerParams))
+		return;
+	
+	with(FOG){
+		var _length = array_length(_layerParams);
+		for (var i = 0; i < _length; i++)
+			add_layer(_layerParams[0], _layerParams[1], _layerParams[2], _layerParams[3]); 
+	}
+}
+
+/// @description 
+///	Sets all existing fog layers' target alpha values to zero, so they all begin fading out until no more fog remains. Useful when the effect
+/// needs to end without being hidden by a transition of some kind (Ex. warping from inside to outside).
+function fog_destroy(){
+	with(FOG){
+		var _length = ds_list_size(curLayers);
+		for (var i = 0; i < _length; i++){
+			with(curLayers[| i]) { targetAlpha = 0.0; }
+		}
+	}
+}
+
+/// @description 
+///	Adds a new layer of fog to the currently existing fog effect. This function does nothing if *fog_create* wasn't called beforehand, as that
+/// function is the one that actually creates the instance of *str_fog*.
+///	@param {Real}	xSpeed	How fast and what direction (- left, + right) the layer will move along the x axis.
+/// @param {Real}	ySpeed	How fast and what direction (- up, + down) the layer will move along the y axis.
+/// @param {Real}	alpha	Overall opacity of the layer in question.
+/// @param {Real}	scale	(Optional) Scaling of the fog layer.
+function fog_add_layer(_xSpeed, _ySpeed, _alpha, _scale = 1.0){
+	with(FOG) { add_layer(_xSpeed, _ySpeed, _alpha, _scale); }
+}
+
+
+/// @description
+/// Removes an existing layer of fog from the currently existing fog effect. This function does nothing is *fog_create* wasn't called before
+/// invoking this function. Unlike *fog_destroy*, this doesn't cause the *str_fog* struct to destroy itself after removal of the layer
+/// (Unless the removed layer is the last one in the current instance of the effect).
+///	@param {Real}	index	The layer within the list of active fog layers to target.
+function fog_remove_layer(_index){
+	with(FOG) { remove_layer(_index); }
+}
+
+#endregion Fog Global Function Definitions

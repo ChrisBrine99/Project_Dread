@@ -118,6 +118,7 @@
     {"id":{"name":"menu_utilites","path":"scripts/menu_utilites/menu_utilites.yy",},},
     {"id":{"name":"note_menu","path":"scripts/note_menu/note_menu.yy",},},
     {"id":{"name":"object_utilities","path":"scripts/object_utilities/object_utilities.yy",},},
+    {"id":{"name":"pause_menu","path":"scripts/pause_menu/pause_menu.yy",},},
     {"id":{"name":"player_info_ui","path":"scripts/player_info_ui/player_info_ui.yy",},},
     {"id":{"name":"screen_fade","path":"scripts/screen_fade/screen_fade.yy",},},
     {"id":{"name":"struct_utilities","path":"scripts/struct_utilities/struct_utilities.yy",},},

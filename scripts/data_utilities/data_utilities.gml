@@ -1,6 +1,7 @@
 #region Globals Related to General Data Management
 
-// 
+// Two globals that store information about items in one form or another. The first is a map of all the values associated with each item,
+// and the second is a list storing all the combinations that are possible between the various items in the game.
 global.itemData			= -1;
 global.itemComboData	= -1;
 
@@ -26,9 +27,8 @@ global.collectedItems	= ds_list_create();
 /// @description
 /// Loads in and automatically decodes a *JSON* file into a *GML* data structure made up of *ds_map* and *ds_list* instances which is then 
 /// returned by the function to be utilized as required in the code.
-/// @returns {Id.DsMap}
-/// 
-///	@param {String}	filename	The JSON file to load.
+/// @returns 	{Id.DsMap}
+///	@param 		{String}	filename	The JSON file to load.
 function load_json(_filename){
 	var _buffer = buffer_load(_filename);
 	if (_buffer == -1)

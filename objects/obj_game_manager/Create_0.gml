@@ -32,13 +32,15 @@
 #macro	TEXTBOX							global.sInstances[? str_textbox]
 #macro	TEXTBOX_LOG						global.sInstances[? str_textbox_log]
 #macro	SCREEN_FADE						global.sInstances[? str_screen_fade]
-#macro	FOG								global.sInstances[? str_fog]
 
 // Macros for referencing the instance IDs of all runtime singletons. These return "noone" when the single allowed instance doesn't exist.
+#macro 	TEXTBOX_OPTIONS 				global.sInstances[? str_textbox_options_menu]
+#macro 	MENU_PAUSE						global.sInstances[? str_pause_menu]
 #macro	MENU_INVENTORY					global.sInstances[? str_inventory_menu]
 #macro	MENU_ITEMS						global.sInstances[? str_item_menu]
 #macro	MENU_NOTES						global.sInstances[? str_note_menu]
 #macro	MENU_MAPS						global.sInstances[? str_map_menu]
+#macro	FOG								global.sInstances[? str_fog]
 
 // Macros for retrieving the state of a given input binding on the keyboard. It simply returns if the key is currently held down or not, and
 // logic for key presses/releases is done within a controllable object using their "inputFlags" and "prevInputFlags" variables.
@@ -325,7 +327,6 @@ global.colorFadeShader = {
 	///	Call this to activate the shader and set its uniform vector to match the color the effect will use. If the effect is already active 
 	/// when this function is called, it will simply exit early. Note that calling *shader_reset* at some point after calling this function 
 	/// is REQUIRED!!!
-	///	
 	/// @param {Real}	color	Determines the color that this shader effect will utilize.
 	activate_shader	: function(_color){
 		if (shader_current() == shd_color_fade)
@@ -337,7 +338,6 @@ global.colorFadeShader = {
 	
 	/// @description 
 	///	Sets the color that will be used for the shader's effect.
-	///	
 	/// @param {Real}	color	Determines the color that this shader effect will utilize.
 	set_effect_color : function(_color){
 		if (curColorHex == _color){
@@ -406,7 +406,6 @@ instancesToWarp			= ds_map_create();
 /// @description 
 ///	Adds a given instance to the map of instances that will warp to the target room together. Each instance can be given a unique position, 
 /// and all will temporarily be set to persistent during the warping process.
-///	
 ///	@param {Id.Instance}	id			The unique value given to the instance in question.
 /// @param {Real}			targetX		Position along the x-axis within the target room to set the instance's x position to.
 /// @param {Real}			targetY		Position along the y-axis within the target room to set the instance's y position to.
@@ -434,7 +433,6 @@ add_instance_to_warp = function(_id, _targetX, _targetY){
 /// @description
 ///	Gets the currently set combat difficulty from the game manager's difficulty value. If this value happens to be outside the valid range 
 /// of numbers, the combat difficulty is set to standard as a default.
-///
 get_current_combat_difficulty = function(){
 	var _combatDifficulty = difficulty & 0x0000FFFF; // Isolate lower 16 bits.
 	if (_combatDifficulty == GAME_COMBATDIFF_INVALID || _combatDifficulty > GAME_COMBATDIFF_ONELIFE)
@@ -445,7 +443,6 @@ get_current_combat_difficulty = function(){
 /// @description 
 ///	Gets the currently set puzzle difficulty from the game manager's difficulty value. If this value happens to be outside the valid range 
 /// of numbers, the puzzle difficulty is set to standard as a default.
-///
 get_current_puzzle_difficulty = function(){
 	var _puzzleDifficulty = difficulty & 0xFFFF0000; // Isolate upper 16 bits.
 	if (_puzzleDifficulty == GAME_PUZZLEDIFF_INVALID || _puzzleDifficulty > GAME_PUZZLEDIFF_PUNISHING)
@@ -472,7 +469,6 @@ numStaticDrawn	= 0;
 /// @description 
 ///	Creates a line within the world from the provided starting coordinates to the provided ending coordinates for the lifetime set in the 
 /// final parameter (60 units = 1 second of real-time). Useful for showing hitscan collision lines and such.
-///	
 ///	@param {Real}	xStart		Origin of the line along the current room's x axis.
 /// @param {Real}	yStart		Origin of the line along the current room's y axis.
 /// @param {Real}	xEnd		Endpoint of the line along the current room's x axis.

@@ -4,7 +4,6 @@ with(CAMERA)				{ destroy_event(); }	delete CAMERA;
 with(TEXTBOX)				{ destroy_event(); }	delete TEXTBOX;
 with(TEXTBOX_LOG)			{ destroy_event(); }	delete TEXTBOX_LOG;
 with(CONTROL_UI_MANAGER)	{ destroy_event(); }	delete CONTROL_UI_MANAGER;
-with(FOG)					{ destroy_event(); }	delete FOG;
 													delete SCREEN_FADE;
 ds_map_destroy(global.sInstances);
 
@@ -29,16 +28,12 @@ if (is_array(global.curItems)){
 
 // Before looping through and deleting all item data, the combo recipes stored alongside those items will need to be cleaned up and removed. 
 // So, that list is grabbed and each struct is deleted before the list itself is destroyed and its ID is removed from the item data map.
-var _validCombos = global.itemData[? KEY_VALID_COMBOS];
-if (ds_exists(_validCombos, ds_type_list)){
-	_length = ds_list_size(_validCombos);
-	for (var i = 0; i < _length; i++){
-		show_debug_message("Deleting combo recipe {0} (structRef: {1})", i, _validCombos[| i]);
-		delete _validCombos[| i];
-	}
-	ds_list_destroy(_validCombos);
-	ds_map_delete(global.itemData, KEY_VALID_COMBOS);
+_length = ds_list_size(global.itemComboData);
+for (var i = 0; i < _length; i++){
+	show_debug_message("Deleting combo recipe {0} (structRef: {1})", i, global.itemComboData[| i]);
+	delete global.itemComboData[| i];
 }
+ds_list_destroy(global.itemComboData);
 
 // Now that only items structs remain, the loop below will go through each element and delete the structs from memory before the map itself 
 // is cleared and destroyed.
