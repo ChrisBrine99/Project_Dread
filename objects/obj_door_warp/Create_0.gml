@@ -105,10 +105,10 @@ on_player_interact = function(_delta){
 			
 			// Check to see if the player has the required key within their inventory. If they do, unlock the lock by setting its desired 
 			// event flag to the state it requires. Increment _locksOpened since a lock has been opened.
-			if (item_inventory_count(keyID) >= 1){
-				item_inventory_remove(keyID, 1);
+			if (item_inventory_count(keyName) >= 1){
+				item_inventory_remove(keyName, 1);
 				event_set_flag(flagID, flagState);
-				textbox_queue_used_item(global.itemIDs[keyID].itemName);
+				textbox_queue_used_item(keyName);
 				_locksOpened++;
 			}
 		}
@@ -199,13 +199,8 @@ add_lock = function(_keyName, _flagID, _flagState){
 	if (_index != -1) // If the flag is already occupying the list of keys, don't add it again.
 		return;
 	
-	// Get the item ID from the item's data and store it within the lock data struct alongside the flag information.
-	var _keyID = ID_INVALID;
-	with(global.itemData[? _keyName])
-		_keyID = itemID;
-	
 	ds_list_add(lockData, {
-		keyID		: _keyID,
+		keyName		: _keyName,
 		flagID		: _flagID,
 		flagState	: _flagState,
 	});

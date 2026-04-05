@@ -25,7 +25,7 @@
 
 // Determines the maximum line width for an item's description string as well as the maximum number of lines that can exist for display 
 // within the inventory's item section.
-#macro	MENUITM_OPTION_INFO_MAX_WIDTH	180
+#macro	MENUITM_OPTION_INFO_MAX_WIDTH	190
 #macro	MENUITM_OPTION_INFO_MAX_LINES	3
 
 // Determines the color of the shadows found behind text rendered through this menu's draw_gui event.
@@ -964,7 +964,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 				// 
 				var _durability	= 0;
 				with(global.itemData[? _resultItem]){ // Get the resulting item's maximum possible durability value (If said value exists for the item).
-					_durability	= variable_struct_exists(global.itemData[? _name], "durability") ? durability : 0;
+					_durability	= variable_struct_exists(global.itemData[? _resultItem], "durability") ? durability : 0;
 				}
 				add_item_to_inventory(_resultItem, _quantity, _durability, _ammoIndex);
 				return;
