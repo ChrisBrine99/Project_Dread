@@ -217,20 +217,19 @@
 /// @description 
 ///	A expanded version of the built-in draw_text function that will apply a drop shadow to any text rendered. This drop shadow is placed one
 /// pixel to the right and one pixel down from the text's actual coordinates.
-/// 
 ///	@param {Real}			x			Position along the x axis that the text will be aligned to when rendered.
 /// @param {Real}			y			Position along the y axis that the text will be aligned to when rendered.
 /// @param {Real}			text		The string of characters that will rendered onto the screen.
 /// @param {Constant.Color}	color		(Optional) Color to use when rendering the text. The default color is white.
 /// @param {Real}			alpha		(Optional) Opacity of the text (Ranging from 0.0 to 1.0). The default opacity is 1.0 or completely opaque.
-/// @param {Constant.Color}	shadowColor	(Optional) Color to use for the text's drop shadow. The default color used is black.
-/// @param {Real}			shadowAlpha	(Optional) Opacity of the text's drop shadow (Ranging from 0.0 to 1.0). The default opacity is set to 0.75 or ~75% opaque.
-function draw_text_shadow(_x, _y, _text, _color = c_white, _alpha = 1.0, _shadowColor = c_black, _shadowAlpha = 0.75){
+/// @param {Constant.Color}	colorShadow	(Optional) Color to use for the text's drop shadow. The default color used is black.
+/// @param {Real}			alphaShadow	(Optional) Opacity of the text's drop shadow (Ranging from 0.0 to 1.0). The default opacity is set to 0.75 or ~75% opaque.
+function draw_text_shadow(_x, _y, _text, _color = c_white, _alpha = 1.0, _colorShadow = c_black, _alphaShadow = 0.75){
 	if (string_length(_text) == 0)
 		return; // Don't bother attempting to draw an empty string of text.
 	
-	draw_set_alpha(_alpha * _shadowAlpha);	// The three lines responsible for drawing the drop shadow.
-	draw_set_color(_shadowColor);
+	draw_set_alpha(_alpha * _alphaShadow);	// The three lines responsible for drawing the drop shadow.
+	draw_set_color(_colorShadow);
 	draw_text(_x + 1, _y + 1, _text);
 	
 	draw_set_alpha(_alpha);	 // The three lines responsible for drawing the main string of text.
@@ -239,9 +238,8 @@ function draw_text_shadow(_x, _y, _text, _color = c_white, _alpha = 1.0, _shadow
 }
 
 /// @description 
-///	An extension of the above defined "draw_text_with_shadow" function. It allows the drawn text to be blended with up to four unique colors.
-/// On top of that, it also allows the drop shadow to be positioned as required by the shadowX and shadowY fucntion parameters.
-/// 
+///	An extension of the above defined *draw_text_shadow* function. It allows the drawn text to be blended with up to four unique colors. On 
+/// top of that, it also allows the drop shadow to be positioned as required by the *xShadow* and *yShadow* fucntion parameters.
 /// @param {Real}			x			Position along the x axis that the text will be aligned to when rendered.
 /// @param {Real}			y			Position along the y axis that the text will be aligned to when rendered.
 /// @param {String}			text		The string of characters that will rendered onto the screen.
@@ -250,17 +248,17 @@ function draw_text_shadow(_x, _y, _text, _color = c_white, _alpha = 1.0, _shadow
 /// @param {Constant.Color}	color3		(Optional) One of the four colors (The bottom-right corner) that is used for the rendered text.
 /// @param {Constant.Color}	color4		(Optional) One of the four colors (The bottom-left corner) that is used for the rendered text.
 /// @param {Real}			alpha		(Optional) Opacity of the text (Ranging from 0.0 to 1.0). The default opacity is 1.0 or completely opaque.
-///	@param {Constant.Color}	shadowColor	(Optional) Color to use for the text's drop shadow. The default color used is black.
-/// @param {Real}			shadowAlpha	(Optional) Opacity of the text's drop shadow (Ranging from 0.0 to 1.0). The default opacity is set to 0.75 or ~75% opaque.
-/// @param {Real}			shadowX		(Optional) Relative horizontal offset for the text's drop shadow. The default offset is one pixel to the right.
-/// @param {Real}			shadowY		(Optional) Relative vertical offset for the text's drop shadow. The default offset is one pixel down.
-function draw_text_shadow_ext(_x, _y, _text, _color1 = c_white, _color2 = c_white, _color3 = c_white, _color4 = c_white, _alpha = 1.0, _shadowColor = c_black, _shadowAlpha = 0.75, _shadowX = 1, _shadowY = 1){
+///	@param {Constant.Color}	colorShadow	(Optional) Color to use for the text's drop shadow. The default color used is black.
+/// @param {Real}			alphaShadow	(Optional) Opacity of the text's drop shadow (Ranging from 0.0 to 1.0). The default opacity is set to 0.75 or ~75% opaque.
+/// @param {Real}			xShadow		(Optional) Relative horizontal offset for the text's drop shadow. The default offset is one pixel to the right.
+/// @param {Real}			yShadow		(Optional) Relative vertical offset for the text's drop shadow. The default offset is one pixel down.
+function draw_text_shadow_ext(_x, _y, _text, _color1 = c_white, _color2 = c_white, _color3 = c_white, _color4 = c_white, _alpha = 1.0, _colorShadow = c_black, _alphaShadow = 0.75, _xShadow = 1, _yShadow = 1){
 	if (string_length(_text) == 0)
 		return; // Don't bother attempting to draw an empty string of text.
 	
-	draw_set_alpha(_alpha * _shadowAlpha);	// Three lines are responsible for drawing the drop shadow.
-	draw_set_color(_shadowColor);
-	draw_text(_x + _shadowX, _y + _shadowY, _text);
+	draw_set_alpha(_alpha * _alphaShadow);	// Three lines are responsible for drawing the drop shadow.
+	draw_set_color(_colorShadow);
+	draw_text(_x + _xShadow, _y + _yShadow, _text);
 	
 	// Then, the text is drawn on top of the shadow text that was drawn previously.
 	draw_text_color(_x, _y, _text, _color1, _color2, _color3, _color4, _alpha);
@@ -270,7 +268,6 @@ function draw_text_shadow_ext(_x, _y, _text, _color1 = c_white, _color2 = c_whit
 ///	An extension of the standard *draw_circle/draw_ellipse* functions that allows the alpha channel to be set as well as two colors that can 
 /// create a gradient across the final output. Arguments are also made to be more intuitive compared to *draw_ellipse* and *draw_ellipse_color*
 /// with their confusing *x1*, *y1*, *x2*, and *y2* values for the parameters that determine how the resulting ellipse will appear.
-/// 
 ///	@param {Real}			x			Centerpoint of the circle/ellipse on the horizontal axis.
 /// @param {Real}			y			Centerpoint of the circle/ellipse on the vertical axis.
 ///	@param {Real}			xRadius		Radius of the circle/ellipse when parallel to the x axis.
@@ -296,16 +293,15 @@ function draw_circle_ext(_x, _y, _xRadius, _yRadius, _innerColor, _outerColor, _
 ///	An extension of GameMaker's audio playback function that applies the game's current master volume and sound effect volume to determine 
 /// how loud the playback will be relative to the optionally set volume value. Also allows previous instances of the sound to be stopped 
 /// prior to playing said sound asset if required.
-/// @returns {Id.Sound}
-/// 
-///	@param {Asset.GMSound}	sound			Index of the audio asset that will be played.
-/// @param {Real}			soundType		(Optional) Determines which volume setting group the sound belongs to.
-/// @param {Real}			volume			(Optional) Determines the volume of the sound BEFORE adjustments are made by the game's volume setting values.
-/// @param {Real}			pitch			(Optional) Pitch of the sound effect relative to its default pitch (This is equivalent to a pitch of 1.0).
-/// @param {Real}			priority		(Optional) Sets the channel priority for the sound (Default is 0).
-/// @param {Bool}			stopPrevious	(Optional) When true, previous instances of the sound's
-/// @param {Bool}			loops			(Optional) When true, the sound will loop indefinitely.
-/// @param {Real}			offset			(Optional) The offset (in seconds) to start sound playback from.
+/// @returns 	{Id.Sound}
+///	@param 		{Asset.GMSound}	sound			Index of the audio asset that will be played.
+/// @param 		{Real}			soundType		(Optional) Determines which volume setting group the sound belongs to.
+/// @param 		{Real}			volume			(Optional) Determines the volume of the sound BEFORE adjustments are made by the game's volume setting values.
+/// @param 		{Real}			pitch			(Optional) Pitch of the sound effect relative to its default pitch (This is equivalent to a pitch of 1.0).
+/// @param 		{Real}			priority		(Optional) Sets the channel priority for the sound (Default is 0).
+/// @param 		{Bool}			stopPrevious	(Optional) When true, previous instances of the sound's
+/// @param 		{Bool}			loops			(Optional) When true, the sound will loop indefinitely.
+/// @param 		{Real}			offset			(Optional) The offset (in seconds) to start sound playback from.
 function sound_effect_play(_sound, _soundType = STNG_AUDIO_GAME_SOUNDS, _volume = 1.0, _pitch = 1.0, _priority = 0, _stopPrevious = false, _loops = false, _offset = 0.0){
 	if (_stopPrevious && audio_is_playing(_sound))
 		audio_stop_sound(_sound); // Stop previous playbacks of the sound if the flag is toggled.
@@ -320,18 +316,17 @@ function sound_effect_play(_sound, _soundType = STNG_AUDIO_GAME_SOUNDS, _volume 
 ///	A further extension of GameMaker's audio playback function that applies the game's current master volume and sound effect volume values 
 /// the player currently has them set to (They range from 0.0 to 1.0) while also allowing each playback of said sound to have randomly 
 /// chosen adjustments to its playback volume and pitch.
-/// @returns {Id.Sound}
-/// 
-///	@param {Asset.GMSound}	sound			Index of the audio asset that will be played.
-/// @param {Real}			soundType		(Optional) Determines which volume setting group the sound belongs to.
-/// @param {Real}			volume			(Optional) Volume for the sound effect without any changes done by volume settings/gain variance.
-/// @param {Real}			pitch			(Optional) Pitch of the sound effect before the random variance is applied to it.
-/// @param {Real}			priority		(Optional) Sets the channel priority for the sound (Default is 0).
-/// @param {Bool}			stopPrevious	(Optional) When true, previous instances of the sound's playback will be stopped.
-/// @param {Bool}			loops			(Optional) When true, the sound will loop indefinitely.
-/// @param {Real}			gainVariance	(Optional) Random amount to adjust the sound's volume; ranging from the base volume plus or minus this value.
-/// @param {Real}			pitchVariance	(Optional) Random amount to shift the sound's pitch; ranging from the base pitch plus or minus this value.
-/// @param {Real}			offset			(Optional) The offset (in seconds) to start sound playback from.
+/// @returns 	{Id.Sound}
+///	@param 		{Asset.GMSound}	sound			Index of the audio asset that will be played.
+/// @param 		{Real}			soundType		(Optional) Determines which volume setting group the sound belongs to.
+/// @param 		{Real}			volume			(Optional) Volume for the sound effect without any changes done by volume settings/gain variance.
+/// @param 		{Real}			pitch			(Optional) Pitch of the sound effect before the random variance is applied to it.
+/// @param 		{Real}			priority		(Optional) Sets the channel priority for the sound (Default is 0).
+/// @param 		{Bool}			stopPrevious	(Optional) When true, previous instances of the sound's playback will be stopped.
+/// @param 		{Bool}			loops			(Optional) When true, the sound will loop indefinitely.
+/// @param 		{Real}			gainVariance	(Optional) Random amount to adjust the sound's volume; ranging from the base volume plus or minus this value.
+/// @param 		{Real}			pitchVariance	(Optional) Random amount to shift the sound's pitch; ranging from the base pitch plus or minus this value.
+/// @param 		{Real}			offset			(Optional) The offset (in seconds) to start sound playback from.
 function sound_effect_play_ext(_sound, _soundType = STNG_AUDIO_GAME_SOUNDS, _volume = 1.0, _pitch = 1.0, _priority = 0, _stopPrevious = false, _loops = false, _gainVariance = 0.1, _pitchVariance = 0.05, _offset = 0.0){
 	return sound_effect_play(
 		_sound,
@@ -353,12 +348,11 @@ function sound_effect_play_ext(_sound, _soundType = STNG_AUDIO_GAME_SOUNDS, _vol
 ///	Takes an input string and converts it to a string that can fit into the region defined by the *maxWidth* and *maxLines* parameters. If 
 /// the input string happens to exceed the total number of lines allowed, the remainder of the string is discarded from the formatted string
 /// that the function returns.
-/// @returns {String}
-/// 
-///	@param {String}			string		Value that will be formatted to fit the defined region.
-/// @param {Asset.GMFont}	font		Resource to use for the various width/height calculations for the string.
-/// @param {Real}			maxWidth	Maximum width of a line in pixels for the formatted string.
-/// @param {Real}			maxLines	Total number of lines allowed in the formatted string.
+/// @returns 	{String}
+///	@param 		{String}		string		Value that will be formatted to fit the defined region.
+/// @param 		{Asset.GMFont}	font		Resource to use for the various width/height calculations for the string.
+/// @param 		{Real}			maxWidth	Maximum width of a line in pixels for the formatted string.
+/// @param 		{Real}			maxLines	Total number of lines allowed in the formatted string.
 function string_split_lines(_string, _font, _maxWidth, _maxLines = 1){
 	// Set the font to the parameter and then check if the input string even needs to be formatted in the first place. If not, it means the 
 	// string is already within the desired format and is simply returned.
@@ -438,9 +432,8 @@ function string_split_lines(_string, _font, _maxWidth, _maxLines = 1){
 ///	Attempts to parse color data from a given *string*. It will take the color data, store it into a dedicated *ds_list*, and then return 
 /// that list alongside the string that has had the color data/formatting parsed out of it. Note that this means the value returned is a 
 /// *struct*, so keep that in mind since it must be deleted once it is no longer required.
-/// @returns {Struct}
-/// 
-///	@param {String}		string		Text that will have color data parsed from it.
+/// @returns 	{Struct}
+///	@param 		{String}	string		Text that will have color data parsed from it.
 function string_parse_color_data(_string){
 	// First, check if there is valid color data that can be parsed out of the string. If there isn't any, the string is simply returned 
 	// unprocessed, and the value for "colorData" is the default of -1.
@@ -494,8 +487,8 @@ function string_parse_color_data(_string){
 /// @description 
 /// A very simple and dirty function that checks to see if the provided character is one of six valid punctuation characters: ',', ':', ';', 
 /// '.', '?', or '!'.
-/// @returns {Bool}
-/// @param {String}		char	The character to check.
+/// @returns 	{Bool}
+/// @param 		{String}	char	The character to check.
 function is_punctuation(_char){
 	return (_char == CHAR_COMMA || _char == CHAR_COLON || _char == CHAR_SEMICOLON || 
 			_char == CHAR_PERIOD || _char == CHAR_QUESTION || _char == CHAR_EXCLAIM);

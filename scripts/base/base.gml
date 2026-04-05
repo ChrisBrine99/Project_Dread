@@ -16,13 +16,11 @@ function str_base(_index) constructor {
 	/// @description 
 	///	Called upon creation of a struct instance (WARNING!! Creating a struct without using *instance_create_struct* will skip the automatic 
 	/// calling of this function).
-	///	
 	create_event	= function() {}
 	
 	/// @description 
 	///	Called upon destruction of a struct instance (WARNING!! Destroying a struct through manually invoking the delete keyword will cause 
 	/// this function to be ignored, so using *instance_destroy_struct* is required).
-	///	
 	destroy_event	= function() {}
 }
 

@@ -65,7 +65,7 @@ switch(async_load[? "event_type"]){
 		show_debug_message("gamepad {0} disconnected", global.gamepadID);
 		
 		// Reset the gamepad state and return control inputs back to the keyboard automatically.
-		global.gamepadID = -1;
-		global.flags &= ~GAME_FLAG_GAMEPAD_ACTIVE;
+		global.gamepadID 	= -1;
+		global.flags 		= global.flags & ~GAME_FLAG_GAMEPAD_ACTIVE;
 		return;
 }

@@ -1,10 +1,10 @@
 #region General Macro Initializations
 
 // Values for the flags found within global.flags. They enable and disable certain aspects of the game on a global scale as required.
-#macro	GAME_FLAG_PLAYTIME_ACTIVE		0x00800000	// Other important flags
-#macro	GAME_FLAG_TRANSITION_ACTIVE		0x01000000
+#macro	GAME_FLAG_TEXTBOX_OPEN			0x00800000	// Project-Specific Flags
+#macro	GAME_FLAG_TRANSITION_ACTIVE		0x01000000	// Other important flags
 #macro	GAME_FLAG_ROOM_WARP				0x02000000
-#macro	GAME_FLAG_TEXTBOX_OPEN			0x04000000
+#macro	GAME_FLAG_PLAYTIME_ACTIVE		0x04000000
 #macro	GAME_FLAG_GAMEPAD_ACTIVE		0x08000000
 #macro	GAME_FLAG_IN_GAME				0x10000000	// Main game state flags
 #macro	GAME_FLAG_MENU_OPEN				0x20000000
@@ -13,10 +13,10 @@
 
 // Macros that allow the state of a given flag within global.flags to be checked; returning either a 0 AKA "false" or the value of the flag 
 // itself which is non-zero AKA "true".
-#macro	GAME_IS_PLAYTIME_ACTIVE			((global.flags & GAME_FLAG_PLAYTIME_ACTIVE)		!= 0)
+#macro	GAME_IS_TEXTBOX_OPEN			((global.flags & GAME_FLAG_TEXTBOX_OPEN)		!= 0)
 #macro	GAME_IS_TRANSITION_ACTIVE		((global.flags & GAME_FLAG_TRANSITION_ACTIVE)	!= 0)
 #macro	GAME_IS_ROOM_WARP_OCCURRING		((global.flags & GAME_FLAG_ROOM_WARP)			!= 0)
-#macro	GAME_IS_TEXTBOX_OPEN			((global.flags & GAME_FLAG_TEXTBOX_OPEN)		!= 0)
+#macro	GAME_IS_PLAYTIME_ACTIVE			((global.flags & GAME_FLAG_PLAYTIME_ACTIVE)		!= 0)
 #macro	GAME_IS_GAMEPAD_ACTIVE			((global.flags & GAME_FLAG_GAMEPAD_ACTIVE)		!= 0)
 #macro	GAME_IS_IN_GAME					((global.flags & GAME_FLAG_IN_GAME)				!= 0)
 #macro	GAME_IS_MENU_OPEN				((global.flags & GAME_FLAG_MENU_OPEN)			!= 0)
@@ -26,12 +26,12 @@
 // Macros for referencing the instance IDs for all compile-time singletons. These should NEVER return "noone" outside of rm_init.
 #macro	GAME_MANAGER					global.sInstances[? obj_game_manager]
 #macro	PLAYER							global.sInstances[? obj_player]
-#macro	CUTSCENE_MANAGER				global.sInstances[? str_cutscene_manager]
 #macro	CONTROL_UI_MANAGER				global.sInstances[? str_control_ui_manager]
 #macro	CAMERA							global.sInstances[? str_camera]
+#macro	SCREEN_FADE						global.sInstances[? str_screen_fade]
+#macro	CUTSCENE_MANAGER				global.sInstances[? str_cutscene_manager]
 #macro	TEXTBOX							global.sInstances[? str_textbox]
 #macro	TEXTBOX_LOG						global.sInstances[? str_textbox_log]
-#macro	SCREEN_FADE						global.sInstances[? str_screen_fade]
 
 // Macros for referencing the instance IDs of all runtime singletons. These return "noone" when the single allowed instance doesn't exist.
 #macro 	TEXTBOX_OPTIONS 				global.sInstances[? str_textbox_options_menu]

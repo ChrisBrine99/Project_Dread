@@ -156,7 +156,6 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	/// @description 
 	///	Called whenever a menu is closed. It handles cleaning up memory that was allocated for any menu options, and can be further extended 
 	/// to clean up additional memory allocated by child menu structs.
-	///	
 	destroy_event = function(){
 		// If no menu created this one (Or it shouldn't have responsibility over this flag's state) it means that the global flag saying 
 		// there is a menu open currently should be cleared.
@@ -177,7 +176,6 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	///	Called during every frame that the menu exists for. It will be responsible for rendering menu's contents to the game's screen. The 
 	/// argument values should include the menu's current position on the screen as well as the screen's current position within the room 
 	/// since they use room-space coordinates.
-	///	
 	///	@param {Real}	xView	The menu's current x position added with the viewport's current x position.
 	/// @param {Real}	yView	The menu's current y position added with the viewport's current y position.
 	/// @param {Real}	wView	The viewport's current width.
@@ -189,7 +187,6 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	/// it will be should options be added to the menu, how large the visible region will be, how that visible region will shift around 
 	/// relative to the cursor's position within the menu, and whether or not the options will loop endlessly or have a defined left, right, 
 	/// top, and bottom.
-	///	
 	///	@param {Real}	x				Starting x position for the menu which all elements will offset themselves from.
 	/// @param {Real}	y				Starting y position for the menu which all elements will offset themselves from.
 	/// @param {Real}	isActive		When true, the menu will initialize itself to be active and receptive to user input immediately.
@@ -221,7 +218,6 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	///	Initializes parameters related to the menu's options. Specifically, it will set the position of the options themselves on the screen 
 	/// (This position is the top-left corner of the visible region of options), how far apart those options will be along each axis, and 
 	/// whether or not an option can be indefinitely selected by the user if that is required for the menu.
-	/// 
 	///	@param {Real}				x				Position of the top-leftmost currently visible option on the screen along the x axis.
 	/// @param {Real}				y				Position of the top-leftmost currently visible option on the screen along the y axis.
 	/// @param {Real}				xSpacing		Determines how far each option is apart from each other (Excluding their actual width) along the x axis.
@@ -249,7 +245,6 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	///	Attempts to add an option to the current menu. It takes in a name for the option as the only requirement which is the string that 
 	/// will be shown to the player when the option is visible on the menu. Optionally, a description can be provided, and the active state 
 	/// of the option can be set. It can also be inserted into the current list of options if required, but it appends the option by default.
-	///	
 	///	@param {String} name			The string that will be shown as the option itself within the menu.
 	/// @param {String}	description		(Optional) Supplemental text alongside the option that helps explain what it represents or what selecting it will do.
 	///	@param {Bool}	isActive		(Optional) When false, the option cannot be selected by the user.
@@ -286,7 +281,6 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	///	An extended version of add_option that also provides parameters for adding an image/icon to the menu option as well as the visible 
 	/// string of text that also represents it. This icon can be positioned independently of the option itself when required, or an empty 
 	/// string can be passed in to make the icon be what represents the option within the menu.
-	///	
 	///	@param {String}			name			The string that will be shown as the option itself within the menu.
 	/// @param {Asset.GMSprite}	sprite			The sprite resource to grab the option's icon from.
 	/// @param {Real}			imageIndex		The frame that will be used form the sprite as the option's icon.
@@ -313,7 +307,6 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	/// @description 
 	///	Attempts to remove the option at the given position within the menu. Will not do anything if an invalid index is provided or menu 
 	/// options haven't been properly initialized.
-	///	
 	/// @param {Real}	index	The position of the option that will be removed.
 	remove_option = function(_index){
 		if (!MENU_ARE_OPTIONS_INITIALIZED || _index < 0 || _index >= ds_list_size(options))
@@ -334,7 +327,6 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	/// @description 
 	///	Attempts to find the option within a given menu that matches the name string in the function's only paramter. Returns -1 if menu 
 	/// options haven't been properly initialized.
-	///	
 	/// @param {String}	name	The visible name of the option to search for.
 	find_option_position = function(_name){
 		if (!MENU_ARE_OPTIONS_INITIALIZED)
@@ -346,7 +338,6 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	///	Gets player input for the menu in question. It handles getting inputs from both the gamepad and the keyboard, but prioritizes the one
 	/// that is currently active. The previous frame's inputs are stored in the *prevInputFlags* variable, so the input can be checked to see
 	/// if it was pressed, held, or released with only a single *keyboard_...* or *gamepad_...* function call per input.
-	///	
 	process_player_input = function(){
 		prevInputFlags	= inputFlags;
 		inputFlags		= 0;
@@ -396,7 +387,6 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	///	Processes the cursor movement for the current game frame. It also handles decrementing the timer that counts durations between 
 	/// automatic cursor shifts if the user is holding down a cursor movement key. If no movement is detected, the menu itself has a single 
 	/// element, or the menu itself hasn't been properly initialized, this function will exit early and never update the cursor's position.
-	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	update_cursor_position = function(_delta){
 		// Don't bother processing cursor movement on a menu that is smaller than a size of 2 since the cursor will have no place to be or 
@@ -532,7 +522,6 @@ function str_base_menu(_index) : str_base(_index) constructor {
 	/// Renders the currently visible region of menu options to the screen given the positioning, spacing, and alignment for each option that
 	/// is (AND SHOULD ALWAYS BE) set upon initialization of a given menu. This version will only render the text elements of each option and
 	/// ignore any potential icons that could also exist. To draw both text and icons, draw_visible_options_ext must be used.
-	/// 
 	/// @param {Asset.GMFont}	font				Four resource to use when displaying the option's name.
 	/// @param {Real}			xPos				The x position to offset the visible options by relative to their own x positions.
 	/// @param {Real}			yPos				The y position to offset the visible options by relative to their own y positions.

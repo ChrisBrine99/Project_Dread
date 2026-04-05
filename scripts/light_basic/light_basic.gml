@@ -30,7 +30,6 @@ function str_light_basic(_index) : str_base(_index) constructor {
 	///	@description 
 	///	Called for every frame that the light source exists. It's responsible for rendering the light source with its given color and 
 	/// properties at its current position within the room.
-	///	
 	/// @param {Real}	viewX		Offset along the x axis caused by the viewport moving around the room.
 	///	@param {Real}	viewY		Offset along the y axis caused by the viewport moving around the room.
 	///	@param {Real}	delta		The difference in time between the execution of this frame and the last.
@@ -50,7 +49,6 @@ function str_light_basic(_index) : str_base(_index) constructor {
 	/// @description 
 	///	Sets the base properties of the light source. Children of this basic light source struct can override this function to enabled setting
 	/// up the parameters they add for their type of lighting style.
-	///	
 	/// @param {Real}	radius		Area from the origin of the light source that is illuminated by it.
 	/// @param {Real}	color		The hue of the light source.
 	/// @param {Real}	strength	How bright the light source appears in the world (Alpha under a different name).
@@ -63,7 +61,6 @@ function str_light_basic(_index) : str_base(_index) constructor {
 	/// @description 
 	///	Sets the position within the room for the light's origin to be. Any floating-point values passed in as argument parameters will be 
 	/// truncated to become whole-pixel values.
-	///	
 	///	@param {Real}	x	Horizontal position of the light within the room.
 	/// @param {Real}	y	Vertical position of the light within the room.
 	static light_set_position = function(_x, _y){
@@ -79,15 +76,14 @@ function str_light_basic(_index) : str_base(_index) constructor {
 /// @description 
 ///	Creates a basic light source instance. It has a set size, color, and strength that can be updated as needed, but will never be updated 
 /// automatically by the light itself.
-/// @returns {Struct.Light_Basic}
-///	
-///	@param {Real}	x			Horizontal position of the light within the room.
-/// @param {Real}	y			Vertical position of the light within the room.
-/// @param {Real}	radius		Area from the origin of the light source that is illuminated by it.
-/// @param {Real}	color		(Optional) The hue of the light source.
-///	@param {Real}	strength	(Optional) How bright the light source appears in the world (Alpha under a different name).
-/// @param {Real}	lifetime	(Optional) Determines how long the light is alive for relative to its creation.
-/// @param {Real}	flags		(Optional) Determines which substate bits to toggle on for the light.
+/// @returns 	{Struct.Light_Basic}
+///	@param 		{Real}					x			Horizontal position of the light within the room.
+/// @param 		{Real}					y			Vertical position of the light within the room.
+/// @param 		{Real}					radius		Area from the origin of the light source that is illuminated by it.
+/// @param 		{Real}					color		(Optional) The hue of the light source.
+///	@param 		{Real}					strength	(Optional) How bright the light source appears in the world (Alpha under a different name).
+/// @param 		{Real}					lifetime	(Optional) Determines how long the light is alive for relative to its creation.
+/// @param 		{Real}					flags		(Optional) Determines which substate bits to toggle on for the light.
 function light_basic_create(_x, _y, _radius, _color = COLOR_TRUE_WHITE, _strength = LGHT_MAX_STRENGTH, _lifetime = 0.0, _flags = LGHT_FLAG_ACTIVE){
 	var _light = light_create(str_light_basic);
 	with(_light){ // Position the light and apply its sizing/color/strength.

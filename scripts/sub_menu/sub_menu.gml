@@ -81,7 +81,6 @@ function str_sub_menu(_index) : str_base_menu(_index) constructor{
 	///	The sub menu's single state, which simply allows the cursor to be moved around the menu based on its set dimensions. The visible 
 	/// region of the menu is also updated during cursor movement as required. Pressing the selection or return inputs will exit this state 
 	/// and put this sub menu in a waiting state so the menu that manages this state can react accordingly.
-	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	state_default = function(_delta){
 		// At the start of the state, the player's input is checked and captured to be used throughout the rest of this state.

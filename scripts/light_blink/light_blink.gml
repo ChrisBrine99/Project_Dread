@@ -27,7 +27,6 @@ function str_light_blink(_index) : str_light_basic(_index) constructor {
 	///	Called for every frame that the light source exists. It's responsible for rendering the light source with its given color and 
 	/// properties at its current position within the room. On top of that, it manages the blinking logic that will toggle the light on and 
 	/// off at random intervals.
-	///	
 	/// @param {Real}	viewX		Offset along the x axis caused by the viewport moving around the room.
 	///	@param {Real}	viewY		Offset along the y axis caused by the viewport moving around the room.
 	///	@param {Real}	delta		The difference in time between the execution of this frame and the last.
@@ -49,7 +48,6 @@ function str_light_blink(_index) : str_light_basic(_index) constructor {
 	
 	/// @description 
 	///	Sets all possible properties for the light source with a single function call.
-	///
 	/// @param {Real}	radius				Area from the origin of the light source that is illuminated by it.
 	/// @param {Real}	minBlinkInterval	Minimum amount of time for a blink to occur for the light.
 	/// @param {Real}	maxBlinkInterval	Maximum amount of time for a blink to occur for the light.
@@ -72,17 +70,16 @@ function str_light_blink(_index) : str_light_basic(_index) constructor {
 /// @description
 ///	Creates a light source that will blink on and off at a given interval between the minimum and maximum ranges specified through the 
 /// arguments in this function. This blinking effect is automatically handled by the instance of the light itself.
-/// @returns {Struct.Light_Blink}
-///	
-///	@param {Real}	x					Horizontal position of the light within the room.
-/// @param {Real}	y					Vertical position of the light within the room.
-/// @param {Real}	radius				Area from the origin of the light source that is illuminated by it.
-/// @param {Real}	minBlinkInterval	Minimum amount of time for a blink to occur for the light.
-/// @param {Real}	maxBlinkInterval	Maximum amount of time for a blink to occur for the light.
-/// @param {Real}	color				(Optional) The hue of the light source.
-///	@param {Real}	strength			(Optional) How bright the light source appears in the world (Alpha under a different name).
-/// @param {Real}	lifetime			(Optional) Determines how long the light is alive for relative to its creation.
-/// @param {Real}	flags				(Optional) Determines which substate bits to toggle on for the light.
+/// @returns 	{Struct.Light_Blink}
+///	@param 		{Real}					x					Horizontal position of the light within the room.
+/// @param 		{Real}					y					Vertical position of the light within the room.
+/// @param 		{Real}					radius				Area from the origin of the light source that is illuminated by it.
+/// @param 		{Real}					minBlinkInterval	Minimum amount of time for a blink to occur for the light.
+/// @param 		{Real}					maxBlinkInterval	Maximum amount of time for a blink to occur for the light.
+/// @param 		{Real}					color				(Optional) The hue of the light source.
+///	@param 		{Real}					strength			(Optional) How bright the light source appears in the world (Alpha under a different name).
+/// @param 		{Real}					lifetime			(Optional) Determines how long the light is alive for relative to its creation.
+/// @param 		{Real}					flags				(Optional) Determines which substate bits to toggle on for the light.
 function light_blink_create(_x, _y, _radius, _minBlinkInterval, _maxBlinkInterval, _color = COLOR_TRUE_WHITE, _strength = LGHT_MAX_STRENGTH, _lifetime = 0.0, _flags = LGHT_FLAG_ACTIVE){
 	var _light = light_create(str_light_blink);
 	with(_light){

@@ -74,7 +74,6 @@ function str_camera(_index) : str_base(_index) constructor {
 	/// @description 
 	///	The camera struct's destroy event. It will clean up anything that isn't automatically cleaned up by GameMaker when this struct is 
 	/// destroyed/out of scope.
-	///
 	destroy_event = function(){
 		camera_destroy(cameraID);
 		delete screenShake;
@@ -83,7 +82,6 @@ function str_camera(_index) : str_base(_index) constructor {
 	/// @description 
 	///	Called every frame that the camera struct exists (Which should be the entirety of the game). It handles moving the viewport to follow
 	/// an object if the camera has an instance to follow.
-	///	
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	step_event = function(_delta){
 		// Move towards the target object if one is assigned by the camera isn't "following" it yet. In this context, "following" means that 
@@ -115,7 +113,6 @@ function str_camera(_index) : str_base(_index) constructor {
 	///	Called at the end of the step events for all instances. It is responsible for setting the viewport to the coordinate calculated during
 	/// the camera's step event (If an object is being followed). The camera's position is actual the center of the viewport instead of the 
 	/// top-left to make camera movement easier.
-	///
 	///	@param {Real} delta		The difference in time between the execution of this frame and the last.
 	end_step_event = function(_delta){
 		// Offset the viewport coordinates such that the viewport is centered on the camera's position.
@@ -163,7 +160,6 @@ function str_camera(_index) : str_base(_index) constructor {
 	/// @description 
 	///	Called when a new room is loaded in by GameMaker. It enables the viewport for said room, sets it to visible, and performs a check to 
 	/// see if the followed object still exists so it doesn't try to follow a now non-existent instance.
-	///
 	room_start_event = function(){
 		// Sets up the viewport for the room to utilize the camera that was set up during the game's initialization.
 		view_set_visible(0, true);
@@ -181,12 +177,11 @@ function str_camera(_index) : str_base(_index) constructor {
 	/// @description 
 	///	Moves the camera towards a given position at a constant speed. Upon reaching the desired position the function will return true to 
 	/// signal that it no longer needs to be used.
-	/// @returns {Bool}
-	/// 
-	///	@param {Real}	x		Target position along the current room's x axis.
-	/// @param {Real}	y		Target position along the current room's y axis.
-	///	@param {Real}	speed	Determines how fast the camera will move towards the object in question.
-	///	@param {Real}	delta	The difference in time between the execution of this frame and the last.
+	/// @returns 	{Bool}
+	///	@param 		{Real}	x		Target position along the current room's x axis.
+	/// @param 		{Real}	y		Target position along the current room's y axis.
+	///	@param 		{Real}	speed	Determines how fast the camera will move towards the object in question.
+	///	@param 		{Real}	delta	The difference in time between the execution of this frame and the last.
 	move_towards_position_linear = function(_x, _y, _speed, _delta){
 		var _dSpeed		= _speed * _delta;
 		var _direction	= point_direction(x, y, _x, _y);
@@ -219,12 +214,11 @@ function str_camera(_index) : str_base(_index) constructor {
 	/// @description 
 	///	Moves the camera towards a given position smoothly. It will decelerate as it gets closer to its target position; returning true once 
 	/// it has reached that destination. Otherwise, it returns false.
-	/// @returns {Bool}
-	///	
-	///	@param {Real}	x		Target position along the current room's x axis.
-	/// @param {Real}	y		Target position along the current room's y axis.
-	///	@param {Real}	speed	Determines how fast the camera will move towards the object in question.
-	///	@param {Real}	delta	The difference in time between the execution of this frame and the last.
+	/// @returns 	{Bool}
+	///	@param 		{Real}	x		Target position along the current room's x axis.
+	/// @param 		{Real}	y		Target position along the current room's y axis.
+	///	@param 		{Real}	speed	Determines how fast the camera will move towards the object in question.
+	///	@param 		{Real}	delta	The difference in time between the execution of this frame and the last.
 	move_towards_position_smooth = function(_x, _y, _speed, _delta){
 		var _dSpeed = _speed * _delta; // Apply delta time to the speed value.
 		x		   += (_x - x) * _dSpeed;
@@ -241,7 +235,6 @@ function str_camera(_index) : str_base(_index) constructor {
 	///	Moves the camera towards a given object's coordinates within the room. The speed at which the camera moves towards said coordinates 
 	/// is relative to the difference between them and the camera's current position. So, it will smoothly decelerate as the camera gets 
 	/// closer to its target.
-	///	
 	/// @param {Id.Instance}	object	The id for the object that the camera is moving towards.
 	///	@param {Real}			speed	Determines how fast the camera will move towards the object in question.
 	///	@param {Real}			delta	The difference in time between the execution of this frame and the last.
@@ -264,7 +257,6 @@ function str_camera(_index) : str_base(_index) constructor {
 	/// Updates the camera's current viewport to the values supplied in the argument paramters of this function. Also handles updating the 
 	/// size of the window relative to its current scaling factor, as well as updating the application surface and GUi layer to match the 
 	/// new viewport size.
-	///
 	/// @param {Real}	width	Size of the camera's viewport along the x axis in whole pixels.
 	/// @param {Real}	height	Size of the camera's viewport along the y axis in whole pixels.
 	camera_set_viewport = function(_width, _height){
@@ -292,7 +284,6 @@ function str_camera(_index) : str_base(_index) constructor {
 	/// @description 
 	///	Assigns the id value for the object the camera will be set to follow into the "followedObject" variable. It won't assign id values 
 	/// that don't point to existing objects.
-	///	
 	///	@param {Id.Instance}	id				The unique id value for the object the camera will begin following.
 	/// @param {Bool}			snapToPosition	When true, the camera will immediately center itself onto the followed object's position.
 	camera_set_followed_object = function(_id, _snapToPosition){
@@ -309,7 +300,6 @@ function str_camera(_index) : str_base(_index) constructor {
 	/// @description 
 	///	Applies an effect that causes the camera's viewport to shake around rapidly for a given amount of time. If the strength value provided
 	/// is less than the current strength of a previous shake, the new value and its duration are ignored.
-	///	
 	/// @param {Real}	strength	Relative intensity of the camera's shaking.
 	/// @param {Real}	duration	The total number of units (60 units = 1 second) that the shake should last for.
 	camera_apply_shake = function(_strength, _duration){
@@ -330,7 +320,6 @@ function str_camera(_index) : str_base(_index) constructor {
 /// @description 
 ///	The function responsible for initializing the game's camera which allows the player to actually see the game in the window that is set up 
 /// by the camera's properties. Optionally, an object id can be provided if the camera needs to instantly follow an object within the game.
-///	
 ///	@param {Real}			width			The initial width of the game's viewport.
 /// @param {Real}			height			The initial height of the game's viewport.
 /// @param {Id.Instance}	id				(Optional) Object that the camera will be following after initialization.
@@ -348,7 +337,6 @@ function camera_initialize(_width, _height, _id = noone, _snapToPosition = false
 ///	Sets the viewport to a given width and height. On top of that, it will also adjust the dimensions of the game window if the player isn't 
 /// in fullscreen, and will update the positional offsets of any UI elements as needed so they remain in the proper locations after the 
 /// change occurs.
-///	
 ///	@param {Real}	width	The width of the game's viewport.
 /// @param {Real}	height	The height of the game's viewport.
 function camera_set_viewport_size(_width, _height){

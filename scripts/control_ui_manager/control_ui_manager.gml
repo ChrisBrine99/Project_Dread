@@ -69,7 +69,6 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	///	The control ui manager struct's create event. When called, it will initialize the keyboard control icon information since it doesn't 
 	/// change throughout the runtime of the game. Gamepad icons are not initialized since those are determined based on the controller that 
 	/// was connected by the user.
-	///	
 	create_event = function(){
 		if (room != rm_init)
 			return; // Prevents a call to this function from executing outside of the game's initialization.
@@ -112,7 +111,6 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	/// @description 
 	///	The control ui manager struct's destroy event. It will clean up anything that isn't automatically cleaned up by GameMaker when this 
 	/// struct is destroyed/out of scope.
-	///	
 	destroy_event = function(){
 		// Loop through and delete all control icons structs that exist at the end of the control ui manager's lifetime. Then, the map 
 		// manging them is also destroyed.
@@ -144,7 +142,6 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	/// @description 
 	///	Sets the icon for a given input's keyboard binding. If the same binding that the data already represents is passed in as the 
 	/// parameter, no updating logic will occur to prevent wasting time getting the same icon information.
-	///	
 	///	@param {Any}	key			What will be used to reference the control icon data.
 	/// @param {Real}	keyBinding	Keyboard constant that will be used to get its icon sprite/subimage data.
 	set_keyboard_control_icon = function(_key, _keyBinding){
@@ -159,7 +156,6 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	/// @description 
 	///	Sets the icon for a given input's gamepad binding. If the same binding that the data already represents is passed in as the parameter,
 	/// no updating logic will occur to prevent wasting time getting the same icon information.
-	///	
 	///	@param {Any}	key			What will be used to reference the control icon data.
 	/// @param {Real}	padBinding	Gamepad constant that will be used to get its icon sprite/subimage data.
 	set_gamepad_control_icon = function(_key, _padBinding){
@@ -174,7 +170,6 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	/// @description 
 	///	Creates an instance of the struct that is responsible for storing infomation about a given input's keyboard and gamepad control icon
 	/// data for use across the entire game's UI.
-	///	
 	///	@param {Any}	key			What will be used to reference the control icon data.
 	create_control_icon_struct = function(_key){
 		var _value = ds_map_find_value(controlIcons, _key);
@@ -196,9 +191,8 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	/// @description
 	///	Grabs the control icon for the gamepad or the keyboard depending on which of the two is currently the active method of input. If no 
 	/// valid data exists, the value -1 will be returned as a default value.
-	/// @returns {Real}
-	///	
-	///	@param {Any}	key		The value tied to ui icon information for a given input in the game.
+	/// @returns 	{Real}
+	///	@param 		{Any}	key		The value tied to ui icon information for a given input in the game.
 	get_control_icon = function(_key){
 		var _data = ds_map_find_value(controlIcons, _key);
 		if (is_undefined(_data)) // No icon data found for the key; return -1 to signify no icon exists.
@@ -215,9 +209,8 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	/// @description
 	///	Gets the desired input binding's ui icon so it can be potentially used to display the controls of the currently active menu/ui element 
 	/// to the player.
-	/// @returns {Real,Array<Any>}
-	///	
-	///	@param {Real}	keyBinding		The virtual keyboard code for the desired input.
+	/// @returns 	{Real,Array<Any>}
+	///	@param 		{Real}				keyBinding		The virtual keyboard code for the desired input.
 	get_keyboard_icon = function(_keyBinding){
 		// No binding provided, don't provide an icon sprite and image index pair.
 		if (_keyBinding == ICONUI_BINDING_NONE)
@@ -308,9 +301,8 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	///	Determines the current controller that has been plugged in or utilized (PlayStation, Xbox, Nintendo, Steam Deck, etc.) and uses the 
 	/// appropriate icons for it. If no unique controller icons are found, a generic set will be used instead. These icons can then be used 
 	/// whenever the gamepad is active to show the user what buttons they need to press to perform actions in the game and in its ui/menus.
-	/// @returns {Real,Array<Any>}
-	/// 
-	///	@param {Real}	padBinding		The virtual gamepad code for the desired input.
+	/// @returns 	{Real,Array<Any>}
+	///	@param 		{Real}				padBinding		The virtual gamepad code for the desired input.
 	get_gamepad_icon = function(_padBinding){
 		if (_padBinding == ICONUI_BINDING_NONE)
 			return ICONUI_NO_ICON;
@@ -327,13 +319,12 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	///	Creates a control group if possible. If one already exists for the key provided, the reference to said group is simply returned. 
 	/// Otherwise, a new struct is created that contains information about the icons within the group, the direction to display the 
 	/// information relative to the "anchor point", and a padding to determine distance between elements along the displayed direction.
-	/// @returns {Struct}
-	///	
-	/// @param {Any}	key			Value that will be used to reference this control group as needed.
-	///	@param {Real}	x			Origin of the group's anchor point along the GUI's x axis.
-	/// @param {Real}	y			Origin of the group's anchor point along the GUI's y axis.
-	/// @param {Real}	padding		Number of pixels between each icon/descriptor in the control group.
-	/// @param {Real}	direction	Determines how the icons and their optional descriptor text are laid out when drawn to the screen.
+	/// @returns 	{Struct}
+	/// @param 		{Any}		key			Value that will be used to reference this control group as needed.
+	///	@param 		{Real}		x			Origin of the group's anchor point along the GUI's x axis.
+	/// @param 		{Real}		y			Origin of the group's anchor point along the GUI's y axis.
+	/// @param 		{Real}		padding		Number of pixels between each icon/descriptor in the control group.
+	/// @param 		{Real}		direction	Determines how the icons and their optional descriptor text are laid out when drawn to the screen.
 	create_control_group = function(_key, _x, _y, _padding, _direction){
 		var _data = ds_map_find_value(controlGroup, _key);
 		if (!is_undefined(_data))
@@ -351,7 +342,6 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 			///	Calculates the position on the GUI layer for all control icons/descriptors found in the control group determined by the 
 			/// function's single parameter. The way these positions are calculated differ slightly depending on the direction of drawing 
 			/// the content of the group relative to its anchor point.
-			///	
 			///	@param {Bool}	gamepadActive	If true, a gamepad is currently the active method of input.
 			calculate_group_positions : function(_gamepadActive) {
 				// var _startTime = get_timer();
@@ -452,7 +442,6 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	/// @description 
 	///	Adds an icon to a control group. This is a group of icon data and optional descriptor text that are all drawn relative to the same 
 	/// point on the GUI layer; offset based on the "direction" of the anchor and the contents of the group.
-	///	
 	///	@param {Struct._structFunc}	controlGroupRef		Reference to the control group the icon will be added to.
 	/// @param {Any}				iconDataKey			Value to find the icon's data from within the "controlIcons" data structure.
 	/// @param {String}				descriptor			(Optional) Text to be shown alongside the control icon to help explain what the input does.
@@ -489,7 +478,6 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	
 	/// @description
 	///	Removes the icon/descriptor information at the index specified within the control group passed into the *controlGroupRef* parameter.
-	///	
 	///	@param {Struct._structFunc}	controlGroupRef		Reference to the control group the icon will be added to.
 	/// @param {Real}				index				The position of the data to remove from the group's icon/descriptor list.
 	remove_control_group_icon = function(_controlGroupRef, _index){
@@ -514,7 +502,6 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	/// @description 
 	///	Updates the descriptor for the icon/descriptor data found at the given index within the control group's 
 	///	currently existing data.
-	///	
 	///	@param {Struct._structRef}	controlGroupRef		Reference to the control group the icon will be added to.
 	/// @param {Real}				index				The position of the data to update within the group's icon/descriptor list.
 	/// @param {String}				descriptor			Text to replace the previous descriptor text with.
@@ -547,7 +534,6 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	///	Updates the current "active" state of a single control group's icon/descriptor data struct to the
 	/// provided value (Either true or false). It will automatically signal to the group that position
 	/// offsets of the group need to be updated depending on the state's previous value versus the new one.
-	///	
 	///	@param {Struct._structRef}	controlGroupRef		Reference to the control group that will be drawn.
 	/// @param {Real}				index				The position of the data to update within the group's icon/descriptor list.	
 	/// @param {Bool}				isActive			The state to set for the icon/descriptor pair in question.
@@ -571,7 +557,6 @@ function str_control_ui_manager(_index) : str_base(_index) constructor {
 	/// @description 
 	///	Draws a control group to the screen at the desired opacity value. No position calculations occur here; it simply displays all 
 	/// control icon/descriptors at wherever they were calculated to be.
-	///	
 	///	@param {Struct._structFunc}	controlGroupRef		Reference to the control group that will be drawn.
 	///	@param {Real}				viewX
 	/// @param {Real}				viewY

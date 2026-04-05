@@ -1,9 +1,9 @@
 // Go through all singleton instances that require their destroy event in order to free any memory they've allocated through the 
 // application's runtime. Then, the sInstance management map is destroyed.
 with(CAMERA)				{ destroy_event(); }	delete CAMERA;
+with(CONTROL_UI_MANAGER)	{ destroy_event(); }	delete CONTROL_UI_MANAGER;
 with(TEXTBOX)				{ destroy_event(); }	delete TEXTBOX;
 with(TEXTBOX_LOG)			{ destroy_event(); }	delete TEXTBOX_LOG;
-with(CONTROL_UI_MANAGER)	{ destroy_event(); }	delete CONTROL_UI_MANAGER;
 													delete SCREEN_FADE;
 ds_map_destroy(global.sInstances);
 

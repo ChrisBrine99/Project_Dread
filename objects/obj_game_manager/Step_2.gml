@@ -18,15 +18,17 @@ if (GAME_IS_PAUSED)
 with(CAMERA) { end_step_event(_delta); }
 
 // Update all currently existing dynamic and static entities within the room so long as they are also currently active.
-with(par_dynamic_entity){
-	if (!ENTT_IS_ACTIVE)
-		continue;
-	end_step_event(_delta);
-}
-with(par_static_entity){
-	if (!ENTT_IS_ACTIVE)
-		continue;
-	object_update_state(); // TODO -- Replace with unique end_step_event function call like above.
+if (!GAME_IS_ROOM_WARP_OCCURRING){ // All entities should pause during a room transition.
+	with(par_dynamic_entity){
+		if (!ENTT_IS_ACTIVE)
+			continue;
+		end_step_event(_delta);
+	}
+	with(par_static_entity){
+		if (!ENTT_IS_ACTIVE)
+			continue;
+		object_update_state(); // TODO -- Replace with unique end_step_event function call like above.
+	}
 }
 
 // Loop through all currently active menu struct instances; updating their current state to whatever was set in their "nextState" variable 

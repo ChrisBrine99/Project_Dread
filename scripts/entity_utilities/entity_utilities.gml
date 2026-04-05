@@ -11,7 +11,6 @@
 #macro	ENTT_FLAG_DESTROYED				0x40000000
 #macro	ENTT_FLAG_INVINCIBLE			0x80000000
 
-
 // Macros for the code required to check the state of a given flag or flag(s) that are required for certain events or code to trigger within 
 // a given entity. They simple condense those checks down to a single term.
 #macro	ENTT_HAS_SHADOW					((flags & ENTT_FLAG_SHADOW)				!= 0)
@@ -37,7 +36,6 @@ global.pausedEntities = ds_list_create();
 /// @description
 ///	The default Entity drawing function, which will also handle animation that Entity should their current sprite have more than one frame OR
 /// their animation speed is set to some non-zero value.
-///	
 /// @param {Real}	delta		The current delta time for the frame.
 function entity_draw_event(_delta){
 	if (animSpeed == 0.0){ // No animation logic currently required, simply draw the current frame for the sprite.
@@ -64,7 +62,6 @@ function entity_draw_event(_delta){
 ///	Prepares an entity for being paused by copying over its state values and storing them; clearing them from the variables within the entity 
 /// that were previously storing these values, respectively. Note that this function should only be called within children of *par_dynamic_entity*
 /// or *par_static_entity*. Failing to do so will cause the game to crash.
-///	
 ///	@param {Id.Instance}	id				Instance ID for the entity that will be paused.
 /// @param {Real}			curState		Index of the state method that was currently being executed by the entity.
 /// @param {Real}			nextState		Index for the state method the entity should switch to on the next frame.
@@ -88,7 +85,6 @@ function entity_pause(_id, _curState, _nextState, _lastState){
 /// @description 
 /// Unpauses an entity that is found within the list of paused entities. If a matching ID cannot be found, nothing is done. Otherwise, the 
 /// entity has its state values returned to it and the list will delete the values it passed along from itself.
-///	
 ///	@param {Id.Instance}	id	Instance ID for the entity that will be paused.
 function entity_unpause(_id){
 	var _size = ds_list_size(global.pausedEntities);
@@ -140,7 +136,6 @@ function entity_unpause(_id){
 /// @description 
 ///	Loops through the list of all currently paused entities and returns their state data back to them. The list for storing previous state 
 /// data of said entities is then completely cleared.
-///	
 function entity_unpause_all(){
 	var _curState	= STATE_NONE;
 	var _nextState	= STATE_NONE;
@@ -164,7 +159,6 @@ function entity_unpause_all(){
 /// @description 
 ///	A general function for rendering an entity's shadow as a circle. Note that this circle's horizontal radius is equal to the value found 
 /// in *widthShadow*, and its vertical radius is the value found in *heightShadow*.
-///	
 ///	@param {Real}	x	The x position of the entity and its shadow's horizontal offset from said position.
 /// @param {Real}	y	The y position of the entity and its shadow's vertical offset from said position.
 function entity_draw_shadow_circle(_x, _y){
@@ -173,7 +167,6 @@ function entity_draw_shadow_circle(_x, _y){
 
 /// @description 
 ///	A general function for rendering an entity's shadow as a square or rectangle.
-///	
 ///	@param {Real}	x	The x position of the entity and its shadow's horizontal offset from said position.
 /// @param {Real}	y	The y position of the entity and its shadow's vertical offset from said position.
 function entity_draw_shadow_square(_x, _y){
@@ -187,7 +180,6 @@ function entity_draw_shadow_square(_x, _y){
 /// @description 
 ///	Assigns a new sprite for the Entity to use. If the sprite resource already matches what the Entity's current sprite is, the current 
 /// animation speed can be updated as required through calling this function.
-///	
 /// @param {Asset.GMSprite}	sprite		Index for the sprite to assign to the Entity in question.
 /// @param {Real}			speed		(Optional) Animation speed relative to the value set within the sprite editor.
 /// @param {Real}			start		(Optional) Starting frame for the animation upon changing.
@@ -210,7 +202,6 @@ function entity_set_sprite(_sprite, _speed = 1.0, _start = -1, _loopStart = -1){
 /// @description 
 ///	Adds a shadow to the entity while also allowing the way that shadow will drawn and its properties to be set at the same time as the flag 
 /// that enables shadow rendering to begin with.
-///	
 ///	@param {Function}	function	Script or method to call when the shadow is being drawn.
 /// @param {Real}		x			Offset of the shadow relative to the entity's x position.
 /// @param {Real}		y			Offset of the shadow relative to the entity's y position.
@@ -231,7 +222,6 @@ function entity_add_shadow(_function, _x, _y, _width, _height){
 /// @description 
 ///	Creates an instance of *str_light_source* and stores it within the Entity's *lightSource* variable. The *x* and *y* parameters denote the 
 /// offsets along each axis relative to the Entity's current position.
-///	
 ///	@param {Real}	x			Offset relative to the entity's current x position.
 /// @param {Real}	y			Offset relative to the entity's current y position.
 /// @param {Real}	radius		Area from the origin of the light source that is illuminated by it.

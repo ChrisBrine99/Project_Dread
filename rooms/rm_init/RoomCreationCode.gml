@@ -21,12 +21,12 @@ var _playerInstance		= instance_create_depth(200, 200, 30, obj_player);
 // exist from game start to game end.
 ds_map_add(global.sInstances, obj_game_manager,			_gManagerInstance);
 ds_map_add(global.sInstances, obj_player,				_playerInstance);
-ds_map_add(global.sInstances, str_cutscene_manager,		new str_cutscene_manager(str_cutscene_manager));
-ds_map_add(global.sInstances, str_control_ui_manager,	new str_control_ui_manager(str_control_ui_manager));
 ds_map_add(global.sInstances, str_camera,				new str_camera(str_camera));
+ds_map_add(global.sInstances, str_control_ui_manager,	new str_control_ui_manager(str_control_ui_manager));
+ds_map_add(global.sInstances, str_screen_fade,			new str_screen_fade(str_screen_fade));
+ds_map_add(global.sInstances, str_cutscene_manager,		new str_cutscene_manager(str_cutscene_manager));
 ds_map_add(global.sInstances, str_textbox,				new str_textbox(str_textbox));
 ds_map_add(global.sInstances, str_textbox_log,			new str_textbox_log(str_textbox_log));
-ds_map_add(global.sInstances, str_screen_fade,			new str_screen_fade(str_screen_fade));
 // NOTE -- This is the only time the default ways of struct and object creation should be used!!!
 
 // Filling the remainder of the global.sInstances elements that will exist to store runtime singleton instances with their default value.
@@ -44,11 +44,11 @@ camera_initialize(320, 180, _playerInstance, true);
 
 // Initialize what needs initialization above by manually calling its create event (If it wasn't a "compile-time" singleton like it is within 
 // this game, the event would've been invoked automatically when it was created).
-with(CONTROL_UI_MANAGER) { create_event(); }
+with(_playerInstance)	 { object_set_state(state_initialize); } // FOR TESTING
 with(CAMERA)			 { create_event(); }
+with(CONTROL_UI_MANAGER) { create_event(); }
 with(TEXTBOX)			 { create_event(); }
 with(TEXTBOX_LOG)		 { create_event(); }
-with(_playerInstance)	 { object_set_state(state_initialize); } // FOR TESTING
 
 // Once everything has been initialized, the first official room for the game is loaded, and the game is unpaused to allow various game 
 // elements to start updating.

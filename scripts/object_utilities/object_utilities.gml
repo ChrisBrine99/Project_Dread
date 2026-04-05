@@ -5,12 +5,11 @@
 /// @description 
 /// A slightly modified version of the standard instance creation functions that come standard with GameMaker. It will simply check to see if 
 /// an object is special before creating an instance of them.
-/// @returns {Id.Instance}
-/// 
-/// @param {Real}			x		Horizontal position to create the object at within the current room.
-/// @param {Real}			y		Vertical position to create the object at within the current room.
-/// @param {Asset.GMObject}	object	Index of the GameMaker object asset to create an instance of.
-/// @param {Real}			depth	(Optional) Layer/depth to place the instance at. Default value is 30.
+/// @returns 	{Id.Instance}
+/// @param 		{Real}				x		Horizontal position to create the object at within the current room.
+/// @param 		{Real}				y		Vertical position to create the object at within the current room.
+/// @param 		{Asset.GMObject}	object	Index of the GameMaker object asset to create an instance of.
+/// @param 		{Real}				depth	(Optional) Layer/depth to place the instance at. Default value is 30.
 function instance_create_object(_x, _y, _object, _depth = 30){
 	if (object_is_special(_object))
 		return noone;
@@ -31,9 +30,8 @@ function instance_destroy_object(_id, _executeEvent = true){
 /// @description 
 /// Simply checks to see if the supplied object is special or not. If so, only one instance of it should exist during runtime; only being 
 /// deleted once the game itself closes. Otherwise, the object can have as many instances of it created as required.
-/// @returns {Bool}
-/// 
-/// @param {Asset.GMObject}	object	Index of the GameMaker object asset to check for.
+/// @returns 	{Bool}
+/// @param 		{Asset.GMObject}	object	Index of the GameMaker object asset to check for.
 function object_is_special(_object){
 	switch(_object){
 		default:					return false;
@@ -46,7 +44,6 @@ function object_is_special(_object){
 /// Determines the state function that the object calling this function will execute from the next frame onwards. Note that without the 
 /// *curState*, *nextState*, and *lastState* variables defined in its *Create Event* (Or the struct equivalent), a call to this function will 
 /// cause the game to crash.
-/// 
 /// @param {Function}	state	The variable assigned to the state function.
 function object_set_state(_state){
 	if (_state == lastState){ // Returning to the previous state.
@@ -67,7 +64,6 @@ function object_set_state(_state){
 ///	Usually called in the *End Step Event* of the object (Or the struct equivalent to that event). Updates the object's current state to match 
 /// the value currently stored within its *nextState* variable. Note that without the *curState*, *nextState*, and *lastState* variables 
 /// defined in its *Create Event* (Or the struct equivalent), a call to this function will cause the game to crash.
-///	
 function object_update_state(){
 	if (curState != nextState){
 		lastState = curState;

@@ -13,7 +13,7 @@
 
 #region Screen Fade Struct Definition
 
-/// @param {Function}	index	The value of "str_screen_fade" as determined by GameMaker during runtime.
+/// @param {Function}	index	The value of *str_screen_fade* as determined by GameMaker during runtime.
 function str_screen_fade(_index) : str_base(_index) constructor {
 	flags			= STR_FLAG_PERSISTENT;
 	
@@ -36,7 +36,6 @@ function str_screen_fade(_index) : str_base(_index) constructor {
 	///	Activates the screen fade effect, which will transition the game's view from the room's viewport to a single color determined on a 
 	/// per-fade activation basis. One the fade has completed it will begin to return the game back to the room's viewport if the fade is set
 	/// to automatically do so. Otherwise, it will wait until the flag to allow fading out is set by another place in the code.
-	/// 
 	///	@param {Real}	inSpeed			How fast the screen will fade completely into the desired color.
 	/// @param {Real}	outSpeed		How fast the screen will fade from the desired color back to the current viewport contents.
 	/// @param {Real}	color			Determines the color that will completely fill the screen once the fade is fully opaque.
@@ -65,7 +64,6 @@ function str_screen_fade(_index) : str_base(_index) constructor {
 	///	A simple state that sets the screen to fade itself into the desired color at the current fade in speed. Once it reaches full opacity 
 	/// (Alpha is 1.0 or higher), the screen fade will either begin fading out or waiting for the flag that allows the screen to begin fading
 	/// out if a manual fade was chosen.
-	///
 	///	@param {Real}	delta		The difference in time between the execution of this frame and the last.
 	state_fade_in = function(_delta){
 		alpha += inSpeed * _delta;
@@ -78,7 +76,6 @@ function str_screen_fade(_index) : str_base(_index) constructor {
 	/// @description 
 	///	A function that will either immediately invoke the screen fade's fade out state OR wait until it is allowed to so by the 
 	/// *ALLOW_FADE_OUT* flag being set by another struct/object.
-	///	
 	///	@param {Real}	delta		The difference in time between the execution of this frame and the last.
 	state_fade_wait = function(_delta){
 		if (!FADE_CAN_FADE_OUT)
@@ -90,7 +87,6 @@ function str_screen_fade(_index) : str_base(_index) constructor {
 	///	Another simple state that sets the screen to fade from the desired color back to whatever was visible on the viewport prior to the 
 	/// screen's fade effect beginning. Once it reaches complete transparency, the screen fade will end and the game will return back to the 
 	/// state it was in prior to the fade effect.
-	///	
 	///	@param {Real}	delta		The difference in time between the execution of this frame and the last.
 	state_fade_out = function(_delta){
 		alpha -= outSpeed * _delta;

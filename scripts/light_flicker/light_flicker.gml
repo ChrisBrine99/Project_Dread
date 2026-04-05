@@ -31,7 +31,6 @@ function str_light_flicker(_index) : str_light_basic(_index) constructor {
 	///	@description 
 	///	Called for every frame that the light source exists. It'ss responsible for rendering the light source with its given color and 
 	/// properties at its current position within the room. Also handles the light flicker logic since there is no step event.
-	///	
 	/// @param {Real}	viewX		Offset along the x axis caused by the viewport moving around the room.
 	///	@param {Real}	viewY		Offset along the y axis caused by the viewport moving around the room.
 	///	@param {Real}	delta		The difference in time between the execution of this frame and the last.
@@ -60,7 +59,6 @@ function str_light_flicker(_index) : str_light_basic(_index) constructor {
 	
 	/// @description 
 	///	Sets all possible properties for the light source with a single function call.
-	/// 
 	/// @param {Real}	minRadius			The minimum possible distance the light source can illuminate.
 	///	@param {Real}	maxRadius			The maximum possible distance the light source can illuminate.
 	/// @param {Real}	minFlickerInterval	Smallest possible duration between size shifts for the light source's flicker effect.
@@ -87,18 +85,17 @@ function str_light_flicker(_index) : str_light_basic(_index) constructor {
 /// @description 
 ///	Creates a light source instance that will flicker randomly while it is active. The flickering effect is automatically handled by the 
 /// instance itself, and the characteristics of that flicker can be adjusted as needed by changing the effect's parameters.
-/// @returns {Struct.Light_Flicker}
-/// 
-///	@param {Real}	x					Horizontal position of the light within the room.
-/// @param {Real}	y					Vertical position of the light within the room.
-/// @param {Real}	minRadius			Minimum possible area the light can illuminate.
-/// @param {Real}	maxRadius			Maximum possible area the light can illuminate.
-/// @param {Real}	minFlickerInterval	Smallest possible duration between size shifts for the light source's flicker effect.
-///	@param {Real}	maxFlickerInterval	Largest possible duration between size shifts for the light source's flicker effect.
-/// @param {Real}	color				(Optional) The hue of the light source.
-///	@param {Real}	strength			(Optional) How bright the light source appears in the world (Alpha under a different name).
-/// @param {Real}	lifetime			(Optional) Determines how long the light is alive for relative to its creation.
-/// @param {Real}	flags				(Optional) Determines which substate bits to toggle on for the light.
+/// @returns 	{Struct.Light_Flicker}
+///	@param 		{Real}					x					Horizontal position of the light within the room.
+/// @param 		{Real}					y					Vertical position of the light within the room.
+/// @param 		{Real}					minRadius			Minimum possible area the light can illuminate.
+/// @param 		{Real}					maxRadius			Maximum possible area the light can illuminate.
+/// @param 		{Real}					minFlickerInterval	Smallest possible duration between size shifts for the light source's flicker effect.
+///	@param 		{Real}					maxFlickerInterval	Largest possible duration between size shifts for the light source's flicker effect.
+/// @param 		{Real}					color				(Optional) The hue of the light source.
+///	@param 		{Real}					strength			(Optional) How bright the light source appears in the world (Alpha under a different name).
+/// @param 		{Real}					lifetime			(Optional) Determines how long the light is alive for relative to its creation.
+/// @param 		{Real}					flags				(Optional) Determines which substate bits to toggle on for the light.
 function light_flicker_create(_x, _y, _minRadius, _maxRadius, _minFlickerInterval, _maxFlickerInterval, _color = COLOR_TRUE_WHITE, _strength = LGHT_MAX_STRENGTH, _lifetime = 0.0, _flags = LGHT_FLAG_ACTIVE){
 	var _light = light_create(str_light_flicker);
 	with(_light){ // Position the light and apply its sizing/color/strength and flicking parameters.

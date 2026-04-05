@@ -2,21 +2,20 @@ if (GAME_IS_PAUSED)
 	return; // Prevent anything from updating while the game is considered paused.
 
 // Ensures that objects will be automatically destroyed if their destroyed flag is toggled and they aren't set to be invincible. Otherwise, 
-// they will remain active despite the flag to signal their destruction being set.
-with(par_dynamic_entity){
-	if (ENTT_IS_DESTROYED) 
-		instance_destroy_object(id);
-}
-
-with(par_static_entity){
-	if (ENTT_IS_DESTROYED) 
-		instance_destroy_object(id);
-}
-
-// Check to see if a room warp is currently occurring. If not, the code below this check will be ignored. If so, the game will process 
-// warping to the next room as required.
-if (!GAME_IS_ROOM_WARP_OCCURRING)
+// they will remain active despite the flag to signal their destruction being set. Note that during a room transition, all entities are
+// paused so they will skip over executing the code below.
+if (!GAME_IS_ROOM_WARP_OCCURRING){
+	with(par_dynamic_entity){
+		if (ENTT_IS_DESTROYED) 
+			instance_destroy_object(id);
+	}
+	
+	with(par_static_entity){
+		if (ENTT_IS_DESTROYED) 
+			instance_destroy_object(id);
+	}
 	return;
+}
 
 // Get and store the screen fade's current alpha value which is used to determine when to activate the room transition and when to end the 
 // room warping event.
