@@ -6,7 +6,6 @@ with(CAMERA) { room_start_event(); }
 // "dynamicItemKeys" ds_list. If any items are found they are created here.
 var _key		= 0;
 var _item		= undefined;
-var _roomIndex	= ID_INVALID;
 var _x			= 0;
 var _y			= 0;
 var _itemName	= "";
@@ -26,19 +25,19 @@ for (var i = 0; i < _length; i++){
 		continue;
 	}
 	
-	// Copy over the stored values about what this dynamic item is, and then check if the current room's index matches the room this dynamic 
-	// item should exist within. If they don't match, move onto the next element.
+	// Check if the item's location matches the current room. If it doesn't, move onto the next item in the list.
+	if (_item.roomIndex != room)
+		continue;
+	
+	// Copy over the stored values so they can be utilized while creating the world item for this dynamic item data.
 	with(_item){	
 		_x			= xPos;
 		_y			= yPos;
-		_roomIndex	= roomIndex;
 		_itemName	= itemName;
 		_quantity	= quantity;
 		_durability	= durability;
 		_ammoIndex	= ammoIndex;
 	}
-	if (_roomIndex != room)
-		continue;
 		
 	// Take the properties that were copied from the dynamic item's world data and use it to construct said item as an object within the 
 	// current room; storing its parameters like within the object's own room start event/creation code.

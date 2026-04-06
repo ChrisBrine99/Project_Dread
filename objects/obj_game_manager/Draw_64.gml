@@ -28,21 +28,21 @@ with(CAMERA){
 }
 
 with(PLAYER){
-	draw_text_shadow(_wView - 5, 3, string("{0}\n{1}\n{2}", maxHitpoints, maxSanity, maxStamina), COLOR_TRUE_WHITE);
+	draw_text_shadow(_wView - 5, 3, string("{0}\n{1}\n{2}\n{3}\n{4}", maxHitpoints, maxSanity, maxStamina, accel, maxMoveSpeed), COLOR_TRUE_WHITE);
 	draw_text_shadow(_wView - 22, 3, "/\n/\n/", COLOR_TRUE_WHITE);
 	draw_text_shadow(_wView - 32, 3, string("{0}\n{1}\n{2}", curHitpoints, curSanity, curStamina), COLOR_DARK_RED);
-	draw_text_shadow(_wView - 50, 3, "Hitpoints\nSanity\nStamina", COLOR_TRUE_WHITE);
+	draw_text_shadow(_wView - 50, 3, "Hitpoints\nSanity\nStamina\nAccel\nmaxMoveSpeed", COLOR_TRUE_WHITE);
 	
-	draw_text_shadow(_wView - 5, 33, "--- Timers ---");
+	draw_text_shadow(_wView - 5, 43, "--- Timers ---");
 	for (var i = 0; i < PLYR_TOTAL_TIMERS; i++)
-		draw_text_shadow(_wView - 5, 43 + (i * 10), string("{0}: {1}", i, timers[i]));
+		draw_text_shadow(_wView - 5, 53 + (i * 10), string("{0}: {1}", i, timers[i]));
 		
 	with(equipment){
 		if (weapon == INV_EMPTY_SLOT)
 			break;
 		
 		with(global.curItems[weapon]){
-			draw_text_shadow(_wView - 5, 43 + (10 * PLYR_TOTAL_TIMERS),
+			draw_text_shadow(_wView - 5, 53 + (10 * PLYR_TOTAL_TIMERS),
 				string("{0} ({1})",
 					itemName,
 					quantity
@@ -50,7 +50,7 @@ with(PLAYER){
 			);
 		}
 		
-		draw_text_shadow(_wView - 5, 53 + (10 * PLYR_TOTAL_TIMERS), 
+		draw_text_shadow(_wView - 5, 63 + (10 * PLYR_TOTAL_TIMERS), 
 			string("{0} x{1}",
 				weaponStatRef.ammoTypes[curAmmoIndex],
 				ammoCount[curAmmoIndex]

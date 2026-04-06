@@ -85,11 +85,13 @@
 
 #region Misc. Macros
 
-// 
+// The calculations that occur relative to the player's current position and facing direction in order to determine where there interaction
+// point will be relative to those values. The vertical value is offset to place it at the character's waist instead of their feet.
 #macro	PLYR_X_INTERACT 				(x + lengthdir_x(8, direction))
 #macro	PLYR_Y_INTERACT					(y + lengthdir_y(8, direction) - 8)
 
-// 
+// Determines the starting maximums and the highest possible values those maximums can reach through use of upgrades for the player's
+// hitpoints, stamina, and sanity, respectively.
 #macro 	PLYR_MAXHITPOINTS_START			100 
 #macro	PLYR_MAXHITPOINTS_LIMIT			150
 #macro 	PLYR_MAXSTAMINA_START			100 
@@ -114,6 +116,11 @@
 #macro	PLYR_ACCEL_SPRINT_SLOW			0.08
 #macro	PLYR_SPEED_SPRINT_SLOW			1.30
 #macro	PLYR_ANIMSPD_SPRINT_SLOW		0.85
+
+// 
+#macro PLYR_ACCEL_CRIPPLED				0.05
+#macro PLYR_SPEED_CRIPPLED				0.70
+#macro PLYR_ANIMSPD_CRIPPLED			0.80   
 
 // Determines the minimum percentage of movement can occur when using a gamepad's analog stick relative to the player's current maximum 
 // movement speed.
@@ -402,11 +409,14 @@ determine_movement_vector = function(){
 /// starting index within that data. 
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 process_movement_animation = function(_delta){
-	var _animSpeed = PLYR_ANIMSPD_NORMAL;
+	var _animSpeed 	= PLYR_ANIMSPD_NORMAL;
+	var _isCrippled = PLYR_IS_CRIPPLED;
 	if (PLYR_IS_SPRINTING){
-		_animSpeed = (curStamina == 0) ? PLYR_ANIMSPD_SPRINT_SLOW : PLYR_ANIMSPD_SPRINT_FAST;
+		_animSpeed = (curStamina > 0) ? PLYR_ANIMSPD_SPRINT_FAST : PLYR_ANIMSPD_SPRINT_SLOW; 
 		entity_set_sprite(spr_player_unarmed_sprint);
 	} else{
+		if (_isCrippled)
+			_animSpeed = PLYR_ANIMSPD_CRIPPLED;
 		entity_set_sprite(spr_player_unarmed_walk);
 	}
 	
@@ -517,6 +527,42 @@ handle_menu_open_inputs = function(){
 }
 
 #endregion Utility Function Definitions
+
+#region Status Condition Function Definitions
+
+/// @description 
+///	Sets the player's *poisoned* flag to 1, resets the current damage percentage to its base value of 0.01 (1% of the player's current max
+/// hitpoints), and activates the timer that allows damage to be inflicted on them and increased in amount until they cure the status.
+status_apply_poisoned = function(){
+	if (PLYR_IS_POISONED)
+		return; // Don't re-poison the player if they're already poisoned.
+	flags = flags | PLYR_FLAG_POISONED;
+	poisonDamagePercent = PLYR_POISON_BASE_DAMAGE;
+	timers[PLYR_POISON_TIMER] = PLYR_POISON_DAMAGE_RATE;
+}
+
+/// @description 
+///	Sets the player's *bleeding* flag to 1 and activates the timer that allows damage to be inflicted on them until they cure the status.
+status_apply_bleeding = function(){
+	if (PLYR_IS_BLEEDING)
+		return; // Don't re-bleed the player if they're already bleeding.
+	flags = flags | PLYR_FLAG_BLEEDING;
+	timers[PLYR_BLEEDING_TIMER] = PLYR_BLEEDING_DAMAGE_RATE;
+}
+
+/// @description 
+///	Sets the player's *crippled* status to 1 and stops them from sprinting if they were the moment they became crippled. Their acceleration
+/// and maximum movement speed are also slightly reduced until they cure the status.
+status_apply_crippled = function(){
+	if (PLYR_IS_CRIPPLED)
+		return; // Don't re-cripple the player if they're already crippled.
+	flags 		 = flags | PLYR_FLAG_CRIPPLED;
+	flags 		 = flags & ~PLYR_FLAG_SPRINTING;
+	accel 		 = PLYR_ACCEL_CRIPPLED;
+	maxMoveSpeed = PLYR_SPEED_CRIPPLED;
+}
+
+#endregion Status Condition Function Definitions
 
 #region Equipment Function Definitions
 
@@ -855,20 +901,17 @@ end_step_event = function(_delta){
 	}
 	
 	// Regenerating the player's stamina when they're no longer sprinting but don't have all their stamina or depleting their stamina if 
-	// the player is currently running.
-	if (!PLYR_IS_SPRINTING && curStamina < maxStamina && timers[PLYR_STAMINA_REGEN_TIMER] == 0.0){
-		timers[PLYR_STAMINA_REGEN_TIMER] = PLYR_STAMINA_REGEN_RATE;
-		curStamina++;
-	} else if (PLYR_IS_SPRINTING && curStamina > 0 && timers[PLYR_STAMINA_LOSS_TIMER] == 0.0){
-		timers[PLYR_STAMINA_LOSS_TIMER] = PLYR_STAMINA_LOSS_RATE;
-		curStamina--;
-		
-		// The player's stamina has been completely depleted, slow them down until they stop sprinting.
-		if (curStamina == 0){
-			if (PLYR_IS_CRIPPLED){ // Move the player back to the standard walking speed and acceleration.
-				accel			= PLYR_ACCEL_NORMAL;
-				maxMoveSpeed	= PLYR_SPEED_NORMAL;
-			} else{ // Move them to the slower sprinting values.
+	// the player is currently running. Stamina regeneration can only occur when the player isn't crippled.
+	if (!PLYR_IS_CRIPPLED){
+		if (!PLYR_IS_SPRINTING && curStamina < maxStamina && timers[PLYR_STAMINA_REGEN_TIMER] == 0.0){
+			timers[PLYR_STAMINA_REGEN_TIMER] = PLYR_STAMINA_REGEN_RATE;
+			curStamina++;
+		} else if (PLYR_IS_SPRINTING && curStamina > 0 && timers[PLYR_STAMINA_LOSS_TIMER] == 0.0){
+			timers[PLYR_STAMINA_LOSS_TIMER] = PLYR_STAMINA_LOSS_RATE;
+			curStamina--;
+			
+			// The player's stamina has been completely depleted, slow them down until they stop sprinting.
+			if (curStamina == 0){
 				accel			= PLYR_ACCEL_SPRINT_SLOW;
 				maxMoveSpeed	= PLYR_SPEED_SPRINT_SLOW;
 			}
@@ -988,10 +1031,15 @@ state_default = function(_delta){
 			entity_set_sprite(spr_player_unarmed_walk);
 			flags		    = flags & ~(DENTT_FLAG_MOVING | PLYR_FLAG_SPRINTING);
 			image_index		= animLoopStart;
-			accel			= PLYR_ACCEL_NORMAL;
-			maxMoveSpeed	= PLYR_SPEED_NORMAL;
 			animCurFrame	= 0.0;
 			moveSpeed		= 0.0;
+			
+			// Only reset the acceleration and max speed of the player if they aren't crippled, as that would overwrite the values applied
+			// by the crippled status.
+			if (!PLYR_IS_CRIPPLED){
+				accel = PLYR_ACCEL_NORMAL;
+				maxMoveSpeed = PLYR_SPEED_NORMAL;
+			}
 		}
 	}
 	
@@ -1058,7 +1106,7 @@ state_default = function(_delta){
 		
 	// Activating the player's sprinting, which will cause their stamina to deplete to zero and remain there until they stop running. They 
 	// can still run without stamina, but the speed is heavily reduced.
-	if (PINPUT_SPRINT_PRESSED && !PLYR_IS_SPRINTING){
+	if (PINPUT_SPRINT_PRESSED && !PLYR_IS_CRIPPLED && !PLYR_IS_SPRINTING){
 		timers[PLYR_STAMINA_LOSS_TIMER] = PLYR_STAMINA_LOSS_RATE;
 		flags = flags | PLYR_FLAG_SPRINTING;
 		
@@ -1067,13 +1115,12 @@ state_default = function(_delta){
 		if (PLYR_IS_SPRINT_TOGGLE)
 			prevInputFlags = inputFlags;
 		
-		
-		// Determine if the player should use their fast speed values (stamina > 0 and not crippled) or their slow speed values (stamina == 
-		// 0 or stamina > 0 and crippled).
-		if (curStamina > 0 && !PLYR_IS_CRIPPLED){
+		// Determine if the player should use their fast speed values if they aren't current exhausted (current stamina > 0). If not, they
+		// can still sprint; it will just be much slower than if they still have stamina to burn.
+		if (curStamina > 0 ){
 			accel			= PLYR_ACCEL_SPRINT_FAST;
 			maxMoveSpeed	= PLYR_SPEED_SPRINT_FAST;
-		} else if ((curStamina == 0 && !PLYR_IS_CRIPPLED) || (curStamina > 0 && PLYR_IS_CRIPPLED)){
+		} else {
 			accel			= PLYR_ACCEL_SPRINT_SLOW;
 			maxMoveSpeed	= PLYR_SPEED_SPRINT_SLOW;
 		}
@@ -1094,9 +1141,11 @@ state_default = function(_delta){
 		// Triple the time it takes before stamina begins to regen if the player is completely exhausted.
 		if (curStamina == 0) { timers[PLYR_STAMINA_REGEN_TIMER] *= PLYR_STAMINA_EXHAUST_FACTOR; }
 		
-		flags		    = flags & ~PLYR_FLAG_SPRINTING;
-		accel			= PLYR_ACCEL_NORMAL;
-		maxMoveSpeed	= PLYR_SPEED_NORMAL;
+		flags = flags & ~PLYR_FLAG_SPRINTING;
+		if (!PLYR_IS_CRIPPLED){
+			accel = PLYR_ACCEL_NORMAL;
+			maxMoveSpeed = PLYR_SPEED_NORMAL;
+		}
 	}
 	
 	// Check if a cutscene collider was walked into during the current frame. If so, the scene it has will be queued up and executed 
@@ -1314,8 +1363,8 @@ state_player_reloading = function(_delta){
 ///	@param {Real}	delta	The difference in time between the execution of this frame and the last.
 state_player_paused = function(_delta){
 	if (!GAME_IS_MENU_OPEN && !GAME_IS_TEXTBOX_OPEN){
-		if (lastState != 0) { object_set_state(lastState); }
-		else				{ object_set_state(state_default); }
+		if (lastState != STATE_NONE) { object_set_state(lastState); }
+		else						 { object_set_state(state_default); }
 	}
 }
 
