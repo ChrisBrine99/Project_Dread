@@ -28,7 +28,7 @@ with(CAMERA){
 }
 
 with(PLAYER){
-	draw_text_shadow(_wView - 5, 3, string("{0}\n{1}\n{2}\n{3}\n{4}", maxHitpoints, maxSanity, maxStamina, accel, maxMoveSpeed), COLOR_TRUE_WHITE);
+	draw_text_shadow(_wView - 5, 3, string("{0}\n{1}\n{2}\n{3}\n{4}", maxHitpoints, maxSanity, maxStamina, get_acceleration(), get_max_move_speed()), COLOR_TRUE_WHITE);
 	draw_text_shadow(_wView - 22, 3, "/\n/\n/", COLOR_TRUE_WHITE);
 	draw_text_shadow(_wView - 32, 3, string("{0}\n{1}\n{2}", curHitpoints, curSanity, curStamina), COLOR_DARK_RED);
 	draw_text_shadow(_wView - 50, 3, "Hitpoints\nSanity\nStamina\nAccel\nmaxMoveSpeed", COLOR_TRUE_WHITE);

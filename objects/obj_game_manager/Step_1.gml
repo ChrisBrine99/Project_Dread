@@ -8,6 +8,8 @@ if (!GAME_IS_ROOM_WARP_OCCURRING){
 	with(par_dynamic_entity){
 		if (ENTT_IS_DESTROYED) 
 			instance_destroy_object(id);
+		accelFactor = 1.0; // Reset both factors to their defaults of 1.0 for the new frame.
+		maxMoveSpeedFactor = 1.0;
 	}
 	
 	with(par_static_entity){

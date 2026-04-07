@@ -1,2 +1,3 @@
+set_warp_params(440, 350, rm_test_02);
 set_facing_direction(DOOR_FLAG_NORTHBOUND);
-add_lock(ID_INVALID, 0, true);
+set_locked_other_side(4);

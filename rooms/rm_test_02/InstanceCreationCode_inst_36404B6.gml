@@ -1,5 +1,5 @@
-set_warp_params(200, 350, rm_test_02);
-set_facing_direction(DOOR_FLAG_NORTHBOUND);
+set_warp_params(200, 56, rm_test_01);
+set_facing_direction(DOOR_FLAG_SOUTHBOUND);
 
 add_lock(ITEM_TEST_DOOR_KEY, 0, true);
 add_lock(ITEM_TEST_DOOR_KEY, 1, true);

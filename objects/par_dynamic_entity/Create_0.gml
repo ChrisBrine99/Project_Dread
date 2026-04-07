@@ -20,61 +20,81 @@ visible			= false;
 #region Variable Initializations
 
 // A value storing bits that enable/disable various aspects of the Entity's general functionality.
-flags			= 0;
+flags				= 0;
 
 // Stores the currently executing state, as well as the last state to be executed AND the state to shift to at the end of the current frame 
 // if applicable (Its value matches that of "curState" otherwise).
-curState		= 0;
-nextState		= 0;
-lastState		= 0;
+curState			= 0;
+nextState			= 0;
+lastState			= 0;
 
 // If required, the entity may utilize its own drawing function to replace the standard one. Having this set to 0 will cause the entity to 
 // fallback to said standard drawing function.
-drawFunction	= 0;
+drawFunction		= 0;
 
 // Variables for the entity's custom animation implementation, which will utilize the sprite's speed set within the editor as well as a 
 // target animation frame rate of 60 fps to provide a frame-independent animation system.
-animSpeed		= 0.0;
-animFps			= 0.0;
-animLength		= 0;
-animLoopStart	= 0;
+animSpeed			= 0.0;
+animFps				= 0.0;
+animLength			= 0;
+animLoopStart		= 0;
 
 // Stores the fractional portion of the Entity's current position within the room to avoid potential issues with collision checks and 
 // rendering with floating-point position values at lower resolutions.
-xFraction		= 0.0;
-yFraction		= 0.0;
+xFraction			= 0.0;
+yFraction			= 0.0;
 
 // Since this game is top-down, only one movement variable is required since it's assumed the Entity has the same velocity across both axes.
 // This means they share the same maximum movement speed, acceleration, and speed; their direction determining how they'll move in the game.
-accel			= 0.0;
-moveSpeed		= 0.0;
-maxMoveSpeed	= 0.0;
+accel				= 0.0;
+moveSpeed			= 0.0;
+maxMoveSpeed		= 0.0;
+
+//
+accelFactor			= 1.0;
+maxMoveSpeedFactor	= 1.0;
 
 // Keeps track of the Entity's current and maximum hitpoints, respectively. When updating the hitpoints for the Entity, it will automatically
 // flag them for destruction when it reaches of goes below 0. Note that even when toggled, an invincible Entity will not be destroyed.
-curHitpoints	= 0;
-maxHitpoints	= 0;
+curHitpoints		= 0;
+maxHitpoints		= 0;
 
 // Variables that are used to draw the entity's shadow if it has one. In order, they store: the function to draw the shadow, the offsets of 
 // the shadow's position relative to the entity's, and the width and height of the shadow.
-shadowFunction	= 0;
-xShadow			= 0;
-yShadow			= 0;
-widthShadow		= 0;
-heightShadow	= 0;
+shadowFunction		= NO_FUNCTION;
+xShadow				= 0;
+yShadow				= 0;
+widthShadow			= 0;
+heightShadow		= 0;
 
 // Stores a reference to a light source struct that will be placed at a given offset relative to the Entity's current position. The offset 
 // on the x and y axes are stored in the two other values below.
-lightRef		= noone;
-xLight			= 0;
-yLight			= 0;
+lightRef			= noone;
+xLight				= 0;
+yLight				= 0;
 
 // CUTSCENES ONLY!!! Allows an entity to keep track of where they are along a list of positions in a path they are following in a cutscene.
-pathIndex		= 0;
+pathIndex			= 0;
 
 #endregion Variable Initializations
 
-#region Utility Function Definitions
+#region Utility Function Definitions\
+
+/// @description 
+/// Returns the entity's current acceleration which is the *accel* value itself multiplied against the *accelFactor* variable, which can be
+/// adjusted as needed but defaults to a value of one.
+/// @returns {Real}
+get_acceleration = function(){
+	return accel * accelFactor;
+}
+
+/// @description 
+/// Returns the entity's current maximum movement speed which is the *maxMoveSpeed* value itself multiplied against the *maxMoveSpeedFactor*
+/// variable, which can be adjusted as needed but defaults to a value of one.
+/// @returns {Real}
+get_max_move_speed = function(){
+	return maxMoveSpeed * maxMoveSpeedFactor;
+}
 
 /// @description
 ///	Handles updating the position of the entity while also processing collision against the world if the Entity has been set to collide with 
@@ -151,7 +171,7 @@ process_world_collision = function(_xMove, _yMove){
 /// @param 		{Real}	yTarget		Position along the current room's y-axis to move towards.
 /// @param 		{Real}	speed		How fast the entity should move relative to its actual movement speed.
 move_to_position = function(_delta, _xTarget, _yTarget, _speed = 1.0){
-	var _maxMoveSpeed = maxMoveSpeed * _speed;
+	var _maxMoveSpeed = get_max_move_speed() * _speed;
 	moveSpeed += accel * _delta;
 	if (moveSpeed > _maxMoveSpeed)
 		moveSpeed = _maxMoveSpeed;
@@ -172,7 +192,7 @@ move_to_position = function(_delta, _xTarget, _yTarget, _speed = 1.0){
 update_hitpoints = function(_amount){
 	curHitpoints = clamp(curHitpoints + _amount, 0, maxHitpoints);
 	if (curHitpoints == 0){ // Deactivate and destroy the Entity.
-		object_set_state(0);
+		object_set_state(STATE_NONE);
 		flags = flags & ~ENTT_FLAG_ACTIVE;
 		flags = flags |  ENTT_FLAG_DESTROYED;
 	}

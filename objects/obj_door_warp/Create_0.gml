@@ -1,18 +1,25 @@
 #region Macro Initializations
 
 // Macros for the bits the door warp will utilize for various characteristics about itself at a given moment of time.
-#macro	DOOR_FLAG_LOCKED				0x00000001
-#macro	DOOR_FLAG_NORTHBOUND			0x00000002
-#macro	DOOR_FLAG_SOUTHBOUND			0x00000004
-#macro	DOOR_FLAG_EASTBOUND				0x00000008
-#macro	DOOR_FLAG_WESTBOUND				0x00000010
+#macro	DOOR_FLAG_LOCKED_KEY			0x00000001
+#macro 	DOOR_FLAG_LOCKED_OTHER_SIDE 	0x00000002
+#macro 	DOOR_FLAG_INTERACT_UNLOCK		0x00000004
+#macro	DOOR_FLAG_NORTHBOUND			0x00000008
+#macro	DOOR_FLAG_SOUTHBOUND			0x00000010
+#macro	DOOR_FLAG_EASTBOUND				0x00000020
+#macro	DOOR_FLAG_WESTBOUND				0x00000040
 
 // Macros for referencing the state of the door warp's flags; if they are set or cleared.
-#macro	DOOR_IS_LOCKED					((flags & DOOR_FLAG_LOCKED)		!= 0)
-#macro	DOOR_FACING_NORTH				((flags & DOOR_FLAG_NORTHBOUND) != 0)
-#macro	DOOR_FACING_SOUTH				((flags & DOOR_FLAG_SOUTHBOUND) != 0)
-#macro	DOOR_FACING_EAST				((flags & DOOR_FLAG_EASTBOUND)	!= 0)
-#macro	DOOR_FACING_WEST				((flags & DOOR_FLAG_WESTBOUND)	!= 0)
+#macro	DOOR_IS_LOCKED_BY_KEY			((flags & DOOR_FLAG_LOCKED_KEY)			!= 0)
+#macro 	DOOR_IS_LOCKED_FROM_OTHER_SIDE	((flags & DOOR_FLAG_LOCKED_OTHER_SIDE)	!= 0) 
+#macro 	DOOR_CAN_INTERACT_UNLOCK		((flags & DOOR_FLAG_INTERACT_UNLOCK) 	!= 0) 
+#macro	DOOR_FACING_NORTH				((flags & DOOR_FLAG_NORTHBOUND) 		!= 0)
+#macro	DOOR_FACING_SOUTH				((flags & DOOR_FLAG_SOUTHBOUND) 		!= 0)
+#macro	DOOR_FACING_EAST				((flags & DOOR_FLAG_EASTBOUND)			!= 0)
+#macro	DOOR_FACING_WEST				((flags & DOOR_FLAG_WESTBOUND)			!= 0)
+
+// Special marco for checking if both the "locked" flags are set to zero so it can begin the warping process.
+#macro 	DOOR_IS_UNLOCKED		 		((flags & (DOOR_FLAG_LOCKED_KEY | DOOR_FLAG_LOCKED_OTHER_SIDE)) == 0)
 
 // Determines how fast the door's direction arrow indicator will bob up/down or left/right to signify the player is able to interact with it 
 // (Locked doors won't display this indicator).
@@ -56,6 +63,9 @@ targetRoom		= undefined;
 // repeat the process indefinitely.
 arrowOffset		= 0.0;
 
+// 
+manualUnlockID	= EVENT_ID_INVALID;
+
 #endregion Variable Initializations
 
 #region Interaction Funciton Override
@@ -67,10 +77,10 @@ arrowOffset		= 0.0;
 /// cause the player to be warped to the target room and position set for the door. 
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 on_player_interact = function(_delta){
-	if (!DOOR_IS_LOCKED || ds_list_size(lockData) == 0){
+	if (DOOR_IS_UNLOCKED){
 		if (GAME_IS_ROOM_WARP_OCCURRING || is_undefined(targetRoom) || !room_exists(targetRoom))
 			return; // No warp will occur if the target room index isn't defined or a room warp is already occurring.
-		global.flags |= GAME_FLAG_ROOM_WARP;
+		global.flags = global.flags | GAME_FLAG_ROOM_WARP;
 		
 		// Set the game manager up to handle the room warping logic. It will add the player to the warp queue with their position after the 
 		// warp being the target x and y values set by the door.
@@ -89,9 +99,26 @@ on_player_interact = function(_delta){
 		return;
 	}
 	
+	// If this door represents the "other side" of a locked door that cannot be opened via key, this branch is taken and the relevant flag
+	// for both sides of the door is set to true. The custom unlocked message is shown to the player, and both flags for the door being
+	// locked are clear in case the other was set accidentally, as this logic doesn't care if it is, but actually opening the door does.
+	if (DOOR_CAN_INTERACT_UNLOCK){
+		event_set_flag(manualUnlockID, true);
+		textbox_show_message(unlockMessage);
+		flags = flags & ~(DOOR_FLAG_LOCKED_KEY | DOOR_FLAG_LOCKED_OTHER_SIDE);
+		return;
+	}
+	
+	// The door is currently locked from the opposite side to where the player is. So, a message is displayed to let them know that the door
+	// can be unlocked without any kind of key, but they must reach the other side in order to unlock it.
+	if (DOOR_IS_LOCKED_FROM_OTHER_SIDE){
+		textbox_show_message(textboxMessage);
+		return;
+	}
+	
 	// Loop through the door's list of locks to see how many of them have been unlocked by the player. This sum of opened locks is stored and
 	// referenced after the loop to determine which of three different types of message to show to the player: an unlock message, a partial
-	// -unlock message, and a completely locked message.
+	// unlock message, and a completely locked message.
 	var _locksOpened	= 0;
 	var _length			= ds_list_size(lockData);
 	for (var i = 0; i < _length; i++){
@@ -114,37 +141,17 @@ on_player_interact = function(_delta){
 		}
 	}
 	
-	// Display the unlocked message to signify to the player that the door has been successfully opened. Note that this message can be made 
-	// unique to each door instance if required.
+	// Display the unlocked message to signify to the player that the door has been successfully opened.
 	if (_locksOpened == _length){
-		flags &= ~DOOR_FLAG_LOCKED;
-		
-		var _unlockMessage = unlockMessage;
-		with(TEXTBOX){ // Queue up the door's unlocking message for being displayed to the user.
-			queue_new_text(_unlockMessage);
-			activate_textbox();
-		}
+		textbox_show_message(unlockMessage);
+		flags = flags & ~DOOR_FLAG_LOCKED_KEY;
 		return;
 	}
 	
-	// Display a "semi-locked" message to signify to the player that the door still has locks that must be opened before they can enter 
-	// through it. The message can be adjusted on a per-door basis if required.
-	if (_locksOpened > 0){
-		var _semiLockMessage = semiLockMessage;
-		with(TEXTBOX){
-			queue_new_text(_semiLockMessage);
-			activate_textbox();
-		}
-		return;
-	}
-	
-	// The final message, which is simply the message that will show up to the player if they haven't unlocked any of the locks for the door.
-	// The message can be adjusted on a per-door basis if required.
-	var _lockedMessage = textboxMessage;
-	with(TEXTBOX){
-		queue_new_text(_lockedMessage);
-		activate_textbox();
-	}
+	// Display a message letting the player know they haven't unlocked any of the door's locks yet (Stored in "textboxMessage"), or if they
+	// have partially unlocked the door but not completely (Stored in "semiLockMessage"). 
+	if (_locksOpened > 0) 	{ textbox_show_message(semiLockMessage); }
+	else 					{ textbox_show_message(textboxMessage); }
 }
 
 #endregion Interaction Function Override
@@ -156,7 +163,7 @@ on_player_interact = function(_delta){
 /// bobbing up and down or left and right for a small animation while it is visible to the player.
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 custom_draw_default = function(_delta){
-	if (!INTR_CAN_PLAYER_INTERACT || DOOR_IS_LOCKED)
+	if (!INTR_CAN_PLAYER_INTERACT || !DOOR_IS_UNLOCKED)
 		return;
 	
 	arrowOffset += DOOR_ARROW_MOVE_SPEED * _delta;
@@ -194,7 +201,7 @@ drawFunction = method_get_index(custom_draw_default);
 ///	@param {Real}	flagID		The event ID flag that is tied to this key.
 /// @param {Real}	flagState	The state that the flag needs to be for the lock to be considered open.
 add_lock = function(_keyName, _flagID, _flagState){
-	flags |= DOOR_FLAG_LOCKED; // A call to this function will always flip the door's "locked" bit.
+	flags = flags | DOOR_FLAG_LOCKED_KEY; // A call to this function will always flip the door's "locked" bit.
 	var _index = ds_list_find_index(lockData, _flagID);
 	if (_index != -1) // If the flag is already occupying the list of keys, don't add it again.
 		return;
@@ -230,10 +237,10 @@ set_facing_direction = function(_flag){
 	// Don't set a facing direction if the flag specified isn't a valid direction flag. Instead, set the door to not be active so it doesn't 
 	// get rendered pointing in the wrong direction.
 	if ((_flag & (DOOR_FLAG_NORTHBOUND | DOOR_FLAG_SOUTHBOUND | DOOR_FLAG_EASTBOUND | DOOR_FLAG_WESTBOUND)) == 0){
-		flags &= ~ENTT_FLAG_ACTIVE;
+		flags = flags & ~ENTT_FLAG_ACTIVE;
 		return; 
 	}
-	flags |= _flag;
+	flags = flags | _flag;
 	
 	// Offset along the x or y position, and assign the proper subimage based on the _flag value. Note that if for some reason this value is 
 	// a combination of multiple direction flags, the offset and proper subimage will not be set.
@@ -254,6 +261,33 @@ set_facing_direction = function(_flag){
 		x		   -= 8;
 		interactX  -= 8; // Shift interaction origin to the left.
 	}
+}
+
+/// @description 
+/// Sets the door as locked, but not by a key. Instead, it is locked from the "other side" meaning the player will have to go to where this
+/// door leads to in order to unlock it. Until then, it remains locked.
+/// @param {Real}	flagID				Flag bit that represents if the door is currently locked (Bit is set to 0) or unlocked (Set to 1).
+/// @param {String}	textboxMessage		(Optional) The message that is displayed to the player when they attempt to interact with the door.
+set_locked_other_side = function(_flagID, _textboxMessage = "The door is locked from the other side."){
+	if (manualUnlockID != EVENT_ID_INVALID)
+		return;
+	manualUnlockID 	= _flagID;
+	flags 			= flags | DOOR_FLAG_LOCKED_OTHER_SIDE;
+	textboxMessage = _textboxMessage;
+}
+
+/// @description 
+///	Sets the door as locked, but not by a key. Instead, it is a door locked from the "other side" and this door object represents that "other
+/// side". Upon interacting with it, the player will unlock the doorway.
+/// @param {Real}	flagID			Flag bit that represents if the door is currently locked (Bit is set to 0) or unlocked (Set to 1).
+/// @param {String}	unlockMessage	(Optional) Custom message that can be created instead of using the default message for unlocking a door.
+set_locked_this_side = function(_flagID, _unlockMessage = ""){
+	if (manualUnlockID != EVENT_ID_INVALID)
+		return;
+	manualUnlockID 	= _flagID;
+	flags 			= flags | DOOR_FLAG_LOCKED_OTHER_SIDE | DOOR_FLAG_INTERACT_UNLOCK;
+	if (_unlockMessage != "") // Only overwrite the base unlock message if one is provided.
+		unlockMessage = _unlockMessage;
 }
 
 #endregion Unique Function Initializations

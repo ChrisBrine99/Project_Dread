@@ -116,12 +116,9 @@ function item_use_consumable(_slot){
 		}
 		flags = _flags;
 		
-		// Restore the player's movement speed and acceleration while walking if they're no longer crippled. Their stamina will pause regen
-		// as if they were recovering from a stamina of 0.
+		// Curing the crippled status condition will have the stamina timer start up as if the player began recovering it from zero.
 		if (!PLYR_IS_CRIPPLED){
 			timers[PLYR_STAMINA_REGEN_TIMER] = PLYR_STAMINA_REGEN_RATE * PLYR_STAMINA_PAUSE_FACTOR * PLYR_STAMINA_EXHAUST_FACTOR;
-			accel = PLYR_ACCEL_NORMAL;
-			maxMoveSpeed = PLYR_SPEED_NORMAL;
 		}
 		
 		if (_hpHeal > 0.0) // Update HP if the consumable heals the player.

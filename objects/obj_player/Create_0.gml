@@ -103,24 +103,25 @@
 // stamina is completely depleted.
 #macro	PLYR_ACCEL_NORMAL				0.10
 #macro	PLYR_SPEED_NORMAL				0.90
+
+// The acceleration adjustment values for the player's additional movement states: sprinting fast, sprinting slow, and moving while crippled,
+// respectively. Each value is multiplied against the base acceleration value to get the final result for the state.
+#macro 	PLYR_ACCELFACTOR_SPRINT_FAST	0.90
+#macro 	PLYR_ACCELFACTOR_SPRINT_SLOW	0.80
+#macro 	PLYR_ACCELFACTOR_CRIPPLED		0.50
+
+// The maximum speed factors for each of the additional movement states the player may be in; multiplied against the base maxMoveSpeed to
+// determine the final value. These additional states are sprinting fast, sprinting slow, and moving while inflicted with crippled.
+#macro	PLYR_SPEEDFACTOR_SPRINT_FAST	2.00
+#macro 	PLYR_SPEEDFACTOR_SPRINT_SLOW	1.50
+#macro 	PLYR_SPEEDFACTOR_CRIPPLED		0.78   
+
+// The animation speeds for the player's current animation relative to how they're current moving: walking, sprinting fast, sprinting slow,
+// or walking while inflicted with the crippled status condition, respectively.
 #macro	PLYR_ANIMSPD_NORMAL				1.00
-
-// Macros for the player's acceleration and maximum speed when sprinting. These values are only utilized when the player has available 
-// stamina and isn't crippled.
-#macro	PLYR_ACCEL_SPRINT_FAST			0.09
-#macro	PLYR_SPEED_SPRINT_FAST			1.80
-#macro	PLYR_ANIMSPD_SPRINT_FAST		1.05
-
-// Macros for the player's acceleration and maximum speed when sprinting without stamina. When crippled, these act as the "fast" sprinting 
-// speed should the player still have stamina remaining.
-#macro	PLYR_ACCEL_SPRINT_SLOW			0.08
-#macro	PLYR_SPEED_SPRINT_SLOW			1.30
 #macro	PLYR_ANIMSPD_SPRINT_SLOW		0.85
-
-// 
-#macro PLYR_ACCEL_CRIPPLED				0.05
-#macro PLYR_SPEED_CRIPPLED				0.70
-#macro PLYR_ANIMSPD_CRIPPLED			0.80   
+#macro	PLYR_ANIMSPD_SPRINT_FAST		1.05
+#macro 	PLYR_ANIMSPD_CRIPPLED			0.75
 
 // Determines the minimum percentage of movement can occur when using a gamepad's analog stick relative to the player's current maximum 
 // movement speed.
@@ -403,6 +404,25 @@ determine_movement_vector = function(){
 	}
 }
 
+/// @description 
+/// A simple function that houses all the possible adjustments that are made to the player's accleration and maximum movement speed factors.
+/// These values are reset back to their defaults of 1.0 on a per-frame basis, so if the player is no longer crippled or sprinting the values
+/// are automatically updated according to the branches taken (Or not) in this function.
+process_movement_speed_factors = function(){
+	if (PLYR_IS_CRIPPLED){ // Moving while crippled (Sprinting is disabled until the condition is cured).
+		accelFactor 		= PLYR_ACCELFACTOR_CRIPPLED;
+		maxMoveSpeedFactor	= PLYR_SPEEDFACTOR_CRIPPLED;
+	} else if (PLYR_IS_SPRINTING){
+		if (curStamina > 0){ // Sprinting while not exhausted
+			accelFactor 		= PLYR_ACCELFACTOR_SPRINT_FAST;
+			maxMoveSpeedFactor 	= PLYR_SPEEDFACTOR_SPRINT_FAST;
+		} else{ // Sprinting while exhausted (Stamina has been completely depleted).
+			accelFactor 		= PLYR_ACCELFACTOR_SPRINT_SLOW;
+			maxMoveSpeedFactor 	= PLYR_SPEEDFACTOR_SPRINT_SLOW;
+		}
+	}
+}
+
 /// @description
 /// Handles updating the player's movement animation(s) which works in a similar way to the standard Entity animation processing, but taking
 /// into account that the player can face 4 directions and all those directions are stored in a single sprite together when determining the
@@ -556,10 +576,8 @@ status_apply_bleeding = function(){
 status_apply_crippled = function(){
 	if (PLYR_IS_CRIPPLED)
 		return; // Don't re-cripple the player if they're already crippled.
-	flags 		 = flags | PLYR_FLAG_CRIPPLED;
-	flags 		 = flags & ~PLYR_FLAG_SPRINTING;
-	accel 		 = PLYR_ACCEL_CRIPPLED;
-	maxMoveSpeed = PLYR_SPEED_CRIPPLED;
+	flags = flags | PLYR_FLAG_CRIPPLED;
+	flags = flags & ~PLYR_FLAG_SPRINTING;
 }
 
 #endregion Status Condition Function Definitions
@@ -909,12 +927,6 @@ end_step_event = function(_delta){
 		} else if (PLYR_IS_SPRINTING && curStamina > 0 && timers[PLYR_STAMINA_LOSS_TIMER] == 0.0){
 			timers[PLYR_STAMINA_LOSS_TIMER] = PLYR_STAMINA_LOSS_RATE;
 			curStamina--;
-			
-			// The player's stamina has been completely depleted, slow them down until they stop sprinting.
-			if (curStamina == 0){
-				accel			= PLYR_ACCEL_SPRINT_SLOW;
-				maxMoveSpeed	= PLYR_SPEED_SPRINT_SLOW;
-			}
 		}
 	}
 	
@@ -1001,19 +1013,21 @@ state_default = function(_delta){
 	process_player_input();
 	determine_movement_vector();
 	
-	// Updating the current direction of the player and also accelerating/decelerating them depending on the movement vector.
+	// Updating the current direction of the player and also accelerating/decelerating them depending on the movement vector. The current
+	// factors for the player's acceleration and movement speed are also set by the function call directly before the movement logic.
+	process_movement_speed_factors();
 	if (xMoveDirection != 0.0 || yMoveDirection != 0.0){ // Handling acceleration
 		if (!DENTT_IS_MOVING){
 			flags		 = flags | DENTT_FLAG_MOVING | PLYR_FLAG_PLAY_STEP_SOUND;
 			animCurFrame = 1.0; // Ensures the player's animation starts on their first step frame immediately.
 		}
-		moveSpeed  += accel * _delta;
+		moveSpeed  += get_acceleration() * _delta;
 		direction	= point_direction(0.0, 0.0, xMoveDirection, yMoveDirection);
 		
 		// Dynamically calculate the limit for the player's movement speed based on if they're currently using the primary or secondary 
 		// analog sticks on a gamepad. If they aren't using either stick (Or are using the keyboard for input) the maximum movement speed 
 		// isn't altered by this logic.
-		var _maxMoveSpeed = maxMoveSpeed;
+		var _maxMoveSpeed = get_max_move_speed();
 		if (PINPUT_USING_LEFT_STICK){ // This is considered the primary stick, so it has priority.
 			var _movePercent	= point_distance(0.0, 0.0, padStickInputLH, padStickInputLV);
 			_maxMoveSpeed	   *= max(_movePercent, PLYR_MIN_ANALOG_PERCENTAGE);
@@ -1026,20 +1040,13 @@ state_default = function(_delta){
 		if (moveSpeed > _maxMoveSpeed)
 			moveSpeed = _maxMoveSpeed;
 	} else if (moveSpeed > 0.0){ // Handling deceleration
-		moveSpeed -= accel * _delta;
+		moveSpeed -= get_acceleration() * _delta;
 		if (moveSpeed <= 0.0){
 			entity_set_sprite(spr_player_unarmed_walk);
 			flags		    = flags & ~(DENTT_FLAG_MOVING | PLYR_FLAG_SPRINTING);
 			image_index		= animLoopStart;
 			animCurFrame	= 0.0;
 			moveSpeed		= 0.0;
-			
-			// Only reset the acceleration and max speed of the player if they aren't crippled, as that would overwrite the values applied
-			// by the crippled status.
-			if (!PLYR_IS_CRIPPLED){
-				accel = PLYR_ACCEL_NORMAL;
-				maxMoveSpeed = PLYR_SPEED_NORMAL;
-			}
 		}
 	}
 	
@@ -1088,8 +1095,6 @@ state_default = function(_delta){
 		object_set_state(state_player_weapon_ready);
 		flags		    = flags & ~(DENTT_FLAG_MOVING | PLYR_FLAG_SPRINTING);
 		image_index		= animLoopStart;
-		accel			= PLYR_ACCEL_NORMAL;
-		maxMoveSpeed	= PLYR_SPEED_NORMAL;
 		animCurFrame	= 0.0;
 		moveSpeed		= 0.0;
 		return;
@@ -1114,16 +1119,6 @@ state_default = function(_delta){
 		// player's press input into a hold for the current frame.
 		if (PLYR_IS_SPRINT_TOGGLE)
 			prevInputFlags = inputFlags;
-		
-		// Determine if the player should use their fast speed values if they aren't current exhausted (current stamina > 0). If not, they
-		// can still sprint; it will just be much slower than if they still have stamina to burn.
-		if (curStamina > 0 ){
-			accel			= PLYR_ACCEL_SPRINT_FAST;
-			maxMoveSpeed	= PLYR_SPEED_SPRINT_FAST;
-		} else {
-			accel			= PLYR_ACCEL_SPRINT_SLOW;
-			maxMoveSpeed	= PLYR_SPEED_SPRINT_SLOW;
-		}
 	}
 	
 	// Store the previous position of the player so a line collision can be performed between it and the new position they are at after 
@@ -1137,15 +1132,10 @@ state_default = function(_delta){
 	var _yMove			= lengthdir_y(moveSpeed, direction);
 	var _sprintEndInput	= PLYR_IS_SPRINT_TOGGLE ? PINPUT_SPRINT_PRESSED : PINPUT_SPRINT_RELEASED;
 	if ((update_position(_xMove, _yMove, _delta) || _sprintEndInput) && PLYR_IS_SPRINTING){
+		flags = flags & ~PLYR_FLAG_SPRINTING;
 		timers[PLYR_STAMINA_REGEN_TIMER] = PLYR_STAMINA_REGEN_RATE * PLYR_STAMINA_PAUSE_FACTOR;
 		// Triple the time it takes before stamina begins to regen if the player is completely exhausted.
 		if (curStamina == 0) { timers[PLYR_STAMINA_REGEN_TIMER] *= PLYR_STAMINA_EXHAUST_FACTOR; }
-		
-		flags = flags & ~PLYR_FLAG_SPRINTING;
-		if (!PLYR_IS_CRIPPLED){
-			accel = PLYR_ACCEL_NORMAL;
-			maxMoveSpeed = PLYR_SPEED_NORMAL;
-		}
 	}
 	
 	// Check if a cutscene collider was walked into during the current frame. If so, the scene it has will be queued up and executed 
@@ -1167,7 +1157,7 @@ state_default = function(_delta){
 			animCurFrame	= 0.0;
 		}
 	}
-
+	
 	// Finally, process the player's movement animation and handle their footstep sound logic which requires the movement animation being 
 	// processed in order to do anything.
 	process_movement_animation(_delta);

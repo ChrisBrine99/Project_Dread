@@ -1054,12 +1054,24 @@ function str_textbox(_index) : str_base(_index) constructor {
 #region Global Functions for Textbox
 
 /// @description 
+///	A function that will queue up a single textbox worth of text to show to the player. Saves having to constantly write out the function for
+/// queuing the text as well as the function for activating the textbox right below it. Instead, it's just a single global function call.
+/// @param {String}	text		The string content of the textbox.
+/// @param {Real}	actorIndex	(Optional) Allows the name of the character who is speaking to be displayed alongside the textbox.
+function textbox_show_message(_text, _actorIndex = TBOX_ACTOR_INVALID){
+	with(TEXTBOX){
+		queue_new_text(_text, _actorIndex);
+		activate_textbox();
+	}
+}
+
+/// @description 
 /// A simple function that queues up text to display on the textbox saying what item was used by the player. This is particularly useful for
 /// whenever a key item is used to unlock a door, for example.
 /// @param {String}	itemName	The name of the item that was used by the player.
 /// @param {Bool}	activate	(Optional) When true, the textbox will be activated by this function being called.
 function textbox_queue_used_item(_itemName, _activate = false){
-	with(TEXTBOX){ 
+	with(TEXTBOX){
 		queue_new_text("Used @0x0010BC{" + _itemName + "}.");
 		if (_activate) { activate_textbox(); }
 	}
