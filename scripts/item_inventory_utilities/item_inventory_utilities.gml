@@ -524,28 +524,71 @@ function item_inventory_remove_slot(_slot, _amount = -1){
 	return (_amount - _amountRemoved);
 }
 
-/// @description
-///	Moves the contents of one inventory slot to another; moving whatever was contained in the destination into that initial slot.
+/// @description 
 ///	
-///	@param {Real}	first		The first slot to swap.
-/// @param {Real}	second		The second slot to swap.
-function item_inventory_slot_swap(_first, _second){
+/// @param {Real}	firstSlot		The first slot that is being combined into the second slot's stack.
+/// @param {Real}	secondSlot		The second slot that is having more of itself added to its current quantity.
+function item_inventory_slot_combine(_firstSlot, _secondSlot){
 	// Don't attempt to swap anything if the inventory hasn't been initialized or if either of the slot values happen to be out of the 
 	// bounds of the inventory array.
-	if (!is_array(global.curItems) || _first < 0 || _second < 0 || 
-			_first >= array_length(global.curItems) || _second >= array_length(global.curItems))
+	if (!is_array(global.curItems) || _firstSlot < 0 || _secondSlot < 0 || 
+			_firstSlot >= array_length(global.curItems) || _secondSlot >= array_length(global.curItems))
+		return;
+	
+	// 
+	var _firstSlotQuantity = 0;
+	with(global.curItems[_firstSlot])
+		_firstSlotQuantity = quantity;
+	
+	// 
+	with(global.curItems[_secondSlot]){
+		var _stackLimit = 0;
+		with(global.itemData[? itemName])
+			_stackLimit = stackLimit;
+		
+		// The second slot is already full; don't waste time trying to add nothing to it.
+		if (quantity == _stackLimit)
+			return;
+		
+		// Add the entire quantity of the first slot to the second. Then, subtract the stack limit against the combined quantity to see if
+		// any amount remains in the first slot (overflow > 0) or if everything was added into the second slot (overflow <= 0).
+		quantity += _firstSlotQuantity;
+		var _overflow = quantity - _stackLimit;
+		if (quantity > _stackLimit) // Limit the quantity to the stack limit for the item.
+			quantity = _stackLimit;
+		
+		// If the value for the stack's overflow is greater than or equal to zero, the item in the first slot had its entire amount added
+		// to the second slot, so the data in the first slot should be removed as it is now no longer occupied. Otherwise, the quantity in
+		// the first slot is simply set to whatever the overflow value is.
+		if (_overflow <= 0){
+			item_inventory_remove_slot(_firstSlot);
+			return;
+		}
+		with(global.curItems[_firstSlot])
+			quantity = _overflow;
+	}
+}
+
+/// @description
+///	Moves the contents of one inventory slot to another; moving whatever was contained in the destination into that initial slot.
+///	@param {Real}	firstSlot		The first slot to swap.
+/// @param {Real}	secondSlot		The second slot to swap.
+function item_inventory_slot_swap(_firstSlot, _secondSlot){
+	// Don't attempt to swap anything if the inventory hasn't been initialized or if either of the slot values happen to be out of the 
+	// bounds of the inventory array.
+	if (!is_array(global.curItems) || _firstSlot < 0 || _secondSlot < 0 || 
+			_firstSlot >= array_length(global.curItems) || _secondSlot >= array_length(global.curItems))
 		return;
 		
-	var _temp					= global.curItems[_first];
-	global.curItems[_first]		= global.curItems[_second];
-	global.curItems[_second]	= _temp;
+	var _temp						= global.curItems[_firstSlot];
+	global.curItems[_firstSlot]		= global.curItems[_secondSlot];
+	global.curItems[_secondSlot]	= _temp;
 }
 
 /// @description 
 ///	A special function for removing an item from an inventory slot that will create said item as an instance of *obj_world_item* at a given 
 /// position within the current room. This item is then added to a list of dynamically created items and will remain persistent at where it
 /// was dropped until it is picked up again.
-///	
 /// @param {Real}	x		Position along the room's x axis that the world item object is created at.
 /// @param {Real}	y		Position along the room's y axis that the world item object is created at.
 ///	@param {Real}	slot	The slot that will be converted into a world item.
@@ -585,9 +628,8 @@ function item_inventory_slot_create_item(_x, _y, _slot){
 ///	Returns the struct containing the information about the item that occupies a slot within the inventory. If no item currently occupies 
 /// the slot, the value -1 (*INV_EMPTY_SLOT*) will be returned. This value is also returned if for some reason the provided value for *slot*
 /// is out of bounds or the inventory hasn't been initialized properly.
-/// @returns {Struct._structFunc}
-/// 
-/// @param {Real}	slot	The slot within the inventory to grab the information from.
+/// @returns 	{Struct._structFunc}
+/// @param 		{Real}					slot	The slot within the inventory to grab the information from.
 function item_inventory_slot_get_data(_slot){
 	if (!is_array(global.curItems) || _slot < 0 || _slot >= array_length(global.curItems))
 		return INV_EMPTY_SLOT;	// Default value will simply be treated as an empty inventory slot.

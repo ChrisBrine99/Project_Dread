@@ -994,12 +994,6 @@ state_initialize = function(_delta){
 	
 	// --- FOR TESTING PURPOSES ONLY --- //
     item_inventory_add(ITEM_FLASHLIGHT, 1, 0);
-	item_inventory_add(ITEM_WEAK_MEDICINE, 1, 0);
-	item_inventory_add(ITEM_WEAK_PAINKILLER, 1, 0);
-	item_inventory_add(ITEM_POTENT_MEDICINE, 1, 0);
-	item_inventory_add(ITEM_POTENT_PAINKILLER, 1, 0);
-	item_inventory_add(ITEM_DETOXING_COMPOUND, 2, 0);
-	item_inventory_add(ITEM_CALMING_COMPOUND, 2, 0);
 	// --- FOR TESTING PURPOSES ONLY --- //
 	
 	object_set_state(state_default);
@@ -1060,7 +1054,7 @@ state_default = function(_delta){
 		var _yInteract	= PLYR_Y_INTERACT;
 		interactableID	= instance_nearest(_xInteract, _yInteract, par_interactable);
 		with(interactableID){ // Check to see if the distance of the point if within the interaction radius.
-			if (point_distance(_xInteract, _yInteract, interactX, interactY) <= interactRadius){
+			if (point_distance(_xInteract, _yInteract, xInteract, yInteract) <= interactRadius){
 				flags = flags | INTR_FLAG_INTERACT;
 				continue;
 			}

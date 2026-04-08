@@ -10,5 +10,5 @@ entity_add_shadow(
 );
 
 // Adjust some of the parameters used during the interact process.
-interactY		= y - 2;
+yInteract		= y - 2;
 interactMessage = "Inspect";

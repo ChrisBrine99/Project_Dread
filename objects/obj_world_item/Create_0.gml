@@ -19,8 +19,8 @@
 // will be rendered, and adjust the interaction position.
 event_inherited();
 flags = ENTT_FLAG_VISIBLE | ENTT_FLAG_ACTIVE;
-interactX += 8;	// The origin of the sprites is (0, 0), so offset the interaction origin to the middle of it.
-interactY += 8;
+xInteract += 8;	// The origin of the sprites is (0, 0), so offset the interaction origin to the middle of it.
+yInteract += 8;
 
 // Adjust the two default message variables to be more specific to an item that the player can pick up.
 interactMessage = "Pick Up Item";
@@ -42,18 +42,13 @@ itemAmmoIndex	= 0;
 /// @description 
 ///	The interaction process for this object, which attempts to add the item it represents into the item inventory in the amount required by 
 /// the quantity set. If the quantity to be picked up fits within the item inventory's current free space, the item is destroyed.
-///	
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 on_player_interact = function(_delta){
 	// The player's item inventory is completely full, so the textbox that is created will display flavor text of the character saying to 
 	// themselves (In their head) that they have no room remaining.
 	var _amount = item_inventory_add(itemName, itemQuantity, itemDurability, itemAmmoIndex);
 	if (_amount == itemQuantity){
-		var _message = textboxMessage;
-		with(TEXTBOX){
-			queue_new_text(_message);
-			activate_textbox();
-		}
+		textbox_show_message(textboxMessage);
 		return;
 	}
 	
@@ -67,10 +62,7 @@ on_player_interact = function(_delta){
 	var _itemName	= itemName;
 	var _quantity	= itemQuantity - _amount;
 	if (_amount > 0){
-		with(TEXTBOX){
-			queue_new_text(ITMPCKUP_MESSAGE_SHOW_AMOUNT + " There's no room for the rest, though...");
-			activate_textbox();
-		}
+		textbox_show_message(ITMPCKUP_MESSAGE_SHOW_AMOUNT + " There's no room for the rest, though...");
 		
 		// Update the quantity stored in the item's world data to match how much was left behind. Also update the object's stored quantity to
 		// match the amount leftover as well.
@@ -81,7 +73,7 @@ on_player_interact = function(_delta){
 		// If the item was ammunition, make sure to check if the current ammunition counts for the equipped weapon (If there is one to begin 
 		// with) need to be updated based on the ammo that was just picked up.
 		if (_itemType == ITEM_TYPE_AMMO){
-			with(PLAYER) { update_current_ammo_counts(_itemData.itemID, _quantity); }
+			with(PLAYER) { update_current_ammo_counts(_itemName, _quantity); }
 		}
 		return;
 	}
@@ -94,16 +86,13 @@ on_player_interact = function(_delta){
 	
 	// Create the message that will be displayed in the textbox. If the value in _itemStackLimit is one it means that the quantity added to 
 	// the inventory isn't displayed in the textbox. Otherwise, it will be shown next to the item's name in brackets.
-	with(TEXTBOX){
-		if (_itemStackLimit == 1)	{ queue_new_text(ITMPCKUP_MESSAGE_STANDARD); }
-		else						{ queue_new_text(ITMPCKUP_MESSAGE_SHOW_AMOUNT); }
-		activate_textbox();
-	}
+	if (_itemStackLimit == 1 && itemQuantity <= 1) { textbox_show_message(ITMPCKUP_MESSAGE_STANDARD); }
+	else { textbox_show_message(ITMPCKUP_MESSAGE_SHOW_AMOUNT); }
 	
 	// If the item was ammunition, make sure to check if the current ammunition counts for the equipped weapon (If there is one to begin with)
 	// need to be updated based on the ammo that was just picked up.
 	if (_itemType == ITEM_TYPE_AMMO){
-		with(PLAYER) { update_current_ammo_counts(_itemData.itemID, _quantity); }
+		with(PLAYER) { update_current_ammo_counts(_itemName, _quantity); }
 	}
 	
 	// Finally, remove the item's world data information and destroy this object. When the room is loaded again, the item will be destroyed 
@@ -119,7 +108,6 @@ on_player_interact = function(_delta){
 /// @description 
 ///	Sets all the parameters required for an item object to function properly. Should be called within the creation code of each instance of 
 /// this object. Failure to do so will mean the object is deleted as soon as its room start event is called.
-///	
 ///	@param {Any}	worldItemID		Unique from an item's ID, this value allows reference to its world item data.
 /// @param {String}	itemName		Value that allows reference to the item's data within the global map containing that information.
 /// @param {Real}	quantity		Amount of the item in question that will be added to the player's inventory when picked up.

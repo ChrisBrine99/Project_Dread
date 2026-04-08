@@ -9,7 +9,8 @@
 // Determines how many pixels there are between the rightmost edge of icon sprite and the leftmost edge of the interaction string and the
 // distance from the bottom of the screen that the interaction control tooltip will be located, respectively.
 #macro	INTR_ICON_TEXT_PADDING			3
-#macro 	INTR_ICON_YOFFSET			   -30 
+#macro 	INTR_ICON_YOFFSET			   -32
+#macro 	INTR_TEXT_YOFFSET				INTR_ICON_YOFFSET + 2  
 
 #endregion Macro Initializations
 
@@ -20,8 +21,8 @@ event_inherited();
 // Determines where the "area of interaction" is located on a given interactable object. The pair of X/Y values allow this area to be placed 
 // anywhere relative to the origin of the object itself, which is the default. The radius will determine how large the interaction area for
 // the object will be.
-interactX				= x;
-interactY				= y;
+xInteract				= x;
+yInteract				= y;
 interactRadius			= 8.0;
 
 // This value can be set in the instance's creation code to create a unique message for the textbox to utilize should an interactble allow a 
@@ -44,11 +45,7 @@ interactMessageWidth 	= 0;
 /// required upon an interaction.
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 on_player_interact = function(_delta){
-	var _message = textboxMessage;
-	with(TEXTBOX){
-		queue_new_text(_message);
-		activate_textbox();
-	}
+	textbox_show_message(interactMessage);
 }
 
 /// @description
@@ -64,21 +61,21 @@ draw_gui_event = function(_xView, _yView, _wView, _hView){
 	// Get the current dimensions of the GUI layer in order to properly center the input binding icon (If one currently exists for the input) 
 	// and the descriptive text that goes alongside it. If no icon exists, only the text will be shown to tell the player they can interact 
 	// with an object.
-	var _xOffset		= _xView + floor((_wView - interactMessageWidth) / 2);
-	var _yOffset		= _yView + _hView;
-	var _iconData		= CONTROL_UI_MANAGER.get_control_icon(ICONUI_INTERACT);
+	var _xOffset	= _xView + floor((_wView - (interactMessageWidth + INTR_ICON_TEXT_PADDING)) / 2);
+	var _yOffset	= _yView + _hView;
+	var _iconData	= CONTROL_UI_MANAGER.get_control_icon(ICONUI_INTERACT);
 	if (_iconData != ICONUI_NO_ICON){
 		// Get the width of the input binding's icon. Then, offset the position by the width of the icon, the width of the message, and a 
 		// three-pixel spacing between the two to place it in its cenetered position.
-		var _iconWidth	= sprite_get_width(_iconData[ICONUI_ICON_SPRITE]);
-		draw_sprite_ext(_iconData[ICONUI_ICON_SPRITE], _iconData[ICONUI_ICON_SUBIMAGE], 
-			_xOffset - floor((_iconWidth - INTR_ICON_TEXT_PADDING) / 2), _yOffset - 32, 
+		var _iconWidth 	= sprite_get_width(_iconData[ICONUI_ICON_SPRITE]);
+		_xOffset	   -= floor(_iconWidth / 2);
+		draw_sprite_ext(_iconData[ICONUI_ICON_SPRITE], _iconData[ICONUI_ICON_SUBIMAGE], _xOffset, _yOffset + INTR_ICON_YOFFSET, 
 				1.0, 1.0, 0.0, COLOR_TRUE_WHITE, 1.0);
 		
 		// After the icon has been drawn, the offset is updated to apply the icon's width plus the three-pixel spacing so the message is 
 		// placed where is should be while being centered alongside the icon.
-		_xOffset	   += _iconWidth + INTR_ICON_TEXT_PADDING;
-		draw_text_shadow(_xOffset, _yOffset + INTR_ICON_YOFFSET, interactMessage, COLOR_WHITE);
+		_xOffset += _iconWidth + INTR_ICON_TEXT_PADDING;
+		draw_text_shadow(_xOffset, _yOffset + INTR_TEXT_YOFFSET, interactMessage, COLOR_WHITE);
 		return;
 	}
 	

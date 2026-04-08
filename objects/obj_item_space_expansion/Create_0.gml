@@ -4,8 +4,8 @@
 // will be rendered, and adjust the interaction position.
 event_inherited();
 flags = ENTT_FLAG_VISIBLE | ENTT_FLAG_ACTIVE;
-interactX += 8;	// The origin of the sprites is (0, 0), so offset the interaction origin to the middle of it.
-interactY += 8;
+xInteract += 8;	// The origin of the sprites is (0, 0), so offset the interaction origin to the middle of it.
+yInteract += 8;
 
 // Adjust the default message to match what the world item object's interaction prompt says since this is technically an item as well; it just
 // immediately has its effect applied to the player's item inventory capacity. THe textbox message is replaced to be a blurb about now being 
@@ -24,7 +24,6 @@ flagID = EVENT_ID_INVALID;
 /// @description 
 ///	Interaction logic that is unique to the item inventory expansion item. It will automatically increase the capcity of the player's item 
 /// inventory by two slots (If possible given the maximum capacity for the combat difficulty chosen) upon interaction.
-///
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 on_player_interact = function(_delta){
 	var _itemInvSize = array_length(global.curItems);
@@ -36,14 +35,9 @@ on_player_interact = function(_delta){
 		array_set(global.curItems,		_itemInvSize + 1,	INV_EMPTY_SLOT);
 	}
 	
-	var _textboxMessage = textboxMessage;
-	with(TEXTBOX){ // Display a message about the item inventory expansion.
-		queue_new_text(_textboxMessage);
-		activate_textbox();
-	}
-	
-	// Set the flag tied to this item capacity expasion to true so it will no longer be available. Then, destroy the instance of this object 
-	// that was interacted with.
+	// Queue the inventory expansion text to be shown by the textbox, set the flag tied to this item capacity expasion to true so it will no 
+	// longer be available, and destroy the instance of this object that was interacted with.
+	textbox_show_message(textboxMessage);
 	event_set_flag(flagID, true);
 	instance_destroy(self);
 }

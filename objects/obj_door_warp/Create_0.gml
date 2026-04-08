@@ -63,7 +63,8 @@ targetRoom		= undefined;
 // repeat the process indefinitely.
 arrowOffset		= 0.0;
 
-// 
+// Stores an event flag ID that is set to true if the door has been manually unlocked by the player. This is used with doorways that are
+// locked from one side and not for doors that are locked by keys.
 manualUnlockID	= EVENT_ID_INVALID;
 
 #endregion Variable Initializations
