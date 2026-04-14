@@ -24,9 +24,9 @@ flags				= 0;
 
 // Stores the currently executing state, as well as the last state to be executed AND the state to shift to at the end of the current frame 
 // if applicable (Its value matches that of "curState" otherwise).
-curState			= 0;
-nextState			= 0;
-lastState			= 0;
+curState			= STATE_NONE;
+nextState			= STATE_NONE;
+lastState			= STATE_NONE;
 
 // If required, the entity may utilize its own drawing function to replace the standard one. Having this set to 0 will cause the entity to 
 // fallback to said standard drawing function.

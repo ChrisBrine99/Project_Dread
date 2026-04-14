@@ -205,7 +205,7 @@ function entity_set_sprite(_sprite, _speed = 1.0, _start = -1, _loopStart = -1){
 ///	@param {Function}	function	Script or method to call when the shadow is being drawn.
 /// @param {Real}		x			Offset of the shadow relative to the entity's x position.
 /// @param {Real}		y			Offset of the shadow relative to the entity's y position.
-/// @param {Real}		width		Size of the shadoe along the x axis.
+/// @param {Real}		width		Size of the shadow along the x axis.
 /// @param {Real}		height		Size of the shadow along the y axis.
 function entity_add_shadow(_function, _x, _y, _width, _height){
 	if (ENTT_HAS_SHADOW || !script_exists(_function))
