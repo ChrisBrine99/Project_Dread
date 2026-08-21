@@ -4,7 +4,7 @@
 #macro	WRLDITM_FLAG_DYNAMIC			0x00000001
 
 // Checks against bits used by this object within its flags variable to determine if they are currently cleared (0) or set (1).
-#macro	WRLDITM_IS_DYNAMIC				((flags & WRLDITM_FLAG_DYNAMIC)		!= 0)
+#macro	WRLDITM_IS_DYNAMIC				bool(flags & WRLDITM_FLAG_DYNAMIC)
 
 // The two message types that can be displayed when interacting with this object. One simply displayed the name of the item and the other 
 // includes the amount of said item that was picked up.

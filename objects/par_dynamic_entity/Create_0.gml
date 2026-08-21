@@ -12,8 +12,8 @@ visible			= false;
 
 // Checks against the bits that are exclusive to a dynamic entity and its children that determine what aspects of the Entity are enabled or
 // disabled for said children of this object.
-#macro	DENTT_IS_MOVING					((flags & DENTT_FLAG_MOVING)			!= 0)
-#macro	DENTT_COLLIDES_WITH_WORLD		((flags & DENTT_FLAG_WORLD_COLLISION)	!= 0)
+#macro	DENTT_IS_MOVING					bool(flags & DENTT_FLAG_MOVING)
+#macro	DENTT_COLLIDES_WITH_WORLD		bool(flags & DENTT_FLAG_WORLD_COLLISION)
 
 #endregion Dynamic Entity Specific Flags
 

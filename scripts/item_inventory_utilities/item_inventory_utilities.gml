@@ -27,11 +27,11 @@
 #macro	WEAP_FLAG_IS_HITSCAN			0x00000010
 
 // Macros that represent the checks for specific bit states within the flags variable of a weapon-type item.
-#macro	WEAPON_IS_MELEE					((flags & WEAP_FLAG_IS_MELEE)		!= 0)
-#macro	WEAPON_IS_AUTOMATIC				((flags & WEAP_FLAG_IS_AUTOMATIC)	!= 0)
-#macro	WEAPON_IS_BURSTFIRE				((flags & WEAP_FLAG_IS_BURSTFIRE)	!= 0)
-#macro	WEAPON_IS_THROWN				((flags & WEAP_FLAG_IS_THROWN)		!= 0)
-#macro	WEAPON_IS_HITSCAN				((flags & WEAP_FLAG_IS_HITSCAN)		!= 0)
+#macro	WEAPON_IS_MELEE					bool(flags & WEAP_FLAG_IS_MELEE)
+#macro	WEAPON_IS_AUTOMATIC				bool(flags & WEAP_FLAG_IS_AUTOMATIC)
+#macro	WEAPON_IS_BURSTFIRE				bool(flags & WEAP_FLAG_IS_BURSTFIRE)
+#macro	WEAPON_IS_THROWN				bool(flags & WEAP_FLAG_IS_THROWN)
+#macro	WEAPON_IS_HITSCAN				bool(flags & WEAP_FLAG_IS_HITSCAN)
 
 // Macros for the bit values of the flags that exist within every consumable-type item.
 #macro	CNSM_FLAG_CURE_POISON			0x00000001
@@ -42,12 +42,12 @@
 #macro	CNSM_FLAG_TMPIMU_CRIPPLE		0x00000020
 
 // Macros that represent the checks for specific bit states within the flags variable of a consumable-type item.
-#macro	CNSM_CURES_POISON				((flags & CNSM_FLAG_CURE_POISON)	!= 0)
-#macro	CNSM_CURES_BLEED				((flags & CNSM_FLAG_CURE_BLEED)		!= 0)
-#macro	CNSM_CURES_CRIPPLE				((flags & CNSM_FLAG_CURE_CRIPPLE)	!= 0)
-#macro	CNSM_GIVES_TMPIMU_POISON		((flags & CNSM_FLAG_TMPIMU_POISON)	!= 0)
-#macro	CNSM_GIVES_TMPIMU_BLEED			((flags & CNSM_FLAG_TMPIMU_BLEED)	!= 0)
-#macro	CNSM_GIVES_TMPIMU_CRIPPLE		((flags & CNSM_FLAG_TMPIMU_CRIPPLE)	!= 0)
+#macro	CNSM_CURES_POISON				bool(flags & CNSM_FLAG_CURE_POISON)
+#macro	CNSM_CURES_BLEED				bool(flags & CNSM_FLAG_CURE_BLEED)
+#macro	CNSM_CURES_CRIPPLE				bool(flags & CNSM_FLAG_CURE_CRIPPLE)
+#macro	CNSM_GIVES_TMPIMU_POISON		bool(flags & CNSM_FLAG_TMPIMU_POISON)
+#macro	CNSM_GIVES_TMPIMU_BLEED			bool(flags & CNSM_FLAG_TMPIMU_BLEED)
+#macro	CNSM_GIVES_TMPIMU_CRIPPLE		bool(flags & CNSM_FLAG_TMPIMU_CRIPPLE)
 
 // Macros for the bit values of the flags that exist within every key item.
 #macro	KEYITM_FLAG_CAN_CLOSE			0x00000001
@@ -55,9 +55,9 @@
 #macro	KEYITM_FLAG_CAN_DROP			0x00000004
 
 // Macros that represent the checks for specific bit states within the flags variable of a given key item.
-#macro	KEYITM_CAN_CLOSE_MENU			((flags & KEYITM_FLAG_CAN_CLOSE)	!= 0)
-#macro	KEYITM_CAN_BE_USED				((flags & KEYITM_FLAG_CAN_USE)		!= 0)
-#macro	KEYITM_CAN_BE_DROPPED			((flags & KEYITM_FLAG_CAN_DROP)		!= 0)
+#macro	KEYITM_CAN_CLOSE_MENU			bool(flags & KEYITM_FLAG_CAN_CLOSE)
+#macro	KEYITM_CAN_BE_USED				bool(flags & KEYITM_FLAG_CAN_USE)
+#macro	KEYITM_CAN_BE_DROPPED			bool(flags & KEYITM_FLAG_CAN_DROP)
 
 // Macros that explain what each index in the equipParams array does when the item is considered a flashlight.
 #macro	EQUP_PARAM_LIGHT_RADIUS			0

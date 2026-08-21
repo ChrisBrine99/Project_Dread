@@ -1,11 +1,19 @@
-// Go through all singleton instances that require their destroy event in order to free any memory they've allocated through the 
-// application's runtime. Then, the sInstance management map is destroyed.
-with(CAMERA)				{ destroy_event(); }	delete CAMERA;
-with(CONTROL_UI_MANAGER)	{ destroy_event(); }	delete CONTROL_UI_MANAGER;
-with(TEXTBOX)				{ destroy_event(); }	delete TEXTBOX;
-with(TEXTBOX_LOG)			{ destroy_event(); }	delete TEXTBOX_LOG;
-													delete SCREEN_FADE;
-ds_map_destroy(global.sInstances);
+// Call the destroy event of every singleton that is created once and never deleted throughout the course of the game's runtime. Then, 
+// clear the data structures for checking if a struct/object is a singleton or not during instance creation/destruction functions. Finally,
+// delete the global.singletons struct from memory.
+with(global.singletons){
+	instance_destroy_struct_singleton(camera);
+	instance_destroy_struct_singleton(controlUiManager);
+	instance_destroy_struct_singleton(cutsceneManager);
+	instance_destroy_struct_singleton(textbox);
+	instance_destroy_struct_singleton(textboxLog);
+	instance_destroy_struct_singleton(screenFade);
+	
+	// Destroy the maps that keep track of singleton objects and structs, respectively.
+	ds_map_destroy(objSingletons);
+	ds_map_destroy(structSingletons);
+}
+delete global.singletons;
 
 var _length = 0; // Used by all array/data structure-based cleanup code, so it's initialized at the start.
 

@@ -13,34 +13,34 @@
 
 // Macros that allow the state of a given flag within global.flags to be checked; returning either a 0 AKA "false" or the value of the flag 
 // itself which is non-zero AKA "true".
-#macro	GAME_IS_TEXTBOX_OPEN			((global.flags & GAME_FLAG_TEXTBOX_OPEN)		!= 0)
-#macro	GAME_IS_TRANSITION_ACTIVE		((global.flags & GAME_FLAG_TRANSITION_ACTIVE)	!= 0)
-#macro	GAME_IS_ROOM_WARP_OCCURRING		((global.flags & GAME_FLAG_ROOM_WARP)			!= 0)
-#macro	GAME_IS_PLAYTIME_ACTIVE			((global.flags & GAME_FLAG_PLAYTIME_ACTIVE)		!= 0)
-#macro	GAME_IS_GAMEPAD_ACTIVE			((global.flags & GAME_FLAG_GAMEPAD_ACTIVE)		!= 0)
-#macro	GAME_IS_IN_GAME					((global.flags & GAME_FLAG_IN_GAME)				!= 0)
-#macro	GAME_IS_MENU_OPEN				((global.flags & GAME_FLAG_MENU_OPEN)			!= 0)
-#macro	GAME_IS_CUTSCENE_ACTIVE			((global.flags & GAME_FLAG_CUTSCENE_ACTIVE)		!= 0)
-#macro	GAME_IS_PAUSED					((global.flags & GAME_FLAG_PAUSED)				!= 0)
+#macro	GAME_IS_TEXTBOX_OPEN			bool(global.flags & GAME_FLAG_TEXTBOX_OPEN)
+#macro	GAME_IS_TRANSITION_ACTIVE		bool(global.flags & GAME_FLAG_TRANSITION_ACTIVE)
+#macro	GAME_IS_ROOM_WARP_OCCURRING		bool(global.flags & GAME_FLAG_ROOM_WARP)
+#macro	GAME_IS_PLAYTIME_ACTIVE			bool(global.flags & GAME_FLAG_PLAYTIME_ACTIVE)
+#macro	GAME_IS_GAMEPAD_ACTIVE			bool(global.flags & GAME_FLAG_GAMEPAD_ACTIVE)
+#macro	GAME_IS_IN_GAME					bool(global.flags & GAME_FLAG_IN_GAME)
+#macro	GAME_IS_MENU_OPEN				bool(global.flags & GAME_FLAG_MENU_OPEN)
+#macro	GAME_IS_CUTSCENE_ACTIVE			bool(global.flags & GAME_FLAG_CUTSCENE_ACTIVE)
+#macro	GAME_IS_PAUSED					bool(global.flags & GAME_FLAG_PAUSED)
 
 // Macros for referencing the instance IDs for all compile-time singletons. These should NEVER return "noone" outside of rm_init.
-#macro	GAME_MANAGER					global.sInstances[? obj_game_manager]
-#macro	PLAYER							global.sInstances[? obj_player]
-#macro	CONTROL_UI_MANAGER				global.sInstances[? str_control_ui_manager]
-#macro	CAMERA							global.sInstances[? str_camera]
-#macro	SCREEN_FADE						global.sInstances[? str_screen_fade]
-#macro	CUTSCENE_MANAGER				global.sInstances[? str_cutscene_manager]
-#macro	TEXTBOX							global.sInstances[? str_textbox]
-#macro	TEXTBOX_LOG						global.sInstances[? str_textbox_log]
+#macro	GAME_MANAGER					global.singletons.gameManager 			// global.sInstances[? obj_game_manager]
+#macro	PLAYER							global.singletons.player 				// global.sInstances[? obj_player]
+#macro	CONTROL_UI_MANAGER				global.singletons.controlUiManager 		// global.sInstances[? str_control_ui_manager]
+#macro	CAMERA							global.singletons.camera 				// global.sInstances[? str_camera]
+#macro	SCREEN_FADE						global.singletons.screenFade 			// global.sInstances[? str_screen_fade]
+#macro	CUTSCENE_MANAGER				global.singletons.cutsceneManager 		// global.sInstances[? str_cutscene_manager]
+#macro	TEXTBOX							global.singletons.textbox 				// global.sInstances[? str_textbox]
+#macro	TEXTBOX_LOG						global.singletons.textboxLog 			// global.sInstances[? str_textbox_log]
 
 // Macros for referencing the instance IDs of all runtime singletons. These return "noone" when the single allowed instance doesn't exist.
-#macro 	TEXTBOX_OPTIONS 				global.sInstances[? str_textbox_options_menu]
-#macro 	MENU_PAUSE						global.sInstances[? str_pause_menu]
-#macro	MENU_INVENTORY					global.sInstances[? str_inventory_menu]
-#macro	MENU_ITEMS						global.sInstances[? str_item_menu]
-#macro	MENU_NOTES						global.sInstances[? str_note_menu]
-#macro	MENU_MAPS						global.sInstances[? str_map_menu]
-#macro	FOG								global.sInstances[? str_fog]
+#macro 	TEXTBOX_OPTIONS 				global.singletons.textboxOptionsMenu 	// global.sInstances[? str_textbox_options_menu]
+#macro 	MENU_PAUSE						global.singletons.pauseMenu 			// global.sInstances[? str_pause_menu]
+#macro	MENU_INVENTORY					global.singletons.inventoryMenu 		// global.sInstances[? str_inventory_menu]
+#macro	MENU_ITEMS						global.singletons.itemMenu				// global.sInstances[? str_item_menu]
+#macro	MENU_NOTES						global.singletons.noteMenu				// global.sInstances[? str_note_menu]
+#macro	MENU_MAPS						global.singletons.mapMenu				// global.sInstances[? str_map_menu]
+#macro	FOG								global.singletons.fog					// global.sInstances[? str_fog]
 
 // Macros for retrieving the state of a given input binding on the keyboard. It simply returns if the key is currently held down or not, and
 // logic for key presses/releases is done within a controllable object using their "inputFlags" and "prevInputFlags" variables.
@@ -187,10 +187,38 @@
 
 #region Game Manager Global and Local Variable Initializations
 
-// The map that manages the instance IDs and references to all existing special objects within the game. These objects are "special" in that 
-// only one instance may exist of any of them during runtime, and attempts to create multiples instances of them will fail when utilizing the
-// proper creation functions. They also cannot be deleted during runtime when using the proper deletion functions.
-global.sInstances		= ds_map_create();
+// A global structure that contains references to every singleton object/struct in the game, and some data structures that contain elements
+// that determine if a given object/struct is a singleton or not.
+var _gameManager = id;
+global.singletons = {
+	// Since singleton objects cannot be created or destroyed through standard means, they will be created here using the default creation
+	// functions for objects within GameMaker.
+	gameManager			: _gameManager,
+	player				: obj_player,
+	
+	// 
+	camera				:	str_camera,
+	controlUiManager 	: 	str_control_ui_manager,
+	cutsceneManager		:	str_cutscene_manager,
+	textbox				:	str_textbox,
+	textboxLog			:	str_textbox_log,
+	screenFade			:	str_screen_fade,
+	
+	// Variables that store references to singletons that are created/destroyed at multiple points throughout the program, but can only ever
+	// have a single instance active in the game at any given point in time.
+	pauseMenu			: 	str_pause_menu,
+	inventoryMenu		:	str_inventory_menu,
+	itemMenu			:	str_item_menu,
+	noteMenu			:	str_note_menu,
+	mapMenu				:	str_map_menu,
+	textboxOptionsMenu	:	str_textbox_options_menu,
+	fog					:	str_fog,
+	
+	// Two ds_maps containing key/value pairs for every object and struct that are singletons, respectively. If a object or struct cannot
+	// be found in either map, it means they can be created with the standard "instance_*" functions instead of the singleton-specific ones.
+	objSingletons		: ds_map_create(),
+	structSingletons	: ds_map_create(),
+}
 
 // Stores a copy of the application surface for any post-processing effects that require the application surface that occur outside of the 
 // draw GUI events. Otherwise, it will draw itself to itself which makes no sense and nothing will be rendered.
@@ -407,9 +435,9 @@ instancesToWarp			= ds_map_create();
 ///	Adds a given instance to the map of instances that will warp to the target room together. Each instance can be given a unique position, 
 /// and all will temporarily be set to persistent during the warping process.
 ///	@param {Id.Instance}	id			The unique value given to the instance in question.
-/// @param {Real}			targetX		Position along the x-axis within the target room to set the instance's x position to.
-/// @param {Real}			targetY		Position along the y-axis within the target room to set the instance's y position to.
-add_instance_to_warp = function(_id, _targetX, _targetY){
+/// @param {Real}			xTarget		Position along the x-axis within the target room to set the instance's x position to.
+/// @param {Real}			yTarget		Position along the y-axis within the target room to set the instance's y position to.
+add_instance_to_warp = function(_id, _xTarget, _yTarget){
 	var _key = ds_map_find_value(instancesToWarp, _id);
 	if (!is_undefined(_key)) // Don't try to add the same instance twice.
 		return;
@@ -424,8 +452,8 @@ add_instance_to_warp = function(_id, _targetX, _targetY){
 	// "_persistent" variable. This is required since warping objects will be set to temporary persistence so they aren't destroyed during 
 	// the actual room transition.
 	ds_map_add(instancesToWarp, _id, {
-		targetX			: _targetX,
-		targetY			: _targetY,
+		xTarget			: _xTarget,
+		yTarget			: _yTarget,
 		wasPersistent	: _persistent
 	});
 }

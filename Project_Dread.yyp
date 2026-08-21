@@ -73,7 +73,7 @@
   "isEcma":false,
   "LibraryEmitters":[],
   "MetaData":{
-    "IDEVersion":"2024.14.4.222",
+    "IDEVersion":"2026.0.0.16",
   },
   "name":"Project_Dread",
   "resources":[
@@ -121,6 +121,7 @@
     {"id":{"name":"pause_menu","path":"scripts/pause_menu/pause_menu.yy",},},
     {"id":{"name":"player_info_ui","path":"scripts/player_info_ui/player_info_ui.yy",},},
     {"id":{"name":"screen_fade","path":"scripts/screen_fade/screen_fade.yy",},},
+    {"id":{"name":"state_utilities","path":"scripts/state_utilities/state_utilities.yy",},},
     {"id":{"name":"struct_utilities","path":"scripts/struct_utilities/struct_utilities.yy",},},
     {"id":{"name":"sub_menu","path":"scripts/sub_menu/sub_menu.yy",},},
     {"id":{"name":"textbox_log","path":"scripts/textbox_log/textbox_log.yy",},},

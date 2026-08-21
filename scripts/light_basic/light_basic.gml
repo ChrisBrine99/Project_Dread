@@ -76,16 +76,16 @@ function str_light_basic(_index) : str_base(_index) constructor {
 /// @description 
 ///	Creates a basic light source instance. It has a set size, color, and strength that can be updated as needed, but will never be updated 
 /// automatically by the light itself.
-/// @returns 	{Struct.Light_Basic}
-///	@param 		{Real}					x			Horizontal position of the light within the room.
-/// @param 		{Real}					y			Vertical position of the light within the room.
-/// @param 		{Real}					radius		Area from the origin of the light source that is illuminated by it.
-/// @param 		{Real}					color		(Optional) The hue of the light source.
-///	@param 		{Real}					strength	(Optional) How bright the light source appears in the world (Alpha under a different name).
-/// @param 		{Real}					lifetime	(Optional) Determines how long the light is alive for relative to its creation.
-/// @param 		{Real}					flags		(Optional) Determines which substate bits to toggle on for the light.
+/// @returns 	{Struct.str_light_basic}
+///	@param 		{Real}					 x			Horizontal position of the light within the room.
+/// @param 		{Real}					 y			Vertical position of the light within the room.
+/// @param 		{Real}					 radius		Area from the origin of the light source that is illuminated by it.
+/// @param 		{Real}					 color		(Optional) The hue of the light source.
+///	@param 		{Real}					 strength	(Optional) How bright the light source appears in the world (Alpha under a different name).
+/// @param 		{Real}					 lifetime	(Optional) Determines how long the light is alive for relative to its creation.
+/// @param 		{Real}					 flags		(Optional) Determines which substate bits to toggle on for the light.
 function light_basic_create(_x, _y, _radius, _color = COLOR_TRUE_WHITE, _strength = LGHT_MAX_STRENGTH, _lifetime = 0.0, _flags = LGHT_FLAG_ACTIVE){
-	var _light = light_create(str_light_basic);
+	var _light = light_get_basic(light_create(str_light_basic));
 	with(_light){ // Position the light and apply its sizing/color/strength.
 		light_set_position(_x, _y);
 		light_set_properties(_radius, _color, _strength);

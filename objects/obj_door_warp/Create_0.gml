@@ -10,16 +10,16 @@
 #macro	DOOR_FLAG_WESTBOUND				0x00000040
 
 // Macros for referencing the state of the door warp's flags; if they are set or cleared.
-#macro	DOOR_IS_LOCKED_BY_KEY			((flags & DOOR_FLAG_LOCKED_KEY)			!= 0)
-#macro 	DOOR_IS_LOCKED_FROM_OTHER_SIDE	((flags & DOOR_FLAG_LOCKED_OTHER_SIDE)	!= 0) 
-#macro 	DOOR_CAN_INTERACT_UNLOCK		((flags & DOOR_FLAG_INTERACT_UNLOCK) 	!= 0) 
-#macro	DOOR_FACING_NORTH				((flags & DOOR_FLAG_NORTHBOUND) 		!= 0)
-#macro	DOOR_FACING_SOUTH				((flags & DOOR_FLAG_SOUTHBOUND) 		!= 0)
-#macro	DOOR_FACING_EAST				((flags & DOOR_FLAG_EASTBOUND)			!= 0)
-#macro	DOOR_FACING_WEST				((flags & DOOR_FLAG_WESTBOUND)			!= 0)
+#macro	DOOR_IS_LOCKED_BY_KEY			bool(flags & DOOR_FLAG_LOCKED_KEY)
+#macro 	DOOR_IS_LOCKED_FROM_OTHER_SIDE	bool(flags & DOOR_FLAG_LOCKED_OTHER_SIDE)
+#macro 	DOOR_CAN_INTERACT_UNLOCK		bool(flags & DOOR_FLAG_INTERACT_UNLOCK)
+#macro	DOOR_FACING_NORTH				bool(flags & DOOR_FLAG_NORTHBOUND)
+#macro	DOOR_FACING_SOUTH				bool(flags & DOOR_FLAG_SOUTHBOUND)
+#macro	DOOR_FACING_EAST				bool(flags & DOOR_FLAG_EASTBOUND)
+#macro	DOOR_FACING_WEST				bool(flags & DOOR_FLAG_WESTBOUND)
 
 // Special marco for checking if both the "locked" flags are set to zero so it can begin the warping process.
-#macro 	DOOR_IS_UNLOCKED		 		((flags & (DOOR_FLAG_LOCKED_KEY | DOOR_FLAG_LOCKED_OTHER_SIDE)) == 0)
+#macro 	DOOR_IS_UNLOCKED		 		!bool(flags & (DOOR_FLAG_LOCKED_KEY | DOOR_FLAG_LOCKED_OTHER_SIDE))
 
 // Determines how fast the door's direction arrow indicator will bob up/down or left/right to signify the player is able to interact with it 
 // (Locked doors won't display this indicator).
@@ -55,8 +55,8 @@ unlockMessage	= "The door has been unlocked.";
 
 // The parameters for the position to snap the player object to and the room to move them to when they interact with this object (When it's 
 // also flagged to be unlocked) in a given area.
-targetX			= 0;
-targetY			= 0;
+xTarget			= 0;
+yTarget			= 0;
 targetRoom		= undefined;
 
 // Acts as both the offset and the timer for the arrow indicator's bobbing effect. It will increase until 2.0 before rolling back to zero to 
@@ -85,12 +85,12 @@ on_player_interact = function(_delta){
 		
 		// Set the game manager up to handle the room warping logic. It will add the player to the warp queue with their position after the 
 		// warp being the target x and y values set by the door.
-		var _targetX	= targetX;
-		var _targetY	= targetY;
+		var _xTarget	= xTarget;
+		var _yTarget	= yTarget;
 		var _targetRoom = targetRoom;
 		with(GAME_MANAGER){
 			targetRoom = _targetRoom;
-			add_instance_to_warp(PLAYER, _targetX, _targetY);
+			add_instance_to_warp(PLAYER, _xTarget, _yTarget);
 		}
 		
 		// Finally, initialize the screen fading effect that is used in tandem with the room warp logic. It is toggled to manually activating
@@ -217,16 +217,16 @@ add_lock = function(_keyName, _flagID, _flagState){
 /// @description 
 /// Attempts to set the parameters for the door's room warping. If the index provided for the room doesn't actually exist, the value for 
 /// *targetRoom* is set to *undefined* so an attempt to warp will not occur.
-/// @param {Real}			targetX		Player's destination along the x-axis within the target room.
-/// @param {Real}			targetY		Player's destination along the y-axis within the target room.
+/// @param {Real}			xTarget		Player's destination along the x-axis within the target room.
+/// @param {Real}			yTarget		Player's destination along the y-axis within the target room.
 /// @param {Asset.GMRoom}	targetRoom	The room to warp the player to.
-set_warp_params = function(_targetX, _targetY, _targetRoom){
+set_warp_params = function(_xTarget, _yTarget, _targetRoom){
 	if (!room_exists(_targetRoom)){
 		targetRoom = undefined;
 		return;
 	}
-	targetX		= _targetX;
-	targetY		= _targetY;
+	xTarget		= _xTarget;
+	yTarget		= _yTarget;
 	targetRoom	= _targetRoom;
 }
 
@@ -252,15 +252,15 @@ set_facing_direction = function(_flag){
 	} else if (_flag == DOOR_FLAG_SOUTHBOUND){
 		image_index	= 2;
 		y		   += 6;
-		interactY  += 8; // Interaction origin is also offset downward.
+		yInteract  += 8; // Interaction origin is also offset downward.
 	} else if (_flag == DOOR_FLAG_EASTBOUND){
 		image_index = 3;
 		x		   += 8;
-		interactX  += 8; // Shift interaction origin to the right.
+		xInteract  += 8; // Shift interaction origin to the right.
 	} else if (_flag == DOOR_FLAG_WESTBOUND){
 		image_index	= 1;
 		x		   -= 8;
-		interactX  -= 8; // Shift interaction origin to the left.
+		xInteract  -= 8; // Shift interaction origin to the left.
 	}
 }
 

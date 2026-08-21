@@ -70,19 +70,19 @@ function str_light_blink(_index) : str_light_basic(_index) constructor {
 /// @description
 ///	Creates a light source that will blink on and off at a given interval between the minimum and maximum ranges specified through the 
 /// arguments in this function. This blinking effect is automatically handled by the instance of the light itself.
-/// @returns 	{Struct.Light_Blink}
-///	@param 		{Real}					x					Horizontal position of the light within the room.
-/// @param 		{Real}					y					Vertical position of the light within the room.
-/// @param 		{Real}					radius				Area from the origin of the light source that is illuminated by it.
-/// @param 		{Real}					minBlinkInterval	Minimum amount of time for a blink to occur for the light.
-/// @param 		{Real}					maxBlinkInterval	Maximum amount of time for a blink to occur for the light.
-/// @param 		{Real}					color				(Optional) The hue of the light source.
-///	@param 		{Real}					strength			(Optional) How bright the light source appears in the world (Alpha under a different name).
-/// @param 		{Real}					lifetime			(Optional) Determines how long the light is alive for relative to its creation.
-/// @param 		{Real}					flags				(Optional) Determines which substate bits to toggle on for the light.
+/// @returns 	{Struct.str_light_blink}
+///	@param 		{Real}						x					Horizontal position of the light within the room.
+/// @param 		{Real}						y					Vertical position of the light within the room.
+/// @param 		{Real}						radius				Area from the origin of the light source that is illuminated by it.
+/// @param 		{Real}						minBlinkInterval	Minimum amount of time for a blink to occur for the light.
+/// @param 		{Real}						maxBlinkInterval	Maximum amount of time for a blink to occur for the light.
+/// @param 		{Real}						color				(Optional) The hue of the light source.
+///	@param 		{Real}						strength			(Optional) How bright the light source appears in the world (Alpha under a different name).
+/// @param 		{Real}						lifetime			(Optional) Determines how long the light is alive for relative to its creation.
+/// @param 		{Real}						flags				(Optional) Determines which substate bits to toggle on for the light.
 function light_blink_create(_x, _y, _radius, _minBlinkInterval, _maxBlinkInterval, _color = COLOR_TRUE_WHITE, _strength = LGHT_MAX_STRENGTH, _lifetime = 0.0, _flags = LGHT_FLAG_ACTIVE){
-	var _light = light_create(str_light_blink);
-	with(_light){
+	var _light = light_get_blink(light_create(str_light_blink));
+	with(_light){ // Position the light and initialize its various parameters.
 		light_set_position(_x, _y);
 		light_set_properties(
 			_radius,

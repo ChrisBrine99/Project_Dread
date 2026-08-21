@@ -15,19 +15,19 @@
 // Bits 0x00400000 and above are used by inherited flags.
 
 // Checks for the state of all flag bits that are exclusive to the player.
-#macro	PLYR_IS_SPRINTING				((flags & PLYR_FLAG_SPRINTING)			!= 0 && (flags & DENTT_FLAG_MOVING) != 0)
-#macro	PLYR_IS_BLEEDING				((flags & PLYR_FLAG_BLEEDING)			!= 0)
-#macro	PLYR_IS_CRIPPLED				((flags & PLYR_FLAG_CRIPPLED)			!= 0)
-#macro	PLYR_IS_POISONED				((flags & PLYR_FLAG_POISONED)			!= 0)
-#macro	PLYR_IS_FLASHLIGHT_ON			((flags & PLYR_FLAG_FLASHLIGHT)			!= 0)
-#macro	PLYR_CAN_UP_POISON_DAMAGE		((flags & PLYR_FLAG_UP_POISON_DAMAGE)	!= 0)
-#macro	PLYR_CAN_PLAY_STEP_SOUND		((flags & PLYR_FLAG_PLAY_STEP_SOUND)	!= 0)
-#macro	PLYR_IS_RELOADING				((flags & PLYR_FLAG_RELOADING)			!= 0)
-#macro	PLYR_IS_SPRINT_TOGGLE			((flags & PLYR_FLAG_SPRINT_TOGGLE)		!= 0)
-#macro	PLYR_IS_AIM_TOGGLE				((flags & PLYR_FLAG_AIM_TOGGLE)			!= 0)
+#macro	PLYR_IS_SPRINTING				(bool(flags & PLYR_FLAG_SPRINTING) && bool(flags & DENTT_FLAG_MOVING))
+#macro	PLYR_IS_BLEEDING				bool(flags & PLYR_FLAG_BLEEDING)
+#macro	PLYR_IS_CRIPPLED				bool(flags & PLYR_FLAG_CRIPPLED)
+#macro	PLYR_IS_POISONED				bool(flags & PLYR_FLAG_POISONED)
+#macro	PLYR_IS_FLASHLIGHT_ON			bool(flags & PLYR_FLAG_FLASHLIGHT)
+#macro	PLYR_CAN_UP_POISON_DAMAGE		bool(flags & PLYR_FLAG_UP_POISON_DAMAGE)
+#macro	PLYR_CAN_PLAY_STEP_SOUND		bool(flags & PLYR_FLAG_PLAY_STEP_SOUND)
+#macro	PLYR_IS_RELOADING				bool(flags & PLYR_FLAG_RELOADING)
+#macro	PLYR_IS_SPRINT_TOGGLE			bool(flags & PLYR_FLAG_SPRINT_TOGGLE)
+#macro	PLYR_IS_AIM_TOGGLE				bool(flags & PLYR_FLAG_AIM_TOGGLE)
 
 // Special checks that group multiple of the player-specific flags together.
-#macro	PLYR_HAS_AILMENT				((flags & (PLYR_FLAG_BLEEDING | PLYR_FLAG_CRIPPLED | PLYR_FLAG_POISONED))	!= 0)
+#macro	PLYR_HAS_AILMENT				bool(flags & (PLYR_FLAG_BLEEDING | PLYR_FLAG_CRIPPLED | PLYR_FLAG_POISONED))
 
 #endregion Player-Specific Flag Macros
 
@@ -55,31 +55,31 @@
 
 // Checks to see if the above input flags have been set in such a way that they have been pressed, held, or released as required by each 
 // individual input.
-#macro	PINPUT_MOVE_RIGHT_HELD			((inputFlags & PINPUT_FLAG_MOVE_RIGHT)		!= 0 && (inputFlags & PINPUT_FLAG_MOVE_LEFT)			== 0)
-#macro	PINPUT_MOVE_LEFT_HELD			((inputFlags & PINPUT_FLAG_MOVE_LEFT)		!= 0 && (inputFlags & PINPUT_FLAG_MOVE_RIGHT)			== 0)
-#macro	PINPUT_MOVE_UP_HELD				((inputFlags & PINPUT_FLAG_MOVE_UP)			!= 0 && (inputFlags & PINPUT_FLAG_MOVE_DOWN)			== 0)
-#macro	PINPUT_MOVE_DOWN_HELD			((inputFlags & PINPUT_FLAG_MOVE_DOWN)		!= 0 && (inputFlags & PINPUT_FLAG_MOVE_UP)				== 0)
-#macro	PINPUT_INTERACT_PRESSED			((inputFlags & PINPUT_FLAG_INTERACT)		!= 0 && (prevInputFlags & PINPUT_FLAG_INTERACT)			== 0)
-#macro	PINPUT_SPRINT_PRESSED			((inputFlags & PINPUT_FLAG_SPRINT)			!= 0 && (prevInputFlags & PINPUT_FLAG_SPRINT)			== 0)
-#macro	PINPUT_READY_WEAPON_PRESSED		((inputFlags & PINPUT_FLAG_READY_WEAPON)	!= 0 && (prevInputFlags & PINPUT_FLAG_READY_WEAPON)		== 0)
-#macro	PINPUT_FLASHLIGHT_PRESSED		((inputFlags & PINPUT_FLAG_FLASHLIGHT)		!= 0 && (prevInputFlags & PINPUT_FLAG_FLASHLIGHT)		== 0)
-#macro	PINPUT_CHANGE_AMMO_PRESSED		((inputFlags & PINPUT_FLAG_CHANGE_AMMO)		!= 0 && (prevInputFlags & PINPUT_FLAG_CHANGE_AMMO)		== 0)
-#macro	PINPUT_RELOAD_WEAPON_PRESSED	((inputFlags & PINPUT_FLAG_RELOAD_WEAPON)	!= 0 && (prevInputFlags & PINPUT_FLAG_RELOAD_WEAPON)	== 0)
-#macro	PINPUT_READY_WEAPON_HELD		((inputFlags & PINPUT_FLAG_READY_WEAPON)	!= 0)
-#macro	PINPUT_USE_WEAPON_HELD			((inputFlags & PINPUT_FLAG_USE_WEAPON)		!= 0)
-#macro	PINPUT_SPRINT_RELEASED			((inputFlags & PINPUT_FLAG_SPRINT)			== 0 && (prevInputFlags & PINPUT_FLAG_SPRINT)			!= 0)
-#macro	PINPUT_READY_WEAPON_RELEASED	((inputFlags & PINPUT_FLAG_READY_WEAPON)	== 0 && (prevInputFlags & PINPUT_FLAG_READY_WEAPON)		!= 0)
-#macro	PINPUT_FLASHLIGHT_RELEASED		((inputFlags & PINPUT_FLAG_FLASHLIGHT)		== 0 && (prevInputFlags & PINPUT_FLAG_FLASHLIGHT)		!= 0)
-#macro	PINPUT_USE_WEAPON_RELEASED		((inputFlags & PINPUT_FLAG_USE_WEAPON)		== 0 && (prevInputFlags & PINPUT_FLAG_USE_WEAPON)		!= 0)
-#macro	PINPUT_OPEN_ITEMS_RELEASED		((inputFlags & PINPUT_FLAG_ITEM_MENU)		== 0 && (prevInputFlags & PINPUT_FLAG_ITEM_MENU)		!= 0)
-#macro	PINPUT_OPEN_NOTES_RELEASED		((inputFlags & PINPUT_FLAG_NOTES_MENU)		== 0 && (prevInputFlags & PINPUT_FLAG_NOTES_MENU)		!= 0)
-#macro	PINPUT_OPEN_MAPS_RELEASED		((inputFlags & PINPUT_FLAG_MAP_MENU)		== 0 && (prevInputFlags & PINPUT_FLAG_MAP_MENU)			!= 0)
-#macro	PINPUT_OPEN_PAUSE_RELEASED		((inputFlags & PINPUT_FLAG_PAUSE_MENU)		== 0 && (prevInputFlags & PINPUT_FLAG_PAUSE_MENU)		!= 0)
+#macro	PINPUT_MOVE_RIGHT_HELD			(bool(inputFlags & PINPUT_FLAG_MOVE_RIGHT)		&& !bool(inputFlags & PINPUT_FLAG_MOVE_LEFT))
+#macro	PINPUT_MOVE_LEFT_HELD			(bool(inputFlags & PINPUT_FLAG_MOVE_LEFT)		&& !bool(inputFlags & PINPUT_FLAG_MOVE_RIGHT))
+#macro	PINPUT_MOVE_UP_HELD				(bool(inputFlags & PINPUT_FLAG_MOVE_UP)			&& !bool(inputFlags & PINPUT_FLAG_MOVE_DOWN))
+#macro	PINPUT_MOVE_DOWN_HELD			(bool(inputFlags & PINPUT_FLAG_MOVE_DOWN)		&& !bool(inputFlags & PINPUT_FLAG_MOVE_UP))
+#macro	PINPUT_INTERACT_PRESSED			(bool(inputFlags & PINPUT_FLAG_INTERACT)		&& !bool(prevInputFlags & PINPUT_FLAG_INTERACT))
+#macro	PINPUT_SPRINT_PRESSED			(bool(inputFlags & PINPUT_FLAG_SPRINT)			&& !bool(prevInputFlags & PINPUT_FLAG_SPRINT))
+#macro	PINPUT_READY_WEAPON_PRESSED		(bool(inputFlags & PINPUT_FLAG_READY_WEAPON)	&& !bool(prevInputFlags & PINPUT_FLAG_READY_WEAPON))
+#macro	PINPUT_FLASHLIGHT_PRESSED		(bool(inputFlags & PINPUT_FLAG_FLASHLIGHT)		&& !bool(prevInputFlags & PINPUT_FLAG_FLASHLIGHT))
+#macro	PINPUT_CHANGE_AMMO_PRESSED		(bool(inputFlags & PINPUT_FLAG_CHANGE_AMMO)		&& !bool(prevInputFlags & PINPUT_FLAG_CHANGE_AMMO))
+#macro	PINPUT_RELOAD_WEAPON_PRESSED	(bool(inputFlags & PINPUT_FLAG_RELOAD_WEAPON)	&& !bool(prevInputFlags & PINPUT_FLAG_RELOAD_WEAPON))
+#macro	PINPUT_READY_WEAPON_HELD		bool(inputFlags & PINPUT_FLAG_READY_WEAPON)
+#macro	PINPUT_USE_WEAPON_HELD			bool(inputFlags & PINPUT_FLAG_USE_WEAPON)
+#macro	PINPUT_SPRINT_RELEASED			(!bool(inputFlags & PINPUT_FLAG_SPRINT)			&& bool(prevInputFlags & PINPUT_FLAG_SPRINT))
+#macro	PINPUT_READY_WEAPON_RELEASED	(!bool(inputFlags & PINPUT_FLAG_READY_WEAPON)	&& bool(prevInputFlags & PINPUT_FLAG_READY_WEAPON))
+#macro	PINPUT_FLASHLIGHT_RELEASED		(!bool(inputFlags & PINPUT_FLAG_FLASHLIGHT)		&& bool(prevInputFlags & PINPUT_FLAG_FLASHLIGHT))
+#macro	PINPUT_USE_WEAPON_RELEASED		(!bool(inputFlags & PINPUT_FLAG_USE_WEAPON)		&& bool(prevInputFlags & PINPUT_FLAG_USE_WEAPON))
+#macro	PINPUT_OPEN_ITEMS_RELEASED		(!bool(inputFlags & PINPUT_FLAG_ITEM_MENU)		&& bool(prevInputFlags & PINPUT_FLAG_ITEM_MENU))
+#macro	PINPUT_OPEN_NOTES_RELEASED		(!bool(inputFlags & PINPUT_FLAG_NOTES_MENU)		&& bool(prevInputFlags & PINPUT_FLAG_NOTES_MENU))
+#macro	PINPUT_OPEN_MAPS_RELEASED		(!bool(inputFlags & PINPUT_FLAG_MAP_MENU)		&& bool(prevInputFlags & PINPUT_FLAG_MAP_MENU))
+#macro	PINPUT_OPEN_PAUSE_RELEASED		(!bool(inputFlags & PINPUT_FLAG_PAUSE_MENU)		&& bool(prevInputFlags & PINPUT_FLAG_PAUSE_MENU))
 
 // Two unique flags contained within the player's "inputFlags" variable. They will let the rest of the code run by the player which of the 
 // two sticks are being used for movement during the current frame.
-#macro	PINPUT_USING_LEFT_STICK			((inputFlags & PINPUT_FLAG_GP_LEFT_STICK)	!= 0)
-#macro	PINPUT_USING_RIGHT_STICK		((inputFlags & PINPUT_FLAG_GP_RIGHT_STICK)	!= 0)
+#macro	PINPUT_USING_LEFT_STICK			bool(inputFlags & PINPUT_FLAG_GP_LEFT_STICK)
+#macro	PINPUT_USING_RIGHT_STICK		bool(inputFlags & PINPUT_FLAG_GP_RIGHT_STICK)
 
 #endregion Input Macros
 
@@ -215,11 +215,6 @@ maxMoveSpeed		= PLYR_SPEED_NORMAL;
 // Creates a circular shadow that is flattened vertically to adhere to the 2.5D perspective of the game's art.
 entity_add_shadow(entity_draw_shadow_circle, PLYR_SHADOW_XOFFSET, PLYR_SHADOW_YOFFSET,
 	PLYR_SHADOW_WIDTH, PLYR_SHADOW_HEIGHT);
-
-// Create a very dim ambient light that will illuminate the player's face when in complete darkness.
-entity_add_basic_light(PLYR_AMBLIGHT_XOFFSET, PLYR_AMBLIGHT_YOFFSET, 
-	PLYR_AMBLIGHT_RADIUS, PLYR_AMBLIGHT_COLOR, PLYR_AMBLIGHT_STRENGTH, 0.0, 
-		STR_FLAG_PERSISTENT | LGHT_FLAG_ACTIVE);
 
 // Set the starting sprite for the player.
 entity_set_sprite(spr_player_unarmed_walk);
@@ -497,7 +492,7 @@ pause_player = function(){
 	if (curState == method_get_index(state_player_paused) || GAME_IS_CUTSCENE_ACTIVE)
 		return; // Don't pause the player again if they've been paused previously or a cutscene is active.
 	
-	object_set_state(state_player_paused);
+	set_state(state_player_paused);
 	image_index		= animLoopStart;
 	flags		    = flags & ~(DENTT_FLAG_MOVING | PLYR_FLAG_SPRINTING);
 	animCurFrame	= 0.0;
@@ -992,11 +987,14 @@ state_initialize = function(_delta){
 	if (STNG_IS_SPRINT_INPUT_TOGGLE) { flags = flags | PLYR_FLAG_SPRINT_TOGGLE; }
 	if (STNG_IS_AIM_INPUT_TOGGLE)	 { flags = flags | PLYR_FLAG_AIM_TOGGLE; }
 	
+	// Create a very dim ambient light that will illuminate the player's face when in complete darkness.
+	entity_add_basic_light(PLYR_AMBLIGHT_XOFFSET, PLYR_AMBLIGHT_YOFFSET, PLYR_AMBLIGHT_RADIUS, PLYR_AMBLIGHT_COLOR, PLYR_AMBLIGHT_STRENGTH, 0.0, STR_FLAG_PERSISTENT | LGHT_FLAG_ACTIVE);
+	
 	// --- FOR TESTING PURPOSES ONLY --- //
     item_inventory_add(ITEM_FLASHLIGHT, 1, 0);
 	// --- FOR TESTING PURPOSES ONLY --- //
 	
-	object_set_state(state_default);
+	set_state(state_default);
 }
 
 /// @description 
@@ -1086,7 +1084,7 @@ state_default = function(_delta){
 	// The player has pressed the input for readying their equipped main weapon/sub weapon. If there isn't a equip currently equipped, the 
 	// branch is not taken. Otherwise, the player is set to their aiming/weapon readied state and this state exits early as well.
 	if (PINPUT_READY_WEAPON_PRESSED && equipment.weapon != INV_EMPTY_SLOT){
-		object_set_state(state_player_weapon_ready);
+		set_state(state_player_weapon_ready);
 		flags		    = flags & ~(DENTT_FLAG_MOVING | PLYR_FLAG_SPRINTING);
 		image_index		= animLoopStart;
 		animCurFrame	= 0.0;
@@ -1178,7 +1176,7 @@ state_player_weapon_ready = function(_delta){
 	// check is altered based on if it is set as a toggle or the default method of checking for a hold ending. If the relevant check returns
 	// true, the player returns to their default state once again.
 	if (PLYR_IS_AIM_TOGGLE ? PINPUT_READY_WEAPON_PRESSED : !PINPUT_READY_WEAPON_HELD){
-		object_set_state(state_default);
+		set_state(state_default);
 		return;
 	}
 	
@@ -1198,7 +1196,7 @@ state_player_weapon_ready = function(_delta){
 			
 			// Since remaining ammo was found, the player's state is switched to their reloading state so they can reloading when trying to
 			// fire a weapon that is currently empty.
-			object_set_state(state_player_reloading);
+			set_state(state_player_reloading);
 			timers[PLYR_RELOAD_TIMER] = weaponReloadSpeed;
 			return;
 		}
@@ -1309,7 +1307,7 @@ state_player_weapon_ready = function(_delta){
 	// The player has pressed the input that changes the equipped weapon's current ammunition to another type (So long as another type 
 	// exists), so the function for swapping ammo is called which handles the logic for switch ammo types if possible.
 	if (PINPUT_CHANGE_AMMO_PRESSED && swap_current_ammo_index()){
-		object_set_state(state_player_reloading);
+		set_state(state_player_reloading);
 		timers[PLYR_RELOAD_TIMER] = weaponReloadSpeed;
 		return;
 	}
@@ -1325,7 +1323,7 @@ state_player_weapon_ready = function(_delta){
 		if (ammoCount[curAmmoIndex] == 0 || global.curItems[weapon].quantity == weaponStatRef.stackLimit)
 			return;
 	}
-	object_set_state(state_player_reloading);
+	set_state(state_player_reloading);
 	timers[PLYR_RELOAD_TIMER] = weaponReloadSpeed;
 }
 
@@ -1335,7 +1333,7 @@ state_player_weapon_ready = function(_delta){
 ///	@param {Real}	delta	The difference in time between the execution of this frame and the last.
 state_player_reloading = function(_delta){
 	if (timers[PLYR_RELOAD_TIMER] == 0.0){
-		object_set_state(state_player_weapon_ready);
+		set_state(state_player_weapon_ready);
 		reload_current_weapon();
 		return;
 	}
@@ -1347,8 +1345,8 @@ state_player_reloading = function(_delta){
 ///	@param {Real}	delta	The difference in time between the execution of this frame and the last.
 state_player_paused = function(_delta){
 	if (!GAME_IS_MENU_OPEN && !GAME_IS_TEXTBOX_OPEN){
-		if (lastState != STATE_NONE) { object_set_state(lastState); }
-		else						 { object_set_state(state_default); }
+		if (lastState != STATE_NONE) { set_state(lastState); }
+		else						 { set_state(state_default); }
 	}
 }
 

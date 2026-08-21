@@ -91,7 +91,6 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	// processing logic for the list of options available to the player for the item they selected, and the second is simply a reference to 
 	// this struct during runtime so it can be passed to that sub menu and stored in its prevMenu variable.
 	itemOptionsMenu		= noone;
-	selfRef				= noone;
 	
 	// Store references to the control group information that is created/gotten and drawn by the inventory menu instance. This allows the 
 	// item menu to adjust what is shown in each group as required by its state.
@@ -113,9 +112,6 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 	///	The item menus struct's create event. It initializes required parameters; sets up the auxillary return input bindings, and loads the
 	/// contents of the item inventory in as menu options + descriptions.
 	create_event = function(){
-		// Get a referfence to this struct so its submenu can reference it in its "prevMenu" variable.
-		selfRef				= instance_find_struct(structID);
-		
 		// Set up the "auxilliary" return inputs to the input that opens up this menu during gameplay, so it can also close the menu should 
 		// the player choose to use it instead of the standard input.
 		var _inputs			= global.settings.inputs;
@@ -338,7 +334,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		// After re-enabling the necessary input information, the inventory has flags set that re-enable its ability to close through the 
 		// return input being pressed, its ability to switch from one section to another, and the item menu is reset to its default state.
 		with(prevMenu) { flags = flags | MENUINV_FLAG_CAN_CLOSE | MENUINV_FLAG_CAN_CHANGE_PAGE & ~MENUINV_FLAG_HIDE_CONTROLS; }
-		object_set_state(state_default);
+		set_state(state_default);
 		flags			= flags & ~(MENUITM_FLAG_MOVING_ITEM | MENUITM_FLAG_OPEN_TEXTBOX);
 		auxSelOption	= -1;
 		selOption		= -1;
@@ -488,7 +484,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 				return; // Don't let the inventory close itself.
 			}
 			
-			with(prevMenu) { object_set_state(state_close_animation); }
+			with(prevMenu) { set_state(state_close_animation); }
 			return; // The menu shouldn't process any other logic.
 		}
 		
@@ -525,14 +521,14 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			// Check if the inventory is moving an item. If so, this branch is taken and the inventory will move to its state for handling 
 			// an item movement, and this state exits early.
 			if (_isMovingItem){
-				object_set_state(state_move_item);
+				set_state(state_move_item);
 				return;
 			}
 			
 			// If there is a value found in the auxSelOption variable and the moving item flag wasn't set, it is assumed the item is being 
 			// combined with another instead, so that state is activated.
 			if (auxSelOption != -1){
-				object_set_state(state_combine_item);
+				set_state(state_combine_item);
 				return;
 			}
 			
@@ -603,7 +599,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			// this sub menu onto a separate surface, and copy over the vertical spacing between options so the height of the menu's 
 			// background can be calculated.
 			if (itemOptionsMenu == noone){
-				itemOptionsMenu	= create_sub_menu(str_sub_menu, selfRef, 0, 0, _options, 1, 1, array_length(_options));
+				itemOptionsMenu	= create_sub_menu(str_sub_menu, global.singletons.itemMenu, 0, 0, _options, 1, 1, array_length(_options));
 				with(itemOptionsMenu){
 					alpha		= 1.0;
 					_ySpacing	= optionSpacingY;
@@ -613,7 +609,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			// Finally, swap over the opening state for the item options menu. On top of that, set the flag that lets this menu know that 
 			// sub menu is open, and position it to show up beside the selected item's name. The cursor animation offset/timer is also reset
 			//  to zero.
-			object_set_state(state_open_item_options);
+			set_state(state_open_item_options);
 			flags = flags | MENUITM_FLAG_OPTIONS_OPEN;
 			
 			// Calculate the offset for the item's options menu and its height for the background UI.
@@ -641,7 +637,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			optionX				= lerp(SUBMENU_ITM_ANIM_X1, SUBMENU_ITM_ANIM_X2, _itemOptionsAlpha); 
 			_itemOptionsAlpha  += SUBMENU_ITM_OANIM_ALPHA_SPEED * _delta;
 			if (_itemOptionsAlpha >= 1.0){ // Animation has completed; set values to their targets.
-				object_set_state(state_default);
+				set_state(state_default);
 				flags				= flags | MENU_FLAG_ACTIVE;
 				optionX				= SUBMENU_ITM_ANIM_X2;
 				_itemOptionsAlpha	= 1.0;
@@ -651,7 +647,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		itemOptionsAlpha = _itemOptionsAlpha;
 		
 		// Once the opening animation is finished, set the state of this menu to handle submenu logic.
-		if (_isOpened) { object_set_state(state_navigating_item_options); }
+		if (_isOpened) { set_state(state_navigating_item_options); }
 	}
 	
 	/// @description 
@@ -685,7 +681,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		if (MENUITM_SHOULD_CLOSE_ON_USE){
 			var _openTextbox = MENUITM_SHOULD_OPEN_TEXTBOX;
 			with(prevMenu){ 
-				object_set_state(state_close_animation);
+				set_state(state_close_animation);
 				if (_openTextbox) { flags = flags | MENUINV_FLAG_OPEN_TEXTBOX; }
 			}
 			return;
@@ -696,13 +692,13 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		if (MENUITM_SHOULD_OPEN_TEXTBOX){
 			with(prevMenu)	{ flags = flags | MENUINV_FLAG_HIDE_CONTROLS; }
 			with(TEXTBOX)	{ activate_textbox(0, TBOX_FLAG_HIDE_CONTROLS); }
-			object_set_state(state_textbox_open);
+			set_state(state_textbox_open);
 			return;
 		}
 		
 		// If no special flags have been set through the use of an item, the function will simply reset the item inventory menu back to its 
 		// default state, and will reset required values back to 0 if the value in "auxSelOption" is set to anything other than its default.
-		object_set_state(state_default);
+		set_state(state_default);
 		if (auxSelOption == -1) 
 			reset_to_default_state();
 	}
@@ -734,13 +730,13 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 			// Determine what should be done based on the name of the option that was selected by the player.
 			switch(_oName){
 				case MENUITM_OPTION_USE:		// Shift to the state that determines how to use the item.
-					object_set_state(state_use_item);
+					set_state(state_use_item);
 					return;
 				case MENUITM_OPTION_EQUIP:		// Shift to the state that handles equipping the item.
-					object_set_state(state_equip_item);
+					set_state(state_equip_item);
 					return;
 				case MENUITM_OPTION_UNEQUIP:	// Shift to the state that handles unequipping the item.
-					object_set_state(state_unequip_item);
+					set_state(state_unequip_item);
 					return;
 				case MENUITM_OPTION_MOVE:		// The item is being moved, so toggle the flag that says that action is occurring in addition to the "Combine" option's line below.
 					flags = flags | MENUITM_FLAG_MOVING_ITEM;
@@ -786,8 +782,8 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		// The sub menu is closing, so the item inventory should return to its default state. The sub menu is also deactivated since it 
 		// isn't required during said state.
 		if (_isClosing){
-			object_set_state(state_close_item_options);
-			with(itemOptionsMenu) { object_set_state(STATE_NONE); }
+			set_state(state_close_item_options);
+			with(itemOptionsMenu) { set_state(STATE_NONE); }
 		}
 	}
 	
@@ -804,7 +800,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 				_useFlags = script_execute(useFunction, _selOption);
 			_itemID	= itemID;
 		}
-		object_set_state(state_close_item_options);
+		set_state(state_close_item_options);
 
 		// No additional logic needs to be performed for the item being used; exit the function early.
 		if (_useFlags == 0)
@@ -857,7 +853,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		itemDataToRender[selOption].isEquipped = true;
 		
 		// Finally, switch to the state that will close the selected item's option menu/window so normal function can return to the menu.
-		object_set_state(state_close_item_options);
+		set_state(state_close_item_options);
 	}
 	
 	/// @description 
@@ -878,7 +874,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 		itemDataToRender[selOption].isEquipped = false;
 		
 		// Finally, switch to the state that will close the selected item's option menu/window so normal function can return to the menu.
-		object_set_state(state_close_item_options);
+		set_state(state_close_item_options);
 	}
 	
 	/// @description 
@@ -939,7 +935,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 				queue_new_text("Seems like nothing happens when I try to combine these two together...");
 				activate_textbox(0, TBOX_FLAG_HIDE_CONTROLS);
 			}
-			object_set_state(state_textbox_open);
+			set_state(state_textbox_open);
 			return;
 		}
 		
@@ -992,7 +988,7 @@ function str_item_menu(_index) : str_base_menu(_index) constructor {
 				queue_new_text("I don't have enough to make anything out of these items...");
 				activate_textbox(0, TBOX_FLAG_HIDE_CONTROLS);
 			}
-			object_set_state(state_textbox_open);
+			set_state(state_textbox_open);
 			return;
 		}
 			

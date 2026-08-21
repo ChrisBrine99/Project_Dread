@@ -85,25 +85,25 @@ function str_light_flicker(_index) : str_light_basic(_index) constructor {
 /// @description 
 ///	Creates a light source instance that will flicker randomly while it is active. The flickering effect is automatically handled by the 
 /// instance itself, and the characteristics of that flicker can be adjusted as needed by changing the effect's parameters.
-/// @returns 	{Struct.Light_Flicker}
-///	@param 		{Real}					x					Horizontal position of the light within the room.
-/// @param 		{Real}					y					Vertical position of the light within the room.
-/// @param 		{Real}					minRadius			Minimum possible area the light can illuminate.
-/// @param 		{Real}					maxRadius			Maximum possible area the light can illuminate.
-/// @param 		{Real}					minFlickerInterval	Smallest possible duration between size shifts for the light source's flicker effect.
-///	@param 		{Real}					maxFlickerInterval	Largest possible duration between size shifts for the light source's flicker effect.
-/// @param 		{Real}					color				(Optional) The hue of the light source.
-///	@param 		{Real}					strength			(Optional) How bright the light source appears in the world (Alpha under a different name).
-/// @param 		{Real}					lifetime			(Optional) Determines how long the light is alive for relative to its creation.
-/// @param 		{Real}					flags				(Optional) Determines which substate bits to toggle on for the light.
+/// @returns 	{Struct.str_light_flicker}
+///	@param 		{Real}						x					Horizontal position of the light within the room.
+/// @param 		{Real}						y					Vertical position of the light within the room.
+/// @param 		{Real}						minRadius			Minimum possible area the light can illuminate.
+/// @param 		{Real}						maxRadius			Maximum possible area the light can illuminate.
+/// @param 		{Real}						minFlickerInterval	Smallest possible duration between size shifts for the light source's flicker effect.
+///	@param 		{Real}						maxFlickerInterval	Largest possible duration between size shifts for the light source's flicker effect.
+/// @param 		{Real}						color				(Optional) The hue of the light source.
+///	@param 		{Real}						strength			(Optional) How bright the light source appears in the world (Alpha under a different name).
+/// @param 		{Real}						lifetime			(Optional) Determines how long the light is alive for relative to its creation.
+/// @param 		{Real}						flags				(Optional) Determines which substate bits to toggle on for the light.
 function light_flicker_create(_x, _y, _minRadius, _maxRadius, _minFlickerInterval, _maxFlickerInterval, _color = COLOR_TRUE_WHITE, _strength = LGHT_MAX_STRENGTH, _lifetime = 0.0, _flags = LGHT_FLAG_ACTIVE){
-	var _light = light_create(str_light_flicker);
-	with(_light){ // Position the light and apply its sizing/color/strength and flicking parameters.
+	var _light = light_get_flicker(light_create(str_light_flicker));
+	with(_light){ // Position the light and initialize its various parameters.
 		light_set_position(_x, _y);
 		light_set_properties(
-			_minRadius,				_maxRadius, 
-			_minFlickerInterval,	_maxFlickerInterval, 
-			_color, 
+			_minRadius,				_maxRadius,
+			_minFlickerInterval,	_maxFlickerInterval,
+			_color,
 			_strength
 		);
 		lifetime	= _lifetime;

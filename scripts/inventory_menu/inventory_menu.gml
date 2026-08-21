@@ -81,11 +81,7 @@
 /// @param {Function}	index	The value of *str_inventory_menu* as determined by GameMaker during runtime.
 function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	// Stores a reference to the three "submenus" that are managed by this main menu: the item, note, and map menus, respectively.
-	menuRef				= array_create(MENUINV_TOTAL_SUBMENUS, noone);
-	
-	// Holds a reference to the inventory menu itself which is then passed along to the submenus when they are created by the player shifting
-	// through its various pages.
-	selfRef				= noone;
+	menuRef				= array_create(MENUINV_TOTAL_SUBMENUS, str_base_menu);
 	
 	// Stores the two control groups utilized by the inventory menu and all of its sections. The references are kept track of here and then 
 	// are passed to each section as required. Then, rendering of the groups is handled here.
@@ -97,10 +93,8 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 	/// made up of menus that represent each option as a *section* instead of a standard menu option. Finally, control groups are made (Or 
 	/// updated if they already exist) here and updated on a per-section basis as they're switched to by the player.
 	create_event = function(){
-		// Get a reference to this menu so it can be passed into the submenus that it manages.
-		selfRef	= instance_find_struct(structID);
 		flags	= flags | MENUINV_FLAG_CAN_CLOSE; // Initially enable the flag to allow this menu to close.
-		object_set_state(state_open_animation);
+		set_state(state_open_animation);
 		
 		// Initialize the menu's base parameters as well as its option parameters. Since this menu works as more of a manager of other menus,
 		// these options won't have logic for selection and the menu will only show the current sectopm that is visble to the player.
@@ -323,9 +317,9 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 			return; // Invalid index; don't create a menu.
 
 		var _isOpened = MENUINV_IS_OPENED;
-		if (menuRef[_index] != noone){
+		if (menuRef[_index] != str_base_menu){
 			with(menuRef[_index]){ // Simply activate the menu in question if it has already been created.
-				if (_isOpened) { object_set_state(state_default); }
+				if (_isOpened) { set_state(state_default); }
 				flags = flags | MENU_FLAG_ACTIVE | MENU_FLAG_VISIBLE;
 			}
 			return;
@@ -355,9 +349,9 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		// main management menu is also passed in as the page's previous menu, so it knows it is not the root menu.
 		menuRef[_index]	= _menuInstance;
 		with(_menuInstance){
-			if (_isOpened) { object_set_state(state_default); }
+			if (_isOpened) { set_state(state_default); }
 			flags				= flags | MENU_FLAG_ACTIVE | MENU_FLAG_VISIBLE;
-			prevMenu			= other.selfRef;
+			prevMenu			= global.singletons.inventoryMenu;
 			movementCtrlGroup	= _movementCtrlGroup;
 			interactCtrlGroup	= _interactCtrlGroup;
 			alpha				= _alpha;
@@ -397,7 +391,7 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 			var _closeMenu = false;
 			with(menuRef[curOption]){ // Check for the return key being released.
 				if (MINPUT_IS_RETURN_RELEASED){
-					object_set_state(0);
+					set_state(0);
 					_closeMenu = true;
 				}
 			}
@@ -405,7 +399,7 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 			// Only if _closeMenu is set to true will the inventory begin its closing animation, and that value is only set to true if the 
 			// current section's return input was released for this frame.
 			if (_closeMenu){
-				object_set_state(state_close_animation);
+				set_state(state_close_animation);
 				return;
 			}
 		}
@@ -477,11 +471,11 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 		// The conditions for the animation are checked. If they've been met, the inventory will activate itself by moving onto its default 
 		// state, and the current section will have the same occur.
 		if (alpha == 1.0 && y == MENUINV_OANIM_YTARGET){
-			object_set_state(state_default);
+			set_state(state_default);
 			flags = flags | MENUINV_FLAG_OPENED | MENUINV_FLAG_CAN_CHANGE_PAGE;
 			
 			with(menuRef[curOption])
-				object_set_state(state_default);
+				set_state(state_default);
 		}
 	}
 	
@@ -502,7 +496,7 @@ function str_inventory_menu(_index) : str_base_menu(_index) constructor {
 			if (MENUINV_SHOULD_OPEN_TEXTBOX){ // Opens a textbox upon closing the inventory if needed.
 				with(TEXTBOX) { activate_textbox(); }
 			}
-			instance_destroy_menu_struct(selfRef);
+			instance_destroy_menu_struct(global.singletons.inventoryMenu);
 			return;
 		}
 		

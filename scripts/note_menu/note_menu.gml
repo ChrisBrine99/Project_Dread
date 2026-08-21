@@ -42,7 +42,7 @@ function str_note_menu(_index) : str_base_menu(_index) constructor {
 		if (MINPUT_IS_AUX_RETURN_RELEASED){
 			with(prevMenu){
 				if (MENUINV_CAN_CLOSE)
-					object_set_state(state_close_animation); 
+					set_state(state_close_animation); 
 			}
 			return;
 		}

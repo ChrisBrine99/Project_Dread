@@ -47,8 +47,8 @@ if (_fadeAlpha == 1.0 && room != targetRoom){
 	while(!is_undefined(_key)){
 		_data = instancesToWarp[? _key];
 		with(_key){ // The key within the map is always the instance id that will use the data.
-			x			= _data.targetX;
-			y			= _data.targetY;
+			x			= _data.xTarget;
+			y			= _data.yTarget;
 			persistent	= _data.wasPersistent;
 		}
 		delete instancesToWarp[? _key]; // Signal to the garbage collector that the struct is no longer required.

@@ -1,72 +1,25 @@
-// A macro that defines what setting an object's state to 0 will do. When set to zero, most logic processing of objects should be bypassed 
-// since it isn't actively doing anything in the game (Excluding rendering if that is still required by the object).
-#macro	STATE_NONE						0
-
 /// @description 
-/// A slightly modified version of the standard instance creation functions that come standard with GameMaker. It will simply check to see if 
-/// an object is special before creating an instance of them.
+/// A wrapper function for GameMaker's standard *instance_create* function that prevents it from creating new singleton instances if they
+/// are objects and found within the *objSingletons* map. In order to create them, the standard *instance_create_depth* or 
+/// *instance_create_layer* functions will have to be invoked manually, which should only happen in the creation code of *obj_game_manager*.
 /// @returns 	{Id.Instance}
 /// @param 		{Real}				x		Horizontal position to create the object at within the current room.
 /// @param 		{Real}				y		Vertical position to create the object at within the current room.
 /// @param 		{Asset.GMObject}	object	Index of the GameMaker object asset to create an instance of.
 /// @param 		{Real}				depth	(Optional) Layer/depth to place the instance at. Default value is 30.
-function instance_create_object(_x, _y, _object, _depth = 30){
-	if (object_is_special(_object))
+function instance_create_object(_x, _y, _object, _depth = 10){
+	if (!is_undefined(global.singletons.objSingletons[? _object]))
 		return noone;
 	return instance_create_depth(_x, _y, _depth, _object);
 }
 
 /// @description 
-///	A slightly modified version of the standard instance destruction functions that come standard with GameMaker. It will simply check to see 
-/// if its a special object being destroyed or not, and if so it won't allow that instance to be destroyed.
+///	A wrapper function for GameMaker's standard *instance_destroy* function that prevents the destruction of singleton objects through
+/// standard means. In order to destroy them, the standard *instance_destroy* function will have to be used (Which should never happen).
 /// @param {Id.Instance}	id				The desired object instance to remove from the game.
 /// @param {Bool}			executeEvent	(Optional) Flag that allows the object's destroy event to be called or not.
 function instance_destroy_object(_id, _executeEvent = true){
-	if (object_is_special(_id.object_index))
-		return;
+	if (!is_undefined(global.singletons.objSingletons[? variable_instance_get(_id, "object_index")]))
+		return; // Singleton instance objects cannot be destroyed; prevent that from occurring if the provided ID is a singleton.
 	instance_destroy(_id, _executeEvent);
-}
-
-/// @description 
-/// Simply checks to see if the supplied object is special or not. If so, only one instance of it should exist during runtime; only being 
-/// deleted once the game itself closes. Otherwise, the object can have as many instances of it created as required.
-/// @returns 	{Bool}
-/// @param 		{Asset.GMObject}	object	Index of the GameMaker object asset to check for.
-function object_is_special(_object){
-	switch(_object){
-		default:					return false;
-		case obj_game_manager:		return true;
-		case obj_player:			return true;
-	}
-}
-
-/// @description
-/// Determines the state function that the object calling this function will execute from the next frame onwards. Note that without the 
-/// *curState*, *nextState*, and *lastState* variables defined in its *Create Event* (Or the struct equivalent), a call to this function will 
-/// cause the game to crash.
-/// @param {Function}	state	The variable assigned to the state function.
-function object_set_state(_state){
-	if (_state == lastState){ // Returning to the previous state.
-		nextState = _state;
-		return;
-	}
-	
-	var _index = method_get_index(_state);
-	if (is_undefined(_index) || _index == curState){
-		nextState = curState;
-		return; // Don't update to an invalid state or if the state is identical to the current one.
-	}
-	curState	= 0;		// Temporarily set to 0 in case the state was changed before it could execute for the frame.
-	nextState	= _index;
-}
-
-/// @description 
-///	Usually called in the *End Step Event* of the object (Or the struct equivalent to that event). Updates the object's current state to match 
-/// the value currently stored within its *nextState* variable. Note that without the *curState*, *nextState*, and *lastState* variables 
-/// defined in its *Create Event* (Or the struct equivalent), a call to this function will cause the game to crash.
-function object_update_state(){
-	if (curState != nextState){
-		lastState = curState;
-		curState = nextState;
-	}
 }

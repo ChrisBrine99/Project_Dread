@@ -1,1 +1,1 @@
-with(PLAYER) { status_apply_crippled(); }
+// with(PLAYER) { status_apply_crippled(); }

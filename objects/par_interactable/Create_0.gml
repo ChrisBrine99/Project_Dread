@@ -45,7 +45,7 @@ interactMessageWidth 	= 0;
 /// required upon an interaction.
 /// @param {Real}	delta	The difference in time between the execution of this frame and the last.
 on_player_interact = function(_delta){
-	textbox_show_message(interactMessage);
+	textbox_show_message(textboxMessage);
 }
 
 /// @description

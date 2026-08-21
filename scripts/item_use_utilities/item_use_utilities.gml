@@ -142,22 +142,18 @@ function item_use_door_key(_slot){
 		var _yInteract 	= PLYR_Y_INTERACT;
 		_door 			= instance_nearest(_xInteract, _yInteract, obj_door_warp);
 		with(_door){
-			show_debug_message("Distance: {0}, radius: {1}", point_distance(_xInteract, _yInteract, interactX, interactY), interactRadius);
-			if (!DOOR_IS_LOCKED || point_distance(_xInteract, _yInteract, interactX, interactY) > interactRadius){
+			show_debug_message("Distance: {0}, radius: {1}", point_distance(_xInteract, _yInteract, xInteract, yInteract), interactRadius);
+			if (DOOR_IS_UNLOCKED || point_distance(_xInteract, _yInteract, xInteract, yInteract) > interactRadius){
 				with(TEXTBOX) { queue_new_text("There's no reason to use this key right now."); }
 				return USEITM_FLAG_OPEN_TEXTBOX;
 			}
 		}
 	}
 	
-	// Get the name of the key being used (Used when the textbox queues text that contains the item's name) and its ID. That ID value is what
-	// is used to see if the door is using a lock that can be opened by the key in question.
-	var _itemName 	= MENUITM_DEFAULT_STRING;
-	var _itemID 	= ID_INVALID;
-	with(global.curItems[_slot]){
-		_itemName 	= string_lower(itemName);
-		_itemID		= itemID;
-	}
+	// Get the name of the key being used (Used when the textbox queues text that contains the item's name).
+	var _itemName = MENUITM_DEFAULT_STRING;
+	with(global.curItems[_slot])
+		_itemName = itemName;
 	
 	// Jump into the door that is being checked. From there, its lock data is looped through to see if the key being used can open any of
 	// its available locks. Locks that are already opened are skipped over, but will increment a value that will check if all locks have been
@@ -176,7 +172,7 @@ function item_use_door_key(_slot){
 				
 				// Don't run any of the code for using the key on the door until the key's ID matches one of the door lock's key IDs. The
 				// code for using the item is also skipped if another locked already used the key, as one can't be used on two or more locks.
-				if (_keyUsed || _itemID != keyID)
+				if (_keyUsed || _itemName != keyName)
 					continue;
 				event_set_flag(flagID, flagState);
 				textbox_queue_used_item(_itemName);

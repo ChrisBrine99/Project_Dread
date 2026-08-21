@@ -13,13 +13,13 @@
 
 // Macros for checking the various bits within a menu's "flags" variable to see if they're currently cleared or set, which can then be used 
 // to determine what to happen with regards to the menu in question.
-#macro	MENU_IS_OPTINFO_INITIALIZED		((flags & MENU_FLAG_OPTINFO_INITIALIZED)	!= 0)
-#macro	MENU_ARE_OPTIONS_INITIALIZED	((flags & MENU_FLAG_OPTIONS_INITIALIZED)	!= 0)
-#macro	MENU_ARE_PARAMS_INITIALIZED		((flags & MENU_FLAG_PARAMS_INITIALIZED)		!= 0)
-#macro	MENU_HAS_SELECTABLE_OPTIONS		((flags & MENU_FLAG_SELECTABLE_OPTIONS)		!= 0)
-#macro	MENU_IS_CURSOR_AUTOSCROLLING	((flags & MENU_FLAG_CURSOR_AUTOSCROLL)		!= 0)
-#macro	MENU_IS_VISIBLE					((flags & MENU_FLAG_VISIBLE)				!= 0)
-#macro	MENU_IS_ACTIVE					((flags & MENU_FLAG_ACTIVE)					!= 0)
+#macro	MENU_IS_OPTINFO_INITIALIZED		bool(flags & MENU_FLAG_OPTINFO_INITIALIZED)
+#macro	MENU_ARE_OPTIONS_INITIALIZED	bool(flags & MENU_FLAG_OPTIONS_INITIALIZED)
+#macro	MENU_ARE_PARAMS_INITIALIZED		bool(flags & MENU_FLAG_PARAMS_INITIALIZED)
+#macro	MENU_HAS_SELECTABLE_OPTIONS		bool(flags & MENU_FLAG_SELECTABLE_OPTIONS)
+#macro	MENU_IS_CURSOR_AUTOSCROLLING	bool(flags & MENU_FLAG_CURSOR_AUTOSCROLL)
+#macro	MENU_IS_VISIBLE					bool(flags & MENU_FLAG_VISIBLE)
+#macro	MENU_IS_ACTIVE					bool(flags & MENU_FLAG_ACTIVE)
 
 // A unique check to see if a menu hasn't been properly initialized; meaning its option parameters and general parameters haven't been setup 
 // before the code attempts to perform any menu logic involving such data.
@@ -37,14 +37,14 @@
 
 // Macros to check the state of a given input flag to see if it is currently set or cleared. Note that these checks have additional conditions
 // alongside seeing if the bit is set to determine if the input is valid.
-#macro	MINPUT_IS_RIGHT_HELD			((inputFlags & MINPUT_FLAG_CURSOR_RIGHT)	!= 0 && (inputFlags & MINPUT_FLAG_CURSOR_LEFT)		== 0)
-#macro	MINPUT_IS_LEFT_HELD				((inputFlags & MINPUT_FLAG_CURSOR_LEFT)		!= 0 && (inputFlags & MINPUT_FLAG_CURSOR_RIGHT)		== 0)
-#macro	MINPUT_IS_UP_HELD				((inputFlags & MINPUT_FLAG_CURSOR_UP)		!= 0 && (inputFlags & MINPUT_FLAG_CURSOR_DOWN)		== 0)
-#macro	MINPUT_IS_DOWN_HELD				((inputFlags & MINPUT_FLAG_CURSOR_DOWN)		!= 0 && (inputFlags & MINPUT_FLAG_CURSOR_UP)		== 0)
-#macro	MINPUT_IS_SELECT_RELEASED		((inputFlags & MINPUT_FLAG_SELECT)			== 0 && (prevInputFlags & MINPUT_FLAG_SELECT)		!= 0)
-#macro	MINPUT_IS_RETURN_RELEASED		((inputFlags & MINPUT_FLAG_RETURN)			== 0 && (prevInputFlags & MINPUT_FLAG_RETURN)		!= 0)
-#macro	MINPUT_IS_AUX_SELECT_RELEASED	((inputFlags & MINPUT_FLAG_AUX_SELECT)		== 0 && (prevInputFlags & MINPUT_FLAG_AUX_SELECT)	!= 0)
-#macro	MINPUT_IS_AUX_RETURN_RELEASED	((inputFlags & MINPUT_FLAG_AUX_RETURN)		== 0 && (prevInputFlags & MINPUT_FLAG_AUX_RETURN)	!= 0)
+#macro	MINPUT_IS_RIGHT_HELD			(bool(inputFlags & MINPUT_FLAG_CURSOR_RIGHT)	&& !bool(inputFlags & MINPUT_FLAG_CURSOR_LEFT))
+#macro	MINPUT_IS_LEFT_HELD				(bool(inputFlags & MINPUT_FLAG_CURSOR_LEFT)		&& !bool(inputFlags & MINPUT_FLAG_CURSOR_RIGHT))
+#macro	MINPUT_IS_UP_HELD				(bool(inputFlags & MINPUT_FLAG_CURSOR_UP)		&& !bool(inputFlags & MINPUT_FLAG_CURSOR_DOWN))
+#macro	MINPUT_IS_DOWN_HELD				(bool(inputFlags & MINPUT_FLAG_CURSOR_DOWN)		&& !bool(inputFlags & MINPUT_FLAG_CURSOR_UP))
+#macro	MINPUT_IS_SELECT_RELEASED		(!bool(inputFlags & MINPUT_FLAG_SELECT)			&& bool(prevInputFlags & MINPUT_FLAG_SELECT))
+#macro	MINPUT_IS_RETURN_RELEASED		(!bool(inputFlags & MINPUT_FLAG_RETURN)			&& bool(prevInputFlags & MINPUT_FLAG_RETURN))
+#macro	MINPUT_IS_AUX_SELECT_RELEASED	(!bool(inputFlags & MINPUT_FLAG_AUX_SELECT)		&& bool(prevInputFlags & MINPUT_FLAG_AUX_SELECT))
+#macro	MINPUT_IS_AUX_RETURN_RELEASED	(!bool(inputFlags & MINPUT_FLAG_AUX_RETURN)		&& bool(prevInputFlags & MINPUT_FLAG_AUX_RETURN))
 
 // A unique check to see if no cursor movement inputs are being held by the player. Prevents having to perform four seperate checks on each 
 // input since they'll all equal 0 when none are held.

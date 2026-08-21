@@ -1,10 +1,16 @@
-// Two macros that determine which kind of singleton the struct is based on its index instead of an instance ID.
-#macro	STRUCT_TYPE_CT_SINGLETON	   -10000	// Can only be created/destroy within rm_init and when the game closes, respectively.
-#macro	STRUCT_TYPE_RT_SINGLETON	   -20000	// Allows only one instance to be created at any given time, but can be destroyed to free that slot.
+#region General Struct Macros
 
-// Macros that determine what type a given struct is when they aren't a compile-time or runtime singleton.
-#macro	STRUCT_TYPE_LIGHT_SOURCE	   -30000
-#macro	STRUCT_TYPE_GENERIC			   -40000
+// 
+#macro 	STR_STRUCTID					"structID" 
+#macro 	CREATE_EVENT					"create_event" 
+#macro 	DESTROY_EVENT					"destroy_event"
+
+// Macros that determine what group type a given struct instance belongs to in order to prevent certain structs from being created with
+// functions like "struct_create_menu_instance" and "light_create", for example.
+#macro	STRUCT_TYPE_MENU			   -10000
+#macro	STRUCT_TYPE_LIGHT_SOURCE	   -10001
+
+#endregion General Struct Macros
 
 // A list that manages the current struct instances that exist at any given point during runtime, and the unique value to provide to a newly
 // created struct instance which will always increment by one from a successful execution of the instance_create_struct function.
@@ -12,65 +18,60 @@ global.structs		= ds_list_create();
 global.structID		= 1000000000; 
 // ^	Start at one billion since GML starts counting instance IDs at 100000; preventing clashing instance IDs between objects and structs.
 
-// A list that should only be written to BEFORE the game actually begins running (AKA before rm_init is even created and executed) so the 
-// game will know at runtime whether a struct can be created multiple times or not or has conditions pertaining to its potential creation. 
+// A ds_map containing key/value pairs for every struct that can be grouped into specific types to allow only certain groups from being
+// created using specific functions like "light_create" and "instance_create_menu_struct", for example.
 global.structType	= ds_map_create();
-// ALL STRUCTS INHERITING FROM "str_base" SHOULD HAVE A VALUE SET HERE FOR THEIR CLASSIFICATION!!!
-ds_map_add(global.structType, str_base,					STRUCT_TYPE_CT_SINGLETON);
-ds_map_add(global.structType, str_camera,				STRUCT_TYPE_CT_SINGLETON);
-ds_map_add(global.structType, str_screen_fade,			STRUCT_TYPE_CT_SINGLETON);
-ds_map_add(global.structType, str_control_ui_manager,	STRUCT_TYPE_CT_SINGLETON);
-ds_map_add(global.structType, str_cutscene_manager,		STRUCT_TYPE_CT_SINGLETON);
-ds_map_add(global.structType, str_textbox,				STRUCT_TYPE_CT_SINGLETON);
-ds_map_add(global.structType, str_textbox_log,			STRUCT_TYPE_CT_SINGLETON);
-ds_map_add(global.structType, str_base_menu,			STRUCT_TYPE_CT_SINGLETON);
-ds_map_add(global.structType, str_inventory_menu,		STRUCT_TYPE_RT_SINGLETON);
-ds_map_add(global.structType, str_item_menu,			STRUCT_TYPE_RT_SINGLETON);
-ds_map_add(global.structType, str_note_menu,			STRUCT_TYPE_RT_SINGLETON);
-ds_map_add(global.structType, str_map_menu,				STRUCT_TYPE_RT_SINGLETON);
-ds_map_add(global.structType, str_textbox_options_menu,	STRUCT_TYPE_RT_SINGLETON);
-ds_map_add(global.structType, str_sub_menu,				STRUCT_TYPE_GENERIC);
-ds_map_add(global.structType, str_player_info_ui,		STRUCT_TYPE_RT_SINGLETON);
-ds_map_add(global.structType, str_fog,					STRUCT_TYPE_RT_SINGLETON);
+// Each sruct that required a specific typing assigned to it will be added to the ds_map directly below this comment.
 ds_map_add(global.structType, str_light_basic,			STRUCT_TYPE_LIGHT_SOURCE);
 ds_map_add(global.structType, str_light_flicker,		STRUCT_TYPE_LIGHT_SOURCE);
 ds_map_add(global.structType, str_light_blink,			STRUCT_TYPE_LIGHT_SOURCE);
+ds_map_add(global.structType, str_sub_menu,				STRUCT_TYPE_MENU);
+ds_map_add(global.structType, str_pause_menu,			STRUCT_TYPE_MENU);
+ds_map_add(global.structType, str_inventory_menu,		STRUCT_TYPE_MENU);
+ds_map_add(global.structType, str_item_menu,			STRUCT_TYPE_MENU);
+ds_map_add(global.structType, str_note_menu,			STRUCT_TYPE_MENU);
+ds_map_add(global.structType, str_map_menu,				STRUCT_TYPE_MENU);
+ds_map_add(global.structType, str_textbox_options_menu,	STRUCT_TYPE_MENU);
+
+#endregion General Struct Global Variable Declarations
+
+#region General Purpose Struct Instance Functions
 
 /// @description 
-///	Attempts to create an instance of the provided struct. If that struct happens to be a *special* struct and an instance for said struct 
-/// already exists, this function will not create another instance and *noone* will be returned to signify no creation occured.
+///	Creates a new struct instance (These structs must use the *constructor* keyword and be a child of *str_base* to call this function 
+/// without bugs or crashes). After creation, it will automatically call the instance's *create_event*, store its reference in the ds_list 
+/// of currently existing structs, and return that reference should the caller of the function require it. Attempting to create a singleton
+/// struct instance with this function will simply return *undefined*.
 /// @returns 	{Struct._structFunc}
-/// @param 		{Function}				structFunc		The struct to attempt to create an instance of.
+/// @param 		{Function}			 structFunc		The struct to attempt to create an instance of.
 function instance_create_struct(_structFunc){
-	if (struct_is_singleton(_structFunc))
-		return noone;
+	if (!is_undefined(global.singletons.structSingletons[? _structFunc]))
+		return undefined;
 	
 	var _structRef = new _structFunc(_structFunc);
 	ds_list_add(global.structs, _structRef);
-	_structRef.create_event();
-	
-	// Check if the created instance is a runtime singleton. If so, store its reference into the global map
-	// for managing singletons; both runtime and compile-time.
-	if (ds_map_find_value(global.structType, _structFunc) == STRUCT_TYPE_RT_SINGLETON)
-		ds_map_set(global.sInstances, _structFunc, _structRef);
-	
+	method_call(struct_get(_structRef, CREATE_EVENT));
+
+	show_debug_message("Created struct {1} (StructRef: {0})", _structRef, _structRef.structID);
 	return _structRef; // Returns the reference to the struct for ease of access in the future if required.
 }
 
 /// @description 
-///	Destroys the provided struct reference (*Special* structs don't exist within the management list, so a check against the struct being 
-/// *special* is not required here). This removes it from the global management list and also singals to the internal garbage collector to 
-/// free it from memory.
-/// @param {Struct._structFunc}	structRef		Reference to the struct that will be deleted.
+///	Attempts to destroy a struct via the reference value provided. If that value is found in the list of currently existing structs, the
+/// reference is deleted from the list and *delete* is called on said reference so the garbage collecter knows it can safely clean the data.
+/// @returns 	{Bool}
+/// @param 		{Struct._structFunc}	structRef		Reference to the struct that will be deleted.
 function instance_destroy_struct(_structRef){
 	var _index = ds_list_find_index(global.structs, _structRef);
-	if (_index == -1 || struct_is_singleton(_structRef.structIndex, true))
-		return;
+	if (_index == -1) // Struct is either a singleton or doesn't exist; no deletion necessary and false is returned.
+		return false;
 	
-	show_debug_message("Delete struct {1} (StructRef: {0})", _structRef, _structRef.structID);
 	ds_list_delete(global.structs, _index);
-	_structRef.destroy_event();
+	method_call(struct_get(_structRef, DESTROY_EVENT));
+	
+	show_debug_message("Deleted struct {1} (StructRef: {0})", _structRef, _structRef.structID);
 	delete _structRef;
+	return true; // Return true to signify a successful deletion.
 }
 
 /// @description 
@@ -84,54 +85,87 @@ function instance_find_struct(_id){
 	var _end		= ds_list_size(global.structs) - 1;
 	var _middle		= 0;
 	
+	// Loop until the value found in _end either hits or exceeds the value found in _start.
 	while (_end >= _start){
         _middle    	= _start + floor((_end - _start) / 2);
 		_structRef	= global.structs[| _middle];
-		if (_structRef.structID < _id){
+		if (struct_get(_structRef, STR_STRUCTID) < _id){
 			_start	= _middle + 1;
-			continue;
+			continue; // Cut off bottom half and search again.
 		}
 		
-		if (_structRef.structID > _id){
+		if (struct_get(_structRef, STR_STRUCTID) > _id){
 			_end 	= _middle - 1;
-			continue;
+			continue; // Cut off top half and search again.
 		}
 		
+		// Desired struct found; return its reference.
 		return _structRef;
 	}
 	
-	return noone;
+	// The struct in question wasn't found; return undefined to signify as such.
+	return undefined;
 }
 
 /// @description 
-/// Checks to see if the struct is a compile-time singleton, runtime singleton, or neither. The term *compile-time* doesn't actually mean 
-/// that the struct CAN'T be created during runtime, but simply that it can't so long as creation/destruction are done through 
-/// *instance_create_struct* and *instance_destroy_struct*, respectively. The same applies to runtime singletons, but they allow at least 
-/// one instance to be created or destroyed as required.
-/// @returns 	{Bool}
-/// @param 		{Function}	structFunc		The struct function to check.
-/// @param 		{Bool}		isDestroying	(Optional) When true, the function will check if a runtime singleton exists to be deleted.
-function struct_is_singleton(_structFunc, _isDestroying = false){
-	var _structType = ds_map_find_value(global.structType, _structFunc);
-	if (_structType == STRUCT_TYPE_CT_SINGLETON) // No creation of compile time singletons can ever occur.
-		return true;
-	
-	// The struct is a singleton, but it can be created/destroyed during runtime. However, only a single instance can exist at any given 
-	// time. This will check if that instance currnetly exists or not.
-	if (_structType == STRUCT_TYPE_RT_SINGLETON){
-		if (!_isDestroying){ // Only bother checking for a valid instance id if destroying the struct in question.
-			var _structID = ds_map_find_value(global.sInstances, _structFunc);
-			if (!is_undefined(_structID) && _structID != noone){
-				show_debug_message("Runtime singleton {0} already exists!", _structFunc);
-				return true;
-			}
-			show_debug_message("Runtime singleton {0} created!", _structFunc);
-		}
-			
-		// Creates a spot in the sInstances map for this runtime singleton's single allowed instance; sets the value to noone as a default
-		// (This is overwritten in the instance_create_struct function).
-		ds_map_set(global.sInstances, _structFunc, noone);
+///	Wrapper function for getting the instance of an existing struct, but treated as if it was the base struct (*str_base*).
+/// @returns 	{Struct.str_base}
+/// @param		{Real}				index	The position the struct instance occupies within *global.structs*.
+function instance_struct_get(_index){
+	return ds_list_find_value(global.structs, _index);
+}
+
+#endregion General Purpose Struct Instance Functions
+
+#region Singleton Struct Instance Functions
+
+/// @description 
+///	Creates a struct that is considered a singleton instance. This will ensure that only a single version of the desired struct(s) exist
+/// at a single time. Attempting to create a non-singleton struct here (Or an object) will result in no struct instance being created.
+/// @param {Function} structFunc	The struct to attempt to create a singleton instance of.
+function instance_create_struct_singleton(_structFunc){
+	var _structName = global.singletons.structSingletons[? _structFunc];
+	if (is_undefined(_structName) || struct_get(global.singletons, _structName) != _structFunc){
+		show_debug_message("{0} cannot be created as a singleton! It either isn't a struct, singleton or already exists!", _structFunc);
+		return; // Parameter value isn't a valid singleton struct; don't create anything.
 	}
 	
-	return false; // By default, undefined is also classified as a standard struct would.
+	// Create the new instance for the singleton struct, and store its reference in its respective variable within the global.singletons
+	// struct. Then, call its create event automatically as all structs should contain it if they're children of str_base.
+	var _structRef = new _structFunc(_structFunc);
+	struct_set(global.singletons, _structName, _structRef);
+	method_call(struct_get(_structRef, CREATE_EVENT));
+	
+	show_debug_message("Created singleton struct {1} (StructRef: {0})", _structRef, _structRef.structID);
 }
+
+/// @description 
+///	Destroys a struct that is considered to be a singleton instance. Does nothing if said struct isn't a singleton, doesn't currently exist,
+/// or if the provided argument value isn't a struct to begin with.
+/// @returns 	{Bool}
+/// @param 		{Struct._structFunc}	structRef		Reference to the singleton struct that will be deleted.
+function instance_destroy_struct_singleton(_structRef){
+	var _structIndex = struct_get(_structRef, "structIndex");
+	var _structName = global.singletons.structSingletons[? _structIndex];
+	if (is_undefined(_structName)){
+		show_debug_message("{0} is not a singleton!", _structRef);
+		return false; // Parameter value isn't a valid singleton struct; don't destroy anything and return false.
+	}
+	
+	var _instance = struct_get(global.singletons, _structName);
+	if (_instance != _structRef){
+		show_debug_message("{0} does not currently exist!", _structRef);
+		return false; // Struct that is being deleted doesn't actually exist; don't execute the deletion process and return false.
+	}
+	
+	// Call the singleton's destroy event and reset its value within global.singletons back to its default of the struct's script index.
+	// Then, call delete on the reference so the garbage collector knows it can safely clean up the data. Returns true for a successful
+	// deletion occurring.
+	method_call(struct_get(_instance, DESTROY_EVENT));
+	struct_set(global.singletons, _structName, _structIndex);
+	show_debug_message("Deleted singleton struct {1} (StructRef: {0})", _instance, _instance.structID);
+	delete _instance;
+	return true;
+}
+
+#endregion Singleton Struct Instance Functions
